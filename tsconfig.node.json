@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "node"
+  },
+  "include": ["src/main", "src/preload", "vite.config.ts"]
+}

@@ -1,0 +1,8 @@
+appId: com.tova.app
+productName: Tova
+directories:
+  output: dist
+files:
+  - out/**/*
+mac:
+  category: public.app-category.productivity

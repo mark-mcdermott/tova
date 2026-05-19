@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+
+# Electron downloads
+electron/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.DS_Store
+.vscode/
+*.swp
+
+# Logs
+npm-debug.log*
+*.log
+
+# TypeScript
+*.tsbuildinfo
