@@ -1,5 +1,7 @@
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, ipcMain } from "electron"
 import { join } from "path"
+import { writeFile } from "fs/promises"
+import { tmpdir } from "os"
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -20,6 +22,12 @@ function createWindow(): void {
 }
 
 app.whenReady().then(createWindow)
+
+ipcMain.handle("note:write-temp", async (_event, content: string) => {
+  const filePath = join(tmpdir(), "tova-temp.md")
+  await writeFile(filePath, content, "utf-8")
+  return filePath
+})
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit()

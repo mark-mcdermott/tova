@@ -1,5 +1,5 @@
-import { contextBridge } from "electron"
+import { contextBridge, ipcRenderer } from "electron"
 
 contextBridge.exposeInMainWorld("electron", {
-  // IPC handlers added in Phase 2
+  writeTemp: (content: string) => ipcRenderer.invoke("note:write-temp", content)
 })
