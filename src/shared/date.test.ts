@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
+  formatDailyTitle,
+  isBlankDailyBody,
   toDailyNoteName,
   parseDailyNoteName,
   isDailyNoteName,
@@ -86,5 +88,49 @@ describe("msUntilNextMidnight", () => {
   it("spans a full day plus a second from just after midnight", () => {
     const now = new Date(2026, 8, 3, 0, 0, 1)
     expect(msUntilNextMidnight(now)).toBe(24 * 60 * 60 * 1000)
+  })
+})
+
+describe("formatDailyTitle", () => {
+  it("formats as M/D/YY without padding", () => {
+    expect(formatDailyTitle(new Date(2026, 4, 17))).toBe("5/17/26")
+  })
+
+  it("keeps double-digit months and days", () => {
+    expect(formatDailyTitle(new Date(2026, 11, 25))).toBe("12/25/26")
+  })
+
+  it("uses the last two digits of the year", () => {
+    expect(formatDailyTitle(new Date(2030, 0, 1))).toBe("1/1/30")
+  })
+})
+
+describe("isBlankDailyBody", () => {
+  it("treats an empty body as blank", () => {
+    expect(isBlankDailyBody("", "9/3/26")).toBe(true)
+  })
+
+  it("treats whitespace and blank lines as blank", () => {
+    expect(isBlankDailyBody("   \n\n  \n", "9/3/26")).toBe(true)
+  })
+
+  it("treats the echoed title heading as blank", () => {
+    expect(isBlankDailyBody("# 9/3/26\n\n", "9/3/26")).toBe(true)
+  })
+
+  it("treats the bare title as blank", () => {
+    expect(isBlankDailyBody("9/3/26", "9/3/26")).toBe(true)
+  })
+
+  it("is not blank once anything is written", () => {
+    expect(isBlankDailyBody("# 9/3/26\n\nmet with Sam", "9/3/26")).toBe(false)
+  })
+
+  it("is not blank for a single word", () => {
+    expect(isBlankDailyBody("groceries", "9/3/26")).toBe(false)
+  })
+
+  it("does not treat another day's title as blank", () => {
+    expect(isBlankDailyBody("# 9/2/26", "9/3/26")).toBe(false)
   })
 })

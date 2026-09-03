@@ -4,6 +4,7 @@ import { ensureVault } from "./vault"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
 import { runBackup } from "./backup"
+import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from "./daily"
 
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000
 
@@ -41,7 +42,6 @@ function reportBackupFailure(error: unknown): void {
 }
 
 function scheduleBackups(): void {
-  runBackup().catch(reportBackupFailure)
   setInterval(() => {
     runBackup().catch(reportBackupFailure)
   }, BACKUP_INTERVAL_MS)
@@ -49,9 +49,22 @@ function scheduleBackups(): void {
 
 app.whenReady().then(async () => {
   await ensureVault()
+
+  // The launch backup runs before cleanup, so anything the sweep removes is
+  // already captured in a restorable snapshot.
+  await runBackup().catch(reportBackupFailure)
+  await cleanupBlankDailyNotes().catch((error: unknown) => {
+    console.error("Daily note cleanup failed", error)
+  })
+  await ensureDailyNote().catch((error: unknown) => {
+    console.error("Could not create today's daily note", error)
+  })
+
   registerNoteHandlers()
   registerBackupHandlers()
   scheduleBackups()
+  startDailyNoteSchedule((error) => console.error("Midnight note creation failed", error))
+
   createWindow()
 })
 

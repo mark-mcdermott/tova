@@ -15,6 +15,7 @@ const notes: NoteApi = {
   remove: (id) => ipcRenderer.invoke("note:delete", id),
   restore: (id) => ipcRenderer.invoke("note:restore", id),
   permanentDelete: (id) => ipcRenderer.invoke("note:permanentDelete", id),
+  today: () => ipcRenderer.invoke("note:today"),
   listFolders: () => ipcRenderer.invoke("folder:list"),
   createFolder: (name) => ipcRenderer.invoke("folder:create", name)
 }

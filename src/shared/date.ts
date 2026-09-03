@@ -28,6 +28,26 @@ export function isDailyNoteName(name: string): boolean {
   return parseDailyNoteName(name) !== null
 }
 
+/** The auto-generated title of a daily note, e.g. `9/3/26`. */
+export function formatDailyTitle(date: Date): string {
+  const year = String(date.getFullYear()).slice(-2)
+  return `${date.getMonth() + 1}/${date.getDate()}/${year}`
+}
+
+/**
+ * A daily note counts as untouched when nothing was written into it. The
+ * auto-generated title alone does not count as content, whether it lives in
+ * front matter or was echoed into the body as a heading.
+ */
+export function isBlankDailyBody(body: string, title: string): boolean {
+  const stripped = body
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && line !== `# ${title}` && line !== title)
+
+  return stripped.length === 0
+}
+
 export function formatDisplayDate(date: Date): string {
   return date.toLocaleDateString(undefined, {
     weekday: "long",

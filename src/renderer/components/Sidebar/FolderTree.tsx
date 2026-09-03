@@ -1,7 +1,9 @@
+import { MouseEvent, useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Disclosure } from "./Disclosure"
 import { NoteRow } from "./NoteRow"
+import { Menu } from "../Popup/Menu"
 
 interface FolderTreeProps {
   notes: NoteSummary[]
@@ -25,6 +27,13 @@ function NoteRows({ notes }: { notes: NoteSummary[] }) {
 
 export function FolderTree({ notes, folders }: FolderTreeProps) {
   const createNote = useNotesStore((state) => state.createNote)
+  const openToday = useNotesStore((state) => state.openToday)
+  const [dailyMenu, setDailyMenu] = useState<{ x: number; y: number } | null>(null)
+
+  function openDailyMenu(event: MouseEvent) {
+    event.preventDefault()
+    setDailyMenu({ x: event.clientX, y: event.clientY })
+  }
 
   const inSection = (section: NoteSummary["section"]) =>
     notes.filter((note) => note.section === section)
@@ -57,9 +66,23 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         </button>
       </Disclosure>
 
-      <Disclosure label="Daily" count={daily.length} defaultOpen>
+      <Disclosure
+        label="Daily"
+        count={daily.length}
+        defaultOpen
+        onContextMenu={openDailyMenu}
+      >
         <NoteRows notes={daily} />
       </Disclosure>
+
+      {dailyMenu !== null && (
+        <Menu
+          x={dailyMenu.x}
+          y={dailyMenu.y}
+          items={[{ label: "Open Today's Note", onSelect: openToday }]}
+          onClose={() => setDailyMenu(null)}
+        />
+      )}
 
       <Disclosure label="Trash" count={trashed.length}>
         <NoteRows notes={trashed} />

@@ -22,6 +22,7 @@ interface NotesState {
   vaultStatus: VaultStatus | null
 
   load: () => Promise<void>
+  openToday: () => Promise<void>
   checkVault: () => Promise<void>
   restoreFromBackup: (name: string) => Promise<void>
   open: (id: string) => Promise<void>
@@ -51,12 +52,28 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       ])
       set({ notes, folders, loading: false, error: null })
 
-      // Open the most recent note so the app never starts on a blank editor.
-      const { activeId } = get()
-      const first = notes.find((note) => note.section !== "trash")
-      if (activeId === null && first !== undefined) await get().open(first.id)
+      // Tova always opens on today's daily note, with no prompt.
+      if (get().activeId === null) await get().openToday()
     } catch (error) {
       set({ loading: false, error: describe(error) })
+    }
+  },
+
+  openToday: async () => {
+    try {
+      const note = await window.tova.notes.today()
+      set((state) => ({
+        activeId: note.id,
+        active: note,
+        openSeq: state.openSeq + 1,
+        notes: sortNotes([
+          ...state.notes.filter((entry) => entry.id !== note.id),
+          toSummary(note)
+        ]),
+        error: null
+      }))
+    } catch (error) {
+      set({ error: describe(error) })
     }
   },
 

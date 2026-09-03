@@ -29,6 +29,8 @@ export interface CreateNoteInput {
   folder?: string | null
   title?: string
   body?: string
+  /** Exact filename to use instead of one derived from the title. */
+  filename?: string
 }
 
 export interface MoveNoteInput {
@@ -66,6 +68,7 @@ export interface NoteApi {
   remove: (id: string) => Promise<NoteSummary>
   restore: (id: string) => Promise<NoteSummary>
   permanentDelete: (id: string) => Promise<void>
+  today: () => Promise<Note>
   listFolders: () => Promise<string[]>
   createFolder: (name: string) => Promise<string>
 }

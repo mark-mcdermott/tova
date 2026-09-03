@@ -10,6 +10,7 @@ import {
 } from "../shared/types"
 import {
   NoteLocation,
+  parseNoteId,
   toNoteId,
   trashLocation,
   restoreLocation,
@@ -174,11 +175,14 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
   const directory = directoryOf(section, folder)
   await mkdir(directory, { recursive: true })
 
-  const location: NoteLocation = {
-    section,
-    folder,
-    filename: await freeFilename(directory, title)
-  }
+  // A caller-supplied filename is validated by round-tripping it through the
+  // id parser, which is the same check every other entry point uses.
+  const location =
+    input.filename === undefined
+      ? { section, folder, filename: await freeFilename(directory, title) }
+      : parseNoteId(toNoteId({ section, folder, filename: input.filename }))
+
+  if (location === null) throw new Error(`Invalid filename: ${input.filename}`)
 
   await persist({
     location,
@@ -296,13 +300,21 @@ export async function restoreNote(id: string): Promise<NoteSummary> {
   return toSummary(await load(next))
 }
 
+/**
+ * Unlinks a note outright, with no Trash step. Internal to the main process —
+ * every caller has to justify skipping the recoverable path.
+ */
+export async function deleteNoteFile(id: string): Promise<void> {
+  await unlink(notePath(requireLocation(id)))
+}
+
 export async function permanentDelete(id: string): Promise<void> {
   const location = requireLocation(id)
   // Permanent deletion is only ever reachable from Trash.
   if (location.section !== "trash") {
     throw new Error("Only trashed notes can be permanently deleted")
   }
-  await unlink(notePath(location))
+  await deleteNoteFile(id)
 }
 
 export async function listFolders(): Promise<string[]> {

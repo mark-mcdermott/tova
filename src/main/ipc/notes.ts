@@ -13,6 +13,7 @@ import {
   createFolder
 } from "../notes"
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
+import { ensureDailyNote } from "../daily"
 
 /*
  * Everything arriving here crossed a process boundary from the renderer, so it
@@ -48,7 +49,8 @@ function asCreateInput(value: unknown): CreateNoteInput {
     section: asSection(raw.section),
     folder: asOptionalString(raw.folder) ?? null,
     title: asOptionalString(raw.title) ?? "",
-    body: asOptionalString(raw.body) ?? ""
+    body: asOptionalString(raw.body) ?? "",
+    filename: asOptionalString(raw.filename)
   }
 }
 
@@ -84,6 +86,8 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("note:permanentDelete", (_event, id) =>
     permanentDelete(asString(id, "id"))
   )
+
+  ipcMain.handle("note:today", () => ensureDailyNote())
 
   ipcMain.handle("folder:list", () => listFolders())
   ipcMain.handle("folder:create", (_event, name) => createFolder(asString(name, "name")))

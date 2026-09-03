@@ -54,6 +54,7 @@ const bridge = {
   move: vi.fn(),
   remove: vi.fn(),
   restore: vi.fn(),
+  today: vi.fn(),
   permanentDelete: vi.fn(),
   createFolder: vi.fn()
 }
@@ -148,6 +149,47 @@ describe("Sidebar", () => {
     await user.click(screen.getByRole("button", { name: /^Trash/ }))
     expect(screen.getByLabelText("Restore old draft")).toBeDefined()
     expect(screen.getByLabelText("Permanently delete old draft")).toBeDefined()
+  })
+
+  it("offers today's note from the Daily context menu", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^Daily/ })
+    })
+    expect(screen.getByRole("menuitem", { name: "Open Today's Note" })).toBeDefined()
+  })
+
+  it("opens today's note when that menu item is chosen", async () => {
+    const user = userEvent.setup()
+    bridge.today.mockResolvedValue({ ...notes[2], body: "" })
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^Daily/ })
+    })
+    await user.click(screen.getByRole("menuitem", { name: "Open Today's Note" }))
+
+    expect(bridge.today).toHaveBeenCalled()
+    await waitFor(() =>
+      expect(screen.queryByRole("menuitem", { name: "Open Today's Note" })).toBeNull()
+    )
+  })
+
+  it("closes the context menu on Escape", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^Daily/ })
+    })
+    await user.keyboard("{Escape}")
+
+    expect(screen.queryByRole("menu")).toBeNull()
   })
 
   it("surfaces a store error", () => {

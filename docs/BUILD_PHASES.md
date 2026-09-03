@@ -72,10 +72,10 @@ Write Playwright test: backup folder exists after launch.
 ## Phase 4 — Daily Notes
 **Goal:** Today's note on launch. Midnight creation. Blank past notes auto-cleaned.
 
-- [ ] Auto-create + auto-open today's `YYYY-MM-DD.md` on launch
-- [ ] Midnight (00:00:01 local) → silently create next day's file (no editor load)
-- [ ] Right-click Daily → context menu: "Open Today's Note" (only option)
-- [ ] Auto-delete blank past daily notes on launch (silently)
+- [x] Auto-create + auto-open today's `YYYY-MM-DD.md` on launch
+- [x] Midnight (00:00:01 local) → silently create next day's file (no editor load)
+- [x] Right-click Daily → context menu: "Open Today's Note" (only option)
+- [x] Auto-delete blank past daily notes on launch (silently)
 
 Write Vitest tests: blank note detection, midnight scheduler.
 Write Playwright test: blank past daily note gone after launch.

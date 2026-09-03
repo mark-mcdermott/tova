@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react"
+import { MouseEvent, ReactNode, useState } from "react"
 
 interface DisclosureProps {
   label: string
@@ -6,6 +6,7 @@ interface DisclosureProps {
   defaultOpen?: boolean
   variant?: "section" | "group"
   onActivate?: () => void
+  onContextMenu?: (event: MouseEvent) => void
   children: ReactNode
 }
 
@@ -20,6 +21,7 @@ export function Disclosure({
   defaultOpen = false,
   variant = "group",
   onActivate,
+  onContextMenu,
   children
 }: DisclosureProps) {
   const [open, setOpen] = useState(defaultOpen)
@@ -30,6 +32,7 @@ export function Disclosure({
         type="button"
         className="disclosure-header"
         aria-expanded={open}
+        onContextMenu={onContextMenu}
         onClick={() => {
           setOpen((current) => !current)
           onActivate?.()
