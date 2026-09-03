@@ -2,31 +2,62 @@
 
 ## Current state
 
-- **Phase 0** — Project scaffold. Complete.
-- **Phase 1** — Editor core. Complete.
-- **Phase 2** — File system & note management. Next.
+| Phase | Status |
+|-------|--------|
+| 0 — Project scaffold | Complete |
+| 1 — Editor core | Complete |
+| 2 — File system & note management | Complete |
+| 3 — Backups & data safety | Complete |
+| 4 — Daily notes | Complete |
+| 5 — Navigation & sidebar polish | Next |
 
-## Phase 1 notes
+196 tests. `npm run check`, `npm run test` and `npm run build` are green.
 
-Live WYSIWYG covers bold, italic, strikethrough, inline code, headings (h1–h6),
-fenced code blocks, links, and both tag styles. Syntax markers reveal while the
-cursor is inside a construct and hide when it leaves.
+## How it fits together
 
-The toolbar and the keymap are generated from one list in
-`src/renderer/components/Editor/formats.ts`, so a button and its advertised
-shortcut cannot drift apart.
+**Main process** owns the filesystem. `vault.ts` is the single choke point that
+turns renderer strings into paths and refuses anything resolving outside the
+vault. `notes.ts` holds note operations, `backup.ts` snapshots and versions,
+`daily.ts` handles today's note and the midnight timer. Everything reaches the
+renderer through typed IPC in `ipc/`, which validates shapes before they touch
+disk.
 
-### Carried forward
+**Vault layout** — `~/Documents/Tova/`
+
+```
+notes/          loose notes and one level of folders
+daily/          YYYY-MM-DD.md
+trash/          soft-deleted notes, flat
+.versions/      per-note history, invisible to the note listing
+```
+
+Backups live in `~/Documents/Tova Backups/` — beside the vault, never inside it.
+
+**Front matter** carries `title`, `section`, `folder` and `deletedAt`. For a
+trashed note, `section` and `folder` record where it came from, which is how
+restore returns it to the right folder.
+
+**Renderer** is a zustand store plus components. The editor reloads its document
+on `openSeq`, which only deliberate opens bump — a save that renames the file
+changes the note id without yanking the cursor.
+
+## Carried forward
 
 - **Alagambe script font is not bundled.** The note title falls back to Snell
   Roundhand. Drop the real face into `assets/` and update `--font-script`.
-- **No syntax highlighting inside code blocks.** Needs `@codemirror/language-data`,
-  which is a new dependency and a meaningful bundle cost.
-- **Tailwind is installed and wired into Vite but unused** — all styling is plain
-  CSS with tokens in `src/renderer/styles/globals.css`. Either adopt it or drop
-  the dependency.
-- Blockquotes, tables, and the Cmd+K link popup are specified but belong to
-  later phases.
+- **No syntax highlighting inside code blocks.** Needs `@codemirror/language-data`
+  — a new dependency with real bundle cost.
+- **Tailwind is installed and wired into Vite but unused.** All styling is plain
+  CSS with tokens in `styles/globals.css`. Either adopt it or drop it.
+- **No background photo.** Phase 6 bundles `bg-dark.jpg` / `bg-light.jpg`; a
+  layered gradient stands in for now.
+- **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
+  picker and the second palette.
+- **Backup status has no UI.** The IPC exists; the Settings panel is Phase 12.
+- **No Playwright.** The lifecycle tests the build plan wanted from it run in
+  Vitest against a real temp filesystem instead, which needs no extra dependency.
+- Blockquotes, tables and the Cmd+K link popup are specified but belong to later
+  phases.
 
 ## To resume
 
