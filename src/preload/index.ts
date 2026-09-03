@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron"
-import type { NoteApi } from "../shared/types"
+import type { NoteApi, BackupApi } from "../shared/types"
 
 /*
  * The only bridge between renderer and main. Each method is a thin, typed
@@ -19,4 +19,13 @@ const notes: NoteApi = {
   createFolder: (name) => ipcRenderer.invoke("folder:create", name)
 }
 
-contextBridge.exposeInMainWorld("tova", { notes })
+const backups: BackupApi = {
+  run: () => ipcRenderer.invoke("backup:run"),
+  list: () => ipcRenderer.invoke("backup:list"),
+  restore: (name) => ipcRenderer.invoke("backup:restore", name),
+  status: () => ipcRenderer.invoke("backup:status"),
+  listVersions: (noteId) => ipcRenderer.invoke("backup:listVersions", noteId),
+  readVersion: (noteId, version) => ipcRenderer.invoke("backup:readVersion", noteId, version)
+}
+
+contextBridge.exposeInMainWorld("tova", { notes, backups })

@@ -2,6 +2,10 @@ import { app, BrowserWindow } from "electron"
 import { join } from "path"
 import { ensureVault } from "./vault"
 import { registerNoteHandlers } from "./ipc/notes"
+import { registerBackupHandlers } from "./ipc/backup"
+import { runBackup } from "./backup"
+
+const BACKUP_INTERVAL_MS = 60 * 60 * 1000
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -31,9 +35,23 @@ function createWindow(): void {
   }
 }
 
+function reportBackupFailure(error: unknown): void {
+  // A failed backup must never take the app down, but it must not pass silently.
+  console.error("Backup failed", error)
+}
+
+function scheduleBackups(): void {
+  runBackup().catch(reportBackupFailure)
+  setInterval(() => {
+    runBackup().catch(reportBackupFailure)
+  }, BACKUP_INTERVAL_MS)
+}
+
 app.whenReady().then(async () => {
   await ensureVault()
   registerNoteHandlers()
+  registerBackupHandlers()
+  scheduleBackups()
   createWindow()
 })
 

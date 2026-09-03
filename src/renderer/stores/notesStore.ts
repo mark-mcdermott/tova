@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { Note, NoteSummary, Section } from "../../shared/types"
+import { Note, NoteSummary, Section, VaultStatus } from "../../shared/types"
 import { sortNotes } from "../../shared/noteLocation"
 
 function describe(error: unknown): string {
@@ -19,8 +19,11 @@ interface NotesState {
   openSeq: number
   loading: boolean
   error: string | null
+  vaultStatus: VaultStatus | null
 
   load: () => Promise<void>
+  checkVault: () => Promise<void>
+  restoreFromBackup: (name: string) => Promise<void>
   open: (id: string) => Promise<void>
   save: (title: string, body: string) => Promise<void>
   createNote: (section: Section, folder: string | null) => Promise<void>
@@ -38,6 +41,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   openSeq: 0,
   loading: true,
   error: null,
+  vaultStatus: null,
 
   load: async () => {
     try {
@@ -53,6 +57,25 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       if (activeId === null && first !== undefined) await get().open(first.id)
     } catch (error) {
       set({ loading: false, error: describe(error) })
+    }
+  },
+
+  checkVault: async () => {
+    try {
+      set({ vaultStatus: await window.tova.backups.status() })
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  restoreFromBackup: async (name) => {
+    try {
+      await window.tova.backups.restore(name)
+      set({ vaultStatus: null, activeId: null, active: null })
+      await get().load()
+      await get().checkVault()
+    } catch (error) {
+      set({ error: describe(error) })
     }
   },
 

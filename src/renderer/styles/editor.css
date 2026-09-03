@@ -275,3 +275,40 @@
   background: var(--accent-tint);
   color: var(--accent-bright);
 }
+
+/* ── Vault recovery ───────────────────────────────────────────────────── */
+
+.vault-warning {
+  max-width: 30rem;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.vault-warning-title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.vault-warning-body {
+  margin-bottom: var(--space-6);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.button-primary {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-tint);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.button-primary:hover {
+  background: var(--accent-tint-strong);
+}

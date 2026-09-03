@@ -36,6 +36,26 @@ export interface MoveNoteInput {
   folder?: string | null
 }
 
+export interface BackupSummary {
+  name: string
+  createdAt: number
+  noteCount: number
+}
+
+export interface VaultStatus {
+  empty: boolean
+  backups: BackupSummary[]
+}
+
+export interface BackupApi {
+  run: () => Promise<BackupSummary>
+  list: () => Promise<BackupSummary[]>
+  restore: (name: string) => Promise<BackupSummary>
+  status: () => Promise<VaultStatus>
+  listVersions: (noteId: string) => Promise<string[]>
+  readVersion: (noteId: string, version: string) => Promise<string>
+}
+
 export interface NoteApi {
   list: () => Promise<NoteSummary[]>
   read: (id: string) => Promise<Note>

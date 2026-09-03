@@ -60,7 +60,17 @@ const bridge = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  window.tova = { notes: bridge }
+  window.tova = {
+    notes: bridge,
+    backups: {
+      run: vi.fn(),
+      list: vi.fn(),
+      restore: vi.fn(),
+      status: vi.fn(),
+      listVersions: vi.fn(),
+      readVersion: vi.fn()
+    }
+  }
   useNotesStore.setState({
     notes,
     folders: ["ideas", "drafts"],

@@ -1,6 +1,6 @@
 const DAILY_NOTE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
-function pad(value: number): string {
+export function padTwo(value: number): string {
   return String(value).padStart(2, "0")
 }
 
@@ -9,7 +9,7 @@ function pad(value: number): string {
  * at 11pm belongs to that evening, whatever the offset from UTC happens to be.
  */
 export function toDailyNoteName(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+  return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}-${padTwo(date.getDate())}`
 }
 
 /** Accepts `2026-09-03` or `2026-09-03.md`. Returns null for anything else. */

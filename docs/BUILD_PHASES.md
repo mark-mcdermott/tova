@@ -55,11 +55,11 @@ Write Playwright test: create note → file on disk; delete → Trash.
 ## Phase 3 — Backups & Data Safety
 **Goal:** No data loss possible.
 
-- [ ] IPC: `backup:run`, `backup:list`, `backup:restore`
-- [ ] Auto-backup on launch + hourly
-- [ ] Keep last 30 (configurable)
-- [ ] Version history per note (last 10)
-- [ ] Empty vault detection on launch → warn + restore option
+- [x] IPC: `backup:run`, `backup:list`, `backup:restore`
+- [x] Auto-backup on launch + hourly
+- [x] Keep last 30 (configurable)
+- [x] Version history per note (last 10)
+- [x] Empty vault detection on launch → warn + restore option
 - [ ] Backup status in Settings
 
 Write Vitest tests: backup naming, version count enforcement.

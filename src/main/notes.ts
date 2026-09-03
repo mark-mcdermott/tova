@@ -20,6 +20,7 @@ import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../sha
 import { slugify, uniqueSlug } from "../shared/noteName"
 import { extractTags } from "../shared/tags"
 import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
+import { saveVersion } from "./backup"
 
 interface Home {
   section: Section
@@ -198,6 +199,12 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
  */
 export async function writeNote(id: string, title: string, body: string): Promise<NoteSummary> {
   const note = await load(requireLocation(id))
+
+  // Snapshot what is on disk before overwriting it; saveVersion throttles so
+  // continuous typing does not burn through the ten version slots.
+  const previous = await readFile(notePath(note.location), "utf-8").catch(() => null)
+  if (previous !== null) await saveVersion(id, previous)
+
   note.title = title.trim()
   note.body = body
 
