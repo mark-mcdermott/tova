@@ -37,13 +37,13 @@ Write Vitest tests: tag extraction utility, front-matter parser, date formatter.
 ## Phase 2 — File System & Note Management
 **Goal:** Real notes on disk. Sections. Trash.
 
-- [ ] IPC: `note:list`, `note:read`, `note:write`, `note:create`, `note:rename`, `note:move`, `note:delete` (→ Trash), `note:restore`, `note:permanentDelete`
-- [ ] Notes as `.md` with YAML front-matter (`section:`, `folder:`)
-- [ ] Sections: Notes, Daily, Trash
-- [ ] 1-level folder support under Notes
-- [ ] Sidebar: FOLDERS + TAGS collapsible sections, accordion folder tree
-- [ ] Click note → opens. New note → creates. Delete → Trash.
-- [ ] Rename: title → filename sync
+- [x] IPC: `note:list`, `note:read`, `note:write`, `note:create`, `note:rename`, `note:move`, `note:delete` (→ Trash), `note:restore`, `note:permanentDelete`
+- [x] Notes as `.md` with YAML front-matter (`section:`, `folder:`)
+- [x] Sections: Notes, Daily, Trash
+- [x] 1-level folder support under Notes
+- [x] Sidebar: FOLDERS + TAGS collapsible sections, accordion folder tree
+- [x] Click note → opens. New note → creates. Delete → Trash.
+- [x] Rename: title → filename sync
 
 Write Vitest tests: note list sorting, Trash/restore state transitions.
 Write Playwright test: create note → file on disk; delete → Trash.

@@ -1,0 +1,318 @@
+import { readdir, readFile, writeFile, mkdir, rename, unlink, stat } from "fs/promises"
+import { join } from "path"
+import {
+  Note,
+  NoteSummary,
+  CreateNoteInput,
+  MoveNoteInput,
+  Section,
+  SECTIONS
+} from "../shared/types"
+import {
+  NoteLocation,
+  toNoteId,
+  trashLocation,
+  restoreLocation,
+  isValidFolderName,
+  sortNotes
+} from "../shared/noteLocation"
+import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
+import { slugify, uniqueSlug } from "../shared/noteName"
+import { extractTags } from "../shared/tags"
+import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
+
+interface Home {
+  section: Section
+  folder: string | null
+}
+
+interface LoadedNote {
+  location: NoteLocation
+  /** Where the note belongs — for a trashed note, where it came from. */
+  home: Home
+  title: string
+  body: string
+  deletedAt: number | null
+  updatedAt: number
+}
+
+function stem(filename: string): string {
+  return filename.replace(/\.md$/, "")
+}
+
+function readTimestamp(value: FrontMatterValue | undefined): number | null {
+  if (typeof value !== "string") return null
+  const ms = Date.parse(value)
+  return Number.isNaN(ms) ? null : ms
+}
+
+async function load(location: NoteLocation): Promise<LoadedNote> {
+  const absolute = notePath(location)
+  const [raw, stats] = await Promise.all([readFile(absolute, "utf-8"), stat(absolute)])
+  const { data, body } = parseFrontMatter(raw)
+
+  const home =
+    location.section === "trash"
+      ? restoreLocation(data, location.filename)
+      : { section: location.section, folder: location.folder }
+
+  const recordedTitle = data.title
+  const title =
+    typeof recordedTitle === "string" && recordedTitle.trim() !== ""
+      ? recordedTitle
+      : stem(location.filename)
+
+  return {
+    location,
+    home: { section: home.section, folder: home.folder },
+    title,
+    body,
+    deletedAt: readTimestamp(data.deletedAt),
+    updatedAt: stats.mtimeMs
+  }
+}
+
+async function persist(note: LoadedNote): Promise<void> {
+  const data: Record<string, FrontMatterValue> = {
+    title: note.title,
+    section: note.home.section
+  }
+  if (note.home.folder !== null) data.folder = note.home.folder
+  if (note.deletedAt !== null) data.deletedAt = new Date(note.deletedAt).toISOString()
+
+  await writeFile(notePath(note.location), serializeFrontMatter(data, note.body), "utf-8")
+}
+
+function toNote(note: LoadedNote): Note {
+  return {
+    id: toNoteId(note.location),
+    title: note.title,
+    section: note.location.section,
+    folder: note.location.folder,
+    tags: extractTags(note.body),
+    updatedAt: note.updatedAt,
+    deletedAt: note.deletedAt,
+    body: note.body
+  }
+}
+
+function toSummary(note: LoadedNote): NoteSummary {
+  const { body: _body, ...summary } = toNote(note)
+  return summary
+}
+
+/** Free `.md` filename in `directory`, ignoring the note's own current name. */
+async function freeFilename(
+  directory: string,
+  title: string,
+  keep?: string
+): Promise<string> {
+  const entries = await readdir(directory).catch(() => [] as string[])
+  const taken = entries
+    .filter((name) => name.endsWith(".md") && name !== keep)
+    .map(stem)
+
+  return `${uniqueSlug(slugify(title), taken)}.md`
+}
+
+function normalizeFolder(section: Section, folder: string | null | undefined): string | null {
+  if (section !== "notes") return null
+  if (typeof folder !== "string" || !isValidFolderName(folder)) return null
+  return folder.trim()
+}
+
+async function listLocations(): Promise<NoteLocation[]> {
+  const locations: NoteLocation[] = []
+
+  for (const section of SECTIONS) {
+    const sectionDir = resolveInVault(section)
+    const entries = await readdir(sectionDir, { withFileTypes: true }).catch(() => [])
+
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        locations.push({ section, folder: null, filename: entry.name })
+        continue
+      }
+
+      // Notes supports exactly one folder level; nothing recurses further.
+      if (entry.isDirectory() && section === "notes" && isValidFolderName(entry.name)) {
+        const nested = await readdir(join(sectionDir, entry.name), {
+          withFileTypes: true
+        }).catch(() => [])
+
+        for (const file of nested) {
+          if (file.isFile() && file.name.endsWith(".md")) {
+            locations.push({ section, folder: entry.name, filename: file.name })
+          }
+        }
+      }
+    }
+  }
+
+  return locations
+}
+
+export async function listNotes(): Promise<NoteSummary[]> {
+  const locations = await listLocations()
+  const loaded = await Promise.all(
+    locations.map((location) => load(location).catch(() => null))
+  )
+
+  return sortNotes(loaded.filter((note): note is LoadedNote => note !== null).map(toSummary))
+}
+
+export async function readNote(id: string): Promise<Note> {
+  return toNote(await load(requireLocation(id)))
+}
+
+export async function createNote(input: CreateNoteInput): Promise<Note> {
+  const section: Section = input.section === "trash" ? "notes" : input.section
+  const folder = normalizeFolder(section, input.folder)
+  const title = (input.title ?? "").trim()
+
+  const directory = directoryOf(section, folder)
+  await mkdir(directory, { recursive: true })
+
+  const location: NoteLocation = {
+    section,
+    folder,
+    filename: await freeFilename(directory, title)
+  }
+
+  await persist({
+    location,
+    home: { section, folder },
+    title,
+    body: input.body ?? "",
+    deletedAt: null,
+    updatedAt: Date.now()
+  })
+
+  return toNote(await load(location))
+}
+
+/**
+ * Saves content, and follows the title with the filename. Daily notes keep
+ * their date-based names, and a note that has been emptied of its title keeps
+ * whatever filename it already had rather than churning to `untitled`.
+ */
+export async function writeNote(id: string, title: string, body: string): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  note.title = title.trim()
+  note.body = body
+
+  await persist(note)
+
+  const shouldRename =
+    note.location.section === "notes" &&
+    note.title !== "" &&
+    slugify(note.title) !== stem(note.location.filename)
+
+  if (!shouldRename) return toSummary(await load(note.location))
+
+  const directory = directoryOf(note.location.section, note.location.folder)
+  const filename = await freeFilename(directory, note.title, note.location.filename)
+  const next: NoteLocation = { ...note.location, filename }
+
+  await rename(notePath(note.location), notePath(next))
+  return toSummary(await load(next))
+}
+
+export async function renameNote(id: string, title: string): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  return writeNote(id, title, note.body)
+}
+
+export async function moveNote(id: string, input: MoveNoteInput): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  const section: Section = input.section === "trash" ? "notes" : input.section
+  const folder = normalizeFolder(section, input.folder)
+
+  const directory = directoryOf(section, folder)
+  await mkdir(directory, { recursive: true })
+
+  const filename = await freeFilename(directory, stem(note.location.filename), note.location.filename)
+  const next: NoteLocation = { section, folder, filename }
+
+  await rename(notePath(note.location), notePath(next))
+
+  const moved = await load(next)
+  moved.home = { section, folder }
+  await persist(moved)
+
+  return toSummary(await load(next))
+}
+
+/** Soft delete. The origin is recorded in front matter so restore can undo it. */
+export async function trashNote(id: string): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  if (note.location.section === "trash") return toSummary(note)
+
+  const trashDir = resolveInVault("trash")
+  await mkdir(trashDir, { recursive: true })
+
+  const filename = await freeFilename(trashDir, stem(note.location.filename))
+  const next = trashLocation(filename)
+
+  await rename(notePath(note.location), notePath(next))
+
+  const trashed = await load(next)
+  trashed.home = { section: note.location.section, folder: note.location.folder }
+  trashed.deletedAt = Date.now()
+  await persist(trashed)
+
+  return toSummary(await load(next))
+}
+
+export async function restoreNote(id: string): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  if (note.location.section !== "trash") return toSummary(note)
+
+  const target = restoreLocation(
+    { section: note.home.section, folder: note.home.folder ?? "" },
+    note.location.filename
+  )
+
+  const directory = directoryOf(target.section, target.folder)
+  await mkdir(directory, { recursive: true })
+
+  const filename = await freeFilename(directory, stem(target.filename))
+  const next: NoteLocation = { ...target, filename }
+
+  await rename(notePath(note.location), notePath(next))
+
+  const restored = await load(next)
+  restored.home = { section: next.section, folder: next.folder }
+  restored.deletedAt = null
+  await persist(restored)
+
+  return toSummary(await load(next))
+}
+
+export async function permanentDelete(id: string): Promise<void> {
+  const location = requireLocation(id)
+  // Permanent deletion is only ever reachable from Trash.
+  if (location.section !== "trash") {
+    throw new Error("Only trashed notes can be permanently deleted")
+  }
+  await unlink(notePath(location))
+}
+
+export async function listFolders(): Promise<string[]> {
+  const entries = await readdir(resolveInVault("notes"), { withFileTypes: true }).catch(() => [])
+  return entries
+    .filter((entry) => entry.isDirectory() && isValidFolderName(entry.name))
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b))
+}
+
+export async function createFolder(name: string): Promise<string> {
+  if (!isValidFolderName(name)) throw new Error(`Invalid folder name: ${name}`)
+  const folder = name.trim()
+  await mkdir(resolveInVault(`notes/${folder}`), { recursive: true })
+  return folder
+}
+
+export function vaultLocation(): string {
+  return vaultRoot()
+}

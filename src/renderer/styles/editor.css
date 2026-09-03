@@ -1,7 +1,24 @@
 .app {
   display: flex;
   height: 100%;
-  padding: var(--space-8) var(--space-6);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-shell-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-placeholder {
+  color: var(--text-muted);
+  font-size: var(--text-base);
 }
 
 /* ── Editor panel ─────────────────────────────────────────────────────── */

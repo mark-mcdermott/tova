@@ -1,0 +1,51 @@
+export const SECTIONS = ["notes", "daily", "trash"] as const
+
+export type Section = (typeof SECTIONS)[number]
+
+export function isSection(value: string): value is Section {
+  return (SECTIONS as readonly string[]).includes(value)
+}
+
+export interface NoteSummary {
+  /** Vault-relative path, e.g. `notes/ideas/river.md`. Changes when renamed. */
+  id: string
+  title: string
+  /** Where the note lives now — `trash` for anything soft-deleted. */
+  section: Section
+  /** Single folder under Notes; null for loose notes and for Daily. */
+  folder: string | null
+  tags: string[]
+  updatedAt: number
+  /** Present only in Trash. */
+  deletedAt: number | null
+}
+
+export interface Note extends NoteSummary {
+  body: string
+}
+
+export interface CreateNoteInput {
+  section: Section
+  folder?: string | null
+  title?: string
+  body?: string
+}
+
+export interface MoveNoteInput {
+  section: Section
+  folder?: string | null
+}
+
+export interface NoteApi {
+  list: () => Promise<NoteSummary[]>
+  read: (id: string) => Promise<Note>
+  write: (id: string, title: string, body: string) => Promise<NoteSummary>
+  create: (input: CreateNoteInput) => Promise<Note>
+  rename: (id: string, title: string) => Promise<NoteSummary>
+  move: (id: string, input: MoveNoteInput) => Promise<NoteSummary>
+  remove: (id: string) => Promise<NoteSummary>
+  restore: (id: string) => Promise<NoteSummary>
+  permanentDelete: (id: string) => Promise<void>
+  listFolders: () => Promise<string[]>
+  createFolder: (name: string) => Promise<string>
+}

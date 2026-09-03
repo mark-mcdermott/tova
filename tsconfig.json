@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
@@ -9,7 +12,14 @@
     "noUnusedLocals": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "paths": { "@renderer/*": ["./src/renderer/*"] }
+    "paths": {
+      "@renderer/*": [
+        "./src/renderer/*"
+      ]
+    }
   },
-  "include": ["src/renderer"]
+  "include": [
+    "src/renderer",
+    "src/shared"
+  ]
 }

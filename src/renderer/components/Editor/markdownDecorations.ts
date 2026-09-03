@@ -9,7 +9,7 @@ import {
 import { Range } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
 import type { SyntaxNode, Tree } from "@lezer/common"
-import { findTags, isTagOnlyLine } from "../../utils/tags"
+import { findTags, isTagOnlyLine } from "../../../shared/tags"
 
 const hide = Decoration.replace({})
 const syntaxMarker = Decoration.mark({ class: "cm-syntax-marker" })

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "preview": "electron-vite preview"
   },
@@ -23,7 +23,8 @@
     "@lezer/markdown": "^1.6.3",
     "electron": "^42.1.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",
