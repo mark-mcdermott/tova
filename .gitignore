@@ -24,3 +24,9 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Design source files and working mockups (196M of PSDs — kept local, not versioned)
+branding/rough/
+
+# Abandoned duplicate scaffold
+tova21/

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react"
-import { EditorView, keymap, drqwSelection, drawSelection } from "@codemirror/view"
+import { EditorView, keymap, drawSelection } from "@codemirror/view"
 import { EditorState } from "@codemirror/state"
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands"
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown"
