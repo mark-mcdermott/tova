@@ -1,1 +1,109 @@
-@import "tailwindcss";
+/*
+ * Design tokens. Every colour, space and radius in Tova resolves to one of
+ * these, so the Phase 6 theme picker only has to swap this block.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Accent — Tova purple. One source; no hot pink anywhere. */
+  --accent: #8b7bf7;
+  --accent-bright: #a99bff;
+  --accent-tint: color-mix(in oklab, var(--accent) 22%, transparent);
+  --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
+
+  /* Surface */
+  --bg-base: #14121c;
+  --bg-image:
+    radial-gradient(120% 90% at 12% 0%, #3a2b4d 0%, transparent 58%),
+    radial-gradient(120% 80% at 88% 8%, #5b3a4a 0%, transparent 55%),
+    radial-gradient(150% 120% at 50% 110%, #c98a5a 0%, transparent 48%),
+    linear-gradient(168deg, #1c1726 0%, #14121c 55%, #100e17 100%);
+
+  /* Glass panels — a dark tint, not a white one: text needs a stable ground
+     to sit on as the background photo shifts from shadow to highlight. */
+  --glass-bg: rgb(17 15 24 / 62%);
+  --glass-bg-raised: rgb(17 15 24 / 78%);
+  --glass-border: rgb(255 255 255 / 12%);
+  --glass-blur: 30px;
+
+  /* Text */
+  --text-primary: #ece9f5;
+  --text-secondary: #b3adc4;
+  --text-muted: #9a93ab;
+  --text-faint: #6f687f;
+
+  /* Code */
+  --code-bg: rgb(0 0 0 / 28%);
+  --code-border: rgb(255 255 255 / 8%);
+
+  /* Type */
+  --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  /* Alagambe is not bundled yet; Snell Roundhand is the macOS stand-in. */
+  --font-script: "Alagambe", "Snell Roundhand", "Apple Chancery", cursive;
+
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-title: 2.75rem;
+
+  /* Rhythm */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  --shadow-panel: 0 24px 60px rgb(0 0 0 / 38%);
+
+  --measure: 68ch;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Calm by default: motion only where it aids comprehension. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

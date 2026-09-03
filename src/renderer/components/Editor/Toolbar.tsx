@@ -1,74 +1,50 @@
 import { EditorView } from "@codemirror/view"
+import { applyFormat, toolbarItems } from "./formats"
+
+export type SaveStatus = "idle" | "saving" | "saved" | "error"
 
 interface ToolbarProps {
   viewRef: React.RefObject<EditorView | null>
   wordCount: number
+  saveStatus: SaveStatus
 }
 
-type WrapFormat = { before: string; after: string }
-type LineFormat = { prefix: string }
-type Format = WrapFormat | LineFormat
-
-function isWrap(f: Format): f is WrapFormat {
-  return "before" in f
+const statusLabels: Record<SaveStatus, string> = {
+  idle: "",
+  saving: "Saving…",
+  saved: "Saved",
+  error: "Save failed"
 }
 
-const formats: Record<string, Format> = {
-  bold:       { before: "**", after: "**" },
-  italic:     { before: "*", after: "*" },
-  strike:     { before: "~~", after: "~~" },
-  inlineCode: { before: "`", after: "`" },
-  h1:         { prefix: "# " },
-  h2:         { prefix: "## " },
-  plain:      { prefix: "" },
-}
-
-function applyFormat(view: EditorView, format: Format) {
-  const { state } = view
-  const { from, to } = state.selection.main
-  const selectedText = state.doc.sliceString(from, to)
-
-  let transaction
-  if (isWrap(format)) {
-    transaction = state.update({
-      changes: { from, to, insert: `${format.before}${selectedText}${format.after}` },
-      selection: { anchor: from + format.before.length, head: to + format.before.length },
-    })
-  } else {
-    const line = state.doc.lineAt(from)
-    const newText = format.prefix + line.text.replace(/^#+\s?/, "")
-    transaction = state.update({
-      changes: { from: line.from, to: line.to, insert: newText }
-    })
-  }
-
-  view.dispatch(transaction)
-  view.focus()
-}
-
-export function Toolbar({ viewRef, wordCount }: ToolbarProps) {
-  const btn = (label: string, formatKey: string, title: string) => (
-    <button
-      title={title}
-      onMouseDown={(e) => {
-        e.preventDefault()
-        if (viewRef.current) applyFormat(viewRef.current, formats[formatKey])
-      }}
-    >
-      {label}
-    </button>
-  )
-
+export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
   return (
     <div className="toolbar">
-      <span className="word-count">{wordCount} words</span>
-      {btn("T", "plain", "Plain (Cmd+Shift+0")}
-      {btn("H1", "h1", "Heading 1 (Cmd+Shift+1")}
-      {btn("H2", "h2", "Heading 2 (Cmd+Shift+2")}
-      {btn("B", "bold", "Bold (Cmd+B")}
-      {btn("I", "italic", "Italic (Cmd+I")}
-      {btn("/", "strike", "Strikethrough (Cmd+Shift+X")}
-      {btn("<>", "inlineCode", "Inline Code (Cmd+E")}
+      <span className="toolbar-status">
+        {wordCount} {wordCount === 1 ? "word" : "words"}
+      </span>
+      <span className={`toolbar-status toolbar-status-${saveStatus}`} role="status">
+        {statusLabels[saveStatus]}
+      </span>
+
+      <div className="toolbar-actions">
+        {toolbarItems.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            title={item.title}
+            aria-label={item.title}
+            // mousedown-with-preventDefault keeps focus in the editor, so the
+            // selection the format applies to survives the click.
+            onMouseDown={(event) => {
+              event.preventDefault()
+              const view = viewRef.current
+              if (view) applyFormat(view, item.format)
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

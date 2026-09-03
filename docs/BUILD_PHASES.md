@@ -3,15 +3,15 @@
 ## Phase 0 — Project Scaffold
 **Goal:** Electron + Vite + React + TypeScript dev environment, blank window.
 
-- [ ] `package.json`: `dev`, `build`, `check` scripts; core deps
-- [ ] `tsconfig.json` (strict)
-- [ ] `vite.config.ts`
-- [ ] `electron-builder.yml`
-- [ ] `src/main/index.ts`, `src/preload/index.ts` (contextBridge stub)
-- [ ] `src/renderer/` (blank React app + Tailwind)
-- [ ] ESLint + Prettier (`semi: false`, `trailingComma: "none"`)
-- [ ] Vitest configured
-- [ ] TUTORIAL.md started
+- [x] `package.json`: `dev`, `build`, `check` scripts; core deps
+- [x] `tsconfig.json` (strict)
+- [x] `vite.config.ts`
+- [x] `electron-builder.yml`
+- [x] `src/main/index.ts`, `src/preload/index.ts` (contextBridge stub)
+- [x] `src/renderer/` (blank React app + Tailwind)
+- [x] ESLint + Prettier (`semi: false`, `trailingComma: "none"`)
+- [x] Vitest configured
+- [x] TUTORIAL.md started
 
 **Deliverable:** `npm run dev` → blank window. `npm run build` passes. `npm run test` runs (0 tests, no failures).
 
@@ -20,13 +20,13 @@
 ## Phase 1 — Editor Core (Platform Baseline)
 **Goal:** Title + CodeMirror live WYSIWYG. Every platform shortcut works.
 
-- [ ] Title `<input>` (Alagambe script font) above CodeMirror
-- [ ] CodeMirror 6 + markdown language extension
-- [ ] Live preview decorations (bold, italic, headings, inline code, code blocks, tag pills, links)
-- [ ] Calm glassmorphic editor CSS
-- [ ] Auto-save to hardcoded temp file (IPC write proved)
-- [ ] Word count + bottom formatting toolbar (buttons insert markdown)
-- [ ] **Manual verification checklist**: Cmd+Z, Cmd+C/V/X/A, cursor click, code blocks, macOS text shortcuts, Tab in title → body, Enter in title → body
+- [x] Title `<input>` (Alagambe script font) above CodeMirror
+- [x] CodeMirror 6 + markdown language extension
+- [x] Live preview decorations (bold, italic, headings, inline code, code blocks, tag pills, links)
+- [x] Calm glassmorphic editor CSS
+- [x] Auto-save to hardcoded temp file (IPC write proved)
+- [x] Word count + bottom formatting toolbar (buttons insert markdown)
+- [x] **Manual verification checklist**: Cmd+Z, Cmd+C/V/X/A, cursor click, code blocks, macOS text shortcuts, Tab in title → body, Enter in title → body
 
 Write Vitest tests: tag extraction utility, front-matter parser, date formatter.
 

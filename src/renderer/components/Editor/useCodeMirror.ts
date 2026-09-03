@@ -1,9 +1,16 @@
 import { useEffect, useRef, useCallback } from "react"
-import { EditorView, keymap, drawSelection } from "@codemirror/view"
+import { EditorView, keymap, drawSelection, dropCursor } from "@codemirror/view"
 import { EditorState } from "@codemirror/state"
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands"
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown"
+import {
+  markdown,
+  markdownLanguage,
+  markdownKeymap,
+  pasteURLAsLink
+} from "@codemirror/lang-markdown"
+import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
+import { formatKeymap } from "./formats"
 
 interface UseCodeMirrorOptions {
   initialValue?: string
@@ -14,41 +21,68 @@ export function useCodeMirror({ initialValue = "", onChange }: UseCodeMirrorOpti
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
 
+  // The view is built once, so the listener must reach the latest handler
+  // through a ref rather than capturing the one present at mount.
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
   useEffect(() => {
-    if (!containerRef.current) return
+    const container = containerRef.current
+    if (!container) return
 
     const view = new EditorView({
       state: EditorState.create({
         doc: initialValue,
         extensions: [
-          drawSelection(),
           history(),
-          keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+          drawSelection(),
+          dropCursor(),
+          EditorView.lineWrapping,
+          indentUnit.of("  "),
           markdown({ base: markdownLanguage }),
           markdownDecorations(),
+          pasteURLAsLink,
+          // Format shortcuts win over the markdown and default keymaps below.
+          keymap.of([
+            ...formatKeymap,
+            ...markdownKeymap,
+            ...historyKeymap,
+            ...defaultKeymap,
+            indentWithTab
+          ]),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
-              onChange?.(update.state.doc.toString())
+              onChangeRef.current?.(update.state.doc.toString())
             }
-          }),
-          EditorView.theme({
-            "&": { height: "100%", fontSize: "15px" },
-            ".cm-scroller": { fontFamily: "monospace", overflow: "auto" },
-            ".cm-content": { padding: "16px" },
-            ".cm-focused": { outline: "none" }
           })
         ]
       }),
-      parent: containerRef.current
+      parent: container
     })
 
     viewRef.current = view
-    return () => view.destroy()
+    return () => {
+      view.destroy()
+      viewRef.current = null
+    }
+    // Recreating the view on prop changes would drop undo history and cursor
+    // position; documents are swapped through setDoc instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const getValue = useCallback(() => {
+  const getValue = useCallback((): string => {
     return viewRef.current?.state.doc.toString() ?? ""
   }, [])
 
-  return { containerRef, getValue, viewRef }
+  /** Replaces the whole document — used when switching notes. */
+  const setDoc = useCallback((value: string): void => {
+    const view = viewRef.current
+    if (!view) return
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: value },
+      selection: { anchor: 0 }
+    })
+  }, [])
+
+  return { containerRef, viewRef, getValue, setDoc }
 }
