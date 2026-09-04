@@ -2,10 +2,13 @@
 
 ## Stack & Architecture
 
-**Stack:** Electron + React 19 + TypeScript strict + CodeMirror 6 + Zustand + Tailwind + Vite
+**Stack:** Electron + React 19 + TypeScript strict + CodeMirror 6 + Zustand + Vite
 
 **Architecture principles:**
-- Zero inline styles — Electron is Chromium, same rules as web. All styling in Tailwind classes or `.css` files with CSS variables.
+- Zero inline styles — Electron is Chromium, same rules as web. All styling lives in
+  `.css` files driven by CSS variables. No utility-class framework and no component
+  library: the design here is specific enough that a generic one would be fought more
+  than used, and hand-written CSS keeps the dependency count low.
 - Small functions, clear module boundaries
 - One shared popup/menu component — not duplicated per feature
 - `npm run check` and `npm run build` always green

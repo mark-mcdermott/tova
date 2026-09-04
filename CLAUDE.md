@@ -65,7 +65,7 @@ no waiting for approval on ordinary implementation work.
 - TypeScript 6 (strict, no `any`)
 - CodeMirror 6
 - electron-vite 5 / Vite 7
-- Tailwind v4
+- Custom CSS with design tokens (no utility framework, no component library)
 - Zustand (state, arrives Phase 5)
 - Vitest 4
 - ESLint + Prettier

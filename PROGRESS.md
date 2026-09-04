@@ -53,8 +53,6 @@ changes the note id without yanking the cursor.
   Roundhand. Drop the real face into `assets/` and update `--font-script`.
 - **No syntax highlighting inside code blocks.** Needs `@codemirror/language-data`
   — a new dependency with real bundle cost.
-- **Tailwind is installed and wired into Vite but unused.** All styling is plain
-  CSS with tokens in `styles/globals.css`. Either adopt it or drop it.
 - **No background photo.** Phase 6 bundles `bg-dark.jpg` / `bg-light.jpg`; a
   layered gradient stands in for now.
 - **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
