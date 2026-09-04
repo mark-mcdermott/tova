@@ -312,3 +312,98 @@
 .button-primary:hover {
   background: var(--accent-tint-strong);
 }
+
+/* ── Editor header navigation ─────────────────────────────────────────── */
+
+.editor-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-12) var(--space-6);
+}
+
+.editor-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 1.75rem;
+}
+
+.editor-nav .icon-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.editor-nav .icon-button:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+  list-style: none;
+  font-size: var(--text-sm);
+  min-width: 0;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* Separator drawn in CSS so the markup stays a clean ordered list. */
+.breadcrumb li + li::before {
+  content: "/";
+  padding-inline: var(--space-2);
+  color: var(--text-faint);
+}
+
+.breadcrumb-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.breadcrumb-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.breadcrumb-current {
+  color: var(--text-secondary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Sidebar collapsed ────────────────────────────────────────────────── */
+
+.sidebar-reveal {
+  align-self: flex-start;
+  width: 1.5rem;
+  height: 2.5rem;
+  margin-top: var(--space-8);
+  border: 1px solid var(--glass-border);
+  border-left: none;
+  border-start-end-radius: var(--radius-sm);
+  border-end-end-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.sidebar-reveal:hover {
+  background: var(--glass-bg-raised);
+  color: var(--text-primary);
+}

@@ -44,12 +44,12 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const trashed = inSection("trash")
 
   return (
-    <Disclosure label="FOLDERS" defaultOpen variant="section">
-      <Disclosure label="Notes" count={notesSection.length} defaultOpen>
+    <Disclosure sectionKey="folders" label="FOLDERS" variant="section">
+      <Disclosure sectionKey="notes" label="Notes" count={notesSection.length}>
         {folders.map((folder) => {
           const inFolder = notesSection.filter((note) => note.folder === folder)
           return (
-            <Disclosure key={folder} label={folder} count={inFolder.length}>
+            <Disclosure key={folder} sectionKey={`folder:${folder}`} label={folder} count={inFolder.length}>
               <NoteRows notes={inFolder} />
             </Disclosure>
           )
@@ -67,9 +67,9 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
       </Disclosure>
 
       <Disclosure
+        sectionKey="daily"
         label="Daily"
         count={daily.length}
-        defaultOpen
         onContextMenu={openDailyMenu}
       >
         <NoteRows notes={daily} />
@@ -84,7 +84,7 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         />
       )}
 
-      <Disclosure label="Trash" count={trashed.length}>
+      <Disclosure sectionKey="trash" label="Trash" count={trashed.length}>
         <NoteRows notes={trashed} />
       </Disclosure>
     </Disclosure>

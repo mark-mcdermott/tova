@@ -1,6 +1,17 @@
 import { create } from "zustand"
 import { Note, NoteSummary, Section, VaultStatus } from "../../shared/types"
 import { sortNotes } from "../../shared/noteLocation"
+import {
+  History,
+  emptyHistory,
+  current as currentEntry,
+  push as pushHistory,
+  goBack,
+  goForward,
+  rememberScroll as recordScroll,
+  forget as forgetHistory,
+  rename as renameHistory
+} from "./history"
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -21,8 +32,19 @@ interface NotesState {
   error: string | null
   vaultStatus: VaultStatus | null
 
+  history: History
+  sidebarCollapsed: boolean
+  /** Which sidebar sections and folders are open, keyed by section id. */
+  expanded: Record<string, boolean>
+
   load: () => Promise<void>
   openToday: () => Promise<void>
+  back: () => Promise<void>
+  forward: () => Promise<void>
+  rememberScroll: (scrollTop: number) => void
+  toggleSidebar: () => void
+  toggleSection: (key: string) => void
+  expandSection: (key: string) => void
   checkVault: () => Promise<void>
   restoreFromBackup: (name: string) => Promise<void>
   open: (id: string) => Promise<void>
@@ -43,6 +65,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   loading: true,
   error: null,
   vaultStatus: null,
+
+  history: emptyHistory,
+  sidebarCollapsed: false,
+  // Folders start collapsed on every launch; nothing is persisted.
+  expanded: { folders: true, tags: true, notes: true, daily: true },
 
   load: async () => {
     try {
@@ -66,6 +93,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
+        history: pushHistory(state.history, note.id),
         notes: sortNotes([
           ...state.notes.filter((entry) => entry.id !== note.id),
           toSummary(note)
@@ -75,6 +103,30 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     } catch (error) {
       set({ error: describe(error) })
     }
+  },
+
+  back: async () => {
+    await travel(set, get, goBack)
+  },
+
+  forward: async () => {
+    await travel(set, get, goForward)
+  },
+
+  rememberScroll: (scrollTop) => {
+    set((state) => ({ history: recordScroll(state.history, scrollTop) }))
+  },
+
+  toggleSidebar: () => {
+    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }))
+  },
+
+  toggleSection: (key) => {
+    set((state) => ({ expanded: { ...state.expanded, [key]: !state.expanded[key] } }))
+  },
+
+  expandSection: (key) => {
+    set((state) => ({ expanded: { ...state.expanded, [key]: true } }))
   },
 
   checkVault: async () => {
@@ -103,6 +155,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
+        history: pushHistory(state.history, note.id),
         error: null
       }))
     } catch (error) {
@@ -123,6 +176,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       activeId: summary.id,
       active: state.active === null ? null : { ...summary, body },
       notes: sortNotes([...state.notes.filter((note) => note.id !== id), summary]),
+      history: renameHistory(state.history, id, summary.id),
       error: null
     }))
   },
@@ -134,6 +188,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
+        history: pushHistory(state.history, note.id),
         notes: sortNotes([...state.notes, toSummary(note)]),
         error: null
       }))
@@ -176,6 +231,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         notes: state.notes.filter((note) => note.id !== id),
         activeId: state.activeId === id ? null : state.activeId,
         active: state.activeId === id ? null : state.active,
+        history: forgetHistory(state.history, id),
         error: null
       }))
     } catch (error) {
@@ -183,6 +239,36 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   }
 }))
+
+/**
+ * Moves through history and loads whatever lands under the cursor, without
+ * pushing a new entry — otherwise going back would itself be a navigation.
+ */
+async function travel(
+  set: (partial: Partial<NotesState>) => void,
+  get: () => NotesState,
+  step: (history: History) => History
+): Promise<void> {
+  const state = get()
+  const next = step(state.history)
+  const entry = currentEntry(next)
+
+  if (entry === null || next === state.history) return
+
+  try {
+    const note = await window.tova.notes.read(entry.noteId)
+    set({
+      history: next,
+      activeId: note.id,
+      active: note,
+      openSeq: state.openSeq + 1,
+      error: null
+    })
+  } catch (error) {
+    // The note is gone from disk; drop it rather than stranding the cursor.
+    set({ history: forgetHistory(state.history, entry.noteId), error: describe(error) })
+  }
+}
 
 function toSummary(note: Note): NoteSummary {
   const { body: _body, ...summary } = note

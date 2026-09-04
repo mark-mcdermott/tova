@@ -3,6 +3,8 @@ import { useCodeMirror } from "./useCodeMirror"
 import { Toolbar, SaveStatus } from "./Toolbar"
 import { countWords } from "../../utils/wordCount"
 import { useNotesStore } from "../../stores/notesStore"
+import { current as currentEntry } from "../../stores/history"
+import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 
 const SAVE_DEBOUNCE_MS = 500
@@ -14,6 +16,7 @@ interface EditorProps {
 export function Editor({ note }: EditorProps) {
   const openSeq = useNotesStore((state) => state.openSeq)
   const save = useNotesStore((state) => state.save)
+  const rememberScroll = useNotesStore((state) => state.rememberScroll)
 
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
@@ -75,6 +78,15 @@ export function Editor({ note }: EditorProps) {
     loading.current = true
     setDoc(note.body)
     loading.current = false
+
+    // Restore where this entry was left, after layout has settled.
+    const entry = currentEntry(useNotesStore.getState().history)
+    const scroller = viewRef.current?.scrollDOM
+    if (entry !== null && scroller !== undefined) {
+      requestAnimationFrame(() => {
+        scroller.scrollTop = entry.scrollTop
+      })
+    }
     // Keyed on openSeq, not the note id, so a rename-on-save never reloads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openSeq, setDoc])
@@ -85,25 +97,33 @@ export function Editor({ note }: EditorProps) {
     }
   }, [])
 
-  function handleTitleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Tab" || event.key === "Enter") {
-      event.preventDefault()
-      viewRef.current?.focus()
+  // Report scroll so back and forward return to where the note was left.
+  // Coalesced to one update per frame; the store keeps it off the render path.
+  useEffect(() => {
+    const scroller = viewRef.current?.scrollDOM
+    if (scroller === undefined) return
+
+    let frame = 0
+    const onScroll = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => rememberScroll(scroller.scrollTop))
     }
-  }
+
+    scroller.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      scroller.removeEventListener("scroll", onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [rememberScroll, viewRef])
 
   return (
     <div className="editor-shell">
-      <div className="editor-header">
-        <input
-          className="title-input"
-          placeholder="Untitled"
-          aria-label="Note title"
-          value={title}
-          onChange={(event) => handleTitleChange(event.target.value)}
-          onKeyDown={handleTitleKeyDown}
-        />
-      </div>
+      <EditorHeader
+        note={note}
+        title={title}
+        onTitleChange={handleTitleChange}
+        onTitleCommit={() => viewRef.current?.focus()}
+      />
 
       <div className="editor-body" ref={containerRef} />
 

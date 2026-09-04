@@ -11,6 +11,8 @@ export default function App() {
   const checkVault = useNotesStore((state) => state.checkVault)
   const active = useNotesStore((state) => state.active)
   const vaultStatus = useNotesStore((state) => state.vaultStatus)
+  const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
+  const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
 
   useEffect(() => {
     load()
@@ -25,12 +27,36 @@ export default function App() {
     })
   }, [load])
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
+        event.preventDefault()
+        toggleSidebar()
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [toggleSidebar])
+
   const needsRecovery =
     vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 
   return (
-    <div className="app">
-      <Sidebar />
+    <div className={`app${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
+      {sidebarCollapsed ? (
+        <button
+          type="button"
+          className="sidebar-reveal"
+          title="Show sidebar (Cmd+\\)"
+          aria-label="Show sidebar"
+          onClick={toggleSidebar}
+        >
+          ›
+        </button>
+      ) : (
+        <Sidebar />
+      )}
       <main className="workspace">
         {needsRecovery && vaultStatus !== null ? (
           <div className="editor-shell editor-shell-empty">

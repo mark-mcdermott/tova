@@ -21,6 +21,12 @@
   padding: var(--space-8) var(--space-4) var(--space-4);
 }
 
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
 .wordmark {
   font-size: var(--text-lg);
   font-weight: 300;

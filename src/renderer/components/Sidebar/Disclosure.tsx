@@ -1,30 +1,31 @@
-import { MouseEvent, ReactNode, useState } from "react"
+import { MouseEvent, ReactNode } from "react"
+import { useNotesStore } from "../../stores/notesStore"
 
 interface DisclosureProps {
+  /** Key in the store's expanded map — also what breadcrumbs target. */
+  sectionKey: string
   label: string
   count?: number
-  defaultOpen?: boolean
   variant?: "section" | "group"
-  onActivate?: () => void
   onContextMenu?: (event: MouseEvent) => void
   children: ReactNode
 }
 
 /**
- * The one collapsible primitive the sidebar uses, for both the FOLDERS/TAGS
- * headers and each folder inside them. Open state is deliberately not persisted
- * — the spec calls for folders to start collapsed on every launch.
+ * The one collapsible primitive the sidebar uses. Open state lives in the store
+ * rather than the component so breadcrumbs can reveal a section, and so folders
+ * start collapsed on every launch with nothing persisted.
  */
 export function Disclosure({
+  sectionKey,
   label,
   count,
-  defaultOpen = false,
   variant = "group",
-  onActivate,
   onContextMenu,
   children
 }: DisclosureProps) {
-  const [open, setOpen] = useState(defaultOpen)
+  const open = useNotesStore((state) => state.expanded[sectionKey] === true)
+  const toggleSection = useNotesStore((state) => state.toggleSection)
 
   return (
     <div className={`disclosure disclosure-${variant}`}>
@@ -33,10 +34,7 @@ export function Disclosure({
         className="disclosure-header"
         aria-expanded={open}
         onContextMenu={onContextMenu}
-        onClick={() => {
-          setOpen((current) => !current)
-          onActivate?.()
-        }}
+        onClick={() => toggleSection(sectionKey)}
       >
         <span className={`disclosure-arrow${open ? " is-open" : ""}`} aria-hidden="true">
           ▸

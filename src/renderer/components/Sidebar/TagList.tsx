@@ -24,7 +24,7 @@ export function TagList({ notes }: TagListProps) {
   const tags = countTags(notes)
 
   return (
-    <Disclosure label="TAGS" defaultOpen variant="section">
+    <Disclosure sectionKey="tags" label="TAGS" variant="section">
       {tags.length === 0 ? (
         <p className="sidebar-empty">No tags yet</p>
       ) : (

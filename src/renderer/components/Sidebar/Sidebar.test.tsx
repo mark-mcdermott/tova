@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { Sidebar } from "./Sidebar"
 import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
+import { emptyHistory } from "../../stores/history"
 
 const notes: NoteSummary[] = [
   {
@@ -73,6 +74,8 @@ beforeEach(() => {
     },
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   }
+  // Disclosure state lives in the store, so it has to be reset or an expanded
+  // folder leaks into whichever test runs next.
   useNotesStore.setState({
     notes,
     folders: ["ideas", "drafts"],
@@ -80,7 +83,10 @@ beforeEach(() => {
     active: null,
     openSeq: 0,
     loading: false,
-    error: null
+    error: null,
+    history: emptyHistory,
+    sidebarCollapsed: false,
+    expanded: { folders: true, tags: true, notes: true, daily: true }
   })
 })
 
@@ -191,6 +197,14 @@ describe("Sidebar", () => {
     await user.keyboard("{Escape}")
 
     expect(screen.queryByRole("menu")).toBeNull()
+  })
+
+  it("collapses when the collapse control is used", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.click(screen.getByLabelText("Collapse sidebar"))
+    expect(useNotesStore.getState().sidebarCollapsed).toBe(true)
   })
 
   it("surfaces a store error", () => {

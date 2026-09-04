@@ -2,6 +2,21 @@ import { useNotesStore } from "../../stores/notesStore"
 import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
 
+function CollapseIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+      <path
+        d="M9.5 3 5 8l4.5 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function PencilIcon() {
   return (
     <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
@@ -22,20 +37,33 @@ export function Sidebar() {
   const loading = useNotesStore((state) => state.loading)
   const error = useNotesStore((state) => state.error)
   const createNote = useNotesStore((state) => state.createNote)
+  const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
 
   return (
     <aside className="sidebar">
       <header className="sidebar-header">
         <span className="wordmark">Tova</span>
-        <button
-          type="button"
-          className="icon-button"
-          title="New note"
-          aria-label="New note"
-          onClick={() => createNote("notes", null)}
-        >
-          <PencilIcon />
-        </button>
+
+        <div className="sidebar-header-actions">
+          <button
+            type="button"
+            className="icon-button"
+            title="New note"
+            aria-label="New note"
+            onClick={() => createNote("notes", null)}
+          >
+            <PencilIcon />
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            title="Collapse sidebar (Cmd+\\)"
+            aria-label="Collapse sidebar"
+            onClick={toggleSidebar}
+          >
+            <CollapseIcon />
+          </button>
+        </div>
       </header>
 
       <div className="sidebar-scroll">
