@@ -17,7 +17,10 @@ const notes: NoteApi = {
   permanentDelete: (id) => ipcRenderer.invoke("note:permanentDelete", id),
   today: () => ipcRenderer.invoke("note:today"),
   listFolders: () => ipcRenderer.invoke("folder:list"),
-  createFolder: (name) => ipcRenderer.invoke("folder:create", name)
+  createFolder: (name) => ipcRenderer.invoke("folder:create", name),
+  renameFolder: (from, to) => ipcRenderer.invoke("folder:rename", from, to),
+  deleteFolder: (name) => ipcRenderer.invoke("folder:delete", name),
+  exportMarkdown: (id) => ipcRenderer.invoke("note:export", id)
 }
 
 const backups: BackupApi = {

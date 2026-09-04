@@ -58,6 +58,10 @@ changes the note id without yanking the cursor.
 - **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
   picker and the second palette.
 - **Backup status has no UI.** The IPC exists; the Settings panel is Phase 12.
+- **Export .pdf is not implemented.** The `...` menu offers Export .md only.
+  A PDF needs a markdown-to-HTML renderer, which Tova does not have and which
+  is a dependency decision rather than a loose end.
+- **Drag-and-drop is not done.** The last item of Phase 5.
 - **No Playwright.** The lifecycle tests the build plan wanted from it run in
   Vitest against a real temp filesystem instead, which needs no extra dependency.
 - Blockquotes, tables and the Cmd+K link popup are specified but belong to later

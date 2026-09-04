@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile, mkdir, rename, unlink, stat } from "fs/promises"
+import { readdir, readFile, writeFile, mkdir, rename, unlink, stat, rm } from "fs/promises"
 import { join } from "path"
 import {
   Note,
@@ -330,6 +330,59 @@ export async function createFolder(name: string): Promise<string> {
   const folder = name.trim()
   await mkdir(resolveInVault(`notes/${folder}`), { recursive: true })
   return folder
+}
+
+/**
+ * Renames a folder and brings the `folder` value in each contained note's front
+ * matter along with it, so a later restore from Trash still lands correctly.
+ */
+export async function renameFolder(from: string, to: string): Promise<string> {
+  if (!isValidFolderName(from) || !isValidFolderName(to)) {
+    throw new Error(`Invalid folder name: ${from} → ${to}`)
+  }
+
+  const source = from.trim()
+  const target = to.trim()
+  if (source === target) return target
+
+  const targetPath = resolveInVault(`notes/${target}`)
+  const taken = await stat(targetPath).then(
+    () => true,
+    () => false
+  )
+  if (taken) throw new Error(`A folder named ${target} already exists`)
+
+  await rename(resolveInVault(`notes/${source}`), targetPath)
+
+  const entries = await readdir(targetPath).catch(() => [] as string[])
+  for (const filename of entries.filter((name) => name.endsWith(".md"))) {
+    const note = await load({ section: "notes", folder: target, filename })
+    note.home = { section: "notes", folder: target }
+    await persist(note)
+  }
+
+  return target
+}
+
+/**
+ * Removes a folder, moving everything inside it to Trash first. Notes are never
+ * destroyed by a folder delete — they stay recoverable like any other deletion.
+ */
+export async function deleteFolder(name: string): Promise<string[]> {
+  if (!isValidFolderName(name)) throw new Error(`Invalid folder name: ${name}`)
+
+  const folder = name.trim()
+  const directory = resolveInVault(`notes/${folder}`)
+  const entries = await readdir(directory).catch(() => [] as string[])
+
+  const trashed: string[] = []
+  for (const filename of entries.filter((entry) => entry.endsWith(".md"))) {
+    const summary = await trashNote(toNoteId({ section: "notes", folder, filename }))
+    trashed.push(summary.id)
+  }
+
+  await rm(directory, { recursive: true, force: true })
+  return trashed
 }
 
 export function vaultLocation(): string {

@@ -33,6 +33,8 @@ interface NotesState {
   vaultStatus: VaultStatus | null
 
   history: History
+  focusTitleSeq: number
+  creatingFolder: boolean
   sidebarCollapsed: boolean
   /** Which sidebar sections and folders are open, keyed by section id. */
   expanded: Record<string, boolean>
@@ -51,6 +53,12 @@ interface NotesState {
   save: (title: string, body: string) => Promise<void>
   createNote: (section: Section, folder: string | null) => Promise<void>
   createFolder: (name: string) => Promise<void>
+  renameFolder: (from: string, to: string) => Promise<void>
+  deleteFolder: (name: string) => Promise<void>
+  moveNote: (id: string, section: Section, folder: string | null) => Promise<void>
+  exportNote: (id: string) => Promise<void>
+  requestTitleFocus: () => void
+  setCreatingFolder: (value: boolean) => void
   trash: (id: string) => Promise<void>
   restore: (id: string) => Promise<void>
   destroy: (id: string) => Promise<void>
@@ -67,6 +75,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   vaultStatus: null,
 
   history: emptyHistory,
+  /** Bumped to ask the editor to focus its title input — how Rename works. */
+  focusTitleSeq: 0,
+  creatingFolder: false,
   sidebarCollapsed: false,
   // Folders start collapsed on every launch; nothing is persisted.
   expanded: { folders: true, tags: true, notes: true, daily: true },
@@ -204,6 +215,55 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     } catch (error) {
       set({ error: describe(error) })
     }
+  },
+
+  renameFolder: async (from, to) => {
+    try {
+      await window.tova.notes.renameFolder(from, to)
+      await get().load()
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  deleteFolder: async (name) => {
+    try {
+      await window.tova.notes.deleteFolder(name)
+      await get().load()
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  moveNote: async (id, section, folder) => {
+    try {
+      const summary = await window.tova.notes.move(id, { section, folder })
+      replaceNote(set, get, id, summary)
+      set((state) => ({ history: renameHistory(state.history, id, summary.id) }))
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  exportNote: async (id) => {
+    try {
+      await window.tova.notes.exportMarkdown(id)
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  // Rename has no sidebar widget by design; it focuses the note's title input.
+  requestTitleFocus: () => {
+    set((state) => ({ focusTitleSeq: state.focusTitleSeq + 1 }))
+  },
+
+  setCreatingFolder: (value) => {
+    // Creating a folder is only visible with Notes open.
+    set((state) => ({
+      creatingFolder: value,
+      expanded: value ? { ...state.expanded, folders: true, notes: true } : state.expanded
+    }))
   },
 
   trash: async (id) => {

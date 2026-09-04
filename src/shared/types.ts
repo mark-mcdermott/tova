@@ -76,4 +76,8 @@ export interface NoteApi {
   today: () => Promise<Note>
   listFolders: () => Promise<string[]>
   createFolder: (name: string) => Promise<string>
+  renameFolder: (from: string, to: string) => Promise<string>
+  deleteFolder: (name: string) => Promise<string[]>
+  /** Resolves to the written path, or null if the user cancelled. */
+  exportMarkdown: (id: string) => Promise<string | null>
 }

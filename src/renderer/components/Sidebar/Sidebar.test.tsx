@@ -57,7 +57,10 @@ const bridge = {
   restore: vi.fn(),
   today: vi.fn(),
   permanentDelete: vi.fn(),
-  createFolder: vi.fn()
+  createFolder: vi.fn(),
+  renameFolder: vi.fn(),
+  deleteFolder: vi.fn(),
+  exportMarkdown: vi.fn()
 }
 
 beforeEach(() => {
@@ -205,6 +208,155 @@ describe("Sidebar", () => {
 
     await user.click(screen.getByLabelText("Collapse sidebar"))
     expect(useNotesStore.getState().sidebarCollapsed).toBe(true)
+  })
+
+  it("offers rename and delete on a note", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: "loose note" })
+    })
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "Delete → Trash" })).toBeDefined()
+  })
+
+  it("offers recovery actions on a trashed note", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.click(screen.getByRole("button", { name: /^Trash/ }))
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: "old draft" })
+    })
+
+    expect(screen.getByRole("menuitem", { name: "Restore" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "Delete permanently" })).toBeDefined()
+    expect(screen.queryByRole("menuitem", { name: "Delete → Trash" })).toBeNull()
+  })
+
+  it("renames by opening the note and asking for its title", async () => {
+    const user = userEvent.setup()
+    bridge.read.mockResolvedValue({ ...notes[1], body: "" })
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: "loose note" })
+    })
+    await user.click(screen.getByRole("menuitem", { name: "Rename" }))
+
+    expect(bridge.read).toHaveBeenCalledWith("notes/loose.md")
+    await waitFor(() => expect(useNotesStore.getState().focusTitleSeq).toBe(1))
+  })
+
+  it("offers folder actions on a folder", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^ideas/ })
+    })
+
+    expect(screen.getByRole("menuitem", { name: "New note" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "New folder" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
+  })
+
+  it("says how many notes a folder delete will move to Trash", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^ideas/ })
+    })
+    expect(screen.getByRole("menuitem", { name: "Delete folder (1 → Trash)" })).toBeDefined()
+  })
+
+  it("deletes a folder through the store", async () => {
+    const user = userEvent.setup()
+    bridge.deleteFolder.mockResolvedValue([])
+    bridge.list.mockResolvedValue([])
+    bridge.listFolders.mockResolvedValue([])
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^ideas/ })
+    })
+    await user.click(screen.getByRole("menuitem", { name: /^Delete folder/ }))
+
+    expect(bridge.deleteFolder).toHaveBeenCalledWith("ideas")
+  })
+
+  it("renames a folder inline", async () => {
+    const user = userEvent.setup()
+    bridge.renameFolder.mockResolvedValue("thoughts")
+    bridge.list.mockResolvedValue([])
+    bridge.listFolders.mockResolvedValue([])
+    render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: screen.getByRole("button", { name: /^ideas/ })
+    })
+    await user.click(screen.getByRole("menuitem", { name: "Rename" }))
+
+    const field = screen.getByLabelText("Folder name")
+    await user.clear(field)
+    await user.type(field, "thoughts{Enter}")
+
+    expect(bridge.renameFolder).toHaveBeenCalledWith("ideas", "thoughts")
+  })
+
+  it("offers creation actions on empty sidebar space", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: container.querySelector(".sidebar-scroll") as Element
+    })
+
+    expect(screen.getByRole("menuitem", { name: "New note" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "New folder" })).toBeDefined()
+  })
+
+  it("creates a folder from the empty-area menu", async () => {
+    const user = userEvent.setup()
+    bridge.createFolder.mockResolvedValue("plans")
+    bridge.listFolders.mockResolvedValue(["ideas", "drafts", "plans"])
+    const { container } = render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: container.querySelector(".sidebar-scroll") as Element
+    })
+    await user.click(screen.getByRole("menuitem", { name: "New folder" }))
+
+    const field = screen.getByLabelText("Folder name")
+    await user.type(field, "plans{Enter}")
+
+    expect(bridge.createFolder).toHaveBeenCalledWith("plans")
+  })
+
+  it("abandons folder creation on Escape", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Sidebar />)
+
+    await user.pointer({
+      keys: "[MouseRight]",
+      target: container.querySelector(".sidebar-scroll") as Element
+    })
+    await user.click(screen.getByRole("menuitem", { name: "New folder" }))
+    await user.keyboard("{Escape}")
+
+    expect(screen.queryByLabelText("Folder name")).toBeNull()
+    expect(bridge.createFolder).not.toHaveBeenCalled()
   })
 
   it("surfaces a store error", () => {

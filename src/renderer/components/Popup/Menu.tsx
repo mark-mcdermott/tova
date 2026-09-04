@@ -1,10 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 
-export interface MenuItem {
+export interface MenuAction {
   label: string
   onSelect: () => void
   destructive?: boolean
+  /** Keeps the menu open — for an item that swaps in a second set of choices. */
+  keepOpen?: boolean
 }
+
+export type MenuItem = MenuAction | "separator"
 
 interface MenuProps {
   x: number
@@ -53,27 +58,39 @@ export function Menu({ x, y, items, onClose }: MenuProps) {
     }
   }, [onClose])
 
-  return (
+  /*
+   * Rendered into document.body rather than in place. The glass panels carry
+   * backdrop-filter, which makes them the containing block for position:fixed
+   * descendants — a menu nested inside one is positioned against the panel
+   * instead of the viewport, and focusing it scrolls the panel's overflow:hidden
+   * box, dragging the layout sideways. A portal keeps the menu out of that chain.
+   */
+  return createPortal(
     <div
       ref={ref}
       className="popup-menu"
       role="menu"
       style={{ left: `${position.left}px`, top: `${position.top}px` }}
     >
-      {items.map((item) => (
-        <button
-          key={item.label}
-          type="button"
-          role="menuitem"
-          className={item.destructive === true ? "is-destructive" : undefined}
-          onClick={() => {
-            item.onSelect()
-            onClose()
-          }}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
+      {items.map((item, index) =>
+        item === "separator" ? (
+          <hr key={`separator-${index}`} className="popup-menu-separator" />
+        ) : (
+          <button
+            key={item.label}
+            type="button"
+            role="menuitem"
+            className={item.destructive === true ? "is-destructive" : undefined}
+            onClick={() => {
+              item.onSelect()
+              if (item.keepOpen !== true) onClose()
+            }}
+          >
+            {item.label}
+          </button>
+        )
+      )}
+    </div>,
+    document.body
   )
 }

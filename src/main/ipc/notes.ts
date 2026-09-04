@@ -10,10 +10,13 @@ import {
   restoreNote,
   permanentDelete,
   listFolders,
-  createFolder
+  createFolder,
+  renameFolder,
+  deleteFolder
 } from "../notes"
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
 import { ensureDailyNote } from "../daily"
+import { exportNoteMarkdown } from "../export"
 
 /*
  * Everything arriving here crossed a process boundary from the renderer, so it
@@ -91,4 +94,12 @@ export function registerNoteHandlers(): void {
 
   ipcMain.handle("folder:list", () => listFolders())
   ipcMain.handle("folder:create", (_event, name) => createFolder(asString(name, "name")))
+
+  ipcMain.handle("folder:rename", (_event, from, to) =>
+    renameFolder(asString(from, "from"), asString(to, "to"))
+  )
+
+  ipcMain.handle("folder:delete", (_event, name) => deleteFolder(asString(name, "name")))
+
+  ipcMain.handle("note:export", (_event, id) => exportNoteMarkdown(asString(id, "id")))
 }

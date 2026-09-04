@@ -13,6 +13,8 @@ vi.mock("electron", () => ({
 
 const {
   listNotes,
+  renameFolder,
+  deleteFolder,
   readNote,
   createNote,
   writeNote,
@@ -265,5 +267,98 @@ describe("folders", () => {
 
   it("rejects a folder name that escapes the vault", async () => {
     await expect(createFolder("../escape")).rejects.toThrow()
+  })
+})
+
+describe("renameFolder", () => {
+  it("moves the folder and its notes", async () => {
+    await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await renameFolder("ideas", "thoughts")
+
+    expect(await listFolders()).toEqual(["thoughts"])
+    expect((await listNotes()).map((note) => note.id)).toEqual(["notes/thoughts/river.md"])
+  })
+
+  it("keeps note contents intact", async () => {
+    const note = await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await writeNote(note.id, "River", "flowing water")
+    await renameFolder("ideas", "thoughts")
+
+    expect((await readNote("notes/thoughts/river.md")).body).toBe("flowing water")
+  })
+
+  it("updates front matter so a later restore lands in the new folder", async () => {
+    const note = await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await renameFolder("ideas", "thoughts")
+
+    const trashed = await trashNote("notes/thoughts/river.md")
+    expect((await restoreNote(trashed.id)).id).toBe("notes/thoughts/river.md")
+    expect(note.folder).toBe("ideas")
+  })
+
+  it("refuses to merge onto an existing folder", async () => {
+    await createFolder("ideas")
+    await createFolder("thoughts")
+    await expect(renameFolder("ideas", "thoughts")).rejects.toThrow()
+  })
+
+  it("is a no-op when the name is unchanged", async () => {
+    await createFolder("ideas")
+    expect(await renameFolder("ideas", "ideas")).toBe("ideas")
+  })
+
+  it("rejects a name that escapes the vault", async () => {
+    await createFolder("ideas")
+    await expect(renameFolder("ideas", "../escape")).rejects.toThrow()
+  })
+})
+
+describe("deleteFolder", () => {
+  it("removes the folder", async () => {
+    await createFolder("ideas")
+    await deleteFolder("ideas")
+    expect(await listFolders()).toEqual([])
+  })
+
+  it("moves contained notes to Trash rather than destroying them", async () => {
+    await createNote({ section: "notes", folder: "ideas", title: "River" })
+    const trashed = await deleteFolder("ideas")
+
+    expect(trashed).toEqual(["trash/river.md"])
+    expect(await exists(vaultFile("trash", "river.md"))).toBe(true)
+  })
+
+  it("keeps the body of a trashed note recoverable", async () => {
+    const note = await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await writeNote(note.id, "River", "worth keeping")
+    await deleteFolder("ideas")
+
+    expect((await readNote("trash/river.md")).body).toBe("worth keeping")
+  })
+
+  it("recreates the folder when one of its notes is restored", async () => {
+    await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await deleteFolder("ideas")
+
+    const restored = await restoreNote("trash/river.md")
+    expect(restored.id).toBe("notes/ideas/river.md")
+  })
+
+  it("leaves notes outside the folder alone", async () => {
+    await createNote({ section: "notes", title: "Loose" })
+    await createNote({ section: "notes", folder: "ideas", title: "River" })
+    await deleteFolder("ideas")
+
+    const live = (await listNotes()).filter((note) => note.section === "notes")
+    expect(live.map((note) => note.id)).toEqual(["notes/loose.md"])
+  })
+
+  it("handles an empty folder", async () => {
+    await createFolder("ideas")
+    expect(await deleteFolder("ideas")).toEqual([])
+  })
+
+  it("rejects a name that escapes the vault", async () => {
+    await expect(deleteFolder("../escape")).rejects.toThrow()
   })
 })

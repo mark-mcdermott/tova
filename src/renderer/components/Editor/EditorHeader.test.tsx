@@ -21,6 +21,9 @@ function note(overrides: Partial<Note> = {}): Note {
 }
 
 const read = vi.fn()
+const exportMarkdown = vi.fn()
+const move = vi.fn()
+const remove = vi.fn()
 
 function renderHeader(active: Note = note()) {
   return render(
@@ -36,11 +39,13 @@ function renderHeader(active: Note = note()) {
 beforeEach(() => {
   vi.clearAllMocks()
   window.tova = {
-    notes: { read } as never,
+    notes: { read, exportMarkdown, move, remove } as never,
     backups: {} as never,
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   }
   useNotesStore.setState({
+    folders: ["ideas", "drafts"],
+    focusTitleSeq: 0,
     history: emptyHistory,
     sidebarCollapsed: false,
     expanded: { folders: true, tags: true, notes: true, daily: true },
@@ -137,5 +142,79 @@ describe("EditorHeader breadcrumb", () => {
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Notes" }))
     expect(useNotesStore.getState().sidebarCollapsed).toBe(false)
+  })
+})
+
+describe("EditorHeader note menu", () => {
+  async function openMenu(active: Note = note()) {
+    const user = userEvent.setup()
+    renderHeader(active)
+    await user.click(screen.getByLabelText("Note actions"))
+    return user
+  }
+
+  it("offers the full set for a regular note", async () => {
+    await openMenu()
+    for (const label of ["Rename", "Move to…", "Export .md", "Delete → Trash"]) {
+      expect(screen.getByRole("menuitem", { name: label })).toBeDefined()
+    }
+  })
+
+  it("omits Move for a daily note, whose filename is its date", async () => {
+    await openMenu(note({ section: "daily", title: "9/4/26" }))
+    expect(screen.queryByRole("menuitem", { name: "Move to…" })).toBeNull()
+    expect(screen.getByRole("menuitem", { name: "Export .md" })).toBeDefined()
+  })
+
+  it("offers recovery for a trashed note", async () => {
+    await openMenu(note({ section: "trash" }))
+    expect(screen.getByRole("menuitem", { name: "Restore" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "Delete permanently" })).toBeDefined()
+    expect(screen.queryByRole("menuitem", { name: "Rename" })).toBeNull()
+  })
+
+  it("focuses the title when Rename is chosen", async () => {
+    const user = await openMenu()
+    await user.click(screen.getByRole("menuitem", { name: "Rename" }))
+    expect(useNotesStore.getState().focusTitleSeq).toBe(1)
+  })
+
+  it("exports through the bridge", async () => {
+    const user = await openMenu()
+    await user.click(screen.getByRole("menuitem", { name: "Export .md" }))
+    expect(exportMarkdown).toHaveBeenCalledWith("notes/river.md")
+  })
+
+  it("swaps in the folder list for Move to…", async () => {
+    const user = await openMenu()
+    await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
+
+    expect(screen.getByRole("menuitem", { name: "ideas" })).toBeDefined()
+    expect(screen.getByRole("menuitem", { name: "drafts" })).toBeDefined()
+  })
+
+  it("does not offer the folder the note is already in", async () => {
+    const user = await openMenu(note({ folder: "ideas" }))
+    await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
+
+    expect(screen.queryByRole("menuitem", { name: "ideas" })).toBeNull()
+    expect(screen.getByRole("menuitem", { name: "Notes" })).toBeDefined()
+  })
+
+  it("moves the note to the chosen folder", async () => {
+    move.mockResolvedValue({ ...note({ folder: "ideas" }), id: "notes/ideas/river.md" })
+    const user = await openMenu()
+    await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
+    await user.click(screen.getByRole("menuitem", { name: "ideas" }))
+
+    expect(move).toHaveBeenCalledWith("notes/river.md", { section: "notes", folder: "ideas" })
+  })
+
+  it("says so when there is nowhere to move a loose note", async () => {
+    useNotesStore.setState({ folders: [] })
+    const user = await openMenu()
+    await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
+
+    expect(screen.getByRole("menuitem", { name: "Nowhere else to move it" })).toBeDefined()
   })
 })

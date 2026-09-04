@@ -339,6 +339,13 @@
   color: var(--text-secondary);
 }
 
+/* Pushed to the far end of the nav row, away from the crumbs. */
+.editor-menu-button {
+  margin-left: auto;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;

@@ -1,7 +1,10 @@
+import { useEffect, useRef } from "react"
 import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { canGoBack, canGoForward } from "../../stores/history"
 import { breadcrumbFor } from "./breadcrumb"
+import { NoteMenu } from "./NoteMenu"
+import { useContextMenu } from "../Popup/useContextMenu"
 
 interface EditorHeaderProps {
   note: Note
@@ -41,8 +44,18 @@ export function EditorHeader({
   // which touch history on every frame.
   const hasBack = useNotesStore((state) => canGoBack(state.history))
   const hasForward = useNotesStore((state) => canGoForward(state.history))
+  const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
 
+  const menu = useContextMenu()
+  const titleRef = useRef<HTMLInputElement>(null)
   const crumbs = breadcrumbFor(note)
+
+  // Rename selects the existing title so typing replaces it outright.
+  useEffect(() => {
+    if (focusTitleSeq === 0) return
+    titleRef.current?.focus()
+    titleRef.current?.select()
+  }, [focusTitleSeq])
 
   function revealInSidebar(target: string) {
     if (sidebarCollapsed) toggleSidebar()
@@ -94,9 +107,21 @@ export function EditorHeader({
             </li>
           ))}
         </ol>
+
+        <button
+          type="button"
+          className="icon-button editor-menu-button"
+          title="Note actions"
+          aria-label="Note actions"
+          aria-haspopup="menu"
+          onClick={(event) => menu.open(event)}
+        >
+          ⋯
+        </button>
       </nav>
 
       <input
+        ref={titleRef}
         className="title-input"
         placeholder="Untitled"
         aria-label="Note title"
@@ -109,6 +134,10 @@ export function EditorHeader({
           }
         }}
       />
+
+      {menu.position !== null && (
+        <NoteMenu note={note} x={menu.position.x} y={menu.position.y} onClose={menu.close} />
+      )}
     </div>
   )
 }

@@ -1,6 +1,8 @@
 import { useNotesStore } from "../../stores/notesStore"
 import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
+import { Menu } from "../Popup/Menu"
+import { useContextMenu } from "../Popup/useContextMenu"
 
 function CollapseIcon() {
   return (
@@ -38,6 +40,8 @@ export function Sidebar() {
   const error = useNotesStore((state) => state.error)
   const createNote = useNotesStore((state) => state.createNote)
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
+  const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
+  const menu = useContextMenu()
 
   return (
     <aside className="sidebar">
@@ -66,7 +70,7 @@ export function Sidebar() {
         </div>
       </header>
 
-      <div className="sidebar-scroll">
+      <div className="sidebar-scroll" onContextMenu={menu.open}>
         {error !== null && <p className="sidebar-error">{error}</p>}
         {loading ? (
           <p className="sidebar-empty">Loading…</p>
@@ -77,6 +81,18 @@ export function Sidebar() {
           </>
         )}
       </div>
+
+      {menu.position !== null && (
+        <Menu
+          x={menu.position.x}
+          y={menu.position.y}
+          items={[
+            { label: "New note", onSelect: () => createNote("notes", null) },
+            { label: "New folder", onSelect: () => setCreatingFolder(true) }
+          ]}
+          onClose={menu.close}
+        />
+      )}
     </aside>
   )
 }
