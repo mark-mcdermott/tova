@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same branch supersedes the run in flight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: tova
+
+jobs:
+  verify:
+    name: check · test · build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches local development; CI should reproduce the dev environment
+          # rather than a version nobody builds on.
+          node-version: 25
+          cache: npm
+          cache-dependency-path: tova/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # Each step is separate so a red run names which gate failed.
+      - name: Typecheck
+        run: npm run check
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
