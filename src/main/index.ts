@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, powerMonitor } from "electron"
 import { join } from "path"
 import { ensureVault } from "./vault"
 import { registerNoteHandlers } from "./ipc/notes"
@@ -36,6 +36,13 @@ function createWindow(): void {
   }
 }
 
+/** Tells every open window the vault changed underneath it. */
+function broadcastNotesChanged(): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send("notes:changed")
+  }
+}
+
 function reportBackupFailure(error: unknown): void {
   // A failed backup must never take the app down, but it must not pass silently.
   console.error("Backup failed", error)
@@ -63,7 +70,18 @@ app.whenReady().then(async () => {
   registerNoteHandlers()
   registerBackupHandlers()
   scheduleBackups()
-  startDailyNoteSchedule((error) => console.error("Midnight note creation failed", error))
+
+  const daily = startDailyNoteSchedule({
+    onCreated: broadcastNotesChanged,
+    onError: (error) => console.error("Daily note creation failed", error)
+  })
+
+  // A midnight timeout cannot be trusted across a suspend, so the same check
+  // runs whenever the machine wakes or the user comes back to the app.
+  powerMonitor.on("resume", daily.refresh)
+  app.on("activate", daily.refresh)
+  app.on("browser-window-focus", daily.refresh)
+  app.on("before-quit", daily.stop)
 
   createWindow()
 })

@@ -38,6 +38,11 @@ export interface MoveNoteInput {
   folder?: string | null
 }
 
+export interface EventsApi {
+  /** Subscribes to vault changes made by the main process. Returns an unsubscribe. */
+  onNotesChanged: (listener: () => void) => () => void
+}
+
 export interface BackupSummary {
   name: string
   createdAt: number

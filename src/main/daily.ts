@@ -15,18 +15,23 @@ function dailyId(date: Date): string {
   return toNoteId({ section: "daily", folder: null, filename: `${toDailyNoteName(date)}.md` })
 }
 
-/** Today's daily note, created with an `M/D/YY` title if it does not exist. */
-export async function ensureDailyNote(date = new Date()): Promise<Note> {
+async function ensureDaily(date: Date): Promise<{ note: Note; created: boolean }> {
   const id = dailyId(date)
 
   const existing = await readNote(id).catch(() => null)
-  if (existing !== null) return existing
+  if (existing !== null) return { note: existing, created: false }
 
-  return createNote({
+  const note = await createNote({
     section: "daily",
     title: formatDailyTitle(date),
     filename: `${toDailyNoteName(date)}.md`
   })
+  return { note, created: true }
+}
+
+/** Today's daily note, created with an `M/D/YY` title if it does not exist. */
+export async function ensureDailyNote(date = new Date()): Promise<Note> {
+  return (await ensureDaily(date)).note
 }
 
 /**
@@ -58,26 +63,80 @@ export async function cleanupBlankDailyNotes(now = new Date()): Promise<string[]
   return removed
 }
 
+export interface DailyNoteSchedule {
+  /**
+   * Re-check immediately — for wake from sleep, or the app regaining focus.
+   * Resolves once the check settles, so callers can await it.
+   */
+  refresh: () => Promise<void>
+  stop: () => void
+}
+
+interface ScheduleOptions {
+  /** Fired only when a note was actually written, not on every check. */
+  onCreated?: (note: Note) => void
+  onError?: (error: unknown) => void
+}
+
 /**
- * Creates the next day's note just after midnight, then re-arms. The file is
- * only created — it is deliberately not loaded into the editor, which fixes
- * the Xin bug where tomorrow's note did not exist until the app restarted.
+ * Keeps today's daily note in existence. The file is only created — it is never
+ * loaded into the editor, which fixes the Xin bug where tomorrow's note did not
+ * exist until the app restarted.
+ *
+ * A midnight timer alone is not enough: Chromium throttles background timers,
+ * and a timeout armed before the machine sleeps does not fire on time (or at
+ * all) across a suspend. So the same check also runs on wake and on focus, and
+ * the timer is re-armed from the current clock each time rather than trusted.
  */
-export function startDailyNoteSchedule(
-  onError: (error: unknown) => void = () => undefined
-): () => void {
+export function startDailyNoteSchedule(options: ScheduleOptions = {}): DailyNoteSchedule {
+  const { onCreated, onError = () => undefined } = options
+
   let timer: ReturnType<typeof setTimeout> | null = null
+  let inFlight: Promise<void> | null = null
+  let ensuredFor: string | null = null
+  let stopped = false
+
+  const check = async (): Promise<void> => {
+    const today = toDailyNoteName(new Date())
+
+    // Focus fires constantly, and a note the user deliberately trashed should
+    // not spring back on every click into the window. One check per date.
+    if (ensuredFor === today) return
+
+    const { note, created } = await ensureDaily(new Date())
+    ensuredFor = today
+    if (created) onCreated?.(note)
+  }
+
+  const run = (): Promise<void> => {
+    // Wake and focus usually arrive together; coalesce so they cannot race
+    // each other into creating the same file twice.
+    if (inFlight === null) {
+      inFlight = check()
+        .catch(onError)
+        .finally(() => {
+          inFlight = null
+        })
+    }
+    return inFlight
+  }
 
   const arm = (): void => {
+    if (stopped) return
+    if (timer !== null) clearTimeout(timer)
     timer = setTimeout(() => {
-      ensureDailyNote().catch(onError).finally(arm)
+      void run().finally(arm)
     }, msUntilNextMidnight(new Date()))
   }
 
   arm()
 
-  return () => {
-    if (timer !== null) clearTimeout(timer)
-    timer = null
+  return {
+    refresh: () => run().finally(arm),
+    stop: () => {
+      stopped = true
+      if (timer !== null) clearTimeout(timer)
+      timer = null
+    }
   }
 }

@@ -37,6 +37,12 @@ Backups live in `~/Documents/Tova Backups/` — beside the vault, never inside i
 trashed note, `section` and `folder` record where it came from, which is how
 restore returns it to the right folder.
 
+**Today's daily note** is guaranteed by three paths, not one: an explicit check
+at launch, a midnight timer, and a re-check on system wake and window focus. A
+timeout armed before the machine sleeps cannot be trusted to fire, so the timer
+is re-armed from the current clock each time rather than relied upon. The check
+runs once per date, so a note deliberately trashed does not spring back.
+
 **Renderer** is a zustand store plus components. The editor reloads its document
 on `openSeq`, which only deliberate opens bump — a save that renames the file
 changes the note id without yanking the cursor.

@@ -144,10 +144,10 @@ describe("startDailyNoteSchedule", () => {
     vi.setSystemTime(now)
 
     const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout")
-    const stop = startDailyNoteSchedule()
+    const schedule = startDailyNoteSchedule()
 
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), msUntilNextMidnight(now))
-    stop()
+    schedule.stop()
   })
 
   it("stops cleanly when cancelled", () => {
@@ -155,7 +155,7 @@ describe("startDailyNoteSchedule", () => {
     vi.setSystemTime(new Date(2026, 8, 3, 23, 0, 0))
 
     const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout")
-    startDailyNoteSchedule()()
+    startDailyNoteSchedule().stop()
 
     expect(clearTimeoutSpy).toHaveBeenCalled()
   })
@@ -165,5 +165,73 @@ describe("startDailyNoteSchedule", () => {
     // behaviour that matters, and it is verified directly here.
     await ensureDailyNote(new Date(2026, 8, 4))
     expect(await exists(dailyFile("2026-09-04.md"))).toBe(true)
+  })
+})
+
+describe("startDailyNoteSchedule refresh", () => {
+  it("creates today's note without waiting for the timer", async () => {
+    const schedule = startDailyNoteSchedule()
+    await schedule.refresh()
+    schedule.stop()
+
+    expect(await exists(dailyFile(`${toDailyNoteName(new Date())}.md`))).toBe(true)
+  })
+
+  it("reports a note it actually created", async () => {
+    const onCreated = vi.fn()
+    const schedule = startDailyNoteSchedule({ onCreated })
+    await schedule.refresh()
+    schedule.stop()
+
+    expect(onCreated).toHaveBeenCalledTimes(1)
+  })
+
+  it("stays quiet when the note already exists", async () => {
+    await ensureDailyNote()
+
+    const onCreated = vi.fn()
+    const schedule = startDailyNoteSchedule({ onCreated })
+    await schedule.refresh()
+    schedule.stop()
+
+    expect(onCreated).not.toHaveBeenCalled()
+  })
+
+  it("does not re-check once today is already ensured", async () => {
+    const schedule = startDailyNoteSchedule()
+    await schedule.refresh()
+
+    // A note trashed on purpose must not spring back on every window focus.
+    const today = dailyFile(`${toDailyNoteName(new Date())}.md`)
+    await rm(today)
+
+    await schedule.refresh()
+    schedule.stop()
+
+    expect(await exists(today)).toBe(false)
+  })
+
+  it("coalesces overlapping refreshes into one check", async () => {
+    const onCreated = vi.fn()
+    const schedule = startDailyNoteSchedule({ onCreated })
+
+    // Wake and focus commonly land together.
+    await Promise.all([schedule.refresh(), schedule.refresh()])
+    schedule.stop()
+
+    expect(onCreated).toHaveBeenCalledTimes(1)
+  })
+
+  it("surfaces failures through onError rather than throwing", async () => {
+    // A file where the vault directory belongs makes every write fail.
+    await rm(vaultRoot(), { recursive: true, force: true })
+    await writeFile(vaultRoot(), "not a directory", "utf-8")
+
+    const onError = vi.fn()
+    const schedule = startDailyNoteSchedule({ onError })
+    await expect(schedule.refresh()).resolves.toBeUndefined()
+    schedule.stop()
+
+    expect(onError).toHaveBeenCalled()
   })
 })

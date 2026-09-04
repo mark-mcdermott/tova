@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron"
-import type { NoteApi, BackupApi } from "../shared/types"
+import type { NoteApi, BackupApi, EventsApi } from "../shared/types"
 
 /*
  * The only bridge between renderer and main. Each method is a thin, typed
@@ -29,4 +29,16 @@ const backups: BackupApi = {
   readVersion: (noteId, version) => ipcRenderer.invoke("backup:readVersion", noteId, version)
 }
 
-contextBridge.exposeInMainWorld("tova", { notes, backups })
+const events: EventsApi = {
+  onNotesChanged: (listener) => {
+    // The raw IpcRendererEvent is deliberately not forwarded — the renderer
+    // has no business with sender handles.
+    const handler = (): void => listener()
+    ipcRenderer.on("notes:changed", handler)
+    return () => {
+      ipcRenderer.removeListener("notes:changed", handler)
+    }
+  }
+}
+
+contextBridge.exposeInMainWorld("tova", { notes, backups, events })

@@ -17,6 +17,14 @@ export default function App() {
     checkVault()
   }, [load, checkVault])
 
+  // The date can roll over while the app is open; refresh the list so the new
+  // daily note appears without reopening anything the user was editing.
+  useEffect(() => {
+    return window.tova.events.onNotesChanged(() => {
+      load()
+    })
+  }, [load])
+
   const needsRecovery =
     vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 

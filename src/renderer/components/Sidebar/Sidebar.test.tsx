@@ -70,7 +70,8 @@ beforeEach(() => {
       status: vi.fn(),
       listVersions: vi.fn(),
       readVersion: vi.fn()
-    }
+    },
+    events: { onNotesChanged: vi.fn(() => () => undefined) }
   }
   useNotesStore.setState({
     notes,
