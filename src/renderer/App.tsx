@@ -39,37 +39,39 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [toggleSidebar])
 
-  const needsRecovery =
-    vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
+  const needsRecovery = vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 
   return (
     <div className={`app${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
-      {sidebarCollapsed ? (
-        <button
-          type="button"
-          className="sidebar-reveal"
-          title="Show sidebar (Cmd+\\)"
-          aria-label="Show sidebar"
-          onClick={toggleSidebar}
-        >
-          ›
-        </button>
-      ) : (
-        <Sidebar />
-      )}
-      <main className="workspace">
-        {needsRecovery && vaultStatus !== null ? (
-          <div className="editor-shell editor-shell-empty">
-            <VaultWarning status={vaultStatus} />
-          </div>
-        ) : active === null ? (
-          <div className="editor-shell editor-shell-empty">
-            <p className="editor-placeholder">Select a note, or create one to start writing.</p>
-          </div>
+      <div className="shell">
+        {sidebarCollapsed ? (
+          <button
+            type="button"
+            className="sidebar-reveal"
+            title="Show sidebar (Cmd+\\)"
+            aria-label="Show sidebar"
+            onClick={toggleSidebar}
+          >
+            ›
+          </button>
         ) : (
-          <Editor note={active} />
+          <Sidebar />
         )}
-      </main>
+
+        <main className="workspace">
+          {needsRecovery && vaultStatus !== null ? (
+            <div className="editor-shell editor-shell-empty">
+              <VaultWarning status={vaultStatus} />
+            </div>
+          ) : active === null ? (
+            <div className="editor-shell editor-shell-empty">
+              <p className="editor-placeholder">Select a note, or create one to start writing.</p>
+            </div>
+          ) : (
+            <Editor note={active} />
+          )}
+        </main>
+      </div>
     </div>
   )
 }

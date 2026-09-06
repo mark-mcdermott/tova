@@ -81,11 +81,21 @@ crosses bright sky and dark land in every one of them, so no fixed text colour
 works. Light text on the dark panel needs **at least 54% opacity** to hold WCAG
 AA; the panels sit at 62%, worst case 5.8:1. Treat 54% as a floor when tuning.
 
-A consequence worth knowing before Phase 6: at 62% the panels cover most of the
-window and mute the photograph to a suggestion at the margins. The mockup is far
-more translucent, and gets away with it because its photo happens to be dark on
-the left and bright on the right. Reaching that look means solving legibility
-another way, not just lowering the opacity.
+**Legibility comes from `backdrop-filter: brightness()`, not opacity.** A flat
+tint heavy enough to be safe flattened the photograph to mud. Scaling the
+backdrop instead keeps its colour and texture: `brightness(0.45)` with a 6%
+tint measures 5.8:1 — identical to the 62% wash it replaced, at a tenth of the
+opacity. `--glass-dim` above roughly 0.5 drops the brightest photograph below AA.
+
+Secondary text had to be lifted to match. Tuned against the old opaque wash, the
+muted greys fell to 1.7:1 once the photograph showed through. They are now set
+against the brightest bundled photograph: 5.3:1 secondary, 4.6:1 muted, 3.1:1
+for faint placeholder text.
+
+**Sidebar and editor share one pane of glass**, divided by a hairline, rather
+than floating as separate cards. The sidebar adds a 20% scrim over the shared
+glass — it carries most of the small secondary text, so its backdrop needs to be
+the more predictable of the two.
 
 **The mockup is light; the app is currently dark.** Phase 6's goal is "looks
 exactly like the mockup", so the light treatment is the primary target rather

@@ -4,11 +4,11 @@
   flex: 0 0 15rem;
   min-height: 0;
 
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-panel);
+  /* No glass of its own — it sits on .shell's. A scrim and a hairline separate
+     it from the editor, and darken its backdrop enough for the small secondary
+     text it carries. */
+  background: rgb(17 15 24 / 20%);
+  border-right: 1px solid var(--glass-border);
   overflow: hidden;
 }
 
