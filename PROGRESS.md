@@ -68,8 +68,24 @@ why this repo is private. It cannot be made public again without removing them.
 Only Acumin Pro **Regular** was available; the mockup uses **Light**. The
 wordmark leans on tighter tracking and a smaller size to compensate.
 
-**Still missing:** `bg-dark.jpg` and `bg-light.jpg`, the full-bleed background.
-Until those land the background is a layered CSS gradient.
+**Backgrounds are in.** Four Unsplash mountain-sunset photographs under
+`src/renderer/assets/backgrounds/`, one picked at random per launch — never
+mid-session. `backgrounds.ts` globs the folder, so adding a photo is enough to
+put it in the rotation. Credits and the re-encode command are in `CREDITS.md`
+beside them. Unlike the fonts, the Unsplash licence permits redistribution, so
+these are not what keeps the repo private.
+
+**Panel tint, not the photo, carries contrast.** Measured across the four
+photos, text on the bare photo bottoms out at **1.3:1** — a full-height sidebar
+crosses bright sky and dark land in every one of them, so no fixed text colour
+works. Light text on the dark panel needs **at least 54% opacity** to hold WCAG
+AA; the panels sit at 62%, worst case 5.8:1. Treat 54% as a floor when tuning.
+
+A consequence worth knowing before Phase 6: at 62% the panels cover most of the
+window and mute the photograph to a suggestion at the margins. The mockup is far
+more translucent, and gets away with it because its photo happens to be dark on
+the left and bright on the right. Reaching that look means solving legibility
+another way, not just lowering the opacity.
 
 **The mockup is light; the app is currently dark.** Phase 6's goal is "looks
 exactly like the mockup", so the light treatment is the primary target rather

@@ -32,7 +32,10 @@
   --accent-tint: color-mix(in oklab, var(--accent) 22%, transparent);
   --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
 
-  /* Surface */
+  /* Surface. --bg-photo is set at launch by backgrounds.ts; the gradient below
+     stays as the layer beneath it, and as the whole background if no photo is
+     bundled. */
+  --bg-photo: none;
   --bg-base: #14121c;
   --bg-image:
     radial-gradient(120% 90% at 12% 0%, #3a2b4d 0%, transparent 58%),
@@ -40,8 +43,11 @@
     radial-gradient(150% 120% at 50% 110%, #c98a5a 0%, transparent 48%),
     linear-gradient(168deg, #1c1726 0%, #14121c 55%, #100e17 100%);
 
-  /* Glass panels — a dark tint, not a white one: text needs a stable ground
-     to sit on as the background photo shifts from shadow to highlight. */
+  /* Glass panels — a dark tint, not a white one: text needs a stable ground to
+     sit on as the background photo shifts from shadow to highlight. The panel,
+     not the photo, is what carries contrast, so these opacities have a floor:
+     measured across the bundled photos, light text on a dark panel needs at
+     least 54% to hold WCAG AA. Below that some photos fall under 4.5:1. */
   --glass-bg: rgb(17 15 24 / 62%);
   --glass-bg-raised: rgb(17 15 24 / 78%);
   --glass-border: rgb(255 255 255 / 12%);
@@ -108,7 +114,7 @@ body {
   font-size: var(--text-base);
   color: var(--text-primary);
   background-color: var(--bg-base);
-  background-image: var(--bg-image);
+  background-image: var(--bg-photo), var(--bg-image);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
