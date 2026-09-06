@@ -48,26 +48,15 @@ export function Sidebar() {
       <header className="sidebar-header">
         <span className="wordmark">Tova</span>
 
-        <div className="sidebar-header-actions">
-          <button
-            type="button"
-            className="icon-button"
-            title="New note"
-            aria-label="New note"
-            onClick={() => createNote("notes", null)}
-          >
-            <PencilIcon />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            title="Collapse sidebar (Cmd+\\)"
-            aria-label="Collapse sidebar"
-            onClick={toggleSidebar}
-          >
-            <CollapseIcon />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="icon-button"
+          title="New note"
+          aria-label="New note"
+          onClick={() => createNote("notes", null)}
+        >
+          <PencilIcon />
+        </button>
       </header>
 
       <div className="sidebar-scroll" onContextMenu={menu.open}>
@@ -81,6 +70,18 @@ export function Sidebar() {
           </>
         )}
       </div>
+
+      <footer className="sidebar-footer">
+        <button
+          type="button"
+          className="icon-button"
+          title="Collapse sidebar (Cmd+\\)"
+          aria-label="Collapse sidebar"
+          onClick={toggleSidebar}
+        >
+          <CollapseIcon />
+        </button>
+      </footer>
 
       {menu.position !== null && (
         <Menu

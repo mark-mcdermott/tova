@@ -1,9 +1,9 @@
 .app {
   display: flex;
   height: 100%;
-  /* Generous margin so the photograph reads as the room the app sits in, not
-     a sliver at the edges. Extra at the top clears the traffic lights. */
-  padding: 2.25rem 1.75rem 1.75rem;
+  /* The glass runs to the window edge; the window's own rounded corners frame
+     it, so the shell needs no inset, radius or shadow of its own. */
+  padding: 0;
 }
 
 /*
@@ -18,9 +18,6 @@
 
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(var(--glass-dim));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-panel);
   overflow: hidden;
 }
 
@@ -424,10 +421,11 @@
 /* ── Sidebar collapsed ────────────────────────────────────────────────── */
 
 .sidebar-reveal {
-  align-self: flex-start;
+  /* Bottom left, where the collapse control it replaces was. */
+  align-self: flex-end;
   width: 1.5rem;
   height: 2.5rem;
-  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
   border: 1px solid var(--glass-border);
   border-left: none;
   border-start-end-radius: var(--radius-sm);

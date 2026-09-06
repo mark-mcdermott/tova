@@ -43,9 +43,6 @@ export function Disclosure({
         onContextMenu={onContextMenu}
         onClick={() => toggleSection(sectionKey)}
       >
-        <span className={`disclosure-arrow${open ? " is-open" : ""}`} aria-hidden="true">
-          ▸
-        </span>
         {icon !== undefined && <Icon name={icon} />}
         <span className="disclosure-label">{label}</span>
         {count !== undefined && <span className="disclosure-count">{count}</span>}
