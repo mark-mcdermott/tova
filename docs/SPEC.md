@@ -11,7 +11,7 @@
   than used, and hand-written CSS keeps the dependency count low.
 - Small functions, clear module boundaries
 - One shared popup/menu component — not duplicated per feature
-- `npm run check` and `npm run build` always green
+- `pnpm run check` and `pnpm run build` always green
 
 **Code style:** ESLint + Prettier. `semi: false`, `trailingComma: "none"`.
 
@@ -535,14 +535,14 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 
 ### Two-tier approach
 
-**Fast — Vitest + @testing-library/react** (`npm run test`, target < 5s)
+**Fast — Vitest + @testing-library/react** (`pnpm run test`, target < 5s)
 
 - Utilities: tag extraction, `@` parser (all field types, quote stripping, arbitrary fields), date formatting, note sorting, backup naming, post filename tracking, YAML↔`@` round-trip conversion
 - Zustand stores: navigation history, section state, tag aggregation, publish state machine
 - React components: accordion open/close, sidebar counts, tag pill render, title→body Tab/Enter focus, `@` popup trigger
 - CodeMirror state: transactions, decorations (Node.js, no browser needed)
 
-**Slow — Playwright + Electron** (`npm run test:e2e`, critical paths only)
+**Slow — Playwright + Electron** (`ppnpm run test:e2e`, critical paths only)
 
 - App launches → today's daily note opens
 - Create note → `.md` file on disk

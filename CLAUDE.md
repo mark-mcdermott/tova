@@ -68,6 +68,7 @@ no waiting for approval on ordinary implementation work.
 - Custom CSS with design tokens (no utility framework, no component library)
 - Zustand (state, arrives Phase 5)
 - Vitest 4
+- pnpm (the `packageManager` field pins the version)
 - ESLint + Prettier
 
 Prefer:
@@ -169,9 +170,9 @@ deliberately dropped and why. Consult it before re-adding anything.
 
 After each meaningful change:
 
-- `npm run check` — TypeScript strict passes
-- `npm run test` — suite green
-- `npm run build` — builds without errors
-- `npm run dev` — opens, feature works manually
+- `pnpm run check` — TypeScript strict passes
+- `pnpm run test` — suite green
+- `pnpm run build` — builds without errors
+- `pnpm run dev` — opens, feature works manually
 
 Keep all four green. Update `PROGRESS.md` when a phase completes.

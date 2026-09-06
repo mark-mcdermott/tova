@@ -13,7 +13,7 @@
 - [x] Vitest configured
 - [x] TUTORIAL.md started
 
-**Deliverable:** `npm run dev` → blank window. `npm run build` passes. `npm run test` runs (0 tests, no failures).
+**Deliverable:** `pnpm run dev` → blank window. `pnpm run build` passes. `pnpm run test` runs (0 tests, no failures).
 
 ---
 
@@ -87,13 +87,13 @@ Write Playwright test: blank past daily note gone after launch.
 ## Phase 5 — Navigation & Sidebar Polish
 **Goal:** Back/forward, breadcrumbs, context menus, drag-and-drop.
 
-- [ ] Navigation history stack (Zustand)
-- [ ] Back/forward arrows in editor header
-- [ ] Breadcrumbs (1–3 levels, clickable)
-- [ ] Right-click context menus (note, section, folder, Daily)
-- [ ] `...` editor header menu (context-sensitive per note type)
+- [x] Navigation history stack (Zustand)
+- [x] Back/forward arrows in editor header
+- [x] Breadcrumbs (1–3 levels, clickable)
+- [x] Right-click context menus (note, section, folder, Daily)
+- [x] `...` editor header menu (context-sensitive per note type)
 - [ ] Drag-and-drop note/folder reorder and move
-- [ ] Sidebar collapse (chevron + Cmd+\)
+- [x] Sidebar collapse (chevron + Cmd+\)
 
 Write Vitest tests: navigation history push/pop/forward.
 
@@ -224,8 +224,8 @@ Write Playwright test: publish request sent, progress bar appears.
 
 ## Verification (after each phase)
 
-- `npm run check` — TypeScript strict passes
-- `npm run test` — fast suite green
-- `npm run build` — builds without errors
-- `npm run dev` — opens, phase features work manually
+- `pnpm run check` — TypeScript strict passes
+- `pnpm run test` — fast suite green
+- `pnpm run build` — builds without errors
+- `pnpm run dev` — opens, phase features work manually
 - Append section to `TUTORIAL.md`

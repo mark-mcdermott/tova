@@ -22,23 +22,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Must precede setup-node, which needs pnpm on PATH to resolve its cache.
+      # The version comes from the packageManager field, so it lives in one place.
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: tova/package.json
+
       - uses: actions/setup-node@v4
         with:
           # Matches local development; CI should reproduce the dev environment
           # rather than a version nobody builds on.
           node-version: 25
-          cache: npm
-          cache-dependency-path: tova/package-lock.json
+          cache: pnpm
+          cache-dependency-path: tova/pnpm-lock.yaml
 
       - name: Install
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # Each step is separate so a red run names which gate failed.
       - name: Typecheck
-        run: npm run check
+        run: pnpm run check
 
       - name: Test
-        run: npm run test
+        run: pnpm run test
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
