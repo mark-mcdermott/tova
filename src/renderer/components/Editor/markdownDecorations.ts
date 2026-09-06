@@ -89,9 +89,7 @@ function buildDecorations(view: EditorView): DecorationSet {
   const toggleMarkers = (node: SyntaxNode, open: boolean, ...names: string[]): void => {
     forChildren(node, names, (child) => {
       decorations.push(
-        open
-          ? syntaxMarker.range(child.from, child.to)
-          : hide.range(child.from, child.to)
+        open ? syntaxMarker.range(child.from, child.to) : hide.range(child.from, child.to)
       )
     })
   }

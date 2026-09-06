@@ -17,9 +17,7 @@ const SECTION_LABELS: Record<NoteSummary["section"], string> = {
  * itself and is not a link; the rest reveal their section in the sidebar.
  */
 export function breadcrumbFor(note: NoteSummary): Crumb[] {
-  const crumbs: Crumb[] = [
-    { label: SECTION_LABELS[note.section], target: note.section }
-  ]
+  const crumbs: Crumb[] = [{ label: SECTION_LABELS[note.section], target: note.section }]
 
   if (note.section === "notes" && note.folder !== null) {
     crumbs.push({ label: note.folder, target: `folder:${note.folder}` })

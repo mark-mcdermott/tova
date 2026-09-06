@@ -1,5 +1,6 @@
 import { MouseEvent, ReactNode } from "react"
 import { useNotesStore } from "../../stores/notesStore"
+import { Icon } from "./icons"
 
 interface DisclosureProps {
   /** Key in the store's expanded map — also what breadcrumbs target. */
@@ -7,6 +8,9 @@ interface DisclosureProps {
   label: string
   count?: number
   variant?: "section" | "group"
+  icon?: "notes" | "daily" | "trash" | "folder"
+  /** Nesting level, so a row can indent its text while its background does not. */
+  depth?: number
   onContextMenu?: (event: MouseEvent) => void
   children: ReactNode
 }
@@ -21,6 +25,8 @@ export function Disclosure({
   label,
   count,
   variant = "group",
+  icon,
+  depth = 0,
   onContextMenu,
   children
 }: DisclosureProps) {
@@ -32,6 +38,7 @@ export function Disclosure({
       <button
         type="button"
         className="disclosure-header"
+        data-depth={depth}
         aria-expanded={open}
         onContextMenu={onContextMenu}
         onClick={() => toggleSection(sectionKey)}
@@ -39,6 +46,7 @@ export function Disclosure({
         <span className={`disclosure-arrow${open ? " is-open" : ""}`} aria-hidden="true">
           ▸
         </span>
+        {icon !== undefined && <Icon name={icon} />}
         <span className="disclosure-label">{label}</span>
         {count !== undefined && <span className="disclosure-count">{count}</span>}
       </button>

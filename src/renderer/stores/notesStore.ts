@@ -105,10 +105,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         active: note,
         openSeq: state.openSeq + 1,
         history: pushHistory(state.history, note.id),
-        notes: sortNotes([
-          ...state.notes.filter((entry) => entry.id !== note.id),
-          toSummary(note)
-        ]),
+        notes: sortNotes([...state.notes.filter((entry) => entry.id !== note.id), toSummary(note)]),
         error: null
       }))
     } catch (error) {
@@ -346,7 +343,8 @@ function replaceNote(set: Setter, get: Getter, previousId: string, summary: Note
   set({
     notes: sortNotes([...state.notes.filter((note) => note.id !== previousId), summary]),
     activeId: wasActive ? summary.id : state.activeId,
-    active: wasActive && state.active !== null ? { ...summary, body: state.active.body } : state.active,
+    active:
+      wasActive && state.active !== null ? { ...summary, body: state.active.body } : state.active,
     error: null
   })
 }

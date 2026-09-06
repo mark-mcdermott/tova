@@ -7,11 +7,7 @@ interface FolderNameInputProps {
 }
 
 /** Inline field used for both creating and renaming a folder. */
-export function FolderNameInput({
-  initialValue = "",
-  onSubmit,
-  onCancel
-}: FolderNameInputProps) {
+export function FolderNameInput({ initialValue = "", onSubmit, onCancel }: FolderNameInputProps) {
   const [value, setValue] = useState(initialValue)
   const ref = useRef<HTMLInputElement>(null)
 

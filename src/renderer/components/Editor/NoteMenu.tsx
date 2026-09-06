@@ -86,12 +86,5 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
     return targets
   }
 
-  return (
-    <Menu
-      x={x}
-      y={y}
-      items={choosingFolder ? folderItems() : mainItems()}
-      onClose={onClose}
-    />
-  )
+  return <Menu x={x} y={y} items={choosingFolder ? folderItems() : mainItems()} onClose={onClose} />
 }

@@ -29,7 +29,7 @@
 
 .wordmark {
   font-family: var(--font-wordmark);
-  font-size: 1.4rem;
+  font-size: 1.75rem;
   font-weight: 400;
   /* The mockup sets the wordmark tight and small; with Regular rather than
      Light standing in, the tracking carries more of that weight. */
@@ -48,7 +48,10 @@
   color: var(--text-secondary);
   cursor: pointer;
   opacity: 0.8;
-  transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+  transition:
+    opacity 120ms ease,
+    background 120ms ease,
+    color 120ms ease;
 }
 
 .icon-button:hover {
@@ -67,12 +70,28 @@
 
 /* ── Disclosure ───────────────────────────────────────────────────────── */
 
+/*
+ * No indent here — nesting is expressed by the text's own left padding, keyed
+ * off data-depth, so every row's background starts at the same left edge and
+ * a selected note reads as a full-width pill like the mockup.
+ */
 .disclosure-body {
+  padding-left: 0;
+}
+
+.disclosure-header[data-depth="1"],
+.note-row-open[data-depth="1"] {
   padding-left: var(--space-3);
 }
 
-.disclosure-section > .disclosure-body {
-  padding-left: 0;
+.disclosure-header[data-depth="2"],
+.note-row-open[data-depth="2"] {
+  padding-left: var(--space-6);
+}
+
+.disclosure-header[data-depth="3"],
+.note-row-open[data-depth="3"] {
+  padding-left: var(--space-8);
 }
 
 .disclosure-header {
@@ -80,15 +99,20 @@
   align-items: center;
   gap: var(--space-2);
   width: 100%;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-family: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   text-align: left;
   cursor: pointer;
+}
+
+.sidebar-icon {
+  flex: none;
+  opacity: 0.75;
 }
 
 .disclosure-header:hover {
@@ -126,7 +150,7 @@
 
 .disclosure-count {
   flex: none;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
@@ -151,12 +175,12 @@
 .note-row-open {
   flex: 1;
   min-width: 0;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2);
   border: none;
   background: transparent;
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   text-align: left;
   overflow: hidden;
   white-space: nowrap;
@@ -210,9 +234,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
@@ -233,7 +257,7 @@
 .sidebar-add {
   width: 100%;
   margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -250,7 +274,7 @@
 }
 
 .sidebar-empty {
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
   color: var(--text-faint);
   font-size: var(--text-sm);
 }

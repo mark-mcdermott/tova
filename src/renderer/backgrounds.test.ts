@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
-import { pickBackground, applyBackground } from "./backgrounds"
+import { pickBackground, applyBackground, cycleBackground } from "./backgrounds"
 
 const urls = ["a.jpg", "b.jpg", "c.jpg"]
 
@@ -29,9 +29,7 @@ describe("pickBackground", () => {
   })
 
   it("can return any of them across many draws", () => {
-    const seen = new Set(
-      Array.from({ length: 300 }, () => pickBackground(urls) as string)
-    )
+    const seen = new Set(Array.from({ length: 300 }, () => pickBackground(urls) as string))
     expect(seen.size).toBe(urls.length)
   })
 
@@ -43,13 +41,34 @@ describe("pickBackground", () => {
 describe("applyBackground", () => {
   it("sets the custom property the stylesheet reads", () => {
     applyBackground("photo.jpg")
-    expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe(
-      'url("photo.jpg")'
-    )
+    expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe('url("photo.jpg")')
   })
 
   it("leaves the gradient fallback in place when there is no photo", () => {
     applyBackground(null)
     expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe("")
+  })
+})
+
+describe("cycleBackground", () => {
+  it("returns null when nothing is bundled", () => {
+    expect(cycleBackground([])).toBeNull()
+  })
+
+  it("steps to the next photograph each time", () => {
+    const first = cycleBackground(urls)
+    const second = cycleBackground(urls)
+    expect(second).not.toBe(first)
+  })
+
+  it("wraps around the end of the list", () => {
+    const seen = urls.map(() => cycleBackground(urls))
+    expect(new Set(seen).size).toBe(urls.length)
+    expect(cycleBackground(urls)).toBe(seen[0])
+  })
+
+  it("applies what it selects", () => {
+    const chosen = cycleBackground(urls) as string
+    expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe(`url("${chosen}")`)
   })
 })

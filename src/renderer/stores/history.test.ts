@@ -151,7 +151,11 @@ describe("rename", () => {
   })
 
   it("updates every occurrence", () => {
-    const history = rename(historyOf("notes/a.md", "notes/b.md", "notes/a.md"), "notes/a.md", "notes/z.md")
+    const history = rename(
+      historyOf("notes/a.md", "notes/b.md", "notes/a.md"),
+      "notes/a.md",
+      "notes/z.md"
+    )
     expect(history.entries.map((entry) => entry.noteId)).toEqual([
       "notes/z.md",
       "notes/b.md",

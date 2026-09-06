@@ -6,9 +6,10 @@ import { useContextMenu } from "../Popup/useContextMenu"
 
 interface NoteRowProps {
   note: NoteSummary
+  depth?: number
 }
 
-export function NoteRow({ note }: NoteRowProps) {
+export function NoteRow({ note, depth = 0 }: NoteRowProps) {
   const activeId = useNotesStore((state) => state.activeId)
   const open = useNotesStore((state) => state.open)
   const trash = useNotesStore((state) => state.trash)
@@ -52,7 +53,12 @@ export function NoteRow({ note }: NoteRowProps) {
       className={`note-row${note.id === activeId ? " is-active" : ""}`}
       onContextMenu={menu.open}
     >
-      <button type="button" className="note-row-open" onClick={() => open(note.id)}>
+      <button
+        type="button"
+        className="note-row-open"
+        data-depth={depth}
+        onClick={() => open(note.id)}
+      >
         {label}
       </button>
 

@@ -27,8 +27,8 @@ export function VaultWarning({ status }: VaultWarningProps) {
       <h2 className="vault-warning-title">Your vault is empty</h2>
       <p className="vault-warning-body">
         No notes were found, but {status.backups.length}{" "}
-        {status.backups.length === 1 ? "backup exists" : "backups exist"}. Restoring replaces
-        the current vault — the existing one is backed up first.
+        {status.backups.length === 1 ? "backup exists" : "backups exist"}. Restoring replaces the
+        current vault — the existing one is backed up first.
       </p>
 
       <div className="vault-warning-actions">

@@ -7,7 +7,9 @@ afterEach(cleanup)
 
 describe("Menu", () => {
   it("renders its actions", () => {
-    render(<Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={vi.fn()} />)
+    render(
+      <Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={vi.fn()} />
+    )
     expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
   })
 
@@ -33,7 +35,11 @@ describe("Menu", () => {
       <Menu
         x={10}
         y={10}
-        items={[{ label: "Rename", onSelect: vi.fn() }, "separator", { label: "Delete", onSelect: vi.fn() }]}
+        items={[
+          { label: "Rename", onSelect: vi.fn() },
+          "separator",
+          { label: "Delete", onSelect: vi.fn() }
+        ]}
         onClose={vi.fn()}
       />
     )
@@ -67,7 +73,9 @@ describe("Menu", () => {
 
   it("closes on Escape", async () => {
     const onClose = vi.fn()
-    render(<Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={onClose} />)
+    render(
+      <Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={onClose} />
+    )
 
     await userEvent.setup().keyboard("{Escape}")
     expect(onClose).toHaveBeenCalled()
@@ -75,7 +83,9 @@ describe("Menu", () => {
 
   it("closes on a click outside", async () => {
     const onClose = vi.fn()
-    render(<Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={onClose} />)
+    render(
+      <Menu x={10} y={10} items={[{ label: "Rename", onSelect: vi.fn() }]} onClose={onClose} />
+    )
 
     await userEvent.setup().click(document.body)
     expect(onClose).toHaveBeenCalled()

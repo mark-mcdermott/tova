@@ -3,6 +3,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
 import { VaultWarning } from "./components/VaultWarning"
 import { useNotesStore } from "./stores/notesStore"
+import { cycleBackground } from "./backgrounds"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 
@@ -32,6 +33,11 @@ export default function App() {
       if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
         event.preventDefault()
         toggleSidebar()
+      }
+
+      if (event.key === "F12") {
+        event.preventDefault()
+        cycleBackground()
       }
     }
 

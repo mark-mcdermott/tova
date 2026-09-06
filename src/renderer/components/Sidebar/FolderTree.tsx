@@ -12,12 +12,12 @@ interface FolderTreeProps {
   folders: string[]
 }
 
-function NoteRows({ notes }: { notes: NoteSummary[] }) {
+function NoteRows({ notes, depth }: { notes: NoteSummary[]; depth: number }) {
   if (notes.length === 0) return <p className="sidebar-empty">Nothing here yet</p>
   return (
     <>
       {notes.map((note) => (
-        <NoteRow key={note.id} note={note} />
+        <NoteRow key={note.id} note={note} depth={depth} />
       ))}
     </>
   )
@@ -77,7 +77,13 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
 
   return (
     <Disclosure sectionKey="folders" label="FOLDERS" variant="section">
-      <Disclosure sectionKey="notes" label="Notes" count={notesSection.length}>
+      <Disclosure
+        sectionKey="notes"
+        label="Notes"
+        count={notesSection.length}
+        icon="notes"
+        depth={1}
+      >
         {folders.map((folder) => {
           const inFolder = notesSection.filter((note) => note.folder === folder)
 
@@ -101,9 +107,11 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               sectionKey={`folder:${folder}`}
               label={folder}
               count={inFolder.length}
+              icon="folder"
+              depth={2}
               onContextMenu={openFolderMenu(folder)}
             >
-              <NoteRows notes={inFolder} />
+              <NoteRows notes={inFolder} depth={3} />
             </Disclosure>
           )
         })}
@@ -118,13 +126,9 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
           />
         )}
 
-        <NoteRows notes={loose} />
+        <NoteRows notes={loose} depth={2} />
 
-        <button
-          type="button"
-          className="sidebar-add"
-          onClick={() => createNote("notes", null)}
-        >
+        <button type="button" className="sidebar-add" onClick={() => createNote("notes", null)}>
           + New note
         </button>
       </Disclosure>
@@ -133,13 +137,15 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         sectionKey="daily"
         label="Daily"
         count={daily.length}
+        icon="daily"
+        depth={1}
         onContextMenu={dailyMenu.open}
       >
-        <NoteRows notes={daily} />
+        <NoteRows notes={daily} depth={2} />
       </Disclosure>
 
-      <Disclosure sectionKey="trash" label="Trash" count={trashed.length}>
-        <NoteRows notes={trashed} />
+      <Disclosure sectionKey="trash" label="Trash" count={trashed.length} icon="trash" depth={1}>
+        <NoteRows notes={trashed} depth={2} />
       </Disclosure>
 
       {dailyMenu.position !== null && (

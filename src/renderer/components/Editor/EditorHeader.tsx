@@ -28,12 +28,7 @@ function ChevronIcon({ direction }: { direction: "left" | "right" }) {
   )
 }
 
-export function EditorHeader({
-  note,
-  title,
-  onTitleChange,
-  onTitleCommit
-}: EditorHeaderProps) {
+export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: EditorHeaderProps) {
   const back = useNotesStore((state) => state.back)
   const forward = useNotesStore((state) => state.forward)
   const expandSection = useNotesStore((state) => state.expandSection)

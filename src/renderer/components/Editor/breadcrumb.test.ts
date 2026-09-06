@@ -17,10 +17,7 @@ function note(overrides: Partial<NoteSummary>): NoteSummary {
 
 describe("breadcrumbFor", () => {
   it("shows section then title for a loose note", () => {
-    expect(breadcrumbFor(note({})).map((crumb) => crumb.label)).toEqual([
-      "Notes",
-      "Project River"
-    ])
+    expect(breadcrumbFor(note({})).map((crumb) => crumb.label)).toEqual(["Notes", "Project River"])
   })
 
   it("inserts the folder between them", () => {
