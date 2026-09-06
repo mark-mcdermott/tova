@@ -1,4 +1,25 @@
 /*
+ * Bundled faces. Both are licensed and travel with the app rather than being
+ * fetched, so font-display: block is safe — there is no network to wait on and
+ * no reason to flash a fallback first.
+ */
+@font-face {
+  font-family: "Alagambe";
+  src: url("../assets/fonts/alagambe.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Acumin Pro";
+  src: url("../assets/fonts/acumin-pro-regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/*
  * Design tokens. Every colour, space and radius in Tova resolves to one of
  * these, so the Phase 6 theme picker only has to swap this block.
  */
@@ -39,8 +60,10 @@
   /* Type */
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  /* Alagambe is not bundled yet; Snell Roundhand is the macOS stand-in. */
   --font-script: "Alagambe", "Snell Roundhand", "Apple Chancery", cursive;
+  /* Acumin Pro Light is what the mockup uses; only Regular is licensed here,
+     so the wordmark leans on tracking and size to stay light in feel. */
+  --font-wordmark: "Acumin Pro", var(--font-sans);
 
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;

@@ -56,16 +56,20 @@ which makes them the containing block for `position: fixed` descendants; a menu
 nested inside one is positioned against the panel rather than the viewport, and
 focusing it scrolls the panel's clipped box sideways.
 
-## Phase 6 needs assets that do not exist yet
+## Phase 6 assets
 
-None of these are in the repo, and three of them are purchases or photographs:
+**Fonts are in.** `Alagambe` (note titles) and `Acumin Pro` (wordmark) are
+bundled under `src/renderer/assets/fonts/` and wired through `--font-script`
+and `--font-wordmark`.
 
-- `bg-dark.jpg` and `bg-light.jpg` — the full-bleed background
-- **Alagambe** — the script face for note titles
-- **Acumin Pro Light** — the wordmark
+Both are proprietary — Acumin Pro is Adobe's, all rights reserved — which is
+why this repo is private. It cannot be made public again without removing them.
 
-Until they land, the background is a layered CSS gradient and the title falls
-back to Snell Roundhand.
+Only Acumin Pro **Regular** was available; the mockup uses **Light**. The
+wordmark leans on tighter tracking and a smaller size to compensate.
+
+**Still missing:** `bg-dark.jpg` and `bg-light.jpg`, the full-bleed background.
+Until those land the background is a layered CSS gradient.
 
 **The mockup is light; the app is currently dark.** Phase 6's goal is "looks
 exactly like the mockup", so the light treatment is the primary target rather
