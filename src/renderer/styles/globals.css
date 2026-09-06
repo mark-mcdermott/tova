@@ -137,6 +137,25 @@ body {
   }
 }
 
+/*
+ * The window is titleBarStyle: "hiddenInset", so macOS provides no title bar to
+ * grab and the content runs to the top edge. These strips stand in for one.
+ * A drag region swallows pointer events from everything inside it, so every
+ * interactive descendant has to opt back out.
+ */
+.sidebar-header,
+.editor-header,
+.sidebar-footer {
+  -webkit-app-region: drag;
+}
+
+.sidebar-header button,
+.editor-header button,
+.editor-header input,
+.sidebar-footer button {
+  -webkit-app-region: no-drag;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
