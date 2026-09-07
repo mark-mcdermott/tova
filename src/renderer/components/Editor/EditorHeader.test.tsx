@@ -13,6 +13,7 @@ function note(overrides: Partial<Note> = {}): Note {
     section: "notes",
     folder: null,
     tags: [],
+    favorite: false,
     updatedAt: 0,
     deletedAt: null,
     body: "",
@@ -24,6 +25,7 @@ const read = vi.fn()
 const exportMarkdown = vi.fn()
 const move = vi.fn()
 const remove = vi.fn()
+const setFavorite = vi.fn()
 
 function renderHeader(active: Note = note()) {
   return render(
@@ -39,7 +41,7 @@ function renderHeader(active: Note = note()) {
 beforeEach(() => {
   vi.clearAllMocks()
   window.tova = {
-    notes: { read, exportMarkdown, move, remove } as never,
+    notes: { read, exportMarkdown, move, remove, setFavorite } as never,
     backups: {} as never,
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   }
@@ -248,5 +250,41 @@ describe("EditorHeader edited time", () => {
     renderHeader()
     await userEvent.setup().click(screen.getByLabelText("Note actions"))
     expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
+  })
+})
+
+describe("EditorHeader favourite", () => {
+  it("offers to add when the note is not a favourite", () => {
+    renderHeader(note({ favorite: false }))
+    expect(screen.getByLabelText("Add to favourites")).toBeDefined()
+  })
+
+  it("offers to remove when it is", () => {
+    renderHeader(note({ favorite: true }))
+    expect(screen.getByLabelText("Remove from favourites")).toBeDefined()
+  })
+
+  it("reports its state to assistive technology", () => {
+    renderHeader(note({ favorite: true }))
+    expect(screen.getByLabelText("Remove from favourites").getAttribute("aria-pressed")).toBe(
+      "true"
+    )
+  })
+
+  it("toggles through the bridge", async () => {
+    setFavorite.mockResolvedValue({ ...note({ favorite: true }) })
+    renderHeader(note({ favorite: false }))
+
+    await userEvent.setup().click(screen.getByLabelText("Add to favourites"))
+    expect(setFavorite).toHaveBeenCalledWith("notes/river.md", true)
+  })
+
+  it("unpins a note that is already pinned", async () => {
+    setFavorite.mockResolvedValue({ ...note({ favorite: false }) })
+    useNotesStore.setState({ notes: [note({ favorite: true })] })
+    renderHeader(note({ favorite: true }))
+
+    await userEvent.setup().click(screen.getByLabelText("Remove from favourites"))
+    expect(setFavorite).toHaveBeenCalledWith("notes/river.md", false)
   })
 })

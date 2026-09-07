@@ -60,6 +60,7 @@ interface NotesState {
   deleteFolder: (name: string) => Promise<void>
   moveNote: (id: string, section: Section, folder: string | null) => Promise<void>
   exportNote: (id: string) => Promise<void>
+  toggleFavorite: (id: string) => Promise<void>
   requestTitleFocus: () => void
   setCreatingFolder: (value: boolean) => void
   setDraggingNote: (id: string | null) => void
@@ -244,6 +245,16 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const summary = await window.tova.notes.move(id, { section, folder })
       replaceNote(set, get, id, summary)
       set((state) => ({ history: renameHistory(state.history, id, summary.id) }))
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  toggleFavorite: async (id) => {
+    const note = get().notes.find((candidate) => candidate.id === id)
+    try {
+      const summary = await window.tova.notes.setFavorite(id, !(note?.favorite ?? false))
+      replaceNote(set, get, id, summary)
     } catch (error) {
       set({ error: describe(error) })
     }

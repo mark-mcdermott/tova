@@ -145,19 +145,15 @@ and the mockup for look.
   the editor's Move menu files a note into any of the flat sections. Only the
   in-section shortcut is unreachable while the section is empty.
 
+- **Theme picker, dark theme, focus mode and search are deferred**, along with
+  folder reordering, code highlighting and PDF export. See the roadmap in
+  `README.md` for what each needs.
+
 - **Prose no longer wraps at a readable measure.** The writing area now spans
   the panel so its insets match the title's, which meant dropping the 68ch cap
   on `.cm-content`. On a 1900px window that wraps around 105 characters, above
   the 45-90 usually considered comfortable, and it grows with the window.
   `--measure` still exists and still caps the title.
-
-- **The favourite star is decoration.** `docs/SPEC.md` cut star/favourite as
-  "not needed"; the mockup shows one, so it is drawn as a static `span` rather
-  than a button, so it does not advertise a behaviour it lacks. Either build it
-  and reverse the cut, or drop it.
-
-- **"Edited Xm ago" does not tick.** It is computed when the header renders, so
-  it refreshes on save or on opening a note, not on a timer.
 
 - **The sidebar is narrower than the mockup's, proportionally.** Ours is 240px
   of a 1280px window (18.8%); the mockup's is 22.2%, which would be about 284px

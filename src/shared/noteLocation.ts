@@ -70,9 +70,14 @@ export function restoreLocation(
   return { section, folder, filename }
 }
 
-/** Most recently touched first, with title as a stable tie-break. */
+/**
+ * Favourites first, then most recently touched, with title as a stable
+ * tie-break. The favourite rank is applied within whatever list it is given,
+ * so a note pins to the top of its own section rather than the whole vault.
+ */
 export function sortNotes(notes: NoteSummary[]): NoteSummary[] {
   return [...notes].sort((a, b) => {
+    if (a.favorite !== b.favorite) return a.favorite ? -1 : 1
     if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt
     return a.title.localeCompare(b.title)
   })

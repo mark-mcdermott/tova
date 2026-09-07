@@ -15,6 +15,8 @@ export interface NoteSummary {
   /** Single folder under Notes; null for loose notes and for Daily. */
   folder: string | null
   tags: string[]
+  /** Pinned to the top of its section by the user. */
+  favorite: boolean
   updatedAt: number
   /** Present only in Trash. */
   deletedAt: number | null
@@ -76,6 +78,7 @@ export interface NoteApi {
   today: () => Promise<Note>
   listFolders: () => Promise<string[]>
   createFolder: (name: string) => Promise<string>
+  setFavorite: (id: string, favorite: boolean) => Promise<NoteSummary>
   renameFolder: (from: string, to: string) => Promise<string>
   deleteFolder: (name: string) => Promise<string[]>
   /** Resolves to the written path, or null if the user cancelled. */

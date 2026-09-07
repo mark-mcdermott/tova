@@ -411,9 +411,12 @@
 }
 
 .editor-star {
-  display: grid;
-  place-items: center;
   color: var(--text-primary);
+}
+
+/* Filled rather than recoloured, so the mark reads as on at a glance. */
+.editor-star.is-on .nav-icon {
+  fill: currentColor;
 }
 
 /* Half again the previous size, for the arrow, the favourite mark and the

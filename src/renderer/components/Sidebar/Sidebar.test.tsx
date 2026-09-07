@@ -13,6 +13,7 @@ const notes: NoteSummary[] = [
     section: "notes",
     folder: "ideas",
     tags: ["writing", "work"],
+    favorite: false,
     updatedAt: 5,
     deletedAt: null
   },
@@ -22,6 +23,7 @@ const notes: NoteSummary[] = [
     section: "notes",
     folder: null,
     tags: ["work"],
+    favorite: false,
     updatedAt: 4,
     deletedAt: null
   },
@@ -31,6 +33,7 @@ const notes: NoteSummary[] = [
     section: "daily",
     folder: null,
     tags: [],
+    favorite: false,
     updatedAt: 3,
     deletedAt: null
   },
@@ -40,6 +43,7 @@ const notes: NoteSummary[] = [
     section: "trash",
     folder: null,
     tags: ["work"],
+    favorite: false,
     updatedAt: 2,
     deletedAt: 2
   }
@@ -60,7 +64,8 @@ const bridge = {
   createFolder: vi.fn(),
   renameFolder: vi.fn(),
   deleteFolder: vi.fn(),
-  exportMarkdown: vi.fn()
+  exportMarkdown: vi.fn(),
+  setFavorite: vi.fn()
 }
 
 beforeEach(() => {

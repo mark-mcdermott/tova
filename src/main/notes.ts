@@ -35,6 +35,7 @@ interface LoadedNote {
   title: string
   body: string
   deletedAt: number | null
+  favorite: boolean
   updatedAt: number
 }
 
@@ -70,6 +71,7 @@ async function load(location: NoteLocation): Promise<LoadedNote> {
     title,
     body,
     deletedAt: readTimestamp(data.deletedAt),
+    favorite: data.favorite === "true",
     updatedAt: stats.mtimeMs
   }
 }
@@ -81,6 +83,8 @@ async function persist(note: LoadedNote): Promise<void> {
   }
   if (note.home.folder !== null) data.folder = note.home.folder
   if (note.deletedAt !== null) data.deletedAt = new Date(note.deletedAt).toISOString()
+  // Written only when set, so an ordinary note's front matter stays quiet.
+  if (note.favorite) data.favorite = "true"
 
   await writeFile(notePath(note.location), serializeFrontMatter(data, note.body), "utf-8")
 }
@@ -92,6 +96,7 @@ function toNote(note: LoadedNote): Note {
     section: note.location.section,
     folder: note.location.folder,
     tags: extractTags(note.body),
+    favorite: note.favorite,
     updatedAt: note.updatedAt,
     deletedAt: note.deletedAt,
     body: note.body
@@ -104,15 +109,9 @@ function toSummary(note: LoadedNote): NoteSummary {
 }
 
 /** Free `.md` filename in `directory`, ignoring the note's own current name. */
-async function freeFilename(
-  directory: string,
-  title: string,
-  keep?: string
-): Promise<string> {
+async function freeFilename(directory: string, title: string, keep?: string): Promise<string> {
   const entries = await readdir(directory).catch(() => [] as string[])
-  const taken = entries
-    .filter((name) => name.endsWith(".md") && name !== keep)
-    .map(stem)
+  const taken = entries.filter((name) => name.endsWith(".md") && name !== keep).map(stem)
 
   return `${uniqueSlug(slugify(title), taken)}.md`
 }
@@ -156,9 +155,7 @@ async function listLocations(): Promise<NoteLocation[]> {
 
 export async function listNotes(): Promise<NoteSummary[]> {
   const locations = await listLocations()
-  const loaded = await Promise.all(
-    locations.map((location) => load(location).catch(() => null))
-  )
+  const loaded = await Promise.all(locations.map((location) => load(location).catch(() => null)))
 
   return sortNotes(loaded.filter((note): note is LoadedNote => note !== null).map(toSummary))
 }
@@ -190,6 +187,7 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
     title,
     body: input.body ?? "",
     deletedAt: null,
+    favorite: false,
     updatedAt: Date.now()
   })
 
@@ -242,7 +240,11 @@ export async function moveNote(id: string, input: MoveNoteInput): Promise<NoteSu
   const directory = directoryOf(section, folder)
   await mkdir(directory, { recursive: true })
 
-  const filename = await freeFilename(directory, stem(note.location.filename), note.location.filename)
+  const filename = await freeFilename(
+    directory,
+    stem(note.location.filename),
+    note.location.filename
+  )
   const next: NoteLocation = { section, folder, filename }
 
   await rename(notePath(note.location), notePath(next))
@@ -383,6 +385,16 @@ export async function deleteFolder(name: string): Promise<string[]> {
 
   await rm(directory, { recursive: true, force: true })
   return trashed
+}
+
+/** Pins a note to the top of its section, or unpins it. */
+export async function setFavorite(id: string, favorite: boolean): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  if (note.favorite === favorite) return toSummary(note)
+
+  note.favorite = favorite
+  await persist(note)
+  return toSummary(await load(note.location))
 }
 
 export function vaultLocation(): string {

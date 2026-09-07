@@ -13,6 +13,7 @@ vi.mock("electron", () => ({
 
 const {
   listNotes,
+  setFavorite,
   renameFolder,
   deleteFolder,
   readNote,
@@ -267,6 +268,54 @@ describe("folders", () => {
 
   it("rejects a folder name that escapes the vault", async () => {
     await expect(createFolder("../escape")).rejects.toThrow()
+  })
+})
+
+describe("favourites", () => {
+  it("is off for a new note", async () => {
+    const note = await createNote({ section: "notes", title: "Plain" })
+    expect(note.favorite).toBe(false)
+  })
+
+  it("pins and unpins", async () => {
+    const note = await createNote({ section: "notes", title: "Pinned" })
+    expect((await setFavorite(note.id, true)).favorite).toBe(true)
+    expect((await setFavorite(note.id, false)).favorite).toBe(false)
+  })
+
+  it("survives a reread", async () => {
+    const note = await createNote({ section: "notes", title: "Pinned" })
+    await setFavorite(note.id, true)
+    expect((await readNote(note.id)).favorite).toBe(true)
+  })
+
+  it("survives a rename driven by the title", async () => {
+    const note = await createNote({ section: "notes", title: "Before" })
+    await setFavorite(note.id, true)
+    const renamed = await writeNote(note.id, "After", "body")
+    expect(renamed.favorite).toBe(true)
+  })
+
+  it("survives a move between sections", async () => {
+    const note = await createNote({ section: "notes", title: "Travelling" })
+    await setFavorite(note.id, true)
+    const moved = await moveNote(note.id, { section: "ideas", folder: null })
+    expect(moved.favorite).toBe(true)
+  })
+
+  it("leaves front matter alone when it is not set", async () => {
+    await createNote({ section: "notes", title: "Plain" })
+    const raw = await readFile(vaultFile("notes", "plain.md"), "utf-8")
+    expect(raw).not.toContain("favorite")
+  })
+
+  it("sorts above more recent notes in the same list", async () => {
+    const older = await createNote({ section: "notes", title: "Older" })
+    await createNote({ section: "notes", title: "Newer" })
+    await setFavorite(older.id, true)
+
+    const listed = (await listNotes()).filter((n) => n.section === "notes")
+    expect(listed[0].title).toBe("Older")
   })
 })
 

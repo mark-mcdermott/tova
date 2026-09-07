@@ -20,7 +20,8 @@ const notes: NoteApi = {
   createFolder: (name) => ipcRenderer.invoke("folder:create", name),
   renameFolder: (from, to) => ipcRenderer.invoke("folder:rename", from, to),
   deleteFolder: (name) => ipcRenderer.invoke("folder:delete", name),
-  exportMarkdown: (id) => ipcRenderer.invoke("note:export", id)
+  exportMarkdown: (id) => ipcRenderer.invoke("note:export", id),
+  setFavorite: (id, favorite) => ipcRenderer.invoke("note:favorite", id, favorite)
 }
 
 const backups: BackupApi = {

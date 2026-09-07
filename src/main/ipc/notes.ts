@@ -12,7 +12,8 @@ import {
   listFolders,
   createFolder,
   renameFolder,
-  deleteFolder
+  deleteFolder,
+  setFavorite
 } from "../notes"
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
 import { ensureDailyNote } from "../daily"
@@ -86,9 +87,7 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("note:delete", (_event, id) => trashNote(asString(id, "id")))
   ipcMain.handle("note:restore", (_event, id) => restoreNote(asString(id, "id")))
 
-  ipcMain.handle("note:permanentDelete", (_event, id) =>
-    permanentDelete(asString(id, "id"))
-  )
+  ipcMain.handle("note:permanentDelete", (_event, id) => permanentDelete(asString(id, "id")))
 
   ipcMain.handle("note:today", () => ensureDailyNote())
 
@@ -102,4 +101,8 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("folder:delete", (_event, name) => deleteFolder(asString(name, "name")))
 
   ipcMain.handle("note:export", (_event, id) => exportNoteMarkdown(asString(id, "id")))
+
+  ipcMain.handle("note:favorite", (_event, id, favorite) =>
+    setFavorite(asString(id, "id"), favorite === true)
+  )
 }

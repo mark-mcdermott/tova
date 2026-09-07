@@ -9,6 +9,7 @@ function note(overrides: Partial<NoteSummary>): NoteSummary {
     section: "notes",
     folder: null,
     tags: [],
+    favorite: false,
     updatedAt: 0,
     deletedAt: null,
     ...overrides

@@ -44,6 +44,11 @@ Two-column layout. Left: bold label title (large — carries readability against
 
 **Sections:** Notes, Daily, Ideas, Journal, Archive, Trash.
 
+**Favourites:** the star in the editor's breadcrumb row pins a note to the top
+of whichever list it appears in. Cut in an earlier draft as "not needed" and
+reinstated on 2026-09-07. Stored as `favorite: true` in front matter, written
+only when set.
+
 Ideas, Journal and Archive were cut in an earlier draft in favour of folders
 under Notes, and reinstated on 2026-09-07 to match the mockup. They are flat,
 like Daily and Trash — only Notes nests, and one level deep. A note reaches them
@@ -600,7 +605,6 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 | Feature | Xin | Tova | Reason |
 |---------|-----|------|--------|
 | Browser-style tabs | Yes (buggy) | No | Cut entirely |
-| Star/favorite | Yes | No | Not needed |
 | `---` YAML front-matter shortcut | Yes | No | Replaced by `@` popup |
 | Deep folder nesting | Yes | 1 level | Simpler, less bug-prone |
 | Inline styles | Yes (everywhere) | Never | Antipattern in Electron/web |
