@@ -3,6 +3,7 @@ import { useCodeMirror } from "./useCodeMirror"
 import { Toolbar, SaveStatus } from "./Toolbar"
 import { countWords } from "../../utils/wordCount"
 import { useNotesStore } from "../../stores/notesStore"
+import { registerPendingSave } from "../../stores/pendingSave"
 import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
@@ -34,6 +35,8 @@ export function Editor({ note }: EditorProps) {
     setSaveStatus("saving")
 
     saveTimer.current = setTimeout(() => {
+      // Cleared so the ref answers "is a write still owed?" truthfully.
+      saveTimer.current = null
       Promise.resolve(save(titleRef.current, bodyRef.current))
         .then(() => setSaveStatus("saved"))
         .catch((error: unknown) => {
@@ -63,6 +66,18 @@ export function Editor({ note }: EditorProps) {
   )
 
   const { containerRef, viewRef, setDoc } = useCodeMirror({ onChange: handleBodyChange })
+
+  // Anything that moves the file underneath us — a drag, a menu move — flushes
+  // this first, so a debounced write cannot land on the old path afterwards.
+  useEffect(() => {
+    return registerPendingSave(async () => {
+      if (saveTimer.current === null) return
+      clearTimeout(saveTimer.current)
+      saveTimer.current = null
+      await save(titleRef.current, bodyRef.current)
+      setSaveStatus("saved")
+    })
+  }, [save])
 
   useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current)

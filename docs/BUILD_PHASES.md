@@ -92,7 +92,7 @@ Write Playwright test: blank past daily note gone after launch.
 - [x] Breadcrumbs (1–3 levels, clickable)
 - [x] Right-click context menus (note, section, folder, Daily)
 - [x] `...` editor header menu (context-sensitive per note type)
-- [ ] Drag-and-drop note/folder reorder and move
+- [x] Drag-and-drop note/folder reorder and move
 - [x] Sidebar collapse (chevron + Cmd+\)
 
 Write Vitest tests: navigation history push/pop/forward.

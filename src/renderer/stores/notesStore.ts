@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { Note, NoteSummary, Section, VaultStatus } from "../../shared/types"
 import { sortNotes } from "../../shared/noteLocation"
+import { flushPendingSave } from "./pendingSave"
 import {
   History,
   emptyHistory,
@@ -35,6 +36,8 @@ interface NotesState {
   history: History
   focusTitleSeq: number
   creatingFolder: boolean
+  /** Note currently being dragged, so drop targets can judge whether to accept. */
+  draggingNoteId: string | null
   sidebarCollapsed: boolean
   /** Which sidebar sections and folders are open, keyed by section id. */
   expanded: Record<string, boolean>
@@ -59,6 +62,7 @@ interface NotesState {
   exportNote: (id: string) => Promise<void>
   requestTitleFocus: () => void
   setCreatingFolder: (value: boolean) => void
+  setDraggingNote: (id: string | null) => void
   trash: (id: string) => Promise<void>
   restore: (id: string) => Promise<void>
   destroy: (id: string) => Promise<void>
@@ -78,6 +82,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   /** Bumped to ask the editor to focus its title input — how Rename works. */
   focusTitleSeq: 0,
   creatingFolder: false,
+  draggingNoteId: null,
   sidebarCollapsed: false,
   // Folders start collapsed on every launch; nothing is persisted.
   expanded: { folders: true, tags: true, notes: true, daily: true },
@@ -234,6 +239,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   moveNote: async (id, section, folder) => {
     try {
+      await flushPendingSave()
       const summary = await window.tova.notes.move(id, { section, folder })
       replaceNote(set, get, id, summary)
       set((state) => ({ history: renameHistory(state.history, id, summary.id) }))
@@ -255,6 +261,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set((state) => ({ focusTitleSeq: state.focusTitleSeq + 1 }))
   },
 
+  setDraggingNote: (id) => {
+    set({ draggingNoteId: id })
+  },
+
   setCreatingFolder: (value) => {
     // Creating a folder is only visible with Notes open.
     set((state) => ({
@@ -265,6 +275,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   trash: async (id) => {
     try {
+      await flushPendingSave()
       const summary = await window.tova.notes.remove(id)
       replaceNote(set, get, id, summary)
     } catch (error) {

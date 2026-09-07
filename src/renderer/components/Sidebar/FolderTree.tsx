@@ -1,4 +1,4 @@
-import { MouseEvent, useState } from "react"
+import { DragEvent, MouseEvent, ReactNode, useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Disclosure } from "./Disclosure"
@@ -6,6 +6,7 @@ import { NoteRow } from "./NoteRow"
 import { FolderNameInput } from "./FolderNameInput"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
+import { useDropTarget } from "./useDropTarget"
 
 interface FolderTreeProps {
   notes: NoteSummary[]
@@ -29,6 +30,49 @@ interface FolderMenuState {
   y: number
 }
 
+interface TrashConfirmState {
+  note: NoteSummary
+  x: number
+  y: number
+}
+
+/**
+ * A folder row. Its own component because each one needs a drop target of its
+ * own, and hooks cannot be called from inside a map.
+ */
+function FolderRow({
+  folder,
+  notes,
+  onContextMenu,
+  onMove,
+  children
+}: {
+  folder: string
+  notes: NoteSummary[]
+  onContextMenu: (event: MouseEvent) => void
+  onMove: (note: NoteSummary, folder: string) => void
+  children: ReactNode
+}) {
+  const { isDropActive, dropHandlers } = useDropTarget({ kind: "folder", folder }, (note) =>
+    onMove(note, folder)
+  )
+
+  return (
+    <Disclosure
+      sectionKey={`folder:${folder}`}
+      label={folder}
+      count={notes.length}
+      icon="folder"
+      depth={2}
+      onContextMenu={onContextMenu}
+      dropHandlers={dropHandlers}
+      isDropActive={isDropActive}
+    >
+      {children}
+    </Disclosure>
+  )
+}
+
 export function FolderTree({ notes, folders }: FolderTreeProps) {
   const createNote = useNotesStore((state) => state.createNote)
   const createFolder = useNotesStore((state) => state.createFolder)
@@ -38,9 +82,22 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const creatingFolder = useNotesStore((state) => state.creatingFolder)
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
 
+  const moveNote = useNotesStore((state) => state.moveNote)
+  const trash = useNotesStore((state) => state.trash)
+
   const dailyMenu = useContextMenu()
   const [folderMenu, setFolderMenu] = useState<FolderMenuState | null>(null)
   const [renaming, setRenaming] = useState<string | null>(null)
+  const [trashConfirm, setTrashConfirm] = useState<TrashConfirmState | null>(null)
+
+  // Trashing is the one drop that destroys the arrangement, so it asks first.
+  const notesRoot = useDropTarget({ kind: "notesRoot" }, (note) =>
+    moveNote(note.id, "notes", null)
+  )
+  const dailyDrop = useDropTarget({ kind: "daily" }, () => undefined)
+  const trashDrop = useDropTarget({ kind: "trash" }, (note, event: DragEvent) =>
+    setTrashConfirm({ note, x: event.clientX, y: event.clientY })
+  )
 
   const inSection = (section: NoteSummary["section"]) =>
     notes.filter((note) => note.section === section)
@@ -83,6 +140,8 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         count={notesSection.length}
         icon="notes"
         depth={1}
+        dropHandlers={notesRoot.dropHandlers}
+        isDropActive={notesRoot.isDropActive}
       >
         {folders.map((folder) => {
           const inFolder = notesSection.filter((note) => note.folder === folder)
@@ -102,17 +161,15 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
           }
 
           return (
-            <Disclosure
+            <FolderRow
               key={folder}
-              sectionKey={`folder:${folder}`}
-              label={folder}
-              count={inFolder.length}
-              icon="folder"
-              depth={2}
+              folder={folder}
+              notes={inFolder}
               onContextMenu={openFolderMenu(folder)}
+              onMove={(note, destination) => moveNote(note.id, "notes", destination)}
             >
               <NoteRows notes={inFolder} depth={3} />
-            </Disclosure>
+            </FolderRow>
           )
         })}
 
@@ -140,11 +197,21 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         icon="daily"
         depth={1}
         onContextMenu={dailyMenu.open}
+        dropHandlers={dailyDrop.dropHandlers}
+        isDropActive={dailyDrop.isDropActive}
       >
         <NoteRows notes={daily} depth={2} />
       </Disclosure>
 
-      <Disclosure sectionKey="trash" label="Trash" count={trashed.length} icon="trash" depth={1}>
+      <Disclosure
+        sectionKey="trash"
+        label="Trash"
+        count={trashed.length}
+        icon="trash"
+        depth={1}
+        dropHandlers={trashDrop.dropHandlers}
+        isDropActive={trashDrop.isDropActive}
+      >
         <NoteRows notes={trashed} depth={2} />
       </Disclosure>
 
@@ -163,6 +230,21 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
           y={folderMenu.y}
           items={folderMenuItems(folderMenu.folder)}
           onClose={() => setFolderMenu(null)}
+        />
+      )}
+
+      {trashConfirm !== null && (
+        <Menu
+          x={trashConfirm.x}
+          y={trashConfirm.y}
+          items={[
+            {
+              label: `Move ${trashConfirm.note.title || "note"} to Trash`,
+              destructive: true,
+              onSelect: () => trash(trashConfirm.note.id)
+            }
+          ]}
+          onClose={() => setTrashConfirm(null)}
         />
       )}
     </Disclosure>

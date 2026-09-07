@@ -3,6 +3,7 @@ import { displayName } from "../../../shared/noteName"
 import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
+import { NOTE_MIME } from "./dragDrop"
 
 interface NoteRowProps {
   note: NoteSummary
@@ -16,6 +17,7 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
   const restore = useNotesStore((state) => state.restore)
   const destroy = useNotesStore((state) => state.destroy)
   const requestTitleFocus = useNotesStore((state) => state.requestTitleFocus)
+  const setDraggingNote = useNotesStore((state) => state.setDraggingNote)
 
   const menu = useContextMenu()
   const isTrashed = note.section === "trash"
@@ -52,6 +54,13 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
     <div
       className={`note-row${note.id === activeId ? " is-active" : ""}`}
       onContextMenu={menu.open}
+      draggable={!isTrashed}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move"
+        event.dataTransfer.setData(NOTE_MIME, note.id)
+        setDraggingNote(note.id)
+      }}
+      onDragEnd={() => setDraggingNote(null)}
     >
       <button
         type="button"

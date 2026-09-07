@@ -120,6 +120,13 @@
   opacity: 0.75;
 }
 
+/* Only shown on a target that will actually accept the note, so the highlight
+   doubles as the answer to "can I drop here?". */
+.disclosure-header.is-drop-active {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
 .disclosure-header:hover {
   background: var(--glass-bg-raised);
   color: var(--text-primary);
@@ -147,6 +154,10 @@
 }
 
 /* ── Note rows ────────────────────────────────────────────────────────── */
+
+.note-row[draggable="true"] {
+  cursor: grab;
+}
 
 .note-row {
   display: flex;

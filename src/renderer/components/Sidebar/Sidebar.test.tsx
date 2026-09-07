@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen, cleanup, waitFor } from "@testing-library/react"
+import { render, screen, cleanup, waitFor, fireEvent, act } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Sidebar } from "./Sidebar"
 import { useNotesStore } from "../../stores/notesStore"
@@ -357,6 +357,114 @@ describe("Sidebar", () => {
 
     expect(screen.queryByLabelText("Folder name")).toBeNull()
     expect(bridge.createFolder).not.toHaveBeenCalled()
+  })
+
+  // jsdom does not implement dataTransfer, and useDropTarget deliberately reads
+  // the dragged note from the store rather than the payload, so these drive the
+  // store directly and fire the drag events by hand.
+  function startDragging(id: string) {
+    // act, so the drop targets have re-rendered before the drag event lands.
+    act(() => {
+      useNotesStore.setState({ draggingNoteId: id })
+    })
+  }
+
+  const transfer = { dropEffect: "", effectAllowed: "", setData: vi.fn(), getData: vi.fn() }
+
+  it("highlights a folder that will accept the note", async () => {
+    const user = userEvent.setup()
+    render(<Sidebar />)
+    startDragging("notes/loose.md")
+
+    const folder = screen.getByRole("button", { name: /^ideas/ })
+    fireEvent.dragOver(folder, { dataTransfer: transfer })
+
+    await waitFor(() => expect(folder.className).toContain("is-drop-active"))
+    await user.click(folder)
+  })
+
+  it("does not highlight the folder the note already lives in", async () => {
+    render(<Sidebar />)
+    startDragging("notes/ideas/river.md")
+
+    const folder = screen.getByRole("button", { name: /^ideas/ })
+    fireEvent.dragOver(folder, { dataTransfer: transfer })
+
+    expect(folder.className).not.toContain("is-drop-active")
+  })
+
+  it("moves a note into the folder it is dropped on", async () => {
+    bridge.move.mockResolvedValue({ ...notes[1], id: "notes/ideas/loose.md", folder: "ideas" })
+    render(<Sidebar />)
+    startDragging("notes/loose.md")
+
+    const folder = screen.getByRole("button", { name: /^ideas/ })
+    fireEvent.dragOver(folder, { dataTransfer: transfer })
+    fireEvent.drop(folder, { dataTransfer: transfer })
+
+    await waitFor(() =>
+      expect(bridge.move).toHaveBeenCalledWith("notes/loose.md", {
+        section: "notes",
+        folder: "ideas"
+      })
+    )
+  })
+
+  it("moves a note out of its folder when dropped on Notes", async () => {
+    bridge.move.mockResolvedValue({ ...notes[0], id: "notes/river.md", folder: null })
+    render(<Sidebar />)
+    startDragging("notes/ideas/river.md")
+
+    const root = screen.getByRole("button", { name: /^Notes/ })
+    fireEvent.dragOver(root, { dataTransfer: transfer })
+    fireEvent.drop(root, { dataTransfer: transfer })
+
+    await waitFor(() =>
+      expect(bridge.move).toHaveBeenCalledWith("notes/ideas/river.md", {
+        section: "notes",
+        folder: null
+      })
+    )
+  })
+
+  it("refuses a drop on Daily", () => {
+    render(<Sidebar />)
+    startDragging("notes/loose.md")
+
+    const daily = screen.getByRole("button", { name: /^Daily/ })
+    fireEvent.dragOver(daily, { dataTransfer: transfer })
+    fireEvent.drop(daily, { dataTransfer: transfer })
+
+    expect(daily.className).not.toContain("is-drop-active")
+    expect(bridge.move).not.toHaveBeenCalled()
+  })
+
+  it("asks before trashing a dropped note rather than doing it outright", async () => {
+    render(<Sidebar />)
+    startDragging("notes/loose.md")
+
+    const trashRow = screen.getByRole("button", { name: /^Trash/ })
+    fireEvent.dragOver(trashRow, { dataTransfer: transfer })
+    fireEvent.drop(trashRow, { dataTransfer: transfer })
+
+    await waitFor(() =>
+      expect(screen.getByRole("menuitem", { name: /Move .* to Trash/ })).toBeDefined()
+    )
+    expect(bridge.remove).not.toHaveBeenCalled()
+  })
+
+  it("trashes once the confirmation is taken", async () => {
+    const user = userEvent.setup()
+    bridge.remove.mockResolvedValue({ ...notes[1], section: "trash" })
+    render(<Sidebar />)
+    startDragging("notes/loose.md")
+
+    const trashRow = screen.getByRole("button", { name: /^Trash/ })
+    fireEvent.dragOver(trashRow, { dataTransfer: transfer })
+    fireEvent.drop(trashRow, { dataTransfer: transfer })
+
+    await user.click(await screen.findByRole("menuitem", { name: /Move .* to Trash/ }))
+    expect(bridge.remove).toHaveBeenCalledWith("notes/loose.md")
   })
 
   it("surfaces a store error", () => {

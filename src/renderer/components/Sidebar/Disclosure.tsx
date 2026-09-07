@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode } from "react"
+import { DragEvent, MouseEvent, ReactNode } from "react"
 import { useNotesStore } from "../../stores/notesStore"
 import { Icon } from "./icons"
 
@@ -12,6 +12,13 @@ interface DisclosureProps {
   /** Nesting level, so a row can indent its text while its background does not. */
   depth?: number
   onContextMenu?: (event: MouseEvent) => void
+  /** Drag handlers from useDropTarget, spread onto the header. */
+  dropHandlers?: {
+    onDragOver: (event: DragEvent) => void
+    onDragLeave: () => void
+    onDrop: (event: DragEvent) => void
+  }
+  isDropActive?: boolean
   children: ReactNode
 }
 
@@ -28,6 +35,8 @@ export function Disclosure({
   icon,
   depth = 0,
   onContextMenu,
+  dropHandlers,
+  isDropActive = false,
   children
 }: DisclosureProps) {
   const open = useNotesStore((state) => state.expanded[sectionKey] === true)
@@ -37,8 +46,9 @@ export function Disclosure({
     <div className={`disclosure disclosure-${variant}`}>
       <button
         type="button"
-        className="disclosure-header"
+        className={`disclosure-header${isDropActive ? " is-drop-active" : ""}`}
         data-depth={depth}
+        {...dropHandlers}
         aria-expanded={open}
         onContextMenu={onContextMenu}
         onClick={() => toggleSection(sectionKey)}

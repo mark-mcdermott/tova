@@ -9,7 +9,7 @@
 | 2 — File system & note management | Complete |
 | 3 — Backups & data safety | Complete |
 | 4 — Daily notes | Complete |
-| 5 — Navigation & sidebar polish | 6 of 7 — drag-and-drop remains |
+| 5 — Navigation & sidebar polish | Complete, bar folder reordering (see below) |
 | 6 — Glassmorphic UI | Next, partly blocked on assets |
 
 288 tests. `pnpm run check`, `pnpm run test` and `pnpm run build` are green.
@@ -109,8 +109,13 @@ and the mockup for look.
   — a new dependency with real bundle cost.
 - **Export .pdf is not implemented.** The `...` menu offers Export .md only.
   A PDF needs a markdown-to-HTML renderer, which Tova does not have.
-- **Drag-and-drop is not done.** The last item of Phase 5. Folder *reordering*
-  needs somewhere to persist a manual order; folders currently sort alphabetically.
+- **Folder reordering is not implemented.** Every drag rule in the spec works —
+  note into a folder, note out to the root, note to Trash with a confirmation,
+  Daily refusing everything — except "drag folder → reorder within Notes". That
+  one needs somewhere to persist a manual order, and notes currently sort by
+  recency with folders alphabetical. Adding an explicit order also raises the
+  question of whether editing a note should still float it to the top. Worth a
+  decision rather than a guess.
 - **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
   picker and the second palette.
 - **Backup status has no UI.** The IPC exists; the Settings panel is Phase 12.
