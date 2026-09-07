@@ -2,8 +2,8 @@ import { useEffect } from "react"
 import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
 import { VaultWarning } from "./components/VaultWarning"
+import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
-import { cycleBackground } from "./backgrounds"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 
@@ -34,11 +34,6 @@ export default function App() {
         event.preventDefault()
         toggleSidebar()
       }
-
-      if (event.key === "F12") {
-        event.preventDefault()
-        cycleBackground()
-      }
     }
 
     window.addEventListener("keydown", onKeyDown)
@@ -58,7 +53,7 @@ export default function App() {
             aria-label="Show sidebar"
             onClick={toggleSidebar}
           >
-            ›
+            <ChevronIcon direction="right" />
           </button>
         ) : (
           <Sidebar />

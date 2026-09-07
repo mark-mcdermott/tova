@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
-import { pickBackground, applyBackground, cycleBackground } from "./backgrounds"
+import { pickBackground, applyBackground } from "./backgrounds"
 
 const urls = ["a.jpg", "b.jpg", "c.jpg"]
 
@@ -47,28 +47,5 @@ describe("applyBackground", () => {
   it("leaves the gradient fallback in place when there is no photo", () => {
     applyBackground(null)
     expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe("")
-  })
-})
-
-describe("cycleBackground", () => {
-  it("returns null when nothing is bundled", () => {
-    expect(cycleBackground([])).toBeNull()
-  })
-
-  it("steps to the next photograph each time", () => {
-    const first = cycleBackground(urls)
-    const second = cycleBackground(urls)
-    expect(second).not.toBe(first)
-  })
-
-  it("wraps around the end of the list", () => {
-    const seen = urls.map(() => cycleBackground(urls))
-    expect(new Set(seen).size).toBe(urls.length)
-    expect(cycleBackground(urls)).toBe(seen[0])
-  })
-
-  it("applies what it selects", () => {
-    const chosen = cycleBackground(urls) as string
-    expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe(`url("${chosen}")`)
   })
 })

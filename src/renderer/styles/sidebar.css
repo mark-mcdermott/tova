@@ -4,11 +4,28 @@
   flex: 0 0 15rem;
   min-height: 0;
 
-  /* No glass of its own — it sits on .shell's. A scrim and a hairline separate
-     it from the editor, and darken its backdrop enough for the small secondary
-     text it carries. */
-  background: rgb(17 15 24 / 20%);
+  /* The mockup does treat the sidebar, and only the sidebar. Fitting its pixels
+     against its own backdrop gives result = 0.72 x backdrop + 42 per channel,
+     which solves to a 28% overlay of this mid grey-lavender. It lifts the
+     shadows into haze and leaves the bright sky about where it was, which is
+     what separates the panel from the untouched editor beside it. */
+  background: rgb(144 141 157 / 28%);
   border-right: 1px solid var(--glass-border);
+
+  /* Monospace throughout, as the mockup has it. Measured there, five-letter
+     labels with quite different letterforms come out within a pixel of each
+     other — Notes 45, Daily 44, Ideas 45, Trash 44 — and the two seven-letter
+     ones are identical. Only a fixed advance does that. The wordmark keeps its
+     own face. */
+  font-family: var(--font-mono);
+
+  --text-primary: #ffffff;
+  --text-secondary: rgb(255 255 255 / 90%);
+  --text-muted: rgb(255 255 255 / 82%);
+  --text-faint: rgb(255 255 255 / 65%);
+  /* Hover and selection lift with light, since the ink here is white. */
+  --glass-bg-raised: rgb(255 255 255 / 16%);
+  color: var(--text-primary);
   overflow: hidden;
 }
 
@@ -42,7 +59,9 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  opacity: 0.8;
+  /* Full strength wherever the control sits on the photograph rather than on
+     a panel; the dimmed default only reads on a scrim. */
+  opacity: var(--icon-strength, 1);
   transition:
     opacity 120ms ease,
     background 120ms ease,
@@ -61,8 +80,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-top: 1px solid var(--glass-border);
+  /* Same box as the editor's toolbar, transparent border included, so the
+     control inside lands on the shared centreline. */
+  margin-bottom: var(--footer-inset);
+  padding: var(--footer-pad) var(--space-3);
+  border: 1px solid transparent;
+}
+
+.sidebar-footer .icon-button {
+  height: var(--footer-control);
+  transform: translateY(var(--footer-icon-nudge));
 }
 
 /* One scrolling region for the whole tree — no fixed-height splits. */
@@ -113,6 +140,38 @@
   font-size: var(--text-base);
   text-align: left;
   cursor: pointer;
+}
+
+/* The mockup frames the compose control in a rounded square. */
+.icon-button-framed {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.header-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Sits opposite the collapse caret, on the same centreline. */
+.sidebar-footer-cog {
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  color: var(--text-secondary);
+  transform: translateY(var(--footer-icon-nudge));
+}
+
+.footer-icon {
+  width: var(--footer-caret);
+  height: var(--footer-caret);
+}
+
+.caret-icon {
+  width: var(--footer-caret);
+  height: var(--footer-caret);
 }
 
 .sidebar-icon {
@@ -227,7 +286,7 @@
 }
 
 .note-row-actions button.is-destructive:hover {
-  color: #f4a2a2;
+  color: #a3242c;
 }
 
 /* ── Tags ─────────────────────────────────────────────────────────────── */
@@ -250,7 +309,7 @@
 }
 
 .tag-row-hash {
-  color: var(--accent);
+  color: #c9c0ff;
   padding-right: 1px;
 }
 
@@ -285,8 +344,8 @@
   margin: var(--space-2);
   padding: var(--space-2);
   border-radius: var(--radius-sm);
-  background: rgb(244 162 162 / 12%);
-  color: #f4a2a2;
+  background: rgb(163 36 44 / 10%);
+  color: #8c1f26;
   font-size: var(--text-sm);
 }
 

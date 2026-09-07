@@ -19,13 +19,6 @@ const statusLabels: Record<SaveStatus, string> = {
 export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
   return (
     <div className="toolbar">
-      <span className="toolbar-status">
-        {wordCount} {wordCount === 1 ? "word" : "words"}
-      </span>
-      <span className={`toolbar-status toolbar-status-${saveStatus}`} role="status">
-        {statusLabels[saveStatus]}
-      </span>
-
       <div className="toolbar-actions">
         {toolbarItems.map((item) => (
           <button
@@ -45,6 +38,13 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
           </button>
         ))}
       </div>
+
+      <span className={`toolbar-status toolbar-status-${saveStatus}`} role="status">
+        {statusLabels[saveStatus]}
+      </span>
+      <span className="toolbar-status">
+        {wordCount} {wordCount === 1 ? "word" : "words"}
+      </span>
     </div>
   )
 }

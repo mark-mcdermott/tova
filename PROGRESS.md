@@ -68,12 +68,12 @@ why this repo is private. It cannot be made public again without removing them.
 Only Acumin Pro **Regular** was available; the mockup uses **Light**. The
 wordmark leans on tighter tracking and a smaller size to compensate.
 
-**Backgrounds are in.** Four Unsplash mountain-sunset photographs under
-`src/renderer/assets/backgrounds/`, one picked at random per launch — never
-mid-session. `backgrounds.ts` globs the folder, so adding a photo is enough to
-put it in the rotation. Credits and the re-encode command are in `CREDITS.md`
-beside them. Unlike the fonts, the Unsplash licence permits redistribution, so
-these are not what keeps the repo private.
+**One background is bundled** — `lake-sunset.jpg`, the backdrop extracted from
+the mockup. It is the only image measured with the luminance split the layout
+relies on. `backgrounds.ts` still globs the folder and picks one per launch, so
+dropping a second image back in restores the rotation with no code change. The
+four Unsplash photographs were removed; the originals remain in
+`branding/backgrounds/`.
 
 **Panel tint, not the photo, carries contrast.** Measured across the four
 photos, text on the bare photo bottoms out at **1.3:1** — a full-height sidebar
@@ -81,7 +81,42 @@ crosses bright sky and dark land in every one of them, so no fixed text colour
 works. Light text on the dark panel needs **at least 54% opacity** to hold WCAG
 AA; the panels sit at 62%, worst case 5.8:1. Treat 54% as a floor when tuning.
 
-**Legibility comes from `backdrop-filter: brightness()`, not opacity.** A flat
+**The app is a light theme.** Dark text on a pale scrim, as the mockup has it.
+
+**The editor is untouched; the sidebar is not.** Fitting the mockup's pixels
+against its own backdrop gives `result = 1.00 x backdrop + 0` for the editor and
+`result = 0.72 x backdrop + 42` for the sidebar. The second solves to a 28%
+overlay of `#908d9d`, a mid grey-lavender.
+
+Its direction is the reverse of how it reads: it *lifts* the shadows rather than
+deepening them — a sample at (57,61,67) comes out (84,91,102), while a bright
+one barely moves. The headlands behind the sidebar go hazy, not dark, and look
+darker only because the editor beside them is untouched and vivid.
+
+It also compresses the range, which moves white sidebar text from 2.1-11.8:1 on
+the bare photograph to 2.4-8.1:1 under the overlay. Legibility rides entirely on text colour: white in
+the sidebar and the breadcrumb row, dark ink for the prose.
+
+**This is a deliberate trade against contrast, chosen with the numbers known.**
+Sampled in 40px cells (region averages hid the extremes), white sidebar text
+runs from 11.8:1 over the dark headland down to **2.1:1** where the photograph
+is brightest, and dark prose bottoms out near **1.7:1** in the same way. The
+mockup has the same property; it works because its text sits over the bright
+water, and Tova's scrolls anywhere.
+
+The toolbar ink is white, `#fffeff`, matching the sidebar rather than the
+mockup's slate. It sits over the darker water at the foot of the image, so this
+is the strongest of the three options measured: **2.4:1 to 4.3:1**, against
+1.3-2.4:1 for the mockup's slate and 2.2-4.0:1 for the dark ink before it.
+
+If a future background is less forgiving, the lever is `--glass-bg`: a white
+scrim around 48% restored better than 5:1 for dark text, and a 40% dark scrim
+carries white text at 4.7:1. Both are one token.
+
+White is set on `.sidebar` and `.editor-nav` rather than globally, so the prose
+below keeps its dark ink on the same untinted backdrop.
+
+**Superseded — the old dark treatment used `backdrop-filter: brightness()`.** A flat
 tint heavy enough to be safe flattened the photograph to mud. Scaling the
 backdrop instead keeps its colour and texture: `brightness(0.45)` with a 6%
 tint measures 5.8:1 — identical to the 62% wash it replaced, at a tenth of the

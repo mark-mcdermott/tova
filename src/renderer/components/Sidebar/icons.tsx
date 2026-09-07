@@ -1,7 +1,8 @@
 import type { ReactElement } from "react"
 
 interface IconProps {
-  name: "notes" | "daily" | "trash" | "folder" | "tag"
+  name: "notes" | "daily" | "trash" | "folder" | "tag" | "cog" | "compose"
+  className?: string
 }
 
 /**
@@ -27,13 +28,49 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
     </>
   ),
   folder: <path d="M2.5 4.5h4l1.2 1.5h5.8v6.5a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1z" />,
-  tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />
+  tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />,
+  // Drawn on a 24 grid and scaled to the shared 16 viewBox: radial spokes read
+  // as a sun at this size, whereas a toothed ring reads as a cog.
+  cog: (
+    <g transform="scale(0.6667)">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </g>
+  ),
+  // Square-and-pencil, as the mockup's compose control has it.
+  compose: (
+    <>
+      <path d="M12.6 8.9V12a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 12V4.9A1.5 1.5 0 0 1 4 3.4h3.1" />
+      <path d="M13.4 2.6a1.13 1.13 0 0 1 0 1.6L9.1 8.5l-2.1.5.5-2.1 4.3-4.3a1.13 1.13 0 0 1 1.6 0Z" />
+    </>
+  )
 }
 
-export function Icon({ name }: IconProps) {
+/**
+ * The sidebar's collapse and reveal carets. Sized in CSS rather than by
+ * attribute so both track the toolbar glyphs from a single token.
+ */
+export function ChevronIcon({ direction }: { direction: "left" | "right" }) {
   return (
     <svg
-      className="sidebar-icon"
+      className="caret-icon"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={direction === "left" ? "M9.5 3 5 8l4.5 5" : "M6.5 3 11 8l-4.5 5"} />
+    </svg>
+  )
+}
+
+export function Icon({ name, className = "sidebar-icon" }: IconProps) {
+  return (
+    <svg
+      className={className}
       viewBox="0 0 16 16"
       width="15"
       height="15"

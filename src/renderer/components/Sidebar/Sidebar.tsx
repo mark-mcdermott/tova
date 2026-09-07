@@ -3,35 +3,7 @@ import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
-
-function CollapseIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-      <path
-        d="M9.5 3 5 8l4.5 5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-      <path
-        d="M11.4 1.9a1.5 1.5 0 0 1 2.1 2.1l-7.6 7.6-2.8.7.7-2.8 7.6-7.6Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
+import { ChevronIcon, Icon } from "./icons"
 
 export function Sidebar() {
   const notes = useNotesStore((state) => state.notes)
@@ -50,12 +22,12 @@ export function Sidebar() {
 
         <button
           type="button"
-          className="icon-button"
+          className="icon-button icon-button-framed"
           title="New note"
           aria-label="New note"
           onClick={() => createNote("notes", null)}
         >
-          <PencilIcon />
+          <Icon name="compose" className="header-icon" />
         </button>
       </header>
 
@@ -79,8 +51,13 @@ export function Sidebar() {
           aria-label="Collapse sidebar"
           onClick={toggleSidebar}
         >
-          <CollapseIcon />
+          <ChevronIcon direction="left" />
         </button>
+
+        {/* Static for now; Settings arrives in phase 12. */}
+        <span className="sidebar-footer-cog" aria-hidden="true">
+          <Icon name="cog" className="footer-icon" />
+        </span>
       </footer>
 
       {menu.position !== null && (

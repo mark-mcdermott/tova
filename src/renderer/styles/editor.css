@@ -17,7 +17,6 @@
   min-height: 0;
 
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(var(--glass-dim));
   overflow: hidden;
 }
 
@@ -239,7 +238,7 @@
 /* Tags inside prose: solid pill when the cursor is elsewhere. */
 .cm-tag-body {
   background: var(--accent-tint-strong);
-  color: #fff;
+  color: #f7f6fc;
 }
 
 /* Cursor inside a prose tag — the pill dissolves back to raw text. */
@@ -253,38 +252,50 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  border-top: 1px solid var(--glass-border);
-  background: var(--glass-bg-raised);
+  /* An inset card rather than a band across the panel, as the mockup has it.
+     Its fill is nearly nothing — measured, the mockup lifts the photograph by
+     about 5% inside the rect — so the bright border is what reads as white. */
+  --text-muted: #fffeff;
+  --text-secondary: #fffeff;
+  color: #fffeff;
+
+  margin: 0 var(--space-6) var(--footer-inset);
+  padding: var(--footer-pad);
+  border: 1px solid rgb(255 255 255 / 62%);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 14%);
 }
 
 .toolbar-status {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .toolbar-status-error {
-  color: #f4a2a2;
+  color: #a3242c;
 }
 
 .toolbar-actions {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin-left: auto;
+  /* Glyphs left, word count pushed to the far right. */
+  margin-right: auto;
 }
 
 .toolbar-actions button {
-  min-width: 2rem;
-  height: 1.85rem;
-  padding-inline: var(--space-2);
+  /* The mockup sets the glyphs well above the prose and leaves the word count
+     near it — derived from cap heights, about 21px against 15px. */
+  min-width: 2.4rem;
+  height: var(--footer-control);
+  padding-inline: var(--space-3);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  font-size: var(--footer-glyph);
   cursor: pointer;
   transition:
     background 120ms ease,
@@ -353,6 +364,15 @@
   align-items: center;
   gap: var(--space-1);
   min-height: 1.75rem;
+
+  /* White across the row, as the mockup has it. Scoped rather than global so
+     the prose below keeps its dark ink. */
+  --icon-strength: 1;
+  --text-primary: #ffffff;
+  --text-secondary: rgb(255 255 255 / 90%);
+  --text-muted: rgb(255 255 255 / 82%);
+  --text-faint: rgb(255 255 255 / 65%);
+  color: var(--text-primary);
 }
 
 .editor-nav .icon-button:disabled {
@@ -424,15 +444,17 @@
   /* Bottom left, where the collapse control it replaces was. */
   align-self: flex-end;
   width: 1.5rem;
-  height: 2.5rem;
-  margin-bottom: var(--space-4);
+  display: grid;
+  place-items: center;
+  height: var(--reveal-height);
+  /* Centred on the same line as the toolbar glyphs it sits beside. */
+  margin-bottom: calc(var(--footer-center) - var(--reveal-height) / 2 - var(--footer-icon-nudge));
   border: 1px solid var(--glass-border);
   border-left: none;
   border-start-end-radius: var(--radius-sm);
   border-end-end-radius: var(--radius-sm);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  color: var(--text-muted);
+  background: rgb(255 255 255 / 14%);
+  color: #ffffff;
   cursor: pointer;
   transition:
     color 120ms ease,

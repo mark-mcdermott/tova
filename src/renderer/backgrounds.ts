@@ -22,26 +22,12 @@ export function pickBackground(
   return urls[index]
 }
 
-/** Where the rotation currently sits, so cycling continues from what is shown. */
-let position = -1
-
 /**
- * Chosen once per launch rather than on a timer — the background is scenery,
- * and changing it unbidden while someone is writing would be the opposite of
- * calm. Stepping through deliberately is another matter; see cycleBackground.
+ * One photograph is bundled today, so this resolves to it. The picker stays
+ * because the glob still drives the list — dropping a second image into the
+ * folder is all it takes to have one chosen per launch again.
  */
 export function applyBackground(url: string | null = pickBackground()): void {
   if (url === null) return
-  const at = backgroundUrls.indexOf(url)
-  if (at !== -1) position = at
   document.documentElement.style.setProperty("--bg-photo", `url("${url}")`)
-}
-
-/** Advances to the next photograph and applies it. Wraps at the end. */
-export function cycleBackground(urls: string[] = backgroundUrls): string | null {
-  if (urls.length === 0) return null
-  position = (position + 1) % urls.length
-  const url = urls[position]
-  applyBackground(url)
-  return url
 }
