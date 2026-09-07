@@ -18,6 +18,7 @@
      ones are identical. Only a fixed advance does that. The wordmark keeps its
      own face. */
   font-family: var(--font-mono);
+  font-weight: 500;
 
   --text-primary: #ffffff;
   --text-secondary: rgb(255 255 255 / 90%);
@@ -36,12 +37,12 @@
   gap: var(--space-2);
   /* Clears the macOS traffic lights, which overlay an inset title bar. With no
      outer margin left, all of that clearance has to come from here. */
-  padding: 2.75rem var(--space-4) var(--space-4);
+  padding: 2.75rem var(--sidebar-gutter) var(--space-8);
 }
 
 .wordmark {
   font-family: var(--font-wordmark);
-  font-size: 1.75rem;
+  font-size: 2.625rem;
   font-weight: 400;
   /* The mockup sets the wordmark tight and small; with Regular rather than
      Light standing in, the tracking carries more of that weight. */
@@ -79,12 +80,34 @@
 .sidebar-footer {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  /* Same box as the editor's toolbar, transparent border included, so the
-     control inside lands on the shared centreline. */
-  margin-bottom: var(--footer-inset);
-  padding: var(--footer-pad) var(--space-3);
-  border: 1px solid transparent;
+  gap: var(--space-4);
+  margin: 0 var(--sidebar-edge) var(--sidebar-footer-inset);
+  padding: var(--sidebar-footer-pad) var(--space-3) 0;
+  border-top: 1px solid var(--sidebar-rule);
+}
+
+/* The rule defines the column. Rows carry their own x padding inside it, so
+   labels and counts never reach its ends. */
+.sidebar-rule {
+  height: 0;
+  margin: var(--space-4) 0;
+  border: none;
+  border-top: 1px solid var(--sidebar-rule);
+}
+
+.sidebar-avatar {
+  width: var(--sidebar-avatar);
+  height: var(--sidebar-avatar);
+  border-radius: 50%;
+  object-fit: cover;
+  transform: translateY(var(--footer-icon-nudge));
+}
+
+.sidebar-user {
+  font-size: var(--text-row);
+  letter-spacing: var(--sidebar-tracking);
+  color: var(--text-primary);
+  transform: translateY(var(--footer-icon-nudge));
 }
 
 .sidebar-footer .icon-button {
@@ -97,7 +120,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 var(--space-2) var(--space-4);
+  padding: 0 var(--sidebar-edge) var(--space-4);
 }
 
 /* ── Disclosure ───────────────────────────────────────────────────────── */
@@ -129,15 +152,17 @@
 .disclosure-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-5);
   width: 100%;
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: var(--text-base);
+  font-weight: inherit;
+  font-size: var(--text-row);
+  letter-spacing: var(--sidebar-tracking);
   text-align: left;
   cursor: pointer;
 }
@@ -176,6 +201,10 @@
 
 .sidebar-icon {
   flex: none;
+  /* Sized here rather than by the SVG's own width/height attributes, which is
+     what the markup would otherwise fall back to. */
+  width: var(--sidebar-icon);
+  height: var(--sidebar-icon);
   opacity: 0.75;
 }
 
@@ -186,6 +215,15 @@
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
+/* Nothing to open, so it does not offer to. */
+.disclosure-header.is-empty {
+  cursor: default;
+}
+
+.disclosure-header.is-empty:hover {
+  background: transparent;
+}
+
 .disclosure-header:hover {
   background: var(--glass-bg-raised);
   color: var(--text-primary);
@@ -194,8 +232,9 @@
 .disclosure-section > .disclosure-header {
   margin-top: var(--space-4);
   color: var(--text-muted);
-  font-size: 0.6875rem;
-  letter-spacing: 0.09em;
+  font-size: var(--text-section);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .disclosure-label {
@@ -208,7 +247,8 @@
 .disclosure-count {
   flex: none;
   color: var(--text-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -241,7 +281,9 @@
   background: transparent;
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: var(--text-base);
+  font-weight: inherit;
+  font-size: var(--text-row);
+  letter-spacing: var(--sidebar-tracking);
   text-align: left;
   overflow: hidden;
   white-space: nowrap;
@@ -297,7 +339,8 @@
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  font-size: var(--text-base);
+  font-size: var(--text-row);
+  letter-spacing: var(--sidebar-tracking);
   color: var(--text-secondary);
 }
 
@@ -324,6 +367,7 @@
   background: transparent;
   color: var(--text-faint);
   font-family: inherit;
+  font-weight: inherit;
   font-size: var(--text-sm);
   text-align: left;
   cursor: pointer;
@@ -338,6 +382,7 @@
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
   color: var(--text-faint);
   font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .sidebar-error {
@@ -374,6 +419,7 @@
   background: transparent;
   color: #241f2e;
   font-family: inherit;
+  font-weight: inherit;
   font-size: var(--text-sm);
   text-align: left;
   cursor: pointer;
@@ -407,6 +453,7 @@
   background: var(--glass-bg-raised);
   color: var(--text-primary);
   font-family: inherit;
+  font-weight: inherit;
   font-size: var(--text-sm);
 }
 

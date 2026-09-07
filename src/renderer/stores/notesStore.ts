@@ -84,8 +84,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   creatingFolder: false,
   draggingNoteId: null,
   sidebarCollapsed: false,
-  // Folders start collapsed on every launch; nothing is persisted.
-  expanded: { folders: true, tags: true, notes: true, daily: true },
+  // Everything but Tags starts collapsed, as the mockup shows it. Nothing is
+  // persisted, so this is the state on every launch.
+  expanded: { tags: true },
 
   load: async () => {
     try {

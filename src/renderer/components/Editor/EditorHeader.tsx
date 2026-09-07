@@ -4,6 +4,8 @@ import { useNotesStore } from "../../stores/notesStore"
 import { canGoBack, canGoForward } from "../../stores/history"
 import { breadcrumbFor } from "./breadcrumb"
 import { NoteMenu } from "./NoteMenu"
+import { Icon } from "../Sidebar/icons"
+import { formatEditedAgo } from "../../../shared/date"
 import { useContextMenu } from "../Popup/useContextMenu"
 
 interface EditorHeaderProps {
@@ -11,21 +13,6 @@ interface EditorHeaderProps {
   title: string
   onTitleChange: (value: string) => void
   onTitleCommit: () => void
-}
-
-function ChevronIcon({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-      <path
-        d={direction === "left" ? "M10 3 5 8l5 5" : "M6 3l5 5-5 5"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
 }
 
 export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: EditorHeaderProps) {
@@ -69,7 +56,7 @@ export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: Edit
           disabled={!hasBack}
           onClick={() => back()}
         >
-          <ChevronIcon direction="left" />
+          <Icon name="back" className="nav-icon" />
         </button>
 
         {/* Forward only earns its space once there is somewhere to go. */}
@@ -81,7 +68,7 @@ export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: Edit
             aria-label="Forward"
             onClick={() => forward()}
           >
-            <ChevronIcon direction="right" />
+            <Icon name="back" className="nav-icon nav-icon-forward" />
           </button>
         )}
 
@@ -103,16 +90,25 @@ export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: Edit
           ))}
         </ol>
 
-        <button
-          type="button"
-          className="icon-button editor-menu-button"
-          title="Note actions"
-          aria-label="Note actions"
-          aria-haspopup="menu"
-          onClick={(event) => menu.open(event)}
-        >
-          ⋯
-        </button>
+        <div className="editor-nav-end">
+          <span className="editor-edited">{formatEditedAgo(note.updatedAt)}</span>
+
+          {/* Static for now — the spec has no favourites; see PROGRESS.md. */}
+          <span className="editor-star" aria-hidden="true">
+            <Icon name="star" className="nav-icon" />
+          </span>
+
+          <button
+            type="button"
+            className="icon-button editor-menu-button"
+            title="Note actions"
+            aria-label="Note actions"
+            aria-haspopup="menu"
+            onClick={(event) => menu.open(event)}
+          >
+            <Icon name="more" className="nav-icon" />
+          </button>
+        </div>
       </nav>
 
       <input

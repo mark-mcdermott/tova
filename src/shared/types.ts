@@ -1,4 +1,4 @@
-export const SECTIONS = ["notes", "daily", "trash"] as const
+export const SECTIONS = ["notes", "daily", "ideas", "journal", "archive", "trash"] as const
 
 export type Section = (typeof SECTIONS)[number]
 

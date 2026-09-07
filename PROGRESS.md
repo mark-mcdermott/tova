@@ -140,6 +140,38 @@ and the mockup for look.
 
 ## Carried forward
 
+- **An empty section cannot be opened**, so the "+ New note" row inside it is
+  out of reach. Notes still get there: the compose control creates in Notes, and
+  the editor's Move menu files a note into any of the flat sections. Only the
+  in-section shortcut is unreachable while the section is empty.
+
+- **Prose no longer wraps at a readable measure.** The writing area now spans
+  the panel so its insets match the title's, which meant dropping the 68ch cap
+  on `.cm-content`. On a 1900px window that wraps around 105 characters, above
+  the 45-90 usually considered comfortable, and it grows with the window.
+  `--measure` still exists and still caps the title.
+
+- **The favourite star is decoration.** `docs/SPEC.md` cut star/favourite as
+  "not needed"; the mockup shows one, so it is drawn as a static `span` rather
+  than a button, so it does not advertise a behaviour it lacks. Either build it
+  and reverse the cut, or drop it.
+
+- **"Edited Xm ago" does not tick.** It is computed when the header renders, so
+  it refreshes on save or on opening a note, not on a timer.
+
+- **The sidebar is narrower than the mockup's, proportionally.** Ours is 240px
+  of a 1280px window (18.8%); the mockup's is 22.2%, which would be about 284px
+  here. With the wider gutters and larger icons now in place, a folder named
+  `correspondence` truncates. Widening to the mockup's proportion would fix it.
+
+- **Sidebar sections start collapsed**, Tags aside, so the sidebar opens as the
+  flat list the mockup shows. Nothing is persisted, so this is every launch.
+
+- **Sidebar collapse has no visible control.** The caret was removed to match
+  the mockup, which puts an avatar there instead. `Cmd+\` and the reveal tab
+  still drive it, and the store, styles and tests are intact — restoring the
+  control is putting a button back, not rebuilding the feature.
+
 - **No syntax highlighting inside code blocks.** Needs `@codemirror/language-data`
   — a new dependency with real bundle cost.
 - **Export .pdf is not implemented.** The `...` menu offers Export .md only.

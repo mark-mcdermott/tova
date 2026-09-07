@@ -48,7 +48,9 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
 
     const items: MenuItem[] = [{ label: "Rename", onSelect: requestTitleFocus }]
 
-    if (note.section === "notes") {
+    // Everything but a daily note can move; a daily note's filename is its date.
+    // Trashed notes never reach here — they take the recovery branch above.
+    if (note.section !== "daily") {
       items.push({
         label: "Move to…",
         keepOpen: true,
@@ -68,8 +70,18 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
   function folderItems(): MenuItem[] {
     const targets: MenuItem[] = []
 
-    if (note.folder !== null) {
+    if (note.folder !== null || note.section !== "notes") {
       targets.push({ label: "Notes", onSelect: () => moveNote(note.id, "notes", null) })
+    }
+
+    // The flat sections beside Notes, minus wherever the note already is.
+    for (const [section, label] of [
+      ["ideas", "Ideas"],
+      ["journal", "Journal"],
+      ["archive", "Archive"]
+    ] as const) {
+      if (note.section === section) continue
+      targets.push({ label, onSelect: () => moveNote(note.id, section, null) })
     }
 
     for (const folder of folders) {

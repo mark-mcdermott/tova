@@ -91,9 +91,7 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const [trashConfirm, setTrashConfirm] = useState<TrashConfirmState | null>(null)
 
   // Trashing is the one drop that destroys the arrangement, so it asks first.
-  const notesRoot = useDropTarget({ kind: "notesRoot" }, (note) =>
-    moveNote(note.id, "notes", null)
-  )
+  const notesRoot = useDropTarget({ kind: "notesRoot" }, (note) => moveNote(note.id, "notes", null))
   const dailyDrop = useDropTarget({ kind: "daily" }, () => undefined)
   const trashDrop = useDropTarget({ kind: "trash" }, (note, event: DragEvent) =>
     setTrashConfirm({ note, x: event.clientX, y: event.clientY })
@@ -106,6 +104,13 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const loose = notesSection.filter((note) => note.folder === null)
   const daily = inSection("daily")
   const trashed = inSection("trash")
+
+  // Flat sections beside Notes: no folders, so each is a list plus a way in.
+  const flatSections = [
+    { key: "ideas", label: "Ideas", icon: "ideas" },
+    { key: "journal", label: "Journal", icon: "journal" },
+    { key: "archive", label: "Archive", icon: "archive" }
+  ] as const
 
   function openFolderMenu(folder: string) {
     return (event: MouseEvent) => {
@@ -133,7 +138,7 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   }
 
   return (
-    <Disclosure sectionKey="folders" label="FOLDERS" variant="section">
+    <>
       <Disclosure
         sectionKey="notes"
         label="Notes"
@@ -203,6 +208,25 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         <NoteRows notes={daily} depth={2} />
       </Disclosure>
 
+      {flatSections.map(({ key, label, icon }) => {
+        const held = inSection(key)
+        return (
+          <Disclosure
+            key={key}
+            sectionKey={key}
+            label={label}
+            count={held.length}
+            icon={icon}
+            depth={1}
+          >
+            <NoteRows notes={held} depth={2} />
+            <button type="button" className="sidebar-add" onClick={() => createNote(key, null)}>
+              + New note
+            </button>
+          </Disclosure>
+        )
+      })}
+
       <Disclosure
         sectionKey="trash"
         label="Trash"
@@ -247,6 +271,6 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
           onClose={() => setTrashConfirm(null)}
         />
       )}
-    </Disclosure>
+    </>
   )
 }

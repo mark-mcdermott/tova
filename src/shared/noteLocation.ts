@@ -59,9 +59,7 @@ export function restoreLocation(
 ): NoteLocation {
   const recorded = data.section
   const section: Section =
-    typeof recorded === "string" && isSection(recorded) && recorded !== "trash"
-      ? recorded
-      : "notes"
+    typeof recorded === "string" && isSection(recorded) && recorded !== "trash" ? recorded : "notes"
 
   const recordedFolder = data.folder
   const folder =

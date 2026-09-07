@@ -42,6 +42,13 @@ Two-column layout. Left: bold label title (large — carries readability against
 
 ## Sidebar
 
+**Sections:** Notes, Daily, Ideas, Journal, Archive, Trash.
+
+Ideas, Journal and Archive were cut in an earlier draft in favour of folders
+under Notes, and reinstated on 2026-09-07 to match the mockup. They are flat,
+like Daily and Trash — only Notes nests, and one level deep. A note reaches them
+through the editor's Move menu or by being created there.
+
 ```
 [Tova wordmark]   [✏ new note]
                   [Q search]
@@ -593,7 +600,6 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 | Feature | Xin | Tova | Reason |
 |---------|-----|------|--------|
 | Browser-style tabs | Yes (buggy) | No | Cut entirely |
-| Archive / Journal / Ideas | Yes | No | Folders under Notes instead |
 | Star/favorite | Yes | No | Not needed |
 | `---` YAML front-matter shortcut | Yes | No | Replaced by `@` popup |
 | Deep folder nesting | Yes | 1 level | Simpler, less bug-prone |

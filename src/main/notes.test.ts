@@ -270,6 +270,47 @@ describe("folders", () => {
   })
 })
 
+describe("the flat sections beside Notes", () => {
+  it.each(["ideas", "journal", "archive"] as const)("creates a note in %s", async (section) => {
+    const note = await createNote({ section, title: "Seed" })
+    expect(note.id).toBe(`${section}/seed.md`)
+    expect(await exists(vaultFile(section, "seed.md"))).toBe(true)
+  })
+
+  it.each(["ideas", "journal", "archive"] as const)("lists notes in %s", async (section) => {
+    await createNote({ section, title: "Seed" })
+    const listed = await listNotes()
+    expect(listed.find((n) => n.section === section)?.title).toBe("Seed")
+  })
+
+  it("restores a trashed note to the section it came from", async () => {
+    const note = await createNote({ section: "journal", title: "Entry" })
+    const trashed = await trashNote(note.id)
+    expect(trashed.section).toBe("trash")
+
+    const restored = await restoreNote(trashed.id)
+    expect(restored.id).toBe("journal/entry.md")
+    expect(restored.section).toBe("journal")
+  })
+
+  it("moves a note between flat sections", async () => {
+    const note = await createNote({ section: "ideas", title: "Spark" })
+    const moved = await moveNote(note.id, { section: "archive", folder: null })
+    expect(moved.id).toBe("archive/spark.md")
+    expect(await exists(vaultFile("ideas", "spark.md"))).toBe(false)
+  })
+
+  it("drops a folder asked for inside a flat section", async () => {
+    // Only Notes nests. moveNote normalises rather than rejecting, the same way
+    // it coerces a move into Trash back to Notes.
+    const loose = await createNote({ section: "notes", title: "Loose" })
+    const moved = await moveNote(loose.id, { section: "ideas", folder: "somewhere" })
+
+    expect(moved.id).toBe("ideas/loose.md")
+    expect(moved.folder).toBeNull()
+  })
+})
+
 describe("renameFolder", () => {
   it("moves the folder and its notes", async () => {
     await createNote({ section: "notes", folder: "ideas", title: "River" })

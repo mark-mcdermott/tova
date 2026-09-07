@@ -210,11 +210,43 @@ describe("EditorHeader note menu", () => {
     expect(move).toHaveBeenCalledWith("notes/river.md", { section: "notes", folder: "ideas" })
   })
 
-  it("says so when there is nowhere to move a loose note", async () => {
+  it("offers the flat sections even when there are no folders", async () => {
     useNotesStore.setState({ folders: [] })
     const user = await openMenu()
     await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
 
-    expect(screen.getByRole("menuitem", { name: "Nowhere else to move it" })).toBeDefined()
+    for (const label of ["Ideas", "Journal", "Archive"]) {
+      expect(screen.getByRole("menuitem", { name: label })).toBeDefined()
+    }
+  })
+
+  it("does not offer the section the note already sits in", async () => {
+    useNotesStore.setState({ folders: [] })
+    const user = await openMenu(note({ section: "journal" }))
+    await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
+
+    expect(screen.queryByRole("menuitem", { name: "Journal" })).toBeNull()
+    expect(screen.getByRole("menuitem", { name: "Ideas" })).toBeDefined()
+    // A note outside Notes can always come back to it.
+    expect(screen.getByRole("menuitem", { name: "Notes" })).toBeDefined()
+  })
+})
+
+describe("EditorHeader edited time", () => {
+  it("reports how long ago the note was written", () => {
+    const twoMinutes = Date.now() - 2 * 60_000
+    renderHeader(note({ updatedAt: twoMinutes }))
+    expect(screen.getByText("Edited 2m ago")).toBeDefined()
+  })
+
+  it("reads as just now for a fresh save", () => {
+    renderHeader(note({ updatedAt: Date.now() }))
+    expect(screen.getByText("Edited just now")).toBeDefined()
+  })
+
+  it("keeps the actions menu reachable beside it", async () => {
+    renderHeader()
+    await userEvent.setup().click(screen.getByLabelText("Note actions"))
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
   })
 })

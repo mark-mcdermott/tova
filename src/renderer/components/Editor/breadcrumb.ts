@@ -9,6 +9,9 @@ export interface Crumb {
 const SECTION_LABELS: Record<NoteSummary["section"], string> = {
   notes: "Notes",
   daily: "Daily",
+  ideas: "Ideas",
+  journal: "Journal",
+  archive: "Archive",
   trash: "Trash"
 }
 

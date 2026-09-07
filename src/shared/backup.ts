@@ -26,7 +26,9 @@ export function parseBackupFolderName(name: string): Date | null {
 
 /** Newest first. Entries that are not backup folders are dropped. */
 export function sortBackups(names: string[]): string[] {
-  return names.filter((name) => parseBackupFolderName(name) !== null).sort((a, b) => b.localeCompare(a))
+  return names
+    .filter((name) => parseBackupFolderName(name) !== null)
+    .sort((a, b) => b.localeCompare(a))
 }
 
 /** The backups beyond `keep` that should be pruned, oldest included first. */

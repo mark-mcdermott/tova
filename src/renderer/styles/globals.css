@@ -49,6 +49,18 @@
   --glass-bg: transparent;
   --glass-bg-raised: rgb(255 255 255 / 20%);
   --glass-border: rgb(255 255 255 / 55%);
+  --sidebar-rule: rgb(255 255 255 / 24%);
+  /* The scroll area's own inset. Header and footer add the depth-1 row indent
+     on top, so the wordmark, the row labels and the avatar all start on one
+     vertical line. */
+  --sidebar-edge: var(--space-6);
+  --sidebar-gutter: calc(var(--sidebar-edge) + var(--space-3));
+  /* The sidebar footer sits lower and looser than the toolbar it used to be
+     paired with; see PROGRESS.md on the centreline that trade gives up. */
+  --sidebar-avatar: 2rem;
+  --sidebar-tracking: -0.025em;
+  --sidebar-footer-inset: calc(var(--footer-center) - var(--sidebar-avatar) / 2);
+  --sidebar-footer-pad: var(--space-8);
   --glass-blur: 16px;
 
   /* Text */
@@ -76,12 +88,18 @@
   --text-base: 0.9375rem;
   --text-lg: 1.125rem;
   --text-title: 2.75rem;
+  /* Sidebar scale, taken off the mockup: its row labels measure a 12px cap,
+     which is about a 16px face once the mockup's own scale is divided out. */
+  --text-row: 1rem;
+  --text-section: 1.21875rem;
+  --sidebar-icon: 1.4rem;
 
   /* Rhythm */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-12: 3rem;
@@ -94,6 +112,9 @@
   --shadow-panel: 0 24px 60px rgb(40 32 60 / 20%);
 
   --measure: 68ch;
+  /* One inset for the writing area: left, right and below. The title carries
+     the same value as its own left padding, so the two line up. */
+  --editor-inset: var(--space-12);
 
   /* Both footers share one horizontal centreline: the editor's toolbar and the
      sidebar's collapse control sit on it, and so does the reveal tab that

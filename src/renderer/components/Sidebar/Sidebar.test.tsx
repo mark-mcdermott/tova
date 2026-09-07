@@ -202,12 +202,60 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("menu")).toBeNull()
   })
 
-  it("collapses when the collapse control is used", async () => {
+  it("shows who is signed in at the foot of the sidebar", () => {
+    const { container } = render(<Sidebar />)
+
+    expect(screen.getByText("Mark")).toBeDefined()
+    expect(container.querySelector(".sidebar-avatar")).not.toBeNull()
+  })
+
+  it("no longer offers a collapse control", () => {
+    // Parked for now; Cmd+backslash and the reveal tab still drive the state.
+    render(<Sidebar />)
+    expect(screen.queryByLabelText("Collapse sidebar")).toBeNull()
+  })
+
+  it("rules off the tags section from the tree above it", () => {
+    const { container } = render(<Sidebar />)
+    expect(container.querySelector(".sidebar-rule")).not.toBeNull()
+  })
+
+  it("does not open a section that holds nothing", async () => {
     const user = userEvent.setup()
     render(<Sidebar />)
 
-    await user.click(screen.getByLabelText("Collapse sidebar"))
-    expect(useNotesStore.getState().sidebarCollapsed).toBe(true)
+    // Ideas holds nothing in the fixture; Trash has a note in it.
+    const ideas = screen.getByRole("button", { name: /^Ideas/ })
+    await user.click(ideas)
+
+    expect(useNotesStore.getState().expanded.ideas).toBeUndefined()
+    expect(ideas.getAttribute("aria-disabled")).toBe("true")
+  })
+
+  it("still opens a section that holds something", async () => {
+    const user = userEvent.setup()
+    useNotesStore.setState({ expanded: { tags: true } })
+    render(<Sidebar />)
+
+    await user.click(screen.getByRole("button", { name: /^Notes/ }))
+    expect(useNotesStore.getState().expanded.notes).toBe(true)
+  })
+
+  it("starts with every section but Tags collapsed", () => {
+    // The store's own default, not the fixture the other tests set up.
+    const { expanded } = useNotesStore.getInitialState()
+    expect(expanded.notes).toBeUndefined()
+    expect(expanded.daily).toBeUndefined()
+    expect(expanded.trash).toBeUndefined()
+    expect(expanded.tags).toBe(true)
+  })
+
+  it("drops the FOLDERS heading the mockup does not have", () => {
+    render(<Sidebar />)
+    expect(screen.queryByRole("button", { name: /^FOLDERS/ })).toBeNull()
+    // The sections it used to wrap are still there.
+    expect(screen.getByRole("button", { name: /^Notes/ })).toBeDefined()
+    expect(screen.getByRole("button", { name: /^Daily/ })).toBeDefined()
   })
 
   it("offers rename and delete on a note", async () => {

@@ -1,7 +1,20 @@
 import type { ReactElement } from "react"
 
 interface IconProps {
-  name: "notes" | "daily" | "trash" | "folder" | "tag" | "cog" | "compose"
+  name:
+    | "notes"
+    | "daily"
+    | "ideas"
+    | "journal"
+    | "archive"
+    | "trash"
+    | "folder"
+    | "tag"
+    | "cog"
+    | "compose"
+    | "back"
+    | "star"
+    | "more"
   className?: string
 }
 
@@ -28,6 +41,37 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
     </>
   ),
   folder: <path d="M2.5 4.5h4l1.2 1.5h5.8v6.5a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1z" />,
+  // A lightbulb reads as an idea; a star reads as a favourite, which is a
+  // different thing and is what the breadcrumb row uses.
+  ideas: (
+    <>
+      <path d="M8 1.9a4.1 4.1 0 0 0-2.4 7.4c.5.4.8 1 .8 1.6v.3h3.2v-.3c0-.6.3-1.2.8-1.6A4.1 4.1 0 0 0 8 1.9Z" />
+      <path d="M6.6 13.2h2.8M7 14.4h2" />
+    </>
+  ),
+  star: <path d="m8 2.2 1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4-2.9-2.8 4-.6z" />,
+  back: <path d="M12.8 8H3.6M7.2 4.2 3.4 8l3.8 3.8" />,
+  more: (
+    <>
+      <circle cx="8" cy="8" r="6.1" />
+      <circle cx="5.3" cy="8" r="0.85" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="8" r="0.85" fill="currentColor" stroke="none" />
+      <circle cx="10.7" cy="8" r="0.85" fill="currentColor" stroke="none" />
+    </>
+  ),
+  journal: (
+    <>
+      <path d="M3.5 2.5h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
+      <path d="M5.5 2.5v11M7.6 5.6h3M7.6 8h3" />
+    </>
+  ),
+  archive: (
+    <>
+      <path d="M2.4 3.4h11.2v2.4H2.4z" />
+      <path d="M3.4 5.8v6.3a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V5.8" />
+      <path d="M6.6 8.4h2.8" />
+    </>
+  ),
   tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />,
   // Drawn on a 24 grid and scaled to the shared 16 viewBox: radial spokes read
   // as a sun at this size, whereas a toothed ring reads as a cog.

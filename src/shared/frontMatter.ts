@@ -21,8 +21,7 @@ function parseValue(raw: string): FrontMatterValue {
 
 function unquote(value: string): string {
   const quoted =
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
+    (value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))
   return quoted && value.length >= 2 ? value.slice(1, -1) : value
 }
 
@@ -65,13 +64,16 @@ export function parseFrontMatter(raw: string): ParsedNote {
     data[key] = parseValue(line.slice(separator + 1))
   }
 
-  return { data, body: lines.slice(closing + 1).join("\n").replace(/^\n/, "") }
+  return {
+    data,
+    body: lines
+      .slice(closing + 1)
+      .join("\n")
+      .replace(/^\n/, "")
+  }
 }
 
-export function serializeFrontMatter(
-  data: Record<string, FrontMatterValue>,
-  body: string
-): string {
+export function serializeFrontMatter(data: Record<string, FrontMatterValue>, body: string): string {
   const entries = Object.entries(data)
   if (entries.length === 0) return body
 

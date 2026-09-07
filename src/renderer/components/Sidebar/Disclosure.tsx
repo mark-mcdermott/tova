@@ -8,7 +8,7 @@ interface DisclosureProps {
   label: string
   count?: number
   variant?: "section" | "group"
-  icon?: "notes" | "daily" | "trash" | "folder"
+  icon?: "notes" | "daily" | "ideas" | "journal" | "archive" | "trash" | "folder"
   /** Nesting level, so a row can indent its text while its background does not. */
   depth?: number
   onContextMenu?: (event: MouseEvent) => void
@@ -42,23 +42,32 @@ export function Disclosure({
   const open = useNotesStore((state) => state.expanded[sectionKey] === true)
   const toggleSection = useNotesStore((state) => state.toggleSection)
 
+  // A section with nothing in it has nothing to reveal, so it does not respond.
+  // Notes still arrive through the compose control or the editor's Move menu.
+  const empty = count === 0
+
   return (
     <div className={`disclosure disclosure-${variant}`}>
       <button
         type="button"
-        className={`disclosure-header${isDropActive ? " is-drop-active" : ""}`}
+        className={`disclosure-header${isDropActive ? " is-drop-active" : ""}${
+          empty ? " is-empty" : ""
+        }`}
         data-depth={depth}
         {...dropHandlers}
-        aria-expanded={open}
+        aria-expanded={empty ? undefined : open}
+        aria-disabled={empty || undefined}
         onContextMenu={onContextMenu}
-        onClick={() => toggleSection(sectionKey)}
+        onClick={() => {
+          if (!empty) toggleSection(sectionKey)
+        }}
       >
         {icon !== undefined && <Icon name={icon} />}
         <span className="disclosure-label">{label}</span>
         {count !== undefined && <span className="disclosure-count">{count}</span>}
       </button>
 
-      {open && <div className="disclosure-body">{children}</div>}
+      {open && !empty && <div className="disclosure-body">{children}</div>}
     </div>
   )
 }

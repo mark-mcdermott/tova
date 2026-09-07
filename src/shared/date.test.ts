@@ -6,7 +6,8 @@ import {
   parseDailyNoteName,
   isDailyNoteName,
   formatDisplayDate,
-  msUntilNextMidnight
+  msUntilNextMidnight,
+  formatEditedAgo
 } from "./date"
 
 describe("toDailyNoteName", () => {
@@ -132,5 +133,44 @@ describe("isBlankDailyBody", () => {
 
   it("does not treat another day's title as blank", () => {
     expect(isBlankDailyBody("# 9/2/26", "9/3/26")).toBe(false)
+  })
+})
+
+describe("formatEditedAgo", () => {
+  const now = new Date(2026, 8, 7, 12, 0, 0).getTime()
+  const ago = (ms: number) => formatEditedAgo(now - ms, now)
+
+  it("reads as just now for the first three quarters of a minute", () => {
+    expect(ago(0)).toBe("Edited just now")
+    expect(ago(44_000)).toBe("Edited just now")
+  })
+
+  it("rounds down to whole minutes", () => {
+    expect(ago(60_000)).toBe("Edited 1m ago")
+    expect(ago(119_000)).toBe("Edited 1m ago")
+    expect(ago(120_000)).toBe("Edited 2m ago")
+  })
+
+  it("never says 0m", () => {
+    // Between 45 and 60 seconds the minute count floors to zero.
+    expect(ago(50_000)).toBe("Edited 1m ago")
+  })
+
+  it("switches to hours after an hour", () => {
+    expect(ago(59 * 60_000)).toBe("Edited 59m ago")
+    expect(ago(60 * 60_000)).toBe("Edited 1h ago")
+  })
+
+  it("switches to days after a day", () => {
+    expect(ago(23 * 3_600_000)).toBe("Edited 23h ago")
+    expect(ago(24 * 3_600_000)).toBe("Edited 1d ago")
+  })
+
+  it("gives a date once a week has passed", () => {
+    expect(ago(7 * 24 * 3_600_000)).toContain("2026")
+  })
+
+  it("does not run backwards if the clock disagrees with the file", () => {
+    expect(formatEditedAgo(now + 5_000, now)).toBe("Edited just now")
   })
 })

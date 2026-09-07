@@ -66,3 +66,23 @@ export function msUntilNextMidnight(now: Date): number {
   const target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1, 0)
   return target.getTime() - now.getTime()
 }
+
+/**
+ * How long ago a note was last written, in the mockup's phrasing. Coarse on
+ * purpose: a writer wants "a while back", not a stopwatch.
+ */
+export function formatEditedAgo(updatedAt: number, now: number = Date.now()): string {
+  const seconds = Math.max(0, Math.floor((now - updatedAt) / 1000))
+  if (seconds < 45) return "Edited just now"
+
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `Edited ${Math.max(minutes, 1)}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Edited ${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `Edited ${days}d ago`
+
+  return `Edited ${formatDisplayDate(new Date(updatedAt))}`
+}

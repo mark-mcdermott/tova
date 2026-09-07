@@ -3,7 +3,8 @@ import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
-import { ChevronIcon, Icon } from "./icons"
+import { Icon } from "./icons"
+import avatarUrl from "../../assets/avatar.jpg"
 
 export function Sidebar() {
   const notes = useNotesStore((state) => state.notes)
@@ -11,7 +12,6 @@ export function Sidebar() {
   const loading = useNotesStore((state) => state.loading)
   const error = useNotesStore((state) => state.error)
   const createNote = useNotesStore((state) => state.createNote)
-  const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
   const menu = useContextMenu()
 
@@ -38,21 +38,15 @@ export function Sidebar() {
         ) : (
           <>
             <FolderTree notes={notes} folders={folders} />
+            <hr className="sidebar-rule" />
             <TagList notes={notes} />
           </>
         )}
       </div>
 
       <footer className="sidebar-footer">
-        <button
-          type="button"
-          className="icon-button"
-          title="Collapse sidebar (Cmd+\\)"
-          aria-label="Collapse sidebar"
-          onClick={toggleSidebar}
-        >
-          <ChevronIcon direction="left" />
-        </button>
+        <img className="sidebar-avatar" src={avatarUrl} alt="" />
+        <span className="sidebar-user">Mark</span>
 
         {/* Static for now; Settings arrives in phase 12. */}
         <span className="sidebar-footer-cog" aria-hidden="true">
