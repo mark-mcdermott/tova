@@ -1,12 +1,40 @@
-import { app, BrowserWindow, powerMonitor } from "electron"
+import { app, BrowserWindow, net, powerMonitor, protocol } from "electron"
 import { join } from "path"
-import { ensureVault } from "./vault"
+import { pathToFileURL } from "url"
+import { ensureVault, resolveInVault } from "./vault"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
+import { registerImageHandlers } from "./ipc/images"
+import { registerAppHandlers } from "./ipc/app"
 import { runBackup } from "./backup"
 import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from "./daily"
 
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000
+
+/*
+ * Images live in the vault, not in the bundle, so the renderer cannot reach
+ * them over file:// from its own origin. This scheme is the only window onto
+ * the vault the page gets, and every request through it is resolved by the same
+ * choke point that guards note writes.
+ */
+const ASSET_SCHEME = "tova-asset"
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }
+])
+
+function serveVaultAssets(): void {
+  protocol.handle(ASSET_SCHEME, async (request) => {
+    try {
+      const { pathname } = new URL(request.url)
+      const file = resolveInVault(decodeURIComponent(pathname).replace(/^\/+/, ""))
+      return await net.fetch(pathToFileURL(file).toString())
+    } catch {
+      // A missing or out-of-vault asset is a broken image, never an app error.
+      return new Response(null, { status: 404 })
+    }
+  })
+}
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -67,8 +95,11 @@ app.whenReady().then(async () => {
     console.error("Could not create today's daily note", error)
   })
 
+  serveVaultAssets()
   registerNoteHandlers()
   registerBackupHandlers()
+  registerImageHandlers()
+  registerAppHandlers()
   scheduleBackups()
 
   const daily = startDailyNoteSchedule({

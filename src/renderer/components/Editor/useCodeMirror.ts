@@ -10,21 +10,42 @@ import {
 } from "@codemirror/lang-markdown"
 import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
+import { imageDrop } from "./imageDrop"
 import { formatKeymap } from "./formats"
 
 interface UseCodeMirrorOptions {
   initialValue?: string
   onChange?: (value: string) => void
+  /** Vault path of the note being edited, so dropped images know where to land. */
+  noteId?: string | null
+  /** Turns an image URL in the document into a source the renderer may load. */
+  resolveImage?: (url: string) => string | null
+  onError?: (message: string | null) => void
 }
 
-export function useCodeMirror({ initialValue = "", onChange }: UseCodeMirrorOptions) {
+export function useCodeMirror({
+  initialValue = "",
+  onChange,
+  noteId = null,
+  resolveImage,
+  onError
+}: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
 
-  // The view is built once, so the listener must reach the latest handler
-  // through a ref rather than capturing the one present at mount.
+  // The view is built once, so every handler must reach the latest props
+  // through a ref rather than capturing the ones present at mount.
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+
+  const noteIdRef = useRef(noteId)
+  noteIdRef.current = noteId
+
+  const resolveImageRef = useRef(resolveImage)
+  resolveImageRef.current = resolveImage
+
+  const onErrorRef = useRef(onError)
+  onErrorRef.current = onError
 
   useEffect(() => {
     const container = containerRef.current
@@ -40,7 +61,13 @@ export function useCodeMirror({ initialValue = "", onChange }: UseCodeMirrorOpti
           EditorView.lineWrapping,
           indentUnit.of("  "),
           markdown({ base: markdownLanguage }),
-          markdownDecorations(),
+          markdownDecorations({
+            resolveImage: (url) => resolveImageRef.current?.(url) ?? null
+          }),
+          imageDrop(
+            () => noteIdRef.current,
+            (message) => onErrorRef.current?.(message)
+          ),
           pasteURLAsLink,
           // Format shortcuts win over the markdown and default keymaps below.
           keymap.of([

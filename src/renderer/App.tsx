@@ -1,17 +1,20 @@
 import { useEffect } from "react"
 import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
+import { Settings } from "./components/Settings/Settings"
 import { VaultWarning } from "./components/VaultWarning"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
+import "./styles/settings.css"
 
 export default function App() {
   const load = useNotesStore((state) => state.load)
   const checkVault = useNotesStore((state) => state.checkVault)
   const active = useNotesStore((state) => state.active)
   const vaultStatus = useNotesStore((state) => state.vaultStatus)
+  const view = useNotesStore((state) => state.view)
   const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
 
@@ -27,6 +30,18 @@ export default function App() {
       load()
     })
   }, [load])
+
+  // Chromium navigates the window to any file dropped outside a handler, which
+  // would replace the app with the image. Nothing else drops onto the window.
+  useEffect(() => {
+    const swallow = (event: DragEvent) => event.preventDefault()
+    window.addEventListener("dragover", swallow)
+    window.addEventListener("drop", swallow)
+    return () => {
+      window.removeEventListener("dragover", swallow)
+      window.removeEventListener("drop", swallow)
+    }
+  }, [])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -64,6 +79,8 @@ export default function App() {
             <div className="editor-shell editor-shell-empty">
               <VaultWarning status={vaultStatus} />
             </div>
+          ) : view === "settings" ? (
+            <Settings />
           ) : active === null ? (
             <div className="editor-shell editor-shell-empty">
               <p className="editor-placeholder">Select a note, or create one to start writing.</p>

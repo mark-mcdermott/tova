@@ -72,6 +72,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   window.tova = {
     notes: bridge,
+    images: { save: vi.fn() },
+    app: { info: vi.fn(), reveal: vi.fn() },
     backups: {
       run: vi.fn(),
       list: vi.fn(),
@@ -94,6 +96,7 @@ beforeEach(() => {
     error: null,
     history: emptyHistory,
     sidebarCollapsed: false,
+    view: "editor",
     expanded: { folders: true, tags: true, notes: true, daily: true }
   })
 })
@@ -105,6 +108,17 @@ describe("Sidebar", () => {
     render(<Sidebar />)
     expect(screen.getByText("Tova")).toBeDefined()
     expect(screen.getByLabelText("New note")).toBeDefined()
+  })
+
+  it("opens settings from the avatar and from the cog", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: "Mark" }))
+    expect(useNotesStore.getState().view).toBe("settings")
+
+    useNotesStore.setState({ view: "editor" })
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }))
+    expect(useNotesStore.getState().view).toBe("settings")
   })
 
   it("counts notes per section", () => {

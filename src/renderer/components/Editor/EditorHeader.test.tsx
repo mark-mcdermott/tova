@@ -43,6 +43,8 @@ beforeEach(() => {
   window.tova = {
     notes: { read, exportMarkdown, move, remove, setFavorite } as never,
     backups: {} as never,
+    images: { save: vi.fn() },
+    app: { info: vi.fn(), reveal: vi.fn() },
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   }
   useNotesStore.setState({

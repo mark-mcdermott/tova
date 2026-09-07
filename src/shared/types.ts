@@ -40,6 +40,25 @@ export interface MoveNoteInput {
   folder?: string | null
 }
 
+export interface AppInfo {
+  version: string
+  electron: string
+  chrome: string
+  vaultPath: string
+  backupPath: string
+}
+
+export interface AppApi {
+  info: () => Promise<AppInfo>
+  /** Opens one of the vault directories in the OS file browser. */
+  reveal: (target: "vault" | "backups") => Promise<void>
+}
+
+export interface ImageApi {
+  /** Writes an image into the vault. Resolves to its vault-relative path. */
+  save: (name: string, data: Uint8Array) => Promise<string>
+}
+
 export interface EventsApi {
   /** Subscribes to vault changes made by the main process. Returns an unsubscribe. */
   onNotesChanged: (listener: () => void) => () => void

@@ -12,7 +12,8 @@
 | 5 — Navigation & sidebar polish | Complete, bar folder reordering (see below) |
 | 6 — Glassmorphic UI | Next, partly blocked on assets |
 
-288 tests. `pnpm run check`, `pnpm run test` and `pnpm run build` are green.
+`pnpm run check`, `pnpm run test` and `pnpm run build` are green. The count is
+deliberately not recorded here — it went stale every phase.
 
 Package manager is **pnpm**, pinned by the `packageManager` field.
 `.npmrc` sets `node-linker=hoisted`, which electron-builder needs in Phase 13.
@@ -138,6 +139,35 @@ than a variant. The mockup also predates the spec — it shows the Ideas, Journa
 and Archive sections the spec explicitly cut — so follow the spec for structure
 and the mockup for look.
 
+## Settings, favourites and images
+
+**Settings takes over the workspace column**, as the spec describes it: the
+sidebar stays put, the avatar and the cog both open it, and the back arrow
+returns to the note that was open. It carries the Vault, Backups and About
+sections — the tabbed panel with Profile, Appearance, Blogs and Docs is still
+Phase 12. Backup status finally has the UI its IPC has had since Phase 3.
+
+**Favourites reverse a documented cut.** The star writes `favorite: true` into
+front matter, and only when set, so untouched notes keep clean front matter.
+`sortNotes` is the one place it affects ordering, so every list that already
+sorted through it pins favourites above recency for free.
+
+**Images live in the vault, not as links to wherever they came from.** A drop or
+a paste writes the file into `assets/` under a slug of its own name, and leaves
+relative markdown behind — `../assets/river.png` — so the note keeps working in
+any other editor opened on the vault, and survives the vault being moved.
+
+The renderer cannot read the vault over `file://` from its own origin, so main
+serves it on a privileged `tova-asset://` scheme whose every request goes
+through `resolveInVault`. Measured against a real vault: a stored image returns
+200 with its own byte count, a missing one 404, and a path climbing out of the
+vault 404. Only the vault resolves — a remote image stays raw markdown rather
+than letting a local-first app reach for the network.
+
+Inline rendering follows the same contract as every other construct: the picture
+shows while the cursor is elsewhere, the markdown returns when the cursor moves
+in. A file that has since been deleted says so in place.
+
 ## Carried forward
 
 - **An empty section cannot be opened**, so the "+ New note" row inside it is
@@ -181,7 +211,6 @@ and the mockup for look.
   decision rather than a guess.
 - **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
   picker and the second palette.
-- **Backup status has no UI.** The IPC exists; the Settings panel is Phase 12.
 - **No Playwright.** The lifecycle tests the build plan wanted from it run in
   Vitest against a real temp filesystem instead, which needs no extra dependency.
 - `TUTORIAL.md` is a frozen historical record and still shows `npm` commands.

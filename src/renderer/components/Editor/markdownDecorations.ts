@@ -48,12 +48,53 @@ class LinkIconWidget extends WidgetType {
 
 const linkIcon = Decoration.widget({ widget: new LinkIconWidget(), side: 1 })
 
+class ImageWidget extends WidgetType {
+  constructor(
+    private readonly src: string,
+    private readonly alt: string
+  ) {
+    super()
+  }
+
+  eq(other: ImageWidget): boolean {
+    return other.src === this.src && other.alt === this.alt
+  }
+
+  toDOM(): HTMLElement {
+    const frame = document.createElement("span")
+    frame.className = "cm-image"
+
+    const image = document.createElement("img")
+    image.src = this.src
+    image.alt = this.alt
+
+    // A note outlives the files it points at. A deleted image says so in place
+    // rather than leaving a broken glyph behind.
+    image.addEventListener("error", () => {
+      frame.classList.add("cm-image-missing")
+      frame.textContent = this.alt === "" ? "Image not found" : `${this.alt} — image not found`
+    })
+
+    frame.append(image)
+    return frame
+  }
+}
+
+export interface MarkdownDecorationOptions {
+  /**
+   * Turns an image URL into something the renderer may load, or null to leave
+   * the markdown as text. Only the vault is resolvable: remote images stay raw
+   * rather than quietly reaching for the network.
+   */
+  resolveImage?: (url: string) => string | null
+}
+
 /**
  * Tags are matched with a regex rather than the syntax tree, so they have to be
  * suppressed anywhere a `#` is already meaningful — inside code, URLs, link
  * bodies, or headings.
  */
-const EXCLUDES_TAGS = /Code|URL|Link|Heading/
+const EXCLUDES_TAGS = /Code|URL|Link|Image|Heading/
 
 function inExcludedContext(tree: Tree, pos: number): boolean {
   for (let node: SyntaxNode | null = tree.resolveInner(pos, 1); node; node = node.parent) {
@@ -62,7 +103,7 @@ function inExcludedContext(tree: Tree, pos: number): boolean {
   return false
 }
 
-function buildDecorations(view: EditorView): DecorationSet {
+function buildDecorations(view: EditorView, options: MarkdownDecorationOptions): DecorationSet {
   const { state } = view
   const tree = syntaxTree(state)
   const decorations: Range<Decoration>[] = []
@@ -144,6 +185,14 @@ function buildDecorations(view: EditorView): DecorationSet {
           return
         }
 
+        if (name === "Image") {
+          if (open) {
+            toggleMarkers(node, true, "LinkMark")
+            return false
+          }
+          return renderImage(view, node, decorations, options) ? false : undefined
+        }
+
         if (name === "Link") {
           if (open) {
             toggleMarkers(node, true, "LinkMark")
@@ -168,6 +217,31 @@ function buildDecorations(view: EditorView): DecorationSet {
   collectTagDecorations(view, tree, decorations, cursorTouches)
 
   return Decoration.set(decorations, true)
+}
+
+/**
+ * Swaps `![alt](url)` for the picture itself. Returns false when the image
+ * cannot be shown — a remote source, or markdown Tova cannot read — leaving the
+ * raw text in place rather than hiding something it failed to render.
+ */
+function renderImage(
+  view: EditorView,
+  node: SyntaxNode,
+  decorations: Range<Decoration>[],
+  options: MarkdownDecorationOptions
+): boolean {
+  const url = node.getChild("URL")
+  const marks = node.getChildren("LinkMark")
+  if (url === null || marks.length < 2) return false
+
+  const source = options.resolveImage?.(view.state.doc.sliceString(url.from, url.to))
+  if (source === undefined || source === null) return false
+
+  const alt = view.state.doc.sliceString(marks[0].to, marks[1].from)
+  decorations.push(
+    Decoration.replace({ widget: new ImageWidget(source, alt) }).range(node.from, node.to)
+  )
+  return true
 }
 
 function decorateFencedCode(
@@ -246,18 +320,18 @@ function collectTagDecorations(
   }
 }
 
-export function markdownDecorations() {
+export function markdownDecorations(options: MarkdownDecorationOptions = {}) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet
 
       constructor(view: EditorView) {
-        this.decorations = buildDecorations(view)
+        this.decorations = buildDecorations(view, options)
       }
 
       update(update: ViewUpdate): void {
         if (update.docChanged || update.selectionSet || update.viewportChanged) {
-          this.decorations = buildDecorations(update.view)
+          this.decorations = buildDecorations(update.view, options)
         }
       }
     },

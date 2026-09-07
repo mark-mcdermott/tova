@@ -7,6 +7,7 @@ import { registerPendingSave } from "../../stores/pendingSave"
 import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
+import { assetUrl, resolveAssetPath } from "../../../shared/assets"
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -22,6 +23,7 @@ export function Editor({ note }: EditorProps) {
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
+  const [dropError, setDropError] = useState<string | null>(null)
 
   // The debounced save reads through refs so it always writes the current
   // title and body, not whichever values existed when it was scheduled.
@@ -65,7 +67,22 @@ export function Editor({ note }: EditorProps) {
     [scheduleSave]
   )
 
-  const { containerRef, viewRef, setDoc } = useCodeMirror({ onChange: handleBodyChange })
+  // Only the vault is resolvable; a remote image stays raw markdown rather than
+  // reaching for the network from a local-first app.
+  const resolveImage = useCallback(
+    (url: string): string | null => {
+      const path = resolveAssetPath(note.id, url)
+      return path === null ? null : assetUrl(path)
+    },
+    [note.id]
+  )
+
+  const { containerRef, viewRef, setDoc } = useCodeMirror({
+    onChange: handleBodyChange,
+    noteId: note.id,
+    resolveImage,
+    onError: setDropError
+  })
 
   // Anything that moves the file underneath us — a drag, a menu move — flushes
   // this first, so a debounced write cannot land on the old path afterwards.
@@ -141,6 +158,20 @@ export function Editor({ note }: EditorProps) {
       />
 
       <div className="editor-body" ref={containerRef} />
+
+      {dropError !== null && (
+        <p className="editor-drop-error" role="alert">
+          {dropError}
+          <button
+            type="button"
+            className="editor-drop-dismiss"
+            aria-label="Dismiss"
+            onClick={() => setDropError(null)}
+          >
+            ×
+          </button>
+        </p>
+      )}
 
       <Toolbar viewRef={viewRef} wordCount={wordCount} saveStatus={saveStatus} />
     </div>

@@ -60,7 +60,7 @@ Write Playwright test: create note → file on disk; delete → Trash.
 - [x] Keep last 30 (configurable)
 - [x] Version history per note (last 10)
 - [x] Empty vault detection on launch → warn + restore option
-- [ ] Backup status in Settings
+- [x] Backup status in Settings
 
 Write Vitest tests: backup naming, version count enforcement.
 Write Playwright test: backup folder exists after launch.
@@ -115,10 +115,10 @@ Write Vitest tests: navigation history push/pop/forward.
 - [ ] Focus mode (Cmd+Shift+F)
 - [ ] Window state persistence
 - [ ] macOS title bar / traffic lights
-- [ ] User avatar + display name at sidebar bottom (click → Settings)
+- [x] User avatar + display name at sidebar bottom (click → Settings)
 - [ ] Tooltips on all icons
 - [ ] Search icon in sidebar header (stacked below pencil), with opacity states
-- [ ] Images: drag-in/paste → vault assets → CM6 inline render
+- [x] Images: drag-in/paste → vault assets → CM6 inline render
 
 **Deliverable:** App looks like the mockup. Portfolio-worthy.
 

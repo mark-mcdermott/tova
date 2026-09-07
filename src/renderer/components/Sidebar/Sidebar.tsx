@@ -13,6 +13,7 @@ export function Sidebar() {
   const error = useNotesStore((state) => state.error)
   const createNote = useNotesStore((state) => state.createNote)
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
+  const showSettings = useNotesStore((state) => state.showSettings)
   const menu = useContextMenu()
 
   return (
@@ -45,13 +46,20 @@ export function Sidebar() {
       </div>
 
       <footer className="sidebar-footer">
-        <img className="sidebar-avatar" src={avatarUrl} alt="" />
-        <span className="sidebar-user">Mark</span>
+        <button type="button" className="sidebar-identity" title="Settings" onClick={showSettings}>
+          <img className="sidebar-avatar" src={avatarUrl} alt="" />
+          <span className="sidebar-user">Mark</span>
+        </button>
 
-        {/* Static for now; Settings arrives in phase 12. */}
-        <span className="sidebar-footer-cog" aria-hidden="true">
+        <button
+          type="button"
+          className="icon-button sidebar-footer-cog"
+          title="Settings"
+          aria-label="Settings"
+          onClick={showSettings}
+        >
           <Icon name="cog" className="footer-icon" />
-        </span>
+        </button>
       </footer>
 
       {menu.position !== null && (

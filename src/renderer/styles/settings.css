@@ -1,0 +1,203 @@
+/*
+ * Settings takes over the workspace column, so it borrows the editor's header
+ * — same nav row, same title face — and differs only below it.
+ */
+
+.settings-heading {
+  color: var(--text-primary);
+  font-family: var(--font-script);
+  font-size: var(--text-title);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Lines up with the prose the editor shows in the same column. */
+  padding: 0 var(--editor-inset) var(--space-12);
+  max-width: calc(var(--measure) + var(--space-12));
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: var(--radius-lg);
+  /* Enough white behind the dark text to hold contrast wherever the photograph
+     happens to be light or dark underneath. */
+  background: rgb(255 255 255 / 46%);
+}
+
+.settings-section-title {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.settings-note {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+
+.settings-path {
+  flex: 1;
+  min-width: 12rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.settings-button {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid rgb(23 20 31 / 16%);
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 62%);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.settings-button:hover {
+  background: rgb(255 255 255 / 88%);
+  border-color: rgb(23 20 31 / 28%);
+}
+
+.settings-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.settings-button-primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.settings-button-primary:hover {
+  border-color: transparent;
+  background: var(--accent-bright);
+}
+
+.settings-button-danger {
+  border-color: transparent;
+  background: #a3242c;
+  color: #ffffff;
+}
+
+.settings-button-danger:hover {
+  border-color: transparent;
+  background: #8b1e25;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-2);
+  list-style: none;
+}
+
+.settings-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) 0;
+  border-top: 1px solid rgb(23 20 31 / 10%);
+}
+
+/* Held on one line: the confirmation beside it wraps to its own row rather
+   than squeezing a timestamp into two. */
+.settings-list-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.settings-list-meta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.settings-list-row > .settings-button {
+  margin-left: auto;
+}
+
+.settings-confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.settings-confirm-text {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.settings-empty,
+.settings-error {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.settings-error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(163 36 44 / 12%);
+  color: #7d1a21;
+}
+
+/* Version numbers read as a table, not as prose. */
+.settings-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-6);
+  margin-top: var(--space-1);
+  font-size: var(--text-base);
+}
+
+.settings-facts > div {
+  display: contents;
+}
+
+.settings-facts dt {
+  color: var(--text-secondary);
+}
+
+.settings-facts dd {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
