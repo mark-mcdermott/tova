@@ -4,6 +4,8 @@ node_modules/
 # Build output
 out/
 dist/
+# Packaged installers — built on demand, never versioned
+release/
 
 # Electron downloads
 electron/

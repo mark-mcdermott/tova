@@ -271,6 +271,29 @@ belongs to its date.
 
 Phase 10 is complete.
 
+## Packaging
+
+`pnpm run package` produces signed `.dmg`s for arm64 and x64 in `release/`.
+Signing is automatic — electron-builder finds the Developer ID in the keychain.
+**Notarization is configured but has never run**: it needs an Apple ID, an
+app-specific password and a team ID in the environment. Until it does,
+`spctl` reports "Unnotarized Developer ID" and Gatekeeper will refuse the app
+on any machine that did not build it. The hardened runtime and its two
+entitlements are already on, because a notarized Electron build launches to a
+blank window without them and that is a miserable thing to debug later.
+
+**Electron moved from `dependencies` to `devDependencies`.** electron-builder
+refuses to package otherwise, and it is right to: the runtime is bundled from
+its own copy, so a runtime dependency would have shipped a second one.
+
+**The app icon is generated, not `branding/logo.png`.** That file is a
+marketing render — tilted in perspective, with a baked-in cream background and
+its own drop shadow. macOS supplies the mask and the shadow itself and expects
+square, face-on art, so at 32px the render would be an unreadable smudge. The
+icon is instead drawn by `tools/icon.html` and captured by Electron at 1024px:
+the app's own sunset, a low horizon, and the Alagambe `T`. Replacing it is one
+file and `pnpm run icon`.
+
 ## Carried forward
 
 - **An empty section cannot be opened**, so the "+ New note" row inside it is

@@ -34,6 +34,23 @@ Electron 42 · React 19 · TypeScript 6 (strict) · CodeMirror 6 · electron-vit
 · Zustand · Vitest 4 · pnpm. Styling is hand-written CSS driven by design
 tokens — no utility framework and no component library.
 
+## Building
+
+```bash
+pnpm install
+pnpm run dev        # run it
+pnpm run package    # signed .dmg for arm64 and x64, into release/
+```
+
+`pnpm run icon` regenerates `build/icon.png` from `tools/icon.html` — Electron
+renders it, so the icon is drawn by the same engine that draws the app rather
+than by adding an image toolchain.
+
+Packaging signs automatically from whatever Developer ID is in the keychain.
+Notarization is configured but not run: it needs an Apple ID, an
+app-specific password and a team ID in the environment, and until it has run
+Gatekeeper will refuse the app on any machine that did not build it.
+
 ## Possible future roadmap
 
 Deliberately deferred. Each is understood and scoped, just not next.

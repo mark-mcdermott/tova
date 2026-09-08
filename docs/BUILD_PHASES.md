@@ -213,10 +213,11 @@ Write Playwright test: publish request sent, progress bar appears.
 ## Phase 13 — Packaging
 **Goal:** Installable `.dmg`.
 
-- [ ] electron-builder finalized
-- [ ] App icon from `/branding/`
-- [ ] macOS `.dmg`
-- [ ] Code signing + notarization
+- [x] electron-builder finalized
+- [x] App icon — generated, not from `/branding/logo.png`; see PROGRESS.md
+- [x] macOS `.dmg` (arm64 + x64, signed)
+- [x] Code signing — automatic from the Developer ID in the keychain
+- [ ] Notarization — needs Apple ID credentials; configured but not run
 
 **Deliverable:** Installable app.
 
