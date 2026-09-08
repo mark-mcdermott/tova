@@ -11,10 +11,21 @@ use commercially and non-commercially without attribution. Credited anyway.
 | `violet-dusk.jpg` | Darya Karaliova | https://unsplash.com/photos/sLevNKufpBo |
 
 `lake-sunset.jpg` is not from Unsplash — it is the backdrop from the design
-mockup in `branding/`, extracted by hand. It is the only bundled image with the
-luminance split the mockup's layout depends on: its sidebar region measures
-1.8x darker than its editor region, which is what lets the mockup carry white
-text on the left and near-black on the right at the same time.
+mockup in `branding/`, extracted by hand, and since re-graded to lift the right
+headland. It is the only bundled image with the luminance split the mockup's
+layout depends on: its sidebar region is markedly darker than its editor
+region, which is what lets the layout carry white text on the left and
+near-black on the right at the same time.
+
+Measured in 40px cells at a 1280x800 window, the re-graded version takes dark
+prose over its worst cell from **1.51:1 to 2.44:1** while leaving the sidebar's
+white text where it was (2.10:1). The right headland was the dark prose's worst
+case, and that is the part that changed. Neither figure clears AA — see
+`PROGRESS.md` on why the panels carry no scrim.
+
+Source: `branding/backgrounds/background-lighter.png`. It is 1402px wide and is
+bundled at that size rather than upscaled; the image is blurred far past the
+point where the extra pixels would show.
 
 Originals are kept out of the app at `branding/backgrounds/`. Regenerate the
 bundled copies with:

@@ -98,6 +98,12 @@ It also compresses the range, which moves white sidebar text from 2.1-11.8:1 on
 the bare photograph to 2.4-8.1:1 under the overlay. Legibility rides entirely on text colour: white in
 the sidebar and the breadcrumb row, dark ink for the prose.
 
+**The backdrop was re-graded to lift the right headland**, which was the dark
+prose's worst case. Measured the same way, that cell goes from 1.51:1 to
+2.44:1, and the sidebar's white text is untouched at 2.10:1 — the left of the
+frame did not change. Still short of AA; the trade below stands, with better
+numbers on one side of it.
+
 **This is a deliberate trade against contrast, chosen with the numbers known.**
 Sampled in 40px cells (region averages hid the extremes), white sidebar text
 runs from 11.8:1 over the dark headland down to **2.1:1** where the photograph
