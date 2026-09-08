@@ -13,8 +13,8 @@ const external = { x: 1512, y: -200, width: 2560, height: 1440 }
 describe("normalizeWindowState", () => {
   it("falls back when there is nothing to read", () => {
     expect(normalizeWindowState(null)).toEqual({
-      width: 1280,
-      height: 800,
+      width: 1345,
+      height: 915,
       x: null,
       y: null,
       maximized: false

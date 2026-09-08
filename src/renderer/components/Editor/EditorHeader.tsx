@@ -7,6 +7,7 @@ import { NoteMenu } from "./NoteMenu"
 import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
 import { useContextMenu } from "../Popup/useContextMenu"
+import { EditorTags } from "./EditorTags"
 
 interface EditorHeaderProps {
   note: Note
@@ -140,6 +141,8 @@ export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: Edit
           }
         }}
       />
+
+      <EditorTags tags={note.tags} />
 
       {menu.position !== null && (
         <NoteMenu note={note} x={menu.position.x} y={menu.position.y} onClose={menu.close} />

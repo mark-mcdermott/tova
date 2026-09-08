@@ -124,6 +124,16 @@ describe("Sidebar", () => {
     expect(trashHeader.textContent).toContain("1")
   })
 
+  it("says nothing where a section holds nothing", () => {
+    render(<Sidebar />)
+    const empty = screen.getByRole("button", { name: /^Journal/ })
+    const full = screen.getByRole("button", { name: /^Notes/ })
+
+    // A nought is noise: an empty section is already saying it is empty.
+    expect(empty.textContent).toBe("Journal")
+    expect(full.textContent).toContain("2")
+  })
+
   it("lists loose notes but keeps folder contents collapsed", () => {
     render(<Sidebar />)
     expect(screen.getByText("loose note")).toBeDefined()

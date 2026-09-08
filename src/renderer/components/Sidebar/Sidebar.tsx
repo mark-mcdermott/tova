@@ -5,7 +5,7 @@ import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { Icon } from "./icons"
 import { Wordmark } from "./Wordmark"
-import bundledAvatar from "../../assets/avatar.jpg"
+import { Avatar } from "./Avatar"
 import { usePreferencesStore } from "../../stores/preferencesStore"
 
 export function Sidebar() {
@@ -59,7 +59,7 @@ export function Sidebar() {
           aria-label="Profile"
           onClick={() => showSettings("profile")}
         >
-          <img className="sidebar-avatar" src={chosenAvatar ?? bundledAvatar} alt="" />
+          <Avatar className="sidebar-avatar" src={chosenAvatar} name={displayName} />
           {displayName !== "" && <span className="sidebar-user">{displayName}</span>}
         </button>
 

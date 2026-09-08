@@ -36,7 +36,16 @@
   --accent: #5646c9;
   --accent-bright: #4436a8;
   --accent-tint: color-mix(in oklab, var(--accent) 22%, transparent);
+  /* The caret and a note's own tags. --accent-bright is darker than either
+     wants — at two pixels wide it reads as black rather than as purple. */
+  --caret: #5359c7;
+  --tag-ink: #5a61de;
   --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
+  /* The accent as ink on the sidebar's glass, where the ink is otherwise white.
+     The accent itself is a dark purple and would read as a hole in the row;
+     even a mid lavender costs too much. Measured against the sidebar's worst
+     cell, this holds 86% of white's contrast while still reading as purple. */
+  --accent-on-glass: #f0ecff;
 
   /* Surface. --bg-photo is set at launch by backgrounds.ts; the gradient below
      stays as the layer beneath it, and as the whole background if no photo is
@@ -54,7 +63,20 @@
   --glass-bg: transparent;
   --glass-bg-raised: rgb(255 255 255 / 20%);
   --glass-border: rgb(255 255 255 / 55%);
+  /* The frame around a control, as against the hairline between panels: a
+     grey-white rather than a pure one, so it reads as an edge and not as ink. */
+  --frame-border: rgb(209 209 209 / 55%);
   --sidebar-rule: rgb(255 255 255 / 24%);
+  /* The seam between sidebar and editor, measured off the mockup: a rim light
+     on the sidebar's inner edge rather than a glow across the join. */
+  --divider-core: rgb(255 255 255 / 18%);
+  --divider-rim: rgb(255 255 255 / 19%);
+  --divider-rim-soft: rgb(255 255 255 / 16%);
+  /* Fixed, not content-driven: the labels are monospaced and the counts sit
+     hard right, so a shrink-to-fit sidebar would jitter as notes are added.
+     Named here because it lives in a flex shorthand otherwise, where nothing
+     searching for "width" will ever find it. */
+  --sidebar-width: 17.25rem;
   /* The scroll area's own inset. Header and footer add the depth-1 row indent
      on top, so the wordmark, the row labels and the avatar all start on one
      vertical line. */
@@ -96,9 +118,12 @@
   --text-base: 0.9375rem;
   --text-lg: 1.125rem;
   --text-title: 2.75rem;
-  /* Sidebar scale, taken off the mockup: its row labels measure a 12px cap,
-     which is about a 16px face once the mockup's own scale is divided out. */
-  --text-row: 1rem;
+  /* The size of the app's furniture: sidebar rows and their counts, tag rows,
+     the footer name, the breadcrumb and its edited time, the word count. One
+     value under several names, so each still says what it is for. Section
+     labels are deliberately not among them — see --text-section. */
+  --text-chrome: 0.87rem;
+  --text-row: var(--text-chrome);
   --text-section: 1.21875rem;
   --sidebar-icon: 1.4rem;
 
@@ -123,6 +148,10 @@
   /* One inset for the writing area: left, right and below. The title carries
      the same value as its own left padding, so the two line up. */
   --editor-inset: var(--space-12);
+  /* The title sits nearer the sidebar than the breadcrumb above it, and the
+     prose a little further out than either. Three insets rather than one,
+     because the mockup does not stack them on a single line. */
+  --title-inset: 2.5rem;
 
   /* Both footers share one horizontal centreline: the editor's toolbar and the
      sidebar's collapse control sit on it, and so does the reveal tab that
@@ -143,6 +172,12 @@
   /* Toolbar glyphs are text: their ink is cap height, about 0.7em. The caret's
      path fills 10 of its 16 viewBox units. Sizing the box at 1.45rem puts the
      two inks within a fraction of a pixel of each other. */
+  /* The breadcrumb row's icons. Drawn shapes, not glyphs, so they take a width
+     rather than a font-size. Larger than --text-chrome on purpose: a glyph's
+     ink is its cap height, about 0.7em, while an icon fills its whole box, so
+     matching the numbers sets noticeably less ink beside the text. Chosen by
+     eye against the row rather than by that ratio, which lands lower. */
+  --nav-icon: 1.58125rem;
   --footer-glyph: 1.3rem;
   --footer-caret: 1.45rem;
 }

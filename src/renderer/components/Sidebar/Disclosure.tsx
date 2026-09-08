@@ -1,6 +1,7 @@
 import { DragEvent, MouseEvent, ReactNode } from "react"
 import { useNotesStore } from "../../stores/notesStore"
 import { Icon } from "./icons"
+import { containerKeyOf } from "./sectionKey"
 
 interface DisclosureProps {
   /** Key in the store's expanded map — also what breadcrumbs target. */
@@ -42,6 +43,10 @@ export function Disclosure({
   const open = useNotesStore((state) => state.expanded[sectionKey] === true)
   const toggleSection = useNotesStore((state) => state.toggleSection)
 
+  // The purple marks where the reader is, so it belongs on whatever directly
+  // holds the open note — the folder if it is in one, the section otherwise.
+  const isActive = useNotesStore((state) => containerKeyOf(state.active) === sectionKey)
+
   // A section with nothing in it has nothing to reveal, so it does not respond.
   // Notes still arrive through the compose control or the editor's Move menu.
   const empty = count === 0
@@ -50,9 +55,9 @@ export function Disclosure({
     <div className={`disclosure disclosure-${variant}`}>
       <button
         type="button"
-        className={`disclosure-header${isDropActive ? " is-drop-active" : ""}${
-          empty ? " is-empty" : ""
-        }`}
+        className={`disclosure-header disclosure-header-${variant}${
+          isDropActive ? " is-drop-active" : ""
+        }${empty ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
         data-depth={depth}
         {...dropHandlers}
         aria-expanded={empty ? undefined : open}
@@ -64,7 +69,8 @@ export function Disclosure({
       >
         {icon !== undefined && <Icon name={icon} />}
         <span className="disclosure-label">{label}</span>
-        {count !== undefined && <span className="disclosure-count">{count}</span>}
+        {/* An empty section says so by being empty; a nought adds nothing. */}
+        {count !== undefined && count > 0 && <span className="disclosure-count">{count}</span>}
       </button>
 
       {open && !empty && <div className="disclosure-body">{children}</div>}

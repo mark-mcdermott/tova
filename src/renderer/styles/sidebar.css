@@ -1,7 +1,7 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  flex: 0 0 15rem;
+  flex: 0 0 var(--sidebar-width);
   min-height: 0;
 
   /* The mockup does treat the sidebar, and only the sidebar. Fitting its pixels
@@ -10,7 +10,16 @@
      shadows into haze and leaves the bright sky about where it was, which is
      what separates the panel from the untouched editor beside it. */
   background: rgb(144 141 157 / 28%);
-  border-right: 1px solid var(--glass-border);
+  /* Measured off the mockup, column by column: the seam is a rim light on the
+     inside of the sidebar, not a glow across it. A bright 2px core peaking
+     about 26% white over the local background, falling back to it over some
+     five pixels — and nothing at all spilling into the editor. What reads as a
+     shadow on that side is only the body being darker than the sidebar's
+     overlay. */
+  border-right: 1px solid var(--divider-core);
+  box-shadow:
+    inset -1px 0 0 var(--divider-rim),
+    inset -6px 0 7px -3px var(--divider-rim-soft);
 
   /* Monospace throughout, as the mockup has it. Measured there, five-letter
      labels with quite different letterforms come out within a pixel of each
@@ -108,6 +117,7 @@
   height: var(--sidebar-avatar);
   border-radius: 50%;
   object-fit: cover;
+  flex: none;
   transform: translateY(var(--footer-icon-nudge));
 }
 
@@ -160,7 +170,7 @@
 .disclosure-header {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-3);
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: none;
@@ -179,7 +189,7 @@
 .icon-button-framed {
   width: 2.4rem;
   height: 2.4rem;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--frame-border);
   border-radius: var(--radius-md);
 }
 
@@ -216,9 +226,11 @@
   transform: translateY(var(--footer-icon-nudge));
 }
 
+/* The cog is the only thing wearing this, and it belongs with the breadcrumb
+   row's icons rather than with the toolbar carets it used to match. */
 .footer-icon {
-  width: var(--footer-caret);
-  height: var(--footer-caret);
+  width: var(--nav-icon);
+  height: var(--nav-icon);
 }
 
 .caret-icon {
@@ -256,12 +268,19 @@
   color: var(--text-primary);
 }
 
-.disclosure-section > .disclosure-header {
+/*
+ * The section label — TAGS — is a signpost rather than a row, so it takes its
+ * own class rather than being reached through its parent. It sits further left
+ * than the rows beneath it, as the mockup has it: the rows indent to clear
+ * their icons, and a label with no icon has nothing to clear.
+ */
+.disclosure-header-section {
   margin-top: var(--space-4);
+  padding-left: var(--space-2);
   color: var(--text-muted);
-  font-size: var(--text-section);
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.05em;
 }
 
 .disclosure-label {
@@ -274,7 +293,7 @@
 .disclosure-count {
   flex: none;
   color: var(--text-muted);
-  font-size: var(--text-base);
+  font-size: var(--text-chrome);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -296,8 +315,14 @@
   background: var(--glass-bg-raised);
 }
 
-.note-row.is-active {
-  background: var(--accent-tint);
+/*
+ * The open note takes the accent as colour, not as a background — the pill
+ * belongs to the folder holding it, and two filled rows would compete over
+ * which one is the answer to "where am I".
+ */
+.note-row.is-active .note-row-open {
+  color: var(--accent-on-glass);
+  font-weight: 600;
 }
 
 .note-row-open {
@@ -318,9 +343,17 @@
   cursor: pointer;
 }
 
-.note-row.is-active .note-row-open,
 .note-row:hover .note-row-open {
   color: var(--text-primary);
+}
+
+/* Hover must not overrule the accent on the row that is actually open. */
+.note-row.is-active:hover .note-row-open {
+  color: var(--accent-on-glass);
+}
+
+.disclosure-header.is-active {
+  background: var(--accent-tint);
 }
 
 .note-row-actions {
@@ -330,14 +363,25 @@
   transition: opacity 120ms ease;
 }
 
-/* Row actions stay hidden until the row is hovered or focused, so the tree
-   reads as a calm list rather than a wall of buttons. */
-.note-row:hover .note-row-actions,
+/*
+ * The action appears only under the pointer that is actually on it, not
+ * anywhere on the row — so passing along the list disturbs nothing. It keeps
+ * its space while invisible, which is what makes it hoverable at all, and
+ * still appears on keyboard focus, where there is no pointer to aim.
+ */
+.note-row-actions:hover,
 .note-row:focus-within .note-row-actions {
   opacity: 1;
 }
 
+.row-action-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .note-row-actions button {
+  display: grid;
+  place-items: center;
   width: 1.25rem;
   height: 1.25rem;
   border: none;
@@ -378,9 +422,10 @@
   text-overflow: ellipsis;
 }
 
+/* The mockup sets the hash in the same white as the name, standing off it
+   rather than tucked against it. */
 .tag-row-hash {
-  color: #c9c0ff;
-  padding-right: 1px;
+  padding-right: var(--space-2);
 }
 
 /* ── Utility rows ─────────────────────────────────────────────────────── */
@@ -501,4 +546,17 @@
 
 .folder-name-input:focus {
   outline: none;
+}
+
+/* The stand-in when no picture is set: initials on a hue taken from the name,
+   so the same person keeps the same colour without anything being stored. */
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
 }

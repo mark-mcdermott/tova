@@ -26,6 +26,7 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
             type="button"
             title={item.title}
             aria-label={item.title}
+            data-glyph={item.key}
             // mousedown-with-preventDefault keeps focus in the editor, so the
             // selection the format applies to survives the click.
             onMouseDown={(event) => {
@@ -34,7 +35,9 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
               if (view) applyFormat(view, item.format)
             }}
           >
-            {item.label}
+            {/* The glyph is nudged on its own for some symbols, so it needs a
+                box of its own to move inside the button's. */}
+            <span className="toolbar-glyph">{item.label}</span>
           </button>
         ))}
       </div>

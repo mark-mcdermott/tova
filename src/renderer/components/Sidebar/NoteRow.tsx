@@ -4,6 +4,7 @@ import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { NOTE_MIME } from "./dragDrop"
+import { Icon } from "./icons"
 
 interface NoteRowProps {
   note: NoteSummary
@@ -99,7 +100,7 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
             aria-label={`Move ${label} to Trash`}
             onClick={() => trash(note.id)}
           >
-            ⌫
+            <Icon name="trash" className="row-action-icon" />
           </button>
         )}
       </div>

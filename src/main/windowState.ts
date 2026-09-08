@@ -16,7 +16,8 @@ export interface WindowState {
   maximized: boolean
 }
 
-const DEFAULTS: WindowState = { width: 1280, height: 800, x: null, y: null, maximized: false }
+/** Where a window opens the first time, before there is a remembered one. */
+const DEFAULTS: WindowState = { width: 1345, height: 915, x: null, y: null, maximized: false }
 
 const MIN = { width: 720, height: 480 }
 

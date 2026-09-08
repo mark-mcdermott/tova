@@ -369,7 +369,24 @@ moves is a poor way to learn how the reference worked. The identity control now
 opens the Profile tab while the cog opens Settings, so the two adjacent buttons
 no longer share an accessible name.
 
+**The divider between sidebar and editor is a rim light, not a glow.** It looks
+like a glowing line in the mockup, but sampling the mockup column by column says
+otherwise: a bright core about two pixels wide sitting *inside* the sidebar,
+falling back to the sidebar's own tone over some five pixels, and nothing at all
+spilling into the editor. What reads as a shadow on the editor side is only the
+body being darker than the sidebar's 28% overlay.
+
+Built as an inset shadow and tuned against that measurement. Aligned on the
+peak, the two profiles agree within about four levels out of 255 — the two
+columns either side of the core match exactly.
+
 ## Carried forward
+
+- **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against
+  the mockup's 22.2%. It was 15rem (18.8%), where a folder named
+  `correspondence` truncated. The value is `--sidebar-width`; it sits in a flex
+  basis rather than a `width`, which is why it is worth having a name.
+
 
 - **An empty section cannot be opened**, so the "+ New note" row inside it is
   out of reach. Notes still get there: the compose control creates in Notes, and
@@ -385,11 +402,6 @@ no longer share an accessible name.
   on `.cm-content`. On a 1900px window that wraps around 105 characters, above
   the 45-90 usually considered comfortable, and it grows with the window.
   `--measure` still exists and still caps the title.
-
-- **The sidebar is narrower than the mockup's, proportionally.** Ours is 240px
-  of a 1280px window (18.8%); the mockup's is 22.2%, which would be about 284px
-  here. With the wider gutters and larger icons now in place, a folder named
-  `correspondence` truncates. Widening to the mockup's proportion would fix it.
 
 - **Sidebar sections start collapsed**, Tags aside, so the sidebar opens as the
   flat list the mockup shows. Nothing is persisted, so this is every launch.

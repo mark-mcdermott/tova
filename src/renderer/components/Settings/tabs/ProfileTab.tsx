@@ -1,6 +1,6 @@
 import { usePreferencesStore } from "../../../stores/preferencesStore"
-import bundledAvatar from "../../../assets/avatar.jpg"
 import { Field } from "../Field"
+import { Avatar } from "../../Sidebar/Avatar"
 
 export function ProfileTab() {
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
@@ -33,7 +33,7 @@ export function ProfileTab() {
         hint="Copied into Tova, so moving the original does not lose it."
       >
         <div className="profile-avatar-row">
-          <img className="profile-avatar" src={avatarUrl ?? bundledAvatar} alt="" />
+          <Avatar className="profile-avatar" src={avatarUrl} name={displayName} />
           <button
             type="button"
             id="profile-avatar"

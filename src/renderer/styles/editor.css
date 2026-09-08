@@ -49,6 +49,7 @@
 
 .title-input {
   width: 100%;
+  padding-left: var(--title-inset);
   /* Held to the same measure as the prose; the nav row above is not, so the
      edited time and its controls can sit against the panel's right edge. */
   max-width: var(--measure);
@@ -103,7 +104,8 @@
 }
 
 .cm-editor .cm-content {
-  padding: 0 var(--editor-inset) var(--editor-inset);
+  /* A little further out than the breadcrumb, as the mockup has it. */
+  padding: 0 var(--editor-inset) var(--editor-inset) calc(var(--editor-inset) + var(--space-1));
   caret-color: var(--accent-bright);
 }
 
@@ -112,7 +114,7 @@
 }
 
 .cm-cursor {
-  border-left-color: var(--accent-bright);
+  border-left-color: var(--caret);
   border-left-width: 2px;
 }
 
@@ -410,6 +412,38 @@
   min-height: 1em;
 }
 
+/* ── A note's tags ────────────────────────────────────────────────────── */
+
+/*
+ * Between the title and the prose, aligned with the prose rather than the
+ * title. The row holds its height with no tags in it, so writing the first one
+ * does not shove the document down a line.
+ */
+.editor-tags {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  min-height: 1.65rem;
+  padding-left: calc(var(--editor-inset) + var(--space-1));
+}
+
+.editor-tag {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.15em 0.6em;
+  border-radius: var(--radius-sm);
+  /* Barely there, as the mockup has it: the ink carries the tag, not the fill. */
+  background: color-mix(in oklab, var(--tag-ink) 14%, transparent);
+  color: var(--tag-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+}
+
+.editor-tag-hash {
+  padding-right: var(--space-2);
+}
+
 /* ── Images ───────────────────────────────────────────────────────────── */
 
 /* Dropped images render in place; the markdown returns as soon as the cursor
@@ -469,21 +503,33 @@
   align-items: center;
   gap: var(--space-3);
   /* An inset card rather than a band across the panel, as the mockup has it.
-     Its fill is nearly nothing — measured, the mockup lifts the photograph by
-     about 5% inside the rect — so the bright border is what reads as white. */
-  --text-muted: #fffeff;
+     Measured across both of the mockup's own edges, its fill lifts the
+     photograph by about 3% — +4.9 levels over the dark left side and +3.1 over
+     the bright right — which solves to a 3% white overlay on both. The bright
+     border is what reads as the card; the fill is barely there. */
+  /* The same 82% white the breadcrumb row's muted ink uses, so the glyphs and
+     the word count sit at the strength the star, the actions control and the
+     edited time do. Both read this token, so it is one value rather than two
+     declarations that could drift. */
+  --text-muted: rgb(255 255 255 / 82%);
   --text-secondary: #fffeff;
   color: #fffeff;
 
-  margin: 0 var(--space-6) var(--footer-inset);
+  margin: 0 var(--space-8) var(--footer-inset);
   padding: var(--footer-pad);
-  border: 1px solid rgb(255 255 255 / 62%);
+  /* The frame the new note control wears, rather than a brighter one of its
+     own. */
+  border: 1px solid var(--frame-border);
   border-radius: var(--radius-lg);
-  background: rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 3%);
 }
 
 .toolbar-status {
-  font-size: var(--text-base);
+  padding-inline: var(--space-3);
+  font-size: var(--text-chrome);
+  /* Mono, like the breadcrumb and the sidebar rows it belongs with. Sans at
+     the same declared size reads smaller, which was the oversight. */
+  font-family: var(--font-mono);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -516,6 +562,28 @@
   transition:
     background 120ms ease,
     color 120ms ease;
+}
+
+/*
+ * Letters sit on the baseline; these four do not. Measured against the letters
+ * in a render, the slash and the code fences land 2px low and the brackets and
+ * the list rule 1.5px, because a symbol is centred on the maths axis rather
+ * than standing on the baseline. The nudge is on the glyph rather than the
+ * button, so the hover background stays where it is and the mark centres in it.
+ */
+.toolbar-actions button[data-glyph="strike"] .toolbar-glyph,
+.toolbar-actions button[data-glyph="codeBlock"] .toolbar-glyph {
+  transform: translateY(-2px);
+}
+
+.toolbar-actions button[data-glyph="inlineCode"] .toolbar-glyph,
+.toolbar-actions button[data-glyph="list"] .toolbar-glyph {
+  transform: translateY(-1.5px);
+}
+
+.toolbar-glyph {
+  display: block;
+  line-height: 1;
 }
 
 .toolbar-actions button:hover {
@@ -570,10 +638,16 @@
 .editor-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  /* Left padding matches the prose below so the breadcrumb lines up with it;
-     the right is tighter, which is where the mockup puts the controls. */
-  padding: var(--space-8) var(--space-8) var(--space-6) var(--space-12);
+  /* The space above the title, which the mockup gives far more of than the
+     nav row needs. */
+  gap: calc(var(--space-4) * 2.5);
+  /* No left padding of its own: the nav row and the title are set from the
+     sidebar independently, since they do not share an edge. */
+  padding: var(--space-8) var(--space-8) var(--space-6) 0;
+}
+
+.editor-header .editor-nav {
+  padding-left: var(--space-12);
 }
 
 .editor-nav {
@@ -594,7 +668,7 @@
 }
 
 .editor-nav .icon-button {
-  color: var(--text-primary);
+  color: var(--text-muted);
 }
 
 .editor-nav .icon-button:disabled {
@@ -616,14 +690,18 @@
 }
 
 .editor-edited {
-  font-size: var(--text-base);
+  font-size: var(--text-chrome);
   font-weight: 500;
   color: var(--text-muted);
   white-space: nowrap;
+  /* On top of the row's own gap, so the text stands off the icon group at
+     2.5x while the two icons keep their original spacing from each other. */
+  margin-right: calc(var(--space-3) * 1.5);
 }
 
 .editor-star {
-  color: var(--text-primary);
+  display: grid;
+  place-items: center;
 }
 
 /* Filled rather than recoloured, so the mark reads as on at a glance. */
@@ -631,11 +709,10 @@
   fill: currentColor;
 }
 
-/* Half again the previous size, for the arrow, the favourite mark and the
-   actions control alike. */
+/* The arrow, the favourite mark and the actions control, all one size. */
 .nav-icon {
-  width: 1.725rem;
-  height: 1.725rem;
+  width: var(--nav-icon);
+  height: var(--nav-icon);
 }
 
 .nav-icon-forward {
@@ -645,10 +722,13 @@
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  /* No gap: the separator's own padding is the whole space between crumbs, so
+     it is even on both sides. With a gap here, the list added it before the
+     separator and not after, leaving 12px to its left and 8px to its right. */
+  gap: 0;
   margin-left: var(--space-2);
   list-style: none;
-  font-size: var(--text-base);
+  font-size: var(--text-chrome);
   font-weight: 400;
   min-width: 0;
 }
@@ -662,7 +742,7 @@
 /* Separator drawn in CSS so the markup stays a clean ordered list. */
 .breadcrumb li + li::before {
   content: "/";
-  padding-inline: var(--space-2);
+  padding-inline: var(--space-3);
   color: var(--text-primary);
 }
 
@@ -707,7 +787,7 @@
   border-left: none;
   border-start-end-radius: var(--radius-sm);
   border-end-end-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 3%);
   color: #ffffff;
   cursor: pointer;
   transition:
