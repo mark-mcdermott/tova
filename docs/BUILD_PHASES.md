@@ -157,10 +157,10 @@ Write Vitest tests: navigation history push/pop/forward.
 - [x] Front-matter lines rendered italic + subdued color (no box/background)
 - [x] `@blogname post 🚀` — rocket inline at end of line
 - [x] `---` on its own line → thin `<hr>` separator
-- [ ] Click 🚀 → publish begins, non-blocking progress bar top-right
-- [ ] Progress bar: optimistic timing + CFP/Vercel API polling every 3s
-- [ ] Success → ✓. Failure → error message. Click ✓ → back to 🚀.
-- [ ] `lastPublishedFilename` tracked; rename = delete old + publish new
+- [x] Click 🚀 → publish begins, non-blocking progress bar top-right
+- [x] Progress bar: optimistic timing + CFP/Vercel API polling every 3s
+- [x] Success → ✓. Failure → error message. Clicking ✓ republishes directly.
+- [x] `lastPublishedFilename` tracked; rename = delete old + publish new
 
 Write Vitest tests: `@` syntax parser, YAML↔`@` round-trip, filename generation, publish state machine.
 Write Playwright test: publish request sent, progress bar appears.

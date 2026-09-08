@@ -11,6 +11,10 @@ import { assetUrl, resolveAssetPath } from "../../../shared/assets"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
+import { PublishToasts } from "./PublishToast"
+import { usePublishStore } from "../../stores/publishStore"
+import { parsePosts, publishedFieldEdit } from "../../../shared/blogPost"
+import { flushPendingSave } from "../../stores/pendingSave"
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -26,6 +30,7 @@ export function Editor({ note }: EditorProps) {
   const blogs = useBlogsStore((state) => state.blogs)
   const loadBlogs = useBlogsStore((state) => state.load)
   const blogsLoaded = useBlogsStore((state) => state.loaded)
+  const startPublish = usePublishStore((state) => state.start)
 
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
@@ -91,10 +96,37 @@ export function Editor({ note }: EditorProps) {
     resolveImage,
     onError: setDropError,
     onSelectBlog: setBlogAnchor,
-    // No blog is configured yet, so the rocket sends the writer where one gets
-    // set up. Publishing itself arrives with that configuration.
-    onPublish: showSettings
+    onPublish: (blog, headerLine) => void publishPost(blog, headerLine)
   })
+
+  /**
+   * The file on disk is what gets published, so a debounced save is flushed
+   * first. On success the note records what it went out as, which is also what
+   * turns the rocket into a tick.
+   */
+  const publishPost = useCallback(
+    async (blog: string, headerLine: number) => {
+      if (useBlogsStore.getState().blogs.length === 0) {
+        showSettings()
+        return
+      }
+
+      await flushPendingSave()
+      const finished = await startPublish({ noteId: note.id, blog, headerLine })
+      if (finished.phase !== "published") return
+
+      const view = viewRef.current
+      if (view === null) return
+
+      const doc = view.state.doc.toString()
+      const post = parsePosts(doc).find((entry) => entry.headerLine === headerLine)
+      if (post === undefined) return
+
+      view.dispatch({ changes: publishedFieldEdit(doc, post, finished.filename) })
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [note.id, showSettings, startPublish]
+  )
 
   // Anything that moves the file underneath us — a drag, a menu move — flushes
   // this first, so a debounced write cannot land on the old path afterwards.
@@ -192,6 +224,8 @@ export function Editor({ note }: EditorProps) {
       )}
 
       <Toolbar viewRef={viewRef} wordCount={wordCount} saveStatus={saveStatus} />
+
+      <PublishToasts />
 
       {blogAnchor !== null && blogs.length > 0 && (
         <Menu

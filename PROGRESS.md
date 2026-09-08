@@ -203,8 +203,30 @@ Typing `@` on an empty line offers the configured blogs and leaves a starter
 block behind, dated by the local calendar. `toIsoDate` is now the one place
 that formats one, because `toISOString` rolls a late evening into tomorrow.
 
-Still to come in phase 9: publishing itself — the GitHub push, the deploy
-polling and the progress toast.
+**Publishing pushes the file, then follows the build.** The filename is computed
+from the post, the `@` block becomes Astro YAML, and the file goes to the repo
+through the Contents API — with the existing SHA when there is one, which is
+what makes it an update rather than a failed create. A post whose filename has
+changed since it last went out has its old file deleted, so a rename does not
+orphan anything on the blog. `@published` records what went out; it stays in the
+note and is stripped from the YAML.
+
+**The progress bar is optimistic, and says so.** A deploy gives almost no signal
+between "queued" and "done", so the bar moves on a rolling average of this
+blog's last five builds and holds at 98% rather than sitting at 100% while the
+build is still running. Past twice the average it says it is taking longer than
+usual instead of pretending.
+
+**The tick means published, not in sync.** Comparing the computed filename to
+the recorded one looked appealing, but it calls a post current after a body edit
+and stale after a retitle — worse than not claiming. Clicking the tick
+republishes in one click.
+
+Two things Xin got wrong are avoided by construction and held by tests: the
+literal `{slug}.md` filename, and Tab reaching the rocket.
+
+Phase 9 is complete. Phase 10 is the other direction — pulling posts back out of
+a repo and keeping the two in step.
 
 ## Carried forward
 

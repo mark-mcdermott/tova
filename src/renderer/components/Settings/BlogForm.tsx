@@ -104,6 +104,20 @@ export function BlogForm({
         />
       </Field>
 
+      <Field
+        id="blog-live-path"
+        label="Live post path"
+        hint="Where posts appear on the site, e.g. /posts/"
+      >
+        <input
+          id="blog-live-path"
+          className="text-input"
+          value={blog.livePostPath}
+          placeholder="/posts/"
+          onChange={(event) => set({ livePostPath: event.target.value })}
+        />
+      </Field>
+
       <Field id="blog-repo" label="Repository" hint="owner/repo" error={errors.repo}>
         <input
           id="blog-repo"

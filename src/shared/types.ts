@@ -52,6 +52,8 @@ export interface AppApi {
   info: () => Promise<AppInfo>
   /** Opens one of the vault directories in the OS file browser. */
   reveal: (target: "vault" | "backups") => Promise<void>
+  /** Opens an http(s) link in the OS browser. */
+  openExternal: (url: string) => Promise<void>
 }
 
 export interface ImageApi {
@@ -89,6 +91,8 @@ export interface Blog {
   sidebarLabel: string
   /** Base URL of the live site, used to link a published post. */
   siteUrl: string
+  /** URL path posts appear under on the live site, e.g. `/posts/`. */
+  livePostPath: string
   github: BlogGithub
   deploy: BlogDeploy
 }
@@ -107,6 +111,35 @@ export interface BlogApi {
   setSecret: (id: string, secret: BlogSecret, value: string) => Promise<BlogSummary>
   /** False when the OS has no keychain to encrypt against. */
   canStoreSecrets: () => Promise<boolean>
+}
+
+export interface PublishRequest {
+  noteId: string
+  /** The blog's name, as written in `@name post`. */
+  blog: string
+  /** 0-based line of the header in the note's body, so the right post is taken. */
+  headerLine: number
+}
+
+export interface PublishUpdate {
+  /** Identifies this attempt, so a second publish does not overwrite the first. */
+  id: string
+  request: PublishRequest
+  phase: import("./publishProgress").PublishPhase
+  progress: number
+  message: string
+  /** The computed filename, so the note can record what it published as. */
+  filename: string
+  /** Where the post went live, once the deploy reports one. */
+  url: string | null
+  /** Set only when the publish failed. */
+  error: string | null
+}
+
+export interface PublishApi {
+  start: (request: PublishRequest) => Promise<PublishUpdate>
+  /** Subscribes to progress for every publish. Returns an unsubscribe. */
+  onUpdate: (listener: (update: PublishUpdate) => void) => () => void
 }
 
 export interface EventsApi {

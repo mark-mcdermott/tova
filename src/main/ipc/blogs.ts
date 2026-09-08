@@ -32,6 +32,7 @@ function asBlog(value: unknown): Blog {
     name: text(raw, "name"),
     sidebarLabel: text(raw, "sidebarLabel"),
     siteUrl: text(raw, "siteUrl"),
+    livePostPath: text(raw, "livePostPath", EMPTY_BLOG.livePostPath),
     github: {
       repo: text(github, "repo"),
       branch: text(github, "branch", EMPTY_BLOG.github.branch),

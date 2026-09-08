@@ -24,7 +24,7 @@ interface UseCodeMirrorOptions {
   resolveImage?: (url: string) => string | null
   onError?: (message: string | null) => void
   /** Called when the rocket at the end of an `@blog post` line is clicked. */
-  onPublish?: (blog: string) => void
+  onPublish?: (blog: string, headerLine: number) => void
   /** Called as `@` is typed on an empty line, and with null when it stops applying. */
   onSelectBlog?: (anchor: SelectorAnchor | null) => void
 }
@@ -78,7 +78,7 @@ export function useCodeMirror({
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null
           }),
-          blogDecorations((blog) => onPublishRef.current?.(blog)),
+          blogDecorations((blog, headerLine) => onPublishRef.current?.(blog, headerLine)),
           blogSelector((anchor) => onSelectBlogRef.current?.(anchor)),
           imageDrop(
             () => noteIdRef.current,

@@ -7,7 +7,7 @@ import {
   WidgetType
 } from "@codemirror/view"
 import { Range } from "@codemirror/state"
-import { parsePosts } from "../../../shared/blogPost"
+import { parsePosts, publishedAs } from "../../../shared/blogPost"
 
 const headerLine = Decoration.line({ class: "cm-post-line cm-post-header" })
 const fieldLine = Decoration.line({ class: "cm-post-line cm-post-field" })
@@ -15,22 +15,31 @@ const fieldLine = Decoration.line({ class: "cm-post-line cm-post-field" })
 class RocketWidget extends WidgetType {
   constructor(
     private readonly blog: string,
-    private readonly onPublish: (blog: string) => void
+    private readonly headerLine: number,
+    /** Whether this post has been published before. */
+    private readonly published: boolean,
+    private readonly onPublish: (blog: string, headerLine: number) => void
   ) {
     super()
   }
 
   eq(other: RocketWidget): boolean {
-    return other.blog === this.blog
+    return (
+      other.blog === this.blog &&
+      other.headerLine === this.headerLine &&
+      other.published === this.published
+    )
   }
 
   toDOM(): HTMLElement {
     const rocket = document.createElement("span")
-    rocket.className = "cm-post-rocket"
-    rocket.textContent = "🚀"
-    rocket.title = `Publish to ${this.blog}`
+    const label = this.published ? `Republish to ${this.blog}` : `Publish to ${this.blog}`
+
+    rocket.className = `cm-post-rocket${this.published ? " is-published" : ""}`
+    rocket.textContent = this.published ? "✓" : "🚀"
+    rocket.title = label
     rocket.setAttribute("role", "button")
-    rocket.setAttribute("aria-label", `Publish to ${this.blog}`)
+    rocket.setAttribute("aria-label", label)
 
     // Xin let Tab reach this, which broke indenting a list inside a post.
     // The rocket is mouse-only on purpose.
@@ -39,7 +48,7 @@ class RocketWidget extends WidgetType {
     rocket.addEventListener("mousedown", (event) => {
       // Keeps the cursor where the writer left it.
       event.preventDefault()
-      this.onPublish(this.blog)
+      this.onPublish(this.blog, this.headerLine)
     })
 
     return rocket
@@ -50,7 +59,7 @@ class RocketWidget extends WidgetType {
  * Renders the `@` authoring block: the decorator lines set back from the prose,
  * and a rocket at the end of the header that publishes the post beneath it.
  */
-export function blogDecorations(onPublish: (blog: string) => void) {
+export function blogDecorations(onPublish: (blog: string, headerLine: number) => void) {
   const build = (view: EditorView): DecorationSet => {
     const { doc } = view.state
     const decorations: Range<Decoration>[] = []
@@ -58,9 +67,15 @@ export function blogDecorations(onPublish: (blog: string) => void) {
     for (const post of parsePosts(doc.toString())) {
       const header = doc.line(post.headerLine + 1)
       decorations.push(headerLine.range(header.from))
+      // A tick once the post has gone out at least once. It says "published",
+      // not "in sync" — comparing filenames would call a post current after a
+      // body edit and stale after a retitle, which is worse than not claiming.
+      // Clicking it republishes.
+      const published = publishedAs(post) !== null
+
       decorations.push(
         Decoration.widget({
-          widget: new RocketWidget(post.blog, onPublish),
+          widget: new RocketWidget(post.blog, post.headerLine, published, onPublish),
           side: 1
         }).range(header.to)
       )

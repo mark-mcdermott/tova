@@ -1,4 +1,12 @@
-import type { AppApi, NoteApi, BackupApi, BlogApi, EventsApi, ImageApi } from "../shared/types"
+import type {
+  AppApi,
+  NoteApi,
+  BackupApi,
+  BlogApi,
+  EventsApi,
+  ImageApi,
+  PublishApi
+} from "../shared/types"
 
 declare global {
   interface Window {
@@ -7,6 +15,7 @@ declare global {
       backups: BackupApi
       images: ImageApi
       blogs: BlogApi
+      publish: PublishApi
       app: AppApi
       events: EventsApi
     }

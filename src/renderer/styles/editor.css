@@ -266,7 +266,9 @@
 }
 
 .cm-post-rocket {
-  padding-left: var(--space-2);
+  /* Margin, not padding: the published variant has a fixed width, and
+     border-box padding would eat into the circle instead of spacing it. */
+  margin-left: var(--space-2);
   font-style: normal;
   cursor: pointer;
   /* Sits with the line rather than growing it. */
@@ -275,6 +277,126 @@
 
 .cm-post-rocket:hover {
   filter: brightness(1.15);
+}
+
+/* What is on the blog matches what is here. An edit that changes the filename
+   turns it back into a rocket on its own. */
+.cm-post-rocket.is-published {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 50%;
+  background: #1f7a44;
+  color: #ffffff;
+  font-size: 0.72em;
+  vertical-align: middle;
+}
+
+/* ── Publish toast ────────────────────────────────────────────────────── */
+
+.publish-toasts {
+  position: fixed;
+  top: var(--space-8);
+  right: var(--space-6);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(22rem, calc(100vw - var(--space-12)));
+}
+
+.publish-toast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(0 0 0 / 8%);
+  border-radius: var(--radius-md);
+  background: rgb(252 251 255 / 92%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 24%);
+  color: #241f2e;
+}
+
+.publish-toast-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.publish-toast-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.publish-toast-close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #6b6480;
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.publish-toast-close:hover {
+  color: #241f2e;
+}
+
+.publish-toast-track {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: rgb(23 20 31 / 10%);
+  overflow: hidden;
+}
+
+.publish-toast-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 400ms ease;
+}
+
+.publish-toast.is-published .publish-toast-bar {
+  background: #1f7a44;
+}
+
+.publish-toast.is-failed .publish-toast-bar {
+  background: #a3242c;
+}
+
+.publish-toast-foot {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: #4a4458;
+}
+
+.publish-toast.is-failed .publish-toast-foot {
+  color: #7d1a21;
+}
+
+.publish-toast-message {
+  min-width: 0;
+}
+
+.publish-toast-link {
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-bright);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.publish-toast-elapsed {
+  margin-left: auto;
+  color: #6b6480;
+  font-variant-numeric: tabular-nums;
 }
 
 /* A post's end marker, and a thematic break anywhere else. */

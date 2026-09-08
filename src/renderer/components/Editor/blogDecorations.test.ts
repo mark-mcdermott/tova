@@ -67,7 +67,31 @@ describe("blogDecorations", () => {
     const rocket = view.dom.querySelector(".cm-post-rocket") as HTMLElement
 
     rocket.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))
-    expect(onPublish).toHaveBeenCalledWith("markmcdermott.io")
+    expect(onPublish).toHaveBeenCalledWith("markmcdermott.io", 2)
+  })
+
+  it("shows a tick once the post has gone out, and offers a republish", () => {
+    const published = "@a.com post\n@title Hello\n@published 26-05-17-hello.md\n\nBody.\n"
+    const { view } = mount(published)
+
+    const rocket = view.dom.querySelector(".cm-post-rocket") as HTMLElement
+    expect(rocket.textContent).toBe("✓")
+    expect(rocket.getAttribute("aria-label")).toBe("Republish to a.com")
+  })
+
+  it("keeps the tick after an edit rather than guessing at being in sync", () => {
+    const edited = "@a.com post\n@title Hello Again\n@published 26-05-17-hello.md\n\nMore.\n"
+    const { view } = mount(edited)
+    expect(view.dom.querySelector(".cm-post-rocket")?.textContent).toBe("✓")
+  })
+
+  it("republishes from the tick in one click", () => {
+    const published = "@a.com post\n@title Hello\n@published 26-05-17-hello.md\n\nBody.\n"
+    const { view, onPublish } = mount(published)
+
+    const rocket = view.dom.querySelector(".cm-post-rocket") as HTMLElement
+    rocket.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))
+    expect(onPublish).toHaveBeenCalledWith("a.com", 0)
   })
 
   it("gives every post in a note its own rocket", () => {

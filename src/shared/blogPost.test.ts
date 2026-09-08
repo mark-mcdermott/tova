@@ -8,6 +8,8 @@ import {
   postFilename,
   postSlug,
   postTags,
+  publishedAs,
+  publishedFieldEdit,
   toYaml
 } from "./blogPost"
 
@@ -210,5 +212,61 @@ The body starts here.
     const [original] = parsePosts("@a.com post\n@title T\n@heroImage /images/git.jpg\n\nBody.")
     const [returned] = parsePosts(fromYaml(toYaml(original), "a.com"))
     expect(fieldValue(returned, "heroImage")).toBe("/images/git.jpg")
+  })
+})
+
+describe("publishedAs", () => {
+  it("is null before a post has ever gone out", () => {
+    const [found] = parsePosts("@a.com post\n@title T\n\nBody.")
+    expect(publishedAs(found)).toBeNull()
+  })
+
+  it("reads the filename a post last went out as", () => {
+    const [found] = parsePosts("@a.com post\n@title T\n@published 26-05-17-t.md\n\nBody.")
+    expect(publishedAs(found)).toBe("26-05-17-t.md")
+  })
+
+  it("stays out of the YAML — it is Tova's bookkeeping, not the blog's", () => {
+    const [found] = parsePosts("@a.com post\n@title T\n@published 26-05-17-t.md\n\nBody.")
+    expect(toYaml(found, new Date(2026, 8, 7))).not.toContain("published")
+  })
+})
+
+describe("publishedFieldEdit", () => {
+  it("adds the record after the last field", () => {
+    const doc = "@a.com post\n@title T\n\nBody."
+    const [found] = parsePosts(doc)
+    const edit = publishedFieldEdit(doc, found, "26-05-17-t.md")
+
+    const applied = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    expect(applied).toBe("@a.com post\n@title T\n@published 26-05-17-t.md\n\nBody.")
+  })
+
+  it("replaces the record rather than stacking a second one", () => {
+    const doc = "@a.com post\n@title T\n@published old.md\n\nBody."
+    const [found] = parsePosts(doc)
+    const edit = publishedFieldEdit(doc, found, "new.md")
+
+    const applied = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    expect(applied).toBe("@a.com post\n@title T\n@published new.md\n\nBody.")
+  })
+
+  it("records against a post with no fields at all", () => {
+    const doc = "@a.com post\n\nBody."
+    const [found] = parsePosts(doc)
+    const edit = publishedFieldEdit(doc, found, "t.md")
+
+    const applied = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    expect(applied).toBe("@a.com post\n@published t.md\n\nBody.")
+  })
+
+  it("records against the second post in a note, not the first", () => {
+    const doc = "@a.com post\n@title A\n\nA.\n\n@b.com post\n@title B\n\nB."
+    const posts = parsePosts(doc)
+    const edit = publishedFieldEdit(doc, posts[1], "b.md")
+
+    const applied = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    expect(applied).toContain("@title B\n@published b.md")
+    expect(applied).not.toContain("@title A\n@published")
   })
 })

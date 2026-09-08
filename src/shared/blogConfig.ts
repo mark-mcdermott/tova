@@ -5,6 +5,7 @@ export const EMPTY_BLOG: Blog = {
   name: "",
   sidebarLabel: "",
   siteUrl: "",
+  livePostPath: "/",
   github: { repo: "", branch: "main", contentPath: "" },
   deploy: { provider: "none", accountId: "", projectName: "", projectId: "" }
 }
@@ -52,6 +53,8 @@ export function normalizeBlog(blog: Blog): Blog {
     name: blog.name.trim(),
     sidebarLabel: blog.sidebarLabel.trim(),
     siteUrl: blog.siteUrl.trim().replace(/\/+$/, ""),
+    // Kept as `/path/` so joining it to a slug never doubles or drops a slash.
+    livePostPath: `/${blog.livePostPath.trim().replace(/^\/+/, "").replace(/\/*$/, "/")}`,
     github: {
       repo: blog.github.repo.trim(),
       branch: blog.github.branch.trim(),
@@ -68,4 +71,10 @@ export function normalizeBlog(blog: Blog): Blog {
 
 export function blogLabel(blog: Blog): string {
   return blog.sidebarLabel === "" ? blog.name : blog.sidebarLabel
+}
+
+/** Where a published post can be read, or null when the site URL is unknown. */
+export function postUrl(blog: Blog, slug: string): string | null {
+  if (blog.siteUrl === "") return null
+  return `${blog.siteUrl}${blog.livePostPath}${slug}`
 }

@@ -137,7 +137,11 @@ function yamlString(value: string): string {
   return value.includes('"') ? `'${value.replace(/'/g, "''")}'` : `"${value}"`
 }
 
-const RESERVED = new Set(["title", "subtitle", "date", "tags", "slug"])
+/** Emitted explicitly below, so the pass-through loop skips them. */
+const HANDLED = new Set(["title", "subtitle", "date", "tags", "slug"])
+
+/** Tova's own bookkeeping. It stays in the note and never reaches the blog. */
+export const PUBLISHED_FIELD = "published"
 
 /**
  * `@` fields to the Astro front matter a repo expects. Unknown fields pass
@@ -160,7 +164,8 @@ export function toYaml(post: BlogPost, today: Date = new Date()): string {
   if (slug !== null) lines.push(`slug: ${slug}`)
 
   for (const field of post.fields) {
-    if (RESERVED.has(field.name.toLowerCase())) continue
+    const name = field.name.toLowerCase()
+    if (HANDLED.has(name) || name === PUBLISHED_FIELD) continue
     lines.push(`${field.name}: ${yamlString(field.value)}`)
   }
 
@@ -193,4 +198,42 @@ export function fromYaml(raw: string, blog: string): string {
   }
 
   return `${lines.join("\n")}\n\n${body.trim()}\n`
+}
+
+/** The filename this post last went out as, if it has been published before. */
+export function publishedAs(post: BlogPost): string | null {
+  const value = fieldValue(post, PUBLISHED_FIELD)
+  return value === null || value.trim() === "" ? null : value.trim()
+}
+
+export interface DocumentEdit {
+  from: number
+  to: number
+  insert: string
+}
+
+/**
+ * Where to record what a post was published as — replacing the existing line if
+ * there is one, otherwise adding it as the last field. Returned as an edit
+ * rather than a new document so the editor can apply it to the live one without
+ * disturbing the cursor.
+ */
+export function publishedFieldEdit(doc: string, post: BlogPost, filename: string): DocumentEdit {
+  const lines = doc.replace(/\r\n/g, "\n").split("\n")
+  const offsetOf = (line: number): number =>
+    lines.slice(0, line).reduce((total, text) => total + text.length + 1, 0)
+
+  const existing = post.fields.find((field) => field.name.toLowerCase() === PUBLISHED_FIELD)
+  if (existing !== undefined) {
+    const from = offsetOf(existing.line)
+    return {
+      from,
+      to: from + lines[existing.line].length,
+      insert: `@${PUBLISHED_FIELD} ${filename}`
+    }
+  }
+
+  const lastLine = post.fields.at(-1)?.line ?? post.headerLine
+  const at = offsetOf(lastLine) + lines[lastLine].length
+  return { from: at, to: at, insert: `\n@${PUBLISHED_FIELD} ${filename}` }
 }

@@ -1,5 +1,14 @@
 import { contextBridge, ipcRenderer } from "electron"
-import type { AppApi, NoteApi, BackupApi, BlogApi, EventsApi, ImageApi } from "../shared/types"
+import type {
+  AppApi,
+  NoteApi,
+  BackupApi,
+  BlogApi,
+  EventsApi,
+  ImageApi,
+  PublishApi,
+  PublishUpdate
+} from "../shared/types"
 
 /*
  * The only bridge between renderer and main. Each method is a thin, typed
@@ -39,7 +48,8 @@ const images: ImageApi = {
 
 const appInfo: AppApi = {
   info: () => ipcRenderer.invoke("app:info"),
-  reveal: (target) => ipcRenderer.invoke("app:reveal", target)
+  reveal: (target) => ipcRenderer.invoke("app:reveal", target),
+  openExternal: (url) => ipcRenderer.invoke("app:openExternal", url)
 }
 
 const blogs: BlogApi = {
@@ -48,6 +58,17 @@ const blogs: BlogApi = {
   remove: (id) => ipcRenderer.invoke("blog:delete", id),
   setSecret: (id, secret, value) => ipcRenderer.invoke("blog:setSecret", id, secret, value),
   canStoreSecrets: () => ipcRenderer.invoke("blog:canStoreSecrets")
+}
+
+const publishing: PublishApi = {
+  start: (request) => ipcRenderer.invoke("publish:start", request),
+  onUpdate: (listener) => {
+    const handler = (_event: unknown, update: PublishUpdate): void => listener(update)
+    ipcRenderer.on("publish:update", handler)
+    return () => {
+      ipcRenderer.removeListener("publish:update", handler)
+    }
+  }
 }
 
 const events: EventsApi = {
@@ -62,4 +83,12 @@ const events: EventsApi = {
   }
 }
 
-contextBridge.exposeInMainWorld("tova", { notes, backups, images, blogs, app: appInfo, events })
+contextBridge.exposeInMainWorld("tova", {
+  notes,
+  backups,
+  images,
+  blogs,
+  publish: publishing,
+  app: appInfo,
+  events
+})
