@@ -104,20 +104,20 @@ Write Vitest tests: navigation history push/pop/forward.
 ## Phase 6 — Glassmorphic UI
 **Goal:** Looks exactly like the mockup.
 
-- [ ] Full-bleed background photo (bundled dark = warm sunset, light = bright variant)
-- [ ] Glassmorphic sidebar + editor panels (`backdrop-filter: blur()` + low-opacity tint)
-- [ ] One shared glassmorphic popup/menu component (reused everywhere)
-- [ ] CSS variable design token system. Accent: Tova purple. Zero hot pink.
-- [ ] Alagambe script font for note title
-- [ ] Acumin Pro Light for wordmark (tight kerning, smaller size)
-- [ ] Monospace body font in editor
-- [ ] Dark / light / system theme (icon + radio picker)
-- [ ] Focus mode (Cmd+Shift+F)
-- [ ] Window state persistence
-- [ ] macOS title bar / traffic lights
+- [x] Full-bleed background photo — one light photograph; the dark variant went with the dark theme
+- [x] Sidebar and editor panels — blur and tint were removed by choice; see PROGRESS.md
+- [x] One shared popup/menu component (context menus, note actions, blog selector, spelling)
+- [x] CSS variable design token system. Accent: Tova purple. Zero hot pink.
+- [x] Alagambe script font for note title
+- [x] Acumin Pro for wordmark — only Regular is licensed, so tracking and size carry the weight
+- [x] Monospace body font in editor
+- [ ] Dark / light / system theme — deferred to the roadmap
+- [ ] Focus mode — deferred to the roadmap
+- [x] Window state persistence
+- [x] macOS title bar / traffic lights (hiddenInset, with drag regions declared)
 - [x] User avatar + display name at sidebar bottom (click → Settings)
-- [ ] Tooltips on all icons
-- [ ] Search icon in sidebar header (stacked below pencil), with opacity states
+- [x] Tooltips on all icons
+- [ ] Search icon in sidebar header — with search, deferred to the roadmap
 - [x] Images: drag-in/paste → vault assets → CM6 inline render
 
 **Deliverable:** App looks like the mockup. Portfolio-worthy.
@@ -130,7 +130,7 @@ Write Vitest tests: navigation history push/pop/forward.
 - [ ] Search: sidebar icon → expanded input + RECENT MATCHES + "View all results →"
 - [ ] Live full-text filter across Notes + Daily + Posts
 - [ ] Esc/✕ closes search
-- [ ] Tag counts aggregated in TAGS sidebar section
+- [x] Tag counts aggregated in TAGS sidebar section
 - [ ] Click tag in sidebar → scroll to first instance in open note (or filter if no note open)
 
 **Deliverable:** Navigate by content or tag.
@@ -187,9 +187,9 @@ Write Playwright test: publish request sent, progress bar appears.
 ## Phase 11 — Blog Configuration (Settings — Blogs Tab)
 **Goal:** Full blog CRUD in Settings.
 
-- [ ] Blogs tab: list + sync/edit/delete per blog — list, edit and delete done; sync is phase 10
+- [x] Blogs tab: list + sync/edit/delete per blog
 - [x] Add/Edit blog form (two-column layout): Blog Name, Sidebar Label, GitHub, Cloudflare Pages (optional), Vercel (optional), Content section
-- [ ] Delete blog → confirm + option to delete local synced posts — confirm done; there are no synced posts to offer yet
+- [x] Delete blog → confirm + option to send local synced posts to Trash
 
 **Deliverable:** Self-contained blog management.
 

@@ -10,7 +10,18 @@
 | 3 — Backups & data safety | Complete |
 | 4 — Daily notes | Complete |
 | 5 — Navigation & sidebar polish | Complete, bar folder reordering (see below) |
-| 6 — Glassmorphic UI | Next, partly blocked on assets |
+| 6 — Glassmorphic UI | Complete, bar the theme picker and focus mode (deferred) |
+| 7 — Search & tags | Tag counts done; search deferred |
+| 8 — Spellcheck & grammar | Spelling complete; grammar deferred |
+| 9 — Blog authoring & publishing | Complete |
+| 10 — Blog sync & posts sidebar | Complete |
+| 11 — Blog configuration | Complete |
+| 12 — Full settings panel | Complete, bar the theme picker and several vaults |
+| 13 — Packaging | Signed `.dmg`; notarization needs Apple credentials |
+
+**Deferred by choice, not left undone** — theme picker and dark theme, focus
+mode, search, grammar checking, several vaults, folder reordering. All are in
+the README's roadmap with the reason each was set aside.
 
 `pnpm run check`, `pnpm run test` and `pnpm run build` are green. The count is
 deliberately not recorded here — it went stale every phase.

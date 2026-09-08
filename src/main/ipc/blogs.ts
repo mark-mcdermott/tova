@@ -1,6 +1,14 @@
 import { ipcMain } from "electron"
 import { canStoreSecrets, deleteBlog, listBlogs, saveBlog, setBlogSecret } from "../blogs"
-import { conflictVersions, deletePost, keepLocal, syncBlog, takeRemote } from "../publish/sync"
+import {
+  conflictVersions,
+  deletePost,
+  keepLocal,
+  localPostCount,
+  syncBlog,
+  takeRemote,
+  trashBlogPosts
+} from "../publish/sync"
 import { forgetSyncState, syncStateFor } from "../publish/syncState"
 import { Blog, BlogSecret, BlogSummary } from "../../shared/types"
 import { EMPTY_BLOG } from "../../shared/blogConfig"
@@ -69,10 +77,18 @@ async function requireBlog(id: string): Promise<BlogSummary> {
 export function registerBlogHandlers(): void {
   ipcMain.handle("blog:list", () => listBlogs())
   ipcMain.handle("blog:save", (_event, blog) => saveBlog(asBlog(blog)))
-  ipcMain.handle("blog:delete", async (_event, id) => {
+  ipcMain.handle("blog:postCount", async (_event, id) =>
+    localPostCount(await requireBlog(asString(id, "id")))
+  )
+
+  ipcMain.handle("blog:delete", async (_event, id, trashPosts) => {
+    if (typeof trashPosts !== "boolean") throw new Error("trashPosts must be a boolean")
     const blogId = asString(id, "id")
+
+    // Read before the configuration goes, since finding the posts needs it.
+    if (trashPosts) await trashBlogPosts(await requireBlog(blogId))
+
     await deleteBlog(blogId)
-    // The local posts stay; only Tova's memory of the pairing goes.
     await forgetSyncState(blogId)
   })
 

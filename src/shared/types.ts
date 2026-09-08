@@ -123,7 +123,10 @@ export interface BlogApi {
   list: () => Promise<BlogSummary[]>
   /** Creates when the id is empty, updates otherwise. Secrets are untouched. */
   save: (blog: Blog) => Promise<BlogSummary>
-  remove: (id: string) => Promise<void>
+  /** Removes the blog. Its synced posts go to Trash only if asked. */
+  remove: (id: string, trashPosts: boolean) => Promise<void>
+  /** How many posts that blog holds locally. */
+  postCount: (id: string) => Promise<number>
   /** Write-only: an empty value clears the stored secret. */
   setSecret: (id: string, secret: BlogSecret, value: string) => Promise<BlogSummary>
   /** False when the OS has no keychain to encrypt against. */

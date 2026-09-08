@@ -279,3 +279,18 @@ export async function deletePost(
   const { [filename]: _gone, ...posts } = state.posts
   await saveSyncState(blog.id, { lastSyncedAt: state.lastSyncedAt, posts })
 }
+
+/** How many posts a blog holds locally, so deleting it can say what is at stake. */
+export async function localPostCount(blog: BlogSummary): Promise<number> {
+  return (await localPosts(blog)).length
+}
+
+/**
+ * Trashes every post synced from a blog. Trash rather than delete: removing a
+ * blog's configuration should not be able to destroy writing outright.
+ */
+export async function trashBlogPosts(blog: BlogSummary): Promise<number> {
+  const posts = await localPosts(blog)
+  for (const post of posts) await trashNote(noteId(blog, post.filename))
+  return posts.length
+}

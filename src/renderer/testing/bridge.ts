@@ -43,6 +43,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       list: vi.fn(async () => []),
       save: vi.fn(),
       remove: vi.fn(),
+      postCount: vi.fn(async () => 0),
       setSecret: vi.fn(),
       canStoreSecrets: vi.fn(async () => true),
       sync: vi.fn(),

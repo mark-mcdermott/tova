@@ -58,6 +58,9 @@ Gatekeeper will refuse the app on any machine that did not build it.
 - **Several vaults.** One vault, at `~/Documents/Tova`. The Settings tab shows
   and reveals it; switching between vaults is unbuilt.
 - **A tooltips toggle**, from the original settings spec.
+- **Folder reordering.** Every other drag rule works; this one needs somewhere
+  to persist a manual order, and raises whether editing a note should still
+  float it to the top. Worth a decision rather than a guess.
 
 Deliberately deferred. Each is understood and scoped, just not next.
 

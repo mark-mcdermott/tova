@@ -19,7 +19,7 @@ interface BlogsState {
   sync: (id: string) => Promise<void>
   deletePost: (blogName: string, filename: string, alsoRemote: boolean) => Promise<void>
   save: (blog: Blog, secrets: Partial<Record<BlogSecret, string>>) => Promise<void>
-  remove: (id: string) => Promise<void>
+  remove: (id: string, trashPosts: boolean) => Promise<void>
 }
 
 export const useBlogsStore = create<BlogsState>((set, get) => ({
@@ -74,8 +74,9 @@ export const useBlogsStore = create<BlogsState>((set, get) => ({
     await useNotesStore.getState().load()
   },
 
-  remove: async (id) => {
-    await window.tova.blogs.remove(id)
+  remove: async (id, trashPosts) => {
+    await window.tova.blogs.remove(id, trashPosts)
     await get().load()
+    await useNotesStore.getState().load()
   }
 }))

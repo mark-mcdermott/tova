@@ -10,6 +10,7 @@ import { registerBlogHandlers } from "./ipc/blogs"
 import { registerPublishHandlers } from "./ipc/publish"
 import { configureSpellcheck, setSpellcheckEnabled } from "./spellcheck"
 import { readPreferences } from "./preferences"
+import { readWindowState, rememberWindowState } from "./windowState"
 import { runBackup } from "./backup"
 import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from "./daily"
 
@@ -38,10 +39,13 @@ function serveVaultAssets(): void {
   })
 }
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
+  const state = await readWindowState()
+
   const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: state.width,
+    height: state.height,
+    ...(state.x === null || state.y === null ? {} : { x: state.x, y: state.y }),
     minWidth: 720,
     minHeight: 480,
     titleBarStyle: "hiddenInset",
@@ -54,6 +58,9 @@ function createWindow(): void {
       sandbox: true
     }
   })
+
+  if (state.maximized) win.maximize()
+  rememberWindowState(win)
 
   // Showing only once the first frame is painted avoids a white flash against
   // the dark window background.
@@ -136,7 +143,7 @@ app.whenReady().then(async () => {
   app.on("browser-window-focus", daily.refresh)
   app.on("before-quit", daily.stop)
 
-  createWindow()
+  await createWindow()
 })
 
 app.on("window-all-closed", () => {
@@ -144,5 +151,5 @@ app.on("window-all-closed", () => {
 })
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  if (BrowserWindow.getAllWindows().length === 0) void createWindow()
 })

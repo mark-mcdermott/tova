@@ -21,6 +21,7 @@ const save = vi.fn()
 const remove = vi.fn()
 const setSecret = vi.fn()
 const canStoreSecrets = vi.fn()
+const postCount = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -29,8 +30,9 @@ beforeEach(() => {
   remove.mockResolvedValue(undefined)
   setSecret.mockResolvedValue(blog)
   canStoreSecrets.mockResolvedValue(true)
+  postCount.mockResolvedValue(0)
 
-  window.tova = stubBridge({ blogs: { list, save, remove, setSecret, canStoreSecrets } })
+  window.tova = stubBridge({ blogs: { list, save, remove, setSecret, canStoreSecrets, postCount } })
   useBlogsStore.setState({ blogs: [], canStoreSecrets: true, loaded: false })
 })
 
@@ -110,6 +112,26 @@ describe("BlogSection", () => {
     expect(remove).not.toHaveBeenCalled()
 
     await userEvent.click(screen.getByRole("button", { name: "Delete" }))
-    await waitFor(() => expect(remove).toHaveBeenCalledWith("blog-1"))
+    await waitFor(() => expect(remove).toHaveBeenCalledWith("blog-1", false))
+  })
+
+  it("offers to trash the synced posts, and says how many", async () => {
+    postCount.mockResolvedValue(12)
+    render(<BlogSection />)
+    await userEvent.click(await screen.findByRole("button", { name: "Delete" }))
+
+    // The plain delete keeps them; the second button is the one that does not.
+    await screen.findByRole("button", { name: "Delete, keep posts" })
+    await userEvent.click(screen.getByRole("button", { name: "Delete, 12 to Trash" }))
+
+    await waitFor(() => expect(remove).toHaveBeenCalledWith("blog-1", true))
+  })
+
+  it("does not offer to trash posts a blog does not have", async () => {
+    render(<BlogSection />)
+    await userEvent.click(await screen.findByRole("button", { name: "Delete" }))
+
+    await waitFor(() => expect(postCount).toHaveBeenCalledWith("blog-1"))
+    expect(screen.queryByRole("button", { name: /to Trash/ })).toBeNull()
   })
 })

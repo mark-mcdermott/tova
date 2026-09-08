@@ -57,6 +57,7 @@ export function BlogSection() {
   const [editing, setEditing] = useState<Editing>(null)
   const [confirming, setConfirming] = useState<string | null>(null)
   const [resolving, setResolving] = useState<{ blog: BlogSummary; filename: string } | null>(null)
+  const [postCount, setPostCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -82,14 +83,22 @@ export function BlogSection() {
     }
   }
 
-  async function remove(id: string) {
+  async function remove(id: string, trashPosts: boolean) {
     setError(null)
     try {
-      await removeBlog(id)
+      await removeBlog(id, trashPosts)
       setConfirming(null)
+      setPostCount(0)
     } catch (cause) {
       setError(describe(cause))
     }
+  }
+
+  // Asked for as the confirmation opens, so the prompt can say what is at stake
+  // rather than making the writer guess.
+  async function confirmDelete(id: string) {
+    setConfirming(id)
+    setPostCount(await window.tova.blogs.postCount(id).catch(() => 0))
   }
 
   return (
@@ -143,10 +152,19 @@ export function BlogSection() {
                       <button
                         type="button"
                         className="settings-button settings-button-danger"
-                        onClick={() => void remove(blog.id)}
+                        onClick={() => void remove(blog.id, false)}
                       >
-                        Delete
+                        {postCount === 0 ? "Delete" : "Delete, keep posts"}
                       </button>
+                      {postCount > 0 && (
+                        <button
+                          type="button"
+                          className="settings-button settings-button-danger"
+                          onClick={() => void remove(blog.id, true)}
+                        >
+                          Delete, {postCount} to Trash
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="settings-button"
@@ -175,7 +193,7 @@ export function BlogSection() {
                       <button
                         type="button"
                         className="settings-button"
-                        onClick={() => setConfirming(blog.id)}
+                        onClick={() => void confirmDelete(blog.id)}
                       >
                         Delete
                       </button>
