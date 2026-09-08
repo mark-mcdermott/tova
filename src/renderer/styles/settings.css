@@ -156,6 +156,12 @@
   margin-left: auto;
 }
 
+.settings-sync-report {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
 .settings-confirm {
   display: flex;
   align-items: center;

@@ -5,6 +5,7 @@ import { Settings } from "./components/Settings/Settings"
 import { VaultWarning } from "./components/VaultWarning"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
+import { useBlogsStore } from "./stores/blogsStore"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 import "./styles/settings.css"
@@ -17,11 +18,15 @@ export default function App() {
   const view = useNotesStore((state) => state.view)
   const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
+  const loadBlogs = useBlogsStore((state) => state.load)
 
   useEffect(() => {
     load()
     checkVault()
-  }, [load, checkVault])
+    // The sidebar lists blogs, so they are loaded once for the app rather than
+    // by whichever component happens to need them first.
+    void loadBlogs()
+  }, [load, checkVault, loadBlogs])
 
   // The date can roll over while the app is open; refresh the list so the new
   // daily note appears without reopening anything the user was editing.

@@ -5,6 +5,7 @@ interface IconProps {
     | "notes"
     | "daily"
     | "ideas"
+    | "posts"
     | "journal"
     | "archive"
     | "trash"
@@ -57,6 +58,13 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
       <circle cx="5.3" cy="8" r="0.85" fill="currentColor" stroke="none" />
       <circle cx="8" cy="8" r="0.85" fill="currentColor" stroke="none" />
       <circle cx="10.7" cy="8" r="0.85" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // A page with a corner turned up: a published piece rather than a note.
+  posts: (
+    <>
+      <path d="M3.5 2.5h6l3 3v8a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1z" />
+      <path d="M9.5 2.5v3h3" />
     </>
   ),
   journal: (

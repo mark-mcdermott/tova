@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile, mkdir, rename, unlink, stat, rm } from "fs/promises"
 import { join } from "path"
 import {
+  FOLDERED_SECTIONS,
   Note,
   NoteSummary,
   CreateNoteInput,
@@ -117,7 +118,7 @@ async function freeFilename(directory: string, title: string, keep?: string): Pr
 }
 
 function normalizeFolder(section: Section, folder: string | null | undefined): string | null {
-  if (section !== "notes") return null
+  if (!FOLDERED_SECTIONS.includes(section)) return null
   if (typeof folder !== "string" || !isValidFolderName(folder)) return null
   return folder.trim()
 }
@@ -135,8 +136,13 @@ async function listLocations(): Promise<NoteLocation[]> {
         continue
       }
 
-      // Notes supports exactly one folder level; nothing recurses further.
-      if (entry.isDirectory() && section === "notes" && isValidFolderName(entry.name)) {
+      // One folder level, and only where a section has them: user folders under
+      // Notes, one per blog under Posts. Nothing recurses further.
+      if (
+        entry.isDirectory() &&
+        FOLDERED_SECTIONS.includes(section) &&
+        isValidFolderName(entry.name)
+      ) {
         const nested = await readdir(join(sectionDir, entry.name), {
           withFileTypes: true
         }).catch(() => [])
@@ -212,6 +218,8 @@ export async function writeNote(id: string, title: string, body: string): Promis
 
   await persist(note)
 
+  // Notes only: a synced post's filename is the blog's, and renaming it here
+  // would quietly break the mapping to the file it came from.
   const shouldRename =
     note.location.section === "notes" &&
     note.title !== "" &&

@@ -8,7 +8,7 @@ interface DisclosureProps {
   label: string
   count?: number
   variant?: "section" | "group"
-  icon?: "notes" | "daily" | "ideas" | "journal" | "archive" | "trash" | "folder"
+  icon?: "notes" | "daily" | "ideas" | "journal" | "archive" | "posts" | "trash" | "folder"
   /** Nesting level, so a row can indent its text while its background does not. */
   depth?: number
   onContextMenu?: (event: MouseEvent) => void

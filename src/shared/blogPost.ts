@@ -237,3 +237,7 @@ export function publishedFieldEdit(doc: string, post: BlogPost, filename: string
   const at = offsetOf(lastLine) + lines[lastLine].length
   return { from: at, to: at, insert: `\n@${PUBLISHED_FIELD} ${filename}` }
 }
+
+export function applyEdit(doc: string, edit: DocumentEdit): string {
+  return doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+}

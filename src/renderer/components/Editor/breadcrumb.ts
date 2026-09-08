@@ -12,6 +12,7 @@ const SECTION_LABELS: Record<NoteSummary["section"], string> = {
   ideas: "Ideas",
   journal: "Journal",
   archive: "Archive",
+  posts: "Posts",
   trash: "Trash"
 }
 
@@ -20,7 +21,12 @@ const SECTION_LABELS: Record<NoteSummary["section"], string> = {
  * itself and is not a link; the rest reveal their section in the sidebar.
  */
 export function breadcrumbFor(note: NoteSummary): Crumb[] {
-  const crumbs: Crumb[] = [{ label: SECTION_LABELS[note.section], target: note.section }]
+  // A synced post belongs to its blog, not to a generic Posts section — the
+  // sidebar shows blogs as peers of Notes, and the crumb follows that.
+  const crumbs: Crumb[] =
+    note.section === "posts" && note.folder !== null
+      ? [{ label: note.folder, target: `blog:${note.folder}` }]
+      : [{ label: SECTION_LABELS[note.section], target: note.section }]
 
   if (note.section === "notes" && note.folder !== null) {
     crumbs.push({ label: note.folder, target: `folder:${note.folder}` })

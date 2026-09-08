@@ -4,11 +4,14 @@ import { mkdir } from "fs/promises"
 import { Section, SECTIONS } from "../shared/types"
 import { NoteLocation, parseNoteId, toNoteId } from "../shared/noteLocation"
 
-let cachedRoot: string | null = null
-
+/*
+ * Deliberately not cached. Caching made the root depend on which call happened
+ * first, which is a hidden global in production and a source of cross-test
+ * bleed besides. `app.getPath` is a lookup, and every caller here is about to
+ * touch the filesystem anyway.
+ */
 export function vaultRoot(): string {
-  if (cachedRoot === null) cachedRoot = join(app.getPath("documents"), "Tova")
-  return cachedRoot
+  return join(app.getPath("documents"), "Tova")
 }
 
 export async function ensureVault(): Promise<void> {

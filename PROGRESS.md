@@ -225,8 +225,35 @@ republishes in one click.
 Two things Xin got wrong are avoided by construction and held by tests: the
 literal `{slug}.md` filename, and Tab reaching the rocket.
 
-Phase 9 is complete. Phase 10 is the other direction — pulling posts back out of
-a repo and keeping the two in step.
+**Sync pulls; it never pushes.** A post changed locally is reported, not
+published — publishing is something the writer does with the rocket when a post
+is ready, not something a background sync decides for them. A post changed on
+both sides is a conflict: both copies are left exactly as they are and the
+filename is reported. A post gone from the blog is kept locally and reported.
+Nothing is deleted automatically in either direction.
+
+`planSync` in `shared/syncPlan.ts` makes every one of those decisions with no
+filesystem or network in sight, which is why the awkward cases can simply be
+read. Two fingerprints per post decide it: the remote blob SHA and a hash of
+the local file, both recorded at the last sync.
+
+**An imported post records the filename it came from.** Without that, the
+rocket would compute a name from the title and push a *second* file beside the
+one it was imported from — a blog whose filenames predate Tova would quietly
+grow duplicates.
+
+**Posts are a section, and blogs are folders within it** — `posts/<blog>/<file>.md`.
+The sidebar shows each blog as a peer of Notes, and a post's breadcrumb names
+its blog rather than a generic "Posts". `writeNote` deliberately does not rename
+a post on a title change the way it does a note: a post's filename is the
+blog's, and renaming it here would break the mapping to the file it came from.
+
+**`vaultRoot()` no longer caches.** It made the vault root depend on which call
+happened first — a hidden global in production, and cross-test bleed besides.
+
+Still to come in phase 10: deleting a local post offering to delete the remote
+one, and a diff prompt for conflicts. Conflicts are currently detected, named
+and left alone, which is safe but leaves the writer to resolve them by hand.
 
 ## Carried forward
 

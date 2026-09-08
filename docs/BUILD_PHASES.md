@@ -172,13 +172,13 @@ Write Playwright test: publish request sent, progress bar appears.
 ## Phase 10 — Blog Sync & POSTS Sidebar
 **Goal:** Bidirectional sync. Blog posts in FOLDERS sidebar.
 
-- [ ] Blog folder entry in FOLDERS sidebar (user-defined label, fallback: blog name truncated)
-- [ ] Fetch all posts from GitHub repo → local `.md` files (first sync: progress + batched)
-- [ ] Edit synced post locally → republish (overwrite remote)
+- [x] Blog folder entry in FOLDERS sidebar (user-defined label, fallback: blog name truncated)
+- [x] Fetch all posts from GitHub repo → local `.md` files (first sync: progress + batched)
+- [x] Edit synced post locally → republish (overwrite remote)
 - [ ] Delete local → prompt to delete remote
-- [ ] Sync status + ↻ button in Settings Blogs tab
-- [ ] Conflict handling (local + remote both changed → diff prompt)
-- [ ] Multiple blogs supported
+- [x] Sync status + ↻ button in Settings Blogs tab
+- [ ] Conflict handling (local + remote both changed → diff prompt) — detected, reported and left alone; the diff prompt itself is not built
+- [x] Multiple blogs supported
 
 **Deliverable:** Sync. Edit. Republish. Delete. All work across sessions.
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { Blog, BlogSecret, BlogSummary } from "../../../shared/types"
+import { Blog, BlogSecret, BlogSummary, SyncResult } from "../../../shared/types"
 import { EMPTY_BLOG } from "../../../shared/blogConfig"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { BlogForm } from "./BlogForm"
+import { formatEditedAgo } from "../../../shared/date"
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -14,6 +15,31 @@ function deployLabel(blog: BlogSummary): string {
   return "Push only"
 }
 
+function syncLabel(lastSyncedAt: number): string {
+  if (lastSyncedAt === 0) return "never synced"
+  return formatEditedAgo(lastSyncedAt).replace("Edited ", "synced ")
+}
+
+/** What a sync actually did, in the order the writer needs to hear it. */
+function syncReport(result: SyncResult): string {
+  const parts: string[] = []
+  if (result.imported > 0) parts.push(`${result.imported} imported`)
+  if (result.updated > 0) parts.push(`${result.updated} updated`)
+  if (result.unchanged > 0) parts.push(`${result.unchanged} unchanged`)
+
+  if (result.conflicts.length > 0) {
+    parts.push(`${result.conflicts.length} changed on both sides — left alone`)
+  }
+  if (result.awaitingPublish.length > 0) {
+    parts.push(`${result.awaitingPublish.length} edited here, waiting for the rocket`)
+  }
+  if (result.removedRemotely.length > 0) {
+    parts.push(`${result.removedRemotely.length} gone from the blog but kept here`)
+  }
+
+  return parts.length === 0 ? "Nothing to do." : `${parts.join(" · ")}.`
+}
+
 type Editing = { blog: Blog; summary: BlogSummary | null } | null
 
 export function BlogSection() {
@@ -22,6 +48,10 @@ export function BlogSection() {
   const loadBlogs = useBlogsStore((state) => state.load)
   const saveBlog = useBlogsStore((state) => state.save)
   const removeBlog = useBlogsStore((state) => state.remove)
+  const syncBlog = useBlogsStore((state) => state.sync)
+  const lastSynced = useBlogsStore((state) => state.lastSynced)
+  const syncing = useBlogsStore((state) => state.syncing)
+  const results = useBlogsStore((state) => state.results)
 
   const [editing, setEditing] = useState<Editing>(null)
   const [confirming, setConfirming] = useState<string | null>(null)
@@ -36,6 +66,15 @@ export function BlogSection() {
     try {
       await saveBlog(blog, secrets)
       setEditing(null)
+    } catch (cause) {
+      setError(describe(cause))
+    }
+  }
+
+  async function sync(id: string) {
+    setError(null)
+    try {
+      await syncBlog(id)
     } catch (cause) {
       setError(describe(cause))
     }
@@ -89,6 +128,8 @@ export function BlogSection() {
                     <span className="settings-list-meta">
                       {blog.github.repo} · {deployLabel(blog)}
                       {blog.hasGithubToken ? "" : " · no token"}
+                      {" · "}
+                      {syncLabel(lastSynced[blog.id] ?? 0)}
                     </span>
                   </span>
 
@@ -117,6 +158,14 @@ export function BlogSection() {
                       <button
                         type="button"
                         className="settings-button"
+                        disabled={syncing.includes(blog.id) || !blog.hasGithubToken}
+                        onClick={() => void sync(blog.id)}
+                      >
+                        {syncing.includes(blog.id) ? "Syncing…" : "Sync"}
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-button"
                         onClick={() => setEditing({ blog, summary: blog })}
                       >
                         Edit
@@ -129,6 +178,10 @@ export function BlogSection() {
                         Delete
                       </button>
                     </span>
+                  )}
+
+                  {results[blog.id] !== undefined && (
+                    <p className="settings-sync-report">{syncReport(results[blog.id])}</p>
                   )}
                 </li>
               ))}

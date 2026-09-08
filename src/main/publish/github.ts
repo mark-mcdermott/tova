@@ -95,6 +95,56 @@ export async function writeFile(
   return commit.sha
 }
 
+export interface RemoteFile {
+  name: string
+  path: string
+  sha: string
+}
+
+/** The markdown files in one directory. An absent directory is simply empty. */
+export async function listDirectory(
+  repo: string,
+  branch: string,
+  path: string,
+  token: string
+): Promise<RemoteFile[]> {
+  const response = await fetch(
+    `${contentsUrl(repo, path.replace(/\/+$/, ""))}?ref=${encodeURIComponent(branch)}`,
+    { headers: headers(token) }
+  )
+
+  if (response.status === 404) return []
+  if (!response.ok) throw new GithubError(await describeFailure(response), response.status)
+
+  const body: unknown = await response.json()
+  if (!Array.isArray(body)) throw new GithubError("That content path is a file, not a folder", 200)
+
+  return body
+    .filter((entry: { type?: unknown; name?: unknown }) => {
+      return entry.type === "file" && typeof entry.name === "string" && entry.name.endsWith(".md")
+    })
+    .map((entry: { name: string; path: string; sha: string }) => ({
+      name: entry.name,
+      path: entry.path,
+      sha: entry.sha
+    }))
+}
+
+/** The decoded text of one file. */
+export async function readFileContent(
+  repo: string,
+  branch: string,
+  path: string,
+  token: string
+): Promise<string> {
+  const response = await fetch(`${contentsUrl(repo, path)}?ref=${encodeURIComponent(branch)}`, {
+    headers: { ...headers(token), Accept: "application/vnd.github.raw+json" }
+  })
+
+  if (!response.ok) throw new GithubError(await describeFailure(response), response.status)
+  return response.text()
+}
+
 export async function deleteFile(
   repo: string,
   branch: string,

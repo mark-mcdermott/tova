@@ -1,5 +1,7 @@
 import { ipcMain } from "electron"
 import { canStoreSecrets, deleteBlog, listBlogs, saveBlog, setBlogSecret } from "../blogs"
+import { syncBlog } from "../publish/sync"
+import { forgetSyncState, syncStateFor } from "../publish/syncState"
 import { Blog, BlogSecret } from "../../shared/types"
 import { EMPTY_BLOG } from "../../shared/blogConfig"
 
@@ -61,7 +63,27 @@ function asSecret(value: unknown): BlogSecret {
 export function registerBlogHandlers(): void {
   ipcMain.handle("blog:list", () => listBlogs())
   ipcMain.handle("blog:save", (_event, blog) => saveBlog(asBlog(blog)))
-  ipcMain.handle("blog:delete", (_event, id) => deleteBlog(asString(id, "id")))
+  ipcMain.handle("blog:delete", async (_event, id) => {
+    const blogId = asString(id, "id")
+    await deleteBlog(blogId)
+    // The local posts stay; only Tova's memory of the pairing goes.
+    await forgetSyncState(blogId)
+  })
+
+  ipcMain.handle("blog:sync", async (_event, id) => {
+    const blogId = asString(id, "id")
+    const blog = (await listBlogs()).find((entry) => entry.id === blogId)
+    if (blog === undefined) throw new Error("That blog no longer exists")
+    return syncBlog(blog)
+  })
+
+  ipcMain.handle("blog:lastSynced", async () => {
+    const blogs = await listBlogs()
+    const entries = await Promise.all(
+      blogs.map(async (blog) => [blog.id, (await syncStateFor(blog.id)).lastSyncedAt] as const)
+    )
+    return Object.fromEntries(entries)
+  })
   ipcMain.handle("blog:canStoreSecrets", () => canStoreSecrets())
 
   ipcMain.handle("blog:setSecret", (_event, id, secret, value) =>

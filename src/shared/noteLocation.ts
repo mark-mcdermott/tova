@@ -1,9 +1,9 @@
-import { Section, isSection, NoteSummary } from "./types"
+import { FOLDERED_SECTIONS, Section, isSection, NoteSummary } from "./types"
 import { FrontMatterValue } from "./frontMatter"
 
 export interface NoteLocation {
   section: Section
-  /** Single folder under Notes; null everywhere else. */
+  /** Single folder under Notes, or the blog under Posts; null elsewhere. */
   folder: string | null
   filename: string
 }
@@ -31,8 +31,8 @@ export function parseNoteId(id: string): NoteLocation | null {
   if (!filename.endsWith(".md")) return null
 
   const folder = rest.length === 2 ? rest[0] : null
-  // Only Notes has folders — Daily and Trash are flat.
-  if (folder !== null && section !== "notes") return null
+  // Notes has user folders and Posts has one per blog; the rest are flat.
+  if (folder !== null && !FOLDERED_SECTIONS.includes(section)) return null
 
   return { section, folder, filename }
 }

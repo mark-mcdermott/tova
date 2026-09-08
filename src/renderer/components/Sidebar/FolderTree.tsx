@@ -7,6 +7,8 @@ import { FolderNameInput } from "./FolderNameInput"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { useDropTarget } from "./useDropTarget"
+import { useBlogsStore } from "../../stores/blogsStore"
+import { blogLabel } from "../../../shared/blogConfig"
 
 interface FolderTreeProps {
   notes: NoteSummary[]
@@ -100,6 +102,8 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const inSection = (section: NoteSummary["section"]) =>
     notes.filter((note) => note.section === section)
 
+  const blogs = useBlogsStore((state) => state.blogs)
+  const posts = inSection("posts")
   const notesSection = inSection("notes")
   const loose = notesSection.filter((note) => note.folder === null)
   const daily = inSection("daily")
@@ -139,6 +143,23 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
 
   return (
     <>
+      {/* Blogs sit as peers of Notes, each holding the posts synced from it. */}
+      {blogs.map((blog) => {
+        const held = posts.filter((note) => note.folder === blog.name)
+        return (
+          <Disclosure
+            key={blog.id}
+            sectionKey={`blog:${blog.name}`}
+            label={blogLabel(blog)}
+            count={held.length}
+            icon="posts"
+            depth={1}
+          >
+            <NoteRows notes={held} depth={2} />
+          </Disclosure>
+        )
+      })}
+
       <Disclosure
         sectionKey="notes"
         label="Notes"

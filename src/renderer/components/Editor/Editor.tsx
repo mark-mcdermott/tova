@@ -28,8 +28,6 @@ export function Editor({ note }: EditorProps) {
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
   const showSettings = useNotesStore((state) => state.showSettings)
   const blogs = useBlogsStore((state) => state.blogs)
-  const loadBlogs = useBlogsStore((state) => state.load)
-  const blogsLoaded = useBlogsStore((state) => state.loaded)
   const startPublish = usePublishStore((state) => state.start)
 
   const [title, setTitle] = useState("")
@@ -172,12 +170,6 @@ export function Editor({ note }: EditorProps) {
       if (saveTimer.current) clearTimeout(saveTimer.current)
     }
   }, [])
-
-  // Loaded once for the app, not once per note; the `@` selector needs it
-  // ready before the writer types, not after.
-  useEffect(() => {
-    if (!blogsLoaded) void loadBlogs()
-  }, [blogsLoaded, loadBlogs])
 
   // Report scroll so back and forward return to where the note was left.
   // Coalesced to one update per frame; the store keeps it off the render path.

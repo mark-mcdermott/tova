@@ -57,7 +57,9 @@ const blogs: BlogApi = {
   save: (blog) => ipcRenderer.invoke("blog:save", blog),
   remove: (id) => ipcRenderer.invoke("blog:delete", id),
   setSecret: (id, secret, value) => ipcRenderer.invoke("blog:setSecret", id, secret, value),
-  canStoreSecrets: () => ipcRenderer.invoke("blog:canStoreSecrets")
+  canStoreSecrets: () => ipcRenderer.invoke("blog:canStoreSecrets"),
+  sync: (id) => ipcRenderer.invoke("blog:sync", id),
+  lastSynced: () => ipcRenderer.invoke("blog:lastSynced")
 }
 
 const publishing: PublishApi = {

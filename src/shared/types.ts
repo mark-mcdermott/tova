@@ -1,4 +1,7 @@
-export const SECTIONS = ["notes", "daily", "ideas", "journal", "archive", "trash"] as const
+export const SECTIONS = ["notes", "daily", "ideas", "journal", "archive", "posts", "trash"] as const
+
+/** Sections whose notes are filed one folder deep. Everything else is flat. */
+export const FOLDERED_SECTIONS: readonly Section[] = ["notes", "posts"]
 
 export type Section = (typeof SECTIONS)[number]
 
@@ -102,6 +105,20 @@ export interface BlogSummary extends Blog {
   hasDeployToken: boolean
 }
 
+export interface SyncResult {
+  blogId: string
+  imported: number
+  updated: number
+  unchanged: number
+  /** Changed here since the last sync; the rocket sends these, not the sync. */
+  awaitingPublish: string[]
+  /** Changed on both sides. Left alone, both copies intact. */
+  conflicts: string[]
+  /** Gone from the blog but still here. Never deleted automatically. */
+  removedRemotely: string[]
+  syncedAt: number
+}
+
 export interface BlogApi {
   list: () => Promise<BlogSummary[]>
   /** Creates when the id is empty, updates otherwise. Secrets are untouched. */
@@ -111,6 +128,10 @@ export interface BlogApi {
   setSecret: (id: string, secret: BlogSecret, value: string) => Promise<BlogSummary>
   /** False when the OS has no keychain to encrypt against. */
   canStoreSecrets: () => Promise<boolean>
+  /** Pulls the blog's posts down. Resolves to what it found and what it left. */
+  sync: (id: string) => Promise<SyncResult>
+  /** When each blog last synced, keyed by blog id; 0 for never. */
+  lastSynced: () => Promise<Record<string, number>>
 }
 
 export interface PublishRequest {
