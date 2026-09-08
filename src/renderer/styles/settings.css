@@ -4,6 +4,9 @@
  */
 
 .settings-heading {
+  /* The same inset the note title carries, so a title sits on one line down
+     the app whichever page you are on. */
+  padding-left: var(--title-inset);
   color: var(--text-primary);
   font-family: var(--font-script);
   font-size: var(--text-title);
@@ -471,13 +474,13 @@
 
 /* Each option is set in its own face: the label says which, the sample says
    what it looks like, and the sample is what the choice is actually about. */
-.title-font-choices {
+.choices {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
 }
 
-.title-font-choice {
+.choice {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -490,7 +493,7 @@
   cursor: pointer;
 }
 
-.title-font-choice.is-chosen {
+.choice.is-chosen {
   border-color: var(--accent);
 }
 
@@ -502,15 +505,32 @@
 }
 
 /* The sample ignores the current selection and shows its own face. */
-.title-font-choice[data-title-font="alagambe"] .title-font-sample {
+.choice[data-title-font="alagambe"] .title-font-sample {
   font-family: "Alagambe", cursive;
 }
 
-.title-font-choice[data-title-font="fascinate"] .title-font-sample {
+.choice[data-title-font="fascinate"] .title-font-sample {
   font-family: "Fascinate Inline", cursive;
 }
 
-.title-font-name {
+/* A column of ruled lines standing in for the prose, so the choice is made by
+   eye like the faces above it rather than by reading two labels. */
+.width-sample {
+  display: block;
+  width: 9rem;
+  height: 2rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--text-muted) 0 2px,
+    transparent 2px 8px
+  );
+}
+
+.choice[data-prose-width="narrow"] .width-sample {
+  width: 5rem;
+}
+
+.choice-name {
   color: var(--text-muted);
   font-family: var(--font-sans);
   font-size: var(--text-sm);

@@ -8,6 +8,7 @@ import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
+import { addTagEdit } from "../../../shared/tags"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
@@ -201,6 +202,17 @@ export function Editor({ note }: EditorProps) {
         title={title}
         onTitleChange={handleTitleChange}
         onTitleCommit={() => viewRef.current?.focus()}
+        onAddTag={(tag) => {
+          const view = viewRef.current
+          if (view === null) return
+
+          // Computed off the live document, not the note as it was loaded —
+          // the writer may have typed the same tag a moment ago.
+          const edit = addTagEdit(view.state.doc.toString(), tag)
+          if (edit === null) return
+
+          view.dispatch({ changes: edit })
+        }}
       />
 
       <div className="editor-body" ref={containerRef} />

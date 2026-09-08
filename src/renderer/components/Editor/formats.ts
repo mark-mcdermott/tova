@@ -1,4 +1,5 @@
 import { EditorView, KeyBinding } from "@codemirror/view"
+import { ChangeSet } from "@codemirror/state"
 
 export type Format =
   | { kind: "wrap"; before: string; after: string }
@@ -21,7 +22,7 @@ export const toolbarItems: ToolbarItem[] = [
   {
     key: "plain",
     label: "T",
-    title: "Plain (Cmd+Shift+0)",
+    title: "Plain — clears a heading or bullet (Cmd+Shift+0)",
     shortcut: "Mod-Shift-0",
     format: { kind: "linePrefix", prefix: "" }
   },
@@ -146,16 +147,29 @@ function applyLinePrefix(view: EditorView, prefix: string): void {
 
     const indent = marker[1]
     const existing = marker[0].slice(indent.length)
-    const rest = line.text.slice(marker[0].length)
 
     // Applying the prefix a line already has removes it, so the buttons toggle.
-    const next = indent + (existing === prefix ? "" : prefix) + rest
-    if (next !== line.text) {
-      changes.push({ from: line.from, to: line.to, insert: next })
-    }
+    const next = existing === prefix ? "" : prefix
+    if (next === existing) continue
+
+    // Just the marker, not the whole line: rewriting the line moved the caret
+    // to its start, which on a blank line left it sitting behind the bullet.
+    changes.push({
+      from: line.from + indent.length,
+      to: line.from + marker[0].length,
+      insert: next
+    })
   }
 
-  if (changes.length > 0) view.dispatch({ changes })
+  if (changes.length === 0) return
+
+  const changeSet = ChangeSet.of(changes, state.doc.length)
+  view.dispatch({
+    changes: changeSet,
+    // Associate forwards, so a marker inserted at the caret goes in front of
+    // it: on a blank line the caret ends up past "- ", ready to type.
+    selection: state.selection.map(changeSet, 1)
+  })
 }
 
 function applyCodeBlock(view: EditorView): void {

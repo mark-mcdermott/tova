@@ -49,6 +49,7 @@
 
 .title-input {
   width: 100%;
+  margin-top: var(--space-title-above);
   padding-left: var(--title-inset);
   /* Held to the same measure as the prose; the nav row above is not, so the
      edited time and its controls can sit against the panel's right edge. */
@@ -88,8 +89,11 @@
 
 .cm-scroller {
   font-family: var(--font-mono);
-  font-size: var(--text-base);
-  line-height: 1.75;
+  /* The same variable the editor takes: the scroller is inside it, so its own
+     declaration wins over inheritance, and setting --text-base here left the
+     font size preference with nothing to change. Leading is set on .cm-content
+     below, where it can beat CodeMirror's own rule. */
+  font-size: var(--editor-font-size, var(--text-base));
   overflow-y: auto;
 }
 
@@ -104,24 +108,62 @@
 }
 
 .cm-editor .cm-content {
-  /* A little further out than the breadcrumb, as the mockup has it. */
-  padding: 0 var(--editor-inset) var(--editor-inset) calc(var(--editor-inset) + var(--space-1));
+  /* CodeMirror's own theme sets 1.4 on .cm-content, which beat every leading
+     declared further out — the prose sat at 1.4 whatever the stylesheet said.
+     Two classes here outrank it. */
+  line-height: 2.8;
+  /* A little further out than the breadcrumb, as the mockup has it — and a
+     margin rather than padding, so the content box is exactly the text
+     column. CodeMirror draws its selection rects to that box's edges, and as
+     padding the inset put them out in the margins. */
+  margin-inline: calc(var(--editor-inset) + var(--space-1)) var(--editor-inset);
+  padding: 0 0 var(--editor-inset);
+  /* drawSelection paints .cm-cursor and blanks the native caret, so this only
+     matters if that extension ever comes out. The colour that shows is the
+     one on .cm-cursor below. */
   caret-color: var(--accent-bright);
+  /* Set on the content rather than the scroller so the column narrows while
+     the click target still runs the full pane. */
+  max-width: var(--prose-max);
 }
 
 .cm-line {
   padding: 0;
 }
 
-.cm-cursor {
+/*
+ * Two classes, because CodeMirror's own theme sets `border-left: 1.2px solid
+ * black` on .cm-cursor and injects it after this sheet — at equal specificity
+ * it wins, and the caret stayed black however --caret was set.
+ */
+.cm-editor .cm-cursor,
+.cm-editor.cm-focused .cm-cursor {
   border-left-color: var(--caret);
   border-left-width: 2px;
 }
 
-.cm-selectionBackground,
-.cm-editor .cm-selectionBackground,
-.cm-editor.cm-focused .cm-selectionBackground {
-  background: var(--accent-tint);
+/*
+ * Selected text is a pill, not a wash: the fill sits behind the glyphs and the
+ * ink goes white over it. The long selector matches CodeMirror's own, which is
+ * five classes deep — the caret's two-class trick is not enough here, since
+ * this one loses on specificity rather than on order.
+ */
+.cm-editor .cm-selectionLayer .cm-selectionBackground,
+.cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: var(--selection-bg);
+  border-radius: var(--radius-sm);
+  /* Padding cannot grow a rect CodeMirror sizes inline, so the spread stands
+     the fill off the glyphs instead. */
+  box-shadow: 0 0 0 3px var(--selection-bg);
+}
+
+/*
+ * drawSelection paints the pill above and blanks the native highlight, but the
+ * text colour still comes from here — the glyphs are never inside that rect.
+ */
+.cm-editor .cm-content ::selection {
+  background: transparent;
+  color: var(--selection-ink);
 }
 
 /* ── Markdown decorations ─────────────────────────────────────────────── */
@@ -421,20 +463,29 @@
  */
 .editor-tags {
   display: flex;
-  align-items: center;
+  /* Top, not centre: the row grows downwards as the padding above it is fixed
+     space belonging to the title, so the chips hold their line. */
+  align-items: flex-start;
   gap: var(--space-2);
   flex-wrap: wrap;
-  min-height: 1.65rem;
-  padding-left: calc(var(--editor-inset) + var(--space-1));
+  /* The gap under the title is padding rather than margin, so a click aimed
+     just below the title lands on the row instead of falling through it. */
+  padding: var(--space-title-below) 0 0 calc(var(--editor-inset) + var(--space-1));
+  min-height: calc(1.65rem + var(--space-title-below));
+  /* The strip is where writing starts, so it says so. */
+  cursor: text;
 }
 
 .editor-tag {
   display: inline-flex;
   align-items: baseline;
-  padding: 0.15em 0.6em;
+  padding: 0.3em 1.2em;
+  /* Matches the border the add control carries, so a tag and the way in are
+     the same height and sit on the same line. */
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   /* Barely there, as the mockup has it: the ink carries the tag, not the fill. */
-  background: color-mix(in oklab, var(--tag-ink) 14%, transparent);
+  background: color-mix(in oklab, var(--tag-ink) 7%, transparent);
   color: var(--tag-ink);
   font-family: var(--font-mono);
   font-size: var(--text-chrome);
@@ -442,6 +493,59 @@
 
 .editor-tag-hash {
   padding-right: var(--space-2);
+}
+
+/* Sized and set like a tag, so typing one looks like the thing it becomes. */
+.editor-tag-input {
+  width: 7ch;
+  padding: 0.3em 0.6em;
+  border: 1px solid color-mix(in oklab, var(--tag-ink) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--tag-ink) 7%, transparent);
+  color: var(--tag-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+}
+
+/*
+ * The way in. The row sits in a wide band of quiet, so without something to
+ * aim at the only target is 26px of unmarked space — findable by accident, if
+ * at all. Dashed and faint at rest so it reads as an invitation rather than a
+ * control, and firms up under the pointer.
+ */
+.editor-tag-add {
+  padding: 0.3em 1.2em;
+  border: 1px dashed color-mix(in oklab, var(--tag-ink) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: color-mix(in oklab, var(--tag-ink) 55%, transparent);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.editor-tag-add:hover {
+  border-color: color-mix(in oklab, var(--tag-ink) 55%, transparent);
+  background: color-mix(in oklab, var(--tag-ink) 7%, transparent);
+  color: var(--tag-ink);
+}
+
+.editor-tag-add:focus-visible {
+  outline: 2px solid var(--tag-ink);
+  outline-offset: 2px;
+}
+
+.editor-tag-input::placeholder {
+  color: color-mix(in oklab, var(--tag-ink) 55%, transparent);
+}
+
+.editor-tag-input:focus {
+  outline: none;
+  border-color: var(--tag-ink);
 }
 
 /* ── Images ───────────────────────────────────────────────────────────── */
@@ -638,12 +742,12 @@
 .editor-header {
   display: flex;
   flex-direction: column;
-  /* The space above the title, which the mockup gives far more of than the
-     nav row needs. */
-  gap: calc(var(--space-4) * 2.5);
-  /* No left padding of its own: the nav row and the title are set from the
-     sidebar independently, since they do not share an edge. */
-  padding: var(--space-8) var(--space-8) var(--space-6) 0;
+  /* No shared gap: the space above the title, below it, and below the tags are
+     three different distances, so each sits on the element that owns it. */
+  gap: 0;
+  /* No left padding of its own either — the nav row, the title and the tags are
+     each set from the sidebar independently, since they share no edge. */
+  padding: var(--space-8) var(--space-8) var(--space-header-end) 0;
 }
 
 .editor-header .editor-nav {

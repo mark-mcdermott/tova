@@ -209,11 +209,10 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
           />
         )}
 
+        {/* No "+ New note" here: the compose button at the top of the sidebar
+            already starts one in Notes. The other sections keep theirs, since
+            nothing else creates a note in them. */}
         <NoteRows notes={loose} depth={2} />
-
-        <button type="button" className="sidebar-add" onClick={() => createNote("notes", null)}>
-          + New note
-        </button>
       </Disclosure>
 
       <Disclosure

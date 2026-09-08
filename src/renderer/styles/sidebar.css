@@ -226,11 +226,12 @@
   transform: translateY(var(--footer-icon-nudge));
 }
 
-/* The cog is the only thing wearing this, and it belongs with the breadcrumb
-   row's icons rather than with the toolbar carets it used to match. */
+/* The cog is the only thing wearing this. It follows the breadcrumb row's
+   icons rather than the toolbar carets it used to match, held a little under
+   them so it sits quietly at the foot of the sidebar. */
 .footer-icon {
-  width: var(--nav-icon);
-  height: var(--nav-icon);
+  width: calc(var(--nav-icon) * 0.85);
+  height: calc(var(--nav-icon) * 0.85);
 }
 
 .caret-icon {
@@ -354,6 +355,7 @@
 
 .disclosure-header.is-active {
   background: var(--accent-tint);
+  font-weight: 600;
 }
 
 .note-row-actions {

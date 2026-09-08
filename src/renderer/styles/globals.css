@@ -25,6 +25,20 @@
 }
 
 /*
+ * The body face, latin subset, from Google Fonts under the SIL Open Font
+ * Licence. Variable weight, so one file covers the 400-700 the interface asks
+ * for. Bundled rather than left to the OS: the stack this replaced resolved to
+ * whatever mono a given Mac had, which on ours was Menlo.
+ */
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("../assets/fonts/noto-sans-mono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+/*
  * Design tokens. Every colour, space and radius in Tova resolves to one of
  * these, so the Phase 6 theme picker only has to swap this block.
  */
@@ -41,11 +55,13 @@
   --caret: #5359c7;
   --tag-ink: #5a61de;
   --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
-  /* The accent as ink on the sidebar's glass, where the ink is otherwise white.
-     The accent itself is a dark purple and would read as a hole in the row;
-     even a mid lavender costs too much. Measured against the sidebar's worst
-     cell, this holds 86% of white's contrast while still reading as purple. */
-  --accent-on-glass: #f0ecff;
+  /* The open note's ink: the same purple its tags wear under the title.
+     Measured over the sidebar's own ground it reads at 2.02:1 where the rows
+     sit today, which is close to white's 2.44 — but the photograph darkens
+     down the column, and past about halfway it falls to 1.01:1. The tag
+     survives that colour because it sits on a light pill; a row has no pill
+     behind it. See PROGRESS.md before moving it. */
+  --accent-on-glass: #5a61de;
 
   /* Surface. --bg-photo is set at launch by backgrounds.ts; the gradient below
      stays as the layer beneath it, and as the whole background if no photo is
@@ -109,7 +125,7 @@
 
   /* Type */
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --font-mono: "Noto Sans Mono", ui-monospace, Menlo, monospace;
   --font-script: "Alagambe", "Snell Roundhand", "Apple Chancery", cursive;
   /* The wordmark is drawn rather than set — see Wordmark.tsx — so there is no
      face for it to load and no --font-wordmark to declare. */
@@ -117,7 +133,7 @@
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;
   --text-lg: 1.125rem;
-  --text-title: 2.75rem;
+  --text-title: 4.125rem;
   /* The size of the app's furniture: sidebar rows and their counts, tag rows,
      the footer name, the breadcrumb and its edited time, the word count. One
      value under several names, so each still says what it is for. Section
@@ -145,6 +161,17 @@
   --shadow-panel: 0 24px 60px rgb(40 32 60 / 20%);
 
   --measure: 68ch;
+  /* The prose runs the pane by default. Narrow holds it to the mockup's
+     column — measured off it at 42-48 characters, so 45 sits in the middle.
+     The `ch` resolves against the prose's own font, not the root's, because
+     an unregistered custom property is substituted where it is used. */
+  --prose-max: none;
+
+  /* Selection reads as a pill, after the mockup's "quiet". The mockup's own
+     fill is a translucent #8f7ea8, which measures 2.6:1 against its text —
+     this one is opaque and clears AA at 9:1. */
+  --selection-bg: var(--accent-bright);
+  --selection-ink: #ffffff;
   /* One inset for the writing area: left, right and below. The title carries
      the same value as its own left padding, so the two line up. */
   --editor-inset: var(--space-12);
@@ -152,6 +179,11 @@
      prose a little further out than either. Three insets rather than one,
      because the mockup does not stack them on a single line. */
   --title-inset: 2.5rem;
+  /* The header's own rhythm: above the title, between title and tags, and
+     below the tags before the prose starts. Three distances, not one. */
+  --space-title-above: 3.75rem;
+  --space-title-below: 1.6875rem;
+  --space-header-end: 2.8125rem;
 
   /* Both footers share one horizontal centreline: the editor's toolbar and the
      sidebar's collapse control sit on it, and so does the reveal tab that
@@ -184,6 +216,12 @@
 
 :root[data-title-font="fascinate"] {
   --font-script: "Fascinate Inline", "Snell Roundhand", "Apple Chancery", cursive;
+}
+
+:root[data-prose-width="narrow"] {
+  /* Just the column now: the editor's inset is a margin, so it sits outside
+     the content box rather than inside this width. */
+  --prose-max: 45ch;
 }
 
 *,

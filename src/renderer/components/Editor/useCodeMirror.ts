@@ -14,6 +14,7 @@ import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
 import { blogSelector, SelectorAnchor } from "./blogSelector"
 import { formatKeymap } from "./formats"
+import { bodyStart } from "../../../shared/tags"
 
 interface UseCodeMirrorOptions {
   initialValue?: string
@@ -140,7 +141,9 @@ export function useCodeMirror({
     if (!view) return
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: value },
-      selection: { anchor: 0 }
+      // Past any tags line, which the tag row above already shows and the
+      // editor therefore hides: landing inside it would reveal it on open.
+      selection: { anchor: bodyStart(value) }
     })
   }, [])
 

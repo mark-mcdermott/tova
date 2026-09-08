@@ -49,4 +49,26 @@ describe("AppearanceTab", () => {
     expect(alagambe.getAttribute("data-title-font")).toBe("alagambe")
     expect(fascinate.getAttribute("data-title-font")).toBe("fascinate")
   })
+
+  it("offers both line widths, narrow first", () => {
+    render(<AppearanceTab />)
+    const widths = screen.getAllByRole("button", { name: /Narrow|Full/ })
+
+    expect(widths.map((button) => button.getAttribute("data-prose-width"))).toEqual([
+      "narrow",
+      "full"
+    ])
+    expect(widths[0].getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("saves the full width when it is chosen", async () => {
+    render(<AppearanceTab />)
+    const [, full] = screen.getAllByRole("button", { name: /Narrow|Full/ })
+
+    await userEvent.click(full)
+    await waitFor(() =>
+      expect(write).toHaveBeenCalledWith(expect.objectContaining({ proseWidth: "full" }))
+    )
+  })
 })
+

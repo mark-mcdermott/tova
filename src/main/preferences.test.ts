@@ -46,6 +46,6 @@ describe("readPreferences", () => {
   it("falls back to the defaults when the file cannot be parsed", async () => {
     await writeFile(join(paths.userData, "preferences.json"), "{ not json", "utf-8")
     const preferences = await readPreferences()
-    expect(preferences.fontSize).toBe(15)
+    expect(preferences.fontSize).toBe(23)
   })
 })

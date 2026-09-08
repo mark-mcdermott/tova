@@ -102,6 +102,37 @@ describe("Sidebar", () => {
     expect(screen.getByLabelText("New note")).toBeDefined()
   })
 
+  it("leaves Notes to the compose button rather than its own add row", () => {
+    render(<Sidebar />)
+
+    // Notes is expanded here, and its loose note proves the body is open.
+    expect(screen.getByText("loose note")).toBeDefined()
+    expect(screen.queryByRole("button", { name: "+ New note" })).toBeNull()
+    expect(screen.getByLabelText("New note")).toBeDefined()
+  })
+
+  it("keeps the add row in a section the compose button cannot reach", () => {
+    useNotesStore.setState({
+      notes: [
+        ...notes,
+        {
+          id: "archive/kept.md",
+          title: "Kept",
+          section: "archive",
+          folder: null,
+          tags: [],
+          favorite: false,
+          updatedAt: 1,
+          deletedAt: null
+        }
+      ],
+      expanded: { archive: true }
+    })
+    render(<Sidebar />)
+
+    expect(screen.getByRole("button", { name: "+ New note" })).toBeDefined()
+  })
+
   it("opens settings from the avatar and from the cog", async () => {
     render(<Sidebar />)
 

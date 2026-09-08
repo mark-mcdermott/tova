@@ -9,7 +9,7 @@ import {
 import { Range } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
 import type { SyntaxNode, Tree } from "@lezer/common"
-import { findTags, isTagOnlyLine } from "../../../shared/tags"
+import { findTags, isTagOnlyLine, tagHeaderLines } from "../../../shared/tags"
 
 const hide = Decoration.replace({})
 const syntaxMarker = Decoration.mark({ class: "cm-syntax-marker" })
@@ -223,6 +223,7 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
     })
   }
 
+  decorateTagHeader(view, decorations, cursorTouches)
   collectTagDecorations(view, tree, decorations, cursorTouches)
 
   return Decoration.set(decorations, true)
@@ -286,6 +287,41 @@ function decorateFencedCode(
   if (styled.length === 0) return
   decorations.push(codeBlockFirstLine.range(styled[0]))
   decorations.push(codeBlockLastLine.range(styled[styled.length - 1]))
+}
+
+/**
+ * The note's leading tags line, and the blank line under it, are what the tag
+ * row above the editor already shows. Rendering them again at the top of the
+ * prose is the same tags twice, so those lines are hidden here — revealed when
+ * the cursor is on them, which is also how a tag gets taken off again.
+ *
+ * Only the opening lines: a tags-only line further down is the writer's own
+ * marker, not this row's business.
+ */
+function decorateTagHeader(
+  view: EditorView,
+  decorations: Range<Decoration>[],
+  cursorTouches: (from: number, to: number) => boolean
+): void {
+  const { doc } = view.state
+
+  const head: string[] = []
+  for (let number = 1; number <= Math.min(3, doc.lines); number++) {
+    head.push(doc.line(number).text)
+  }
+
+  const count = tagHeaderLines(head)
+  if (count === 0) return
+
+  // Revealed as one unit — showing the tags but keeping the gap hidden would
+  // shuffle the prose as the cursor moved between them. The prose's own first
+  // character is outside the span, so starting to write does not flash the
+  // tags back.
+  if (cursorTouches(doc.line(1).from, doc.line(count).to)) return
+
+  for (let number = 1; number <= count; number++) {
+    decorations.push(hiddenLine.range(doc.line(number).from))
+  }
 }
 
 function collectTagDecorations(

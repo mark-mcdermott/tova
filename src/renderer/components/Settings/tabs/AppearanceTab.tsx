@@ -1,4 +1,9 @@
-import { TITLE_FONTS, TitleFont } from "../../../../shared/preferences"
+import {
+  PROSE_WIDTHS,
+  ProseWidth,
+  TITLE_FONTS,
+  TitleFont
+} from "../../../../shared/preferences"
 import { backgroundUrls } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
@@ -11,6 +16,7 @@ function nameOf(url: string): string {
 export function AppearanceTab() {
   const background = usePreferencesStore((state) => state.preferences.background)
   const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
+  const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const update = usePreferencesStore((state) => state.update)
 
   return (
@@ -26,18 +32,42 @@ export function AppearanceTab() {
         label="Note titles"
         hint="Shown in the face it sets, so the choice is made by eye."
       >
-        <div className="title-font-choices">
+        <div className="choices">
           {TITLE_FONTS.map((font) => (
             <button
               key={font.value}
               type="button"
-              className={`title-font-choice${titleFont === font.value ? " is-chosen" : ""}`}
+              className={`choice${titleFont === font.value ? " is-chosen" : ""}`}
               aria-pressed={titleFont === font.value}
               data-title-font={font.value}
               onClick={() => void update({ titleFont: font.value as TitleFont })}
             >
               <span className="title-font-sample">Tova</span>
-              <span className="title-font-name">{font.label}</span>
+              <span className="choice-name">{font.label}</span>
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field
+        id="prose-width"
+        label="Line width"
+        hint="How far the prose runs before it wraps. The title and the toolbar keep the pane."
+      >
+        <div className="choices">
+          {PROSE_WIDTHS.map((width) => (
+            <button
+              key={width.value}
+              type="button"
+              className={`choice${proseWidth === width.value ? " is-chosen" : ""}`}
+              aria-pressed={proseWidth === width.value}
+              data-prose-width={width.value}
+              onClick={() => void update({ proseWidth: width.value as ProseWidth })}
+            >
+              <span className="width-sample" aria-hidden="true" />
+              <span className="choice-name">
+                {width.label} — {width.hint}
+              </span>
             </button>
           ))}
         </div>

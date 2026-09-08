@@ -14,7 +14,7 @@ const DOCS: Doc[] = [
     title: "Getting started",
     body: [
       "Every note is a plain markdown file in ~/Documents/Tova. Nothing else is needed to read them — any editor will do, and moving the folder moves everything.",
-      "Tova opens on today's daily note. The compose button at the top of the sidebar starts a new note in Notes; each section's own “+ New note” starts one there.",
+      "Tova opens on today's daily note. The compose button at the top of the sidebar starts a new note in Notes; the other sections have their own “+ New note”.",
       "Formatting renders as you write. Syntax markers show while the cursor is inside a construct and hide once it leaves, so the raw markdown is always one click away."
     ]
   },

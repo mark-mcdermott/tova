@@ -25,6 +25,7 @@ export default function App() {
   const fontSize = usePreferencesStore((state) => state.preferences.fontSize)
   const background = usePreferencesStore((state) => state.preferences.background)
   const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
+  const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
 
   useEffect(() => {
@@ -55,6 +56,10 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.titleFont = titleFont
   }, [titleFont])
+
+  useEffect(() => {
+    document.documentElement.dataset.proseWidth = proseWidth
+  }, [proseWidth])
 
   // Applied only once preferences have loaded, so a chosen background is not
   // overwritten by a shuffle a frame earlier.

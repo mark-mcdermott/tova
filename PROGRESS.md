@@ -380,6 +380,16 @@ Built as an inset shadow and tuned against that measurement. Aligned on the
 peak, the two profiles agree within about four levels out of 255 — the two
 columns either side of the core match exactly.
 
+- **The open note's ink is the tag purple, and it does not survive the whole
+  column.** `#5a61de` measures 2.02:1 over the sidebar's ground where the rows
+  sit today, close to white's 2.44 — but the photograph darkens going down, and
+  past about halfway it falls to **1.01:1**, which is invisible. No saturated
+  purple clears that band: the best of the ones measured, `#bdb5fa`, reaches
+  only 1.30. The tag under the title wears the same ink and reads because it
+  sits on a light pill; a sidebar row has no pill behind it. The alternatives
+  are a near-white lavender (`#f0ecff`, 2.11:1 throughout, barely purple) or
+  giving the active row a pill of its own.
+
 ## Carried forward
 
 - **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against

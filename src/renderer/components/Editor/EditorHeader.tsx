@@ -14,9 +14,16 @@ interface EditorHeaderProps {
   title: string
   onTitleChange: (value: string) => void
   onTitleCommit: () => void
+  onAddTag: (tag: string) => void
 }
 
-export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: EditorHeaderProps) {
+export function EditorHeader({
+  note,
+  title,
+  onTitleChange,
+  onTitleCommit,
+  onAddTag
+}: EditorHeaderProps) {
   const back = useNotesStore((state) => state.back)
   const forward = useNotesStore((state) => state.forward)
   const expandSection = useNotesStore((state) => state.expandSection)
@@ -142,7 +149,7 @@ export function EditorHeader({ note, title, onTitleChange, onTitleCommit }: Edit
         }}
       />
 
-      <EditorTags tags={note.tags} />
+      <EditorTags tags={note.tags} onAddTag={onAddTag} />
 
       {menu.position !== null && (
         <NoteMenu note={note} x={menu.position.x} y={menu.position.y} onClose={menu.close} />

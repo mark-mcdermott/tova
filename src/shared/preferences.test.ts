@@ -55,3 +55,18 @@ describe("title font", () => {
     expect(normalizePreferences({ titleFont: "comic-sans" }).titleFont).toBe("alagambe")
   })
 })
+
+describe("proseWidth", () => {
+  it("defaults to the mockup's narrow column", () => {
+    expect(normalizePreferences({}).proseWidth).toBe("narrow")
+  })
+
+  it("keeps the full-width choice", () => {
+    expect(normalizePreferences({ proseWidth: "full" }).proseWidth).toBe("full")
+  })
+
+  it("falls back on anything else", () => {
+    expect(normalizePreferences({ proseWidth: "poetry" }).proseWidth).toBe("narrow")
+  })
+})
+

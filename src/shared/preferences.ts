@@ -6,6 +6,17 @@ export const TITLE_FONTS: { value: TitleFont; label: string }[] = [
   { value: "fascinate", label: "Fascinate Inline" }
 ]
 
+/**
+ * How wide the prose runs. "narrow" is the mockup's column, about 45
+ * characters; "full" lets it use the pane, which is what Tova shipped with.
+ */
+export type ProseWidth = "narrow" | "full"
+
+export const PROSE_WIDTHS: { value: ProseWidth; label: string; hint: string }[] = [
+  { value: "narrow", label: "Narrow", hint: "As the mockup" },
+  { value: "full", label: "Full", hint: "Uses the pane" }
+]
+
 export interface Preferences {
   /** Shown beside the avatar in the sidebar footer. */
   displayName: string
@@ -23,18 +34,20 @@ export interface Preferences {
   /** Bundled background filename, or null to pick one at each launch. */
   background: string | null
   titleFont: TitleFont
+  proseWidth: ProseWidth
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   displayName: "",
   avatarFile: null,
-  fontSize: 15,
+  fontSize: 23,
   tabSize: 2,
   backupIntervalMinutes: 60,
   backupLimit: 30,
   spellcheck: true,
   background: null,
-  titleFont: "alagambe"
+  titleFont: "alagambe",
+  proseWidth: "narrow"
 }
 
 const LIMITS = {
@@ -77,7 +90,8 @@ export function normalizePreferences(value: unknown): Preferences {
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
     background: typeof raw.background === "string" ? raw.background : null,
-    titleFont: raw.titleFont === "fascinate" ? "fascinate" : DEFAULT_PREFERENCES.titleFont
+    titleFont: raw.titleFont === "fascinate" ? "fascinate" : DEFAULT_PREFERENCES.titleFont,
+    proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth
   }
 }
 
