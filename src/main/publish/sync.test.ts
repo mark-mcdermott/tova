@@ -16,12 +16,16 @@ vi.mock("../blogs", () => ({ blogSecret: (...args: unknown[]) => blogSecret(...a
 
 const listDirectory = vi.fn()
 const readFileContent = vi.fn()
+const readFileSha = vi.fn()
+const deleteFile = vi.fn()
 vi.mock("./github", () => ({
   listDirectory: (...args: unknown[]) => listDirectory(...args),
-  readFileContent: (...args: unknown[]) => readFileContent(...args)
+  readFileContent: (...args: unknown[]) => readFileContent(...args),
+  readFileSha: (...args: unknown[]) => readFileSha(...args),
+  deleteFile: (...args: unknown[]) => deleteFile(...args)
 }))
 
-const { syncBlog } = await import("./sync")
+const { conflictVersions, deletePost, keepLocal, syncBlog, takeRemote } = await import("./sync")
 const { ensureVault, vaultRoot } = await import("../vault")
 const { listNotes } = await import("../notes")
 
@@ -65,6 +69,8 @@ beforeEach(async () => {
     }
   ])
   readFileContent.mockResolvedValue(remotePost)
+  readFileSha.mockResolvedValue(null)
+  deleteFile.mockResolvedValue(undefined)
 })
 
 afterAll(async () => {
@@ -188,5 +194,89 @@ describe("imported posts and republishing", () => {
     expect(await readFile(postPath("legacy-name.md"), "utf-8")).toContain(
       "@published legacy-name.md"
     )
+  })
+})
+
+describe("resolving a conflict", () => {
+  async function makeConflict() {
+    await syncBlog(blog)
+    const path = postPath("26-05-17-quick-git-notes.md")
+    await writeFile(path, (await readFile(path, "utf-8")) + "\nA local edit.\n", "utf-8")
+
+    listDirectory.mockResolvedValue([
+      {
+        name: "26-05-17-quick-git-notes.md",
+        path: "src/content/posts/26-05-17-quick-git-notes.md",
+        sha: "sha2"
+      }
+    ])
+    readFileContent.mockResolvedValue(remotePost.replace("The body from the blog.", "Rewritten."))
+
+    const result = await syncBlog(blog)
+    expect(result.conflicts).toHaveLength(1)
+    return path
+  }
+
+  it("offers both copies to look at", async () => {
+    await makeConflict()
+    const versions = await conflictVersions(blog, "26-05-17-quick-git-notes.md")
+
+    expect(versions.local).toContain("A local edit.")
+    expect(versions.remote).toContain("Rewritten.")
+  })
+
+  it("takes the blog's copy and settles the conflict", async () => {
+    const path = await makeConflict()
+    readFileSha.mockResolvedValue({ sha: "sha2" })
+
+    await takeRemote(blog, "26-05-17-quick-git-notes.md")
+    expect(await readFile(path, "utf-8")).toContain("Rewritten.")
+
+    const after = await syncBlog(blog)
+    expect(after.conflicts).toEqual([])
+    expect(after.unchanged).toBe(1)
+  })
+
+  it("keeps the local copy and leaves it waiting for the rocket", async () => {
+    const path = await makeConflict()
+    readFileSha.mockResolvedValue({ sha: "sha2" })
+
+    await keepLocal(blog, "26-05-17-quick-git-notes.md")
+    // Nothing is pushed: the local copy is untouched and the remote is accepted
+    // as seen, so the next sync asks for a publish rather than re-reporting.
+    expect(await readFile(path, "utf-8")).toContain("A local edit.")
+
+    const after = await syncBlog(blog)
+    expect(after.conflicts).toEqual([])
+    expect(after.awaitingPublish).toEqual(["26-05-17-quick-git-notes.md"])
+  })
+})
+
+describe("deletePost", () => {
+  it("trashes the local post without touching the blog", async () => {
+    await syncBlog(blog)
+    await deletePost(blog, "26-05-17-quick-git-notes.md", false)
+
+    expect(deleteFile).not.toHaveBeenCalled()
+    const notes = await listNotes()
+    expect(notes.map((note) => note.section)).toEqual(["trash"])
+  })
+
+  it("removes it from the blog as well when asked", async () => {
+    await syncBlog(blog)
+    readFileSha.mockResolvedValue({ sha: "sha1" })
+
+    await deletePost(blog, "26-05-17-quick-git-notes.md", true)
+    expect(deleteFile).toHaveBeenCalled()
+    expect(deleteFile.mock.calls[0][2]).toBe("src/content/posts/26-05-17-quick-git-notes.md")
+  })
+
+  it("forgets the post, so a later sync treats it as new rather than deleted", async () => {
+    await syncBlog(blog)
+    await deletePost(blog, "26-05-17-quick-git-notes.md", false)
+
+    const after = await syncBlog(blog)
+    expect(after.imported).toBe(1)
+    expect(after.removedRemotely).toEqual([])
   })
 })

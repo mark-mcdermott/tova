@@ -307,3 +307,40 @@
     gap: var(--space-2);
   }
 }
+
+/* ── Conflicts ────────────────────────────────────────────────────────── */
+
+.conflict {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.conflict-diff {
+  max-height: 18rem;
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid rgb(23 20 31 / 12%);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 55%);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.conflict-line.is-added {
+  background: rgb(31 122 68 / 12%);
+  color: #14532d;
+}
+
+.conflict-line.is-removed {
+  background: rgb(163 36 44 / 12%);
+  color: #7d1a21;
+}
+
+.conflict-line.is-same {
+  color: var(--text-muted);
+}

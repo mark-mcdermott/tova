@@ -251,9 +251,25 @@ blog's, and renaming it here would break the mapping to the file it came from.
 **`vaultRoot()` no longer caches.** It made the vault root depend on which call
 happened first — a hidden global in production, and cross-test bleed besides.
 
-Still to come in phase 10: deleting a local post offering to delete the remote
-one, and a diff prompt for conflicts. Conflicts are currently detected, named
-and left alone, which is safe but leaves the writer to resolve them by hand.
+**A conflict is shown, not merged.** The resolver fetches both copies and shows
+a line diff — removed lines are the local copy, added lines are the blog's — with
+two ways out. Tova never merges: a post is short enough that choosing a side is
+honest, and a wrong automatic merge in something already published is worse than
+a moment's reading.
+
+"Take the blog's" overwrites locally and settles. "Keep mine" pushes nothing and
+deliberately leaves the *local* fingerprint as it was, marking only the blog's
+version as seen — so the next sync reports the post as waiting for the rocket,
+which is true, because the blog is still carrying the older text. Recording the
+local edit as reconciled instead would have hidden that.
+
+**Deleting a post asks which copy.** "Delete here only" trashes it locally and
+leaves the blog alone; "Delete here and on the blog" removes both. Deleting a
+draft locally should never quietly unpublish it. A post also cannot be moved
+between sections — its filename belongs to the blog, the way a daily note's
+belongs to its date.
+
+Phase 10 is complete.
 
 ## Carried forward
 

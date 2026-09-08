@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
+import { useBlogsStore } from "../../stores/blogsStore"
 
 interface NoteMenuProps {
   note: Note
@@ -24,7 +25,10 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
   const exportNote = useNotesStore((state) => state.exportNote)
   const requestTitleFocus = useNotesStore((state) => state.requestTitleFocus)
 
+  const deletePost = useBlogsStore((state) => state.deletePost)
+
   const [choosingFolder, setChoosingFolder] = useState(false)
+  const [choosingDelete, setChoosingDelete] = useState(false)
 
   const exportItem: MenuItem = {
     label: "Export .md",
@@ -48,9 +52,9 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
 
     const items: MenuItem[] = [{ label: "Rename", onSelect: requestTitleFocus }]
 
-    // Everything but a daily note can move; a daily note's filename is its date.
-    // Trashed notes never reach here — they take the recovery branch above.
-    if (note.section !== "daily") {
+    // A daily note's filename is its date, and a post's belongs to the blog it
+    // came from — moving either would break what the filename is for.
+    if (note.section !== "daily" && note.section !== "posts") {
       items.push({
         label: "Move to…",
         keepOpen: true,
@@ -58,13 +62,42 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
       })
     }
 
-    items.push("separator", exportItem, "separator", {
-      label: "Delete → Trash",
-      destructive: true,
-      onSelect: () => trash(note.id)
-    })
+    // A post lives on a blog as well as here, so deleting it asks which.
+    items.push(
+      "separator",
+      exportItem,
+      "separator",
+      note.section === "posts"
+        ? {
+            label: "Delete…",
+            destructive: true,
+            keepOpen: true,
+            onSelect: () => setChoosingDelete(true)
+          }
+        : { label: "Delete → Trash", destructive: true, onSelect: () => trash(note.id) }
+    )
 
     return items
+  }
+
+  function deleteItems(): MenuItem[] {
+    const filename = note.id.split("/").pop() ?? ""
+
+    return [
+      {
+        label: "Delete here only",
+        onSelect: () => {
+          if (note.folder !== null) void deletePost(note.folder, filename, false)
+        }
+      },
+      {
+        label: "Delete here and on the blog",
+        destructive: true,
+        onSelect: () => {
+          if (note.folder !== null) void deletePost(note.folder, filename, true)
+        }
+      }
+    ]
   }
 
   function folderItems(): MenuItem[] {
@@ -98,5 +131,7 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
     return targets
   }
 
-  return <Menu x={x} y={y} items={choosingFolder ? folderItems() : mainItems()} onClose={onClose} />
+  const items = choosingFolder ? folderItems() : choosingDelete ? deleteItems() : mainItems()
+
+  return <Menu x={x} y={y} items={items} onClose={onClose} />
 }

@@ -4,6 +4,7 @@ import { EMPTY_BLOG } from "../../../shared/blogConfig"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { BlogForm } from "./BlogForm"
 import { formatEditedAgo } from "../../../shared/date"
+import { ConflictResolver } from "./ConflictResolver"
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -55,6 +56,7 @@ export function BlogSection() {
 
   const [editing, setEditing] = useState<Editing>(null)
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [resolving, setResolving] = useState<{ blog: BlogSummary; filename: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -182,6 +184,33 @@ export function BlogSection() {
 
                   {results[blog.id] !== undefined && (
                     <p className="settings-sync-report">{syncReport(results[blog.id])}</p>
+                  )}
+
+                  {(results[blog.id]?.conflicts ?? []).length > 0 && resolving === null && (
+                    <span className="settings-sync-report">
+                      {results[blog.id].conflicts.map((filename) => (
+                        <button
+                          key={filename}
+                          type="button"
+                          className="settings-button"
+                          onClick={() => setResolving({ blog, filename })}
+                        >
+                          Resolve {filename}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+
+                  {resolving !== null && resolving.blog.id === blog.id && (
+                    <ConflictResolver
+                      blog={resolving.blog}
+                      filename={resolving.filename}
+                      onResolved={() => {
+                        setResolving(null)
+                        void sync(blog.id)
+                      }}
+                      onCancel={() => setResolving(null)}
+                    />
                   )}
                 </li>
               ))}

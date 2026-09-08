@@ -17,6 +17,7 @@ interface BlogsState {
 
   load: () => Promise<void>
   sync: (id: string) => Promise<void>
+  deletePost: (blogName: string, filename: string, alsoRemote: boolean) => Promise<void>
   save: (blog: Blog, secrets: Partial<Record<BlogSecret, string>>) => Promise<void>
   remove: (id: string) => Promise<void>
 }
@@ -63,6 +64,14 @@ export const useBlogsStore = create<BlogsState>((set, get) => ({
     }
 
     await get().load()
+  },
+
+  deletePost: async (blogName, filename, alsoRemote) => {
+    const blog = get().blogs.find((entry) => entry.name === blogName)
+    if (blog === undefined) throw new Error(`No blog named ${blogName} is configured`)
+
+    await window.tova.blogs.deletePost(blog.id, filename, alsoRemote)
+    await useNotesStore.getState().load()
   },
 
   remove: async (id) => {

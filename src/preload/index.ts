@@ -59,7 +59,11 @@ const blogs: BlogApi = {
   setSecret: (id, secret, value) => ipcRenderer.invoke("blog:setSecret", id, secret, value),
   canStoreSecrets: () => ipcRenderer.invoke("blog:canStoreSecrets"),
   sync: (id) => ipcRenderer.invoke("blog:sync", id),
-  lastSynced: () => ipcRenderer.invoke("blog:lastSynced")
+  lastSynced: () => ipcRenderer.invoke("blog:lastSynced"),
+  conflict: (id, filename) => ipcRenderer.invoke("blog:conflict", id, filename),
+  resolve: (id, filename, keep) => ipcRenderer.invoke("blog:resolve", id, filename, keep),
+  deletePost: (id, filename, alsoRemote) =>
+    ipcRenderer.invoke("blog:deletePost", id, filename, alsoRemote)
 }
 
 const publishing: PublishApi = {

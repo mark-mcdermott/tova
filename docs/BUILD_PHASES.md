@@ -175,9 +175,9 @@ Write Playwright test: publish request sent, progress bar appears.
 - [x] Blog folder entry in FOLDERS sidebar (user-defined label, fallback: blog name truncated)
 - [x] Fetch all posts from GitHub repo → local `.md` files (first sync: progress + batched)
 - [x] Edit synced post locally → republish (overwrite remote)
-- [ ] Delete local → prompt to delete remote
+- [x] Delete local → prompt to delete remote
 - [x] Sync status + ↻ button in Settings Blogs tab
-- [ ] Conflict handling (local + remote both changed → diff prompt) — detected, reported and left alone; the diff prompt itself is not built
+- [x] Conflict handling (local + remote both changed → diff prompt)
 - [x] Multiple blogs supported
 
 **Deliverable:** Sync. Edit. Republish. Delete. All work across sessions.

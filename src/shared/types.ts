@@ -132,6 +132,12 @@ export interface BlogApi {
   sync: (id: string) => Promise<SyncResult>
   /** When each blog last synced, keyed by blog id; 0 for never. */
   lastSynced: () => Promise<Record<string, number>>
+  /** Both sides of a conflict, for showing what the choice is between. */
+  conflict: (id: string, filename: string) => Promise<{ local: string; remote: string }>
+  /** Resolve a conflict: take the blog's copy, or keep the one here. */
+  resolve: (id: string, filename: string, keep: "local" | "remote") => Promise<void>
+  /** Trash a post locally, optionally removing it from the blog as well. */
+  deletePost: (id: string, filename: string, alsoRemote: boolean) => Promise<void>
 }
 
 export interface PublishRequest {

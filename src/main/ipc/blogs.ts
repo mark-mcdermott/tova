@@ -1,8 +1,8 @@
 import { ipcMain } from "electron"
 import { canStoreSecrets, deleteBlog, listBlogs, saveBlog, setBlogSecret } from "../blogs"
-import { syncBlog } from "../publish/sync"
+import { conflictVersions, deletePost, keepLocal, syncBlog, takeRemote } from "../publish/sync"
 import { forgetSyncState, syncStateFor } from "../publish/syncState"
-import { Blog, BlogSecret } from "../../shared/types"
+import { Blog, BlogSecret, BlogSummary } from "../../shared/types"
 import { EMPTY_BLOG } from "../../shared/blogConfig"
 
 function asString(value: unknown, label: string): string {
@@ -60,6 +60,12 @@ function asSecret(value: unknown): BlogSecret {
   return name
 }
 
+async function requireBlog(id: string): Promise<BlogSummary> {
+  const blog = (await listBlogs()).find((entry) => entry.id === id)
+  if (blog === undefined) throw new Error("That blog no longer exists")
+  return blog
+}
+
 export function registerBlogHandlers(): void {
   ipcMain.handle("blog:list", () => listBlogs())
   ipcMain.handle("blog:save", (_event, blog) => saveBlog(asBlog(blog)))
@@ -70,11 +76,29 @@ export function registerBlogHandlers(): void {
     await forgetSyncState(blogId)
   })
 
-  ipcMain.handle("blog:sync", async (_event, id) => {
-    const blogId = asString(id, "id")
-    const blog = (await listBlogs()).find((entry) => entry.id === blogId)
-    if (blog === undefined) throw new Error("That blog no longer exists")
-    return syncBlog(blog)
+  ipcMain.handle("blog:sync", async (_event, id) => syncBlog(await requireBlog(asString(id, "id"))))
+
+  ipcMain.handle("blog:conflict", async (_event, id, filename) =>
+    conflictVersions(await requireBlog(asString(id, "id")), asString(filename, "filename"))
+  )
+
+  ipcMain.handle("blog:resolve", async (_event, id, filename, keep) => {
+    const blog = await requireBlog(asString(id, "id"))
+    const name = asString(filename, "filename")
+    const choice = asString(keep, "keep")
+
+    if (choice !== "local" && choice !== "remote") throw new Error(`Unknown choice: ${choice}`)
+    if (choice === "remote") await takeRemote(blog, name)
+    else await keepLocal(blog, name)
+  })
+
+  ipcMain.handle("blog:deletePost", async (_event, id, filename, alsoRemote) => {
+    if (typeof alsoRemote !== "boolean") throw new Error("alsoRemote must be a boolean")
+    await deletePost(
+      await requireBlog(asString(id, "id")),
+      asString(filename, "filename"),
+      alsoRemote
+    )
   })
 
   ipcMain.handle("blog:lastSynced", async () => {

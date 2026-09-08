@@ -11,8 +11,9 @@ import { LocalPost, RemotePost, planSync } from "../../shared/syncPlan"
 import { blogSecret } from "../blogs"
 import { createNote, writeNote } from "../notes"
 import { directoryOf } from "../vault"
-import { listDirectory, readFileContent } from "./github"
+import { deleteFile, listDirectory, readFileContent, readFileSha } from "./github"
 import { PostState, hashContent, saveSyncState, syncStateFor } from "./syncState"
+import { trashNote } from "../notes"
 
 export interface SyncResult {
   blogId: string
@@ -90,8 +91,7 @@ async function writeLocal(
  * intact.
  */
 export async function syncBlog(blog: BlogSummary): Promise<SyncResult> {
-  const token = await blogSecret(blog.id, "github")
-  if (token === null) throw new Error(`${blog.name} has no GitHub token saved`)
+  const token = await tokenFor(blog)
 
   const files = await listDirectory(
     blog.github.repo,
@@ -157,4 +157,125 @@ export async function syncBlog(blog: BlogSummary): Promise<SyncResult> {
 
   await saveSyncState(blog.id, { lastSyncedAt: result.syncedAt, posts })
   return result
+}
+
+async function tokenFor(blog: BlogSummary): Promise<string> {
+  const token = await blogSecret(blog.id, "github")
+  if (token === null) throw new Error(`${blog.name} has no GitHub token saved`)
+  return token
+}
+
+async function remoteShaFor(
+  blog: BlogSummary,
+  filename: string,
+  token: string
+): Promise<string | null> {
+  const file = await readFileSha(
+    blog.github.repo,
+    blog.github.branch,
+    `${blog.github.contentPath}${filename}`,
+    token
+  )
+  return file === null ? null : file.sha
+}
+
+/** Both sides of a conflict, so the writer can see what they are choosing between. */
+export async function conflictVersions(
+  blog: BlogSummary,
+  filename: string
+): Promise<{ local: string; remote: string }> {
+  const token = await tokenFor(blog)
+  const remote = await readFileContent(
+    blog.github.repo,
+    blog.github.branch,
+    `${blog.github.contentPath}${filename}`,
+    token
+  )
+
+  return { local: await readFile(localPath(blog, filename), "utf-8"), remote }
+}
+
+/** Resolve a conflict by taking the blog's copy, overwriting what is here. */
+export async function takeRemote(blog: BlogSummary, filename: string): Promise<void> {
+  const token = await tokenFor(blog)
+  const raw = await readFileContent(
+    blog.github.repo,
+    blog.github.branch,
+    `${blog.github.contentPath}${filename}`,
+    token
+  )
+
+  await writeLocal(blog, filename, raw, true)
+  await recordSynced(blog, filename, await remoteShaFor(blog, filename, token))
+}
+
+/**
+ * Resolve a conflict by keeping the local copy. Nothing is pushed, and the
+ * local fingerprint is deliberately left as it was: only the blog's version is
+ * marked as seen. The next sync then reports the post as one waiting for the
+ * rocket — which is true, because the blog is still carrying the older text —
+ * rather than either re-raising the conflict or calling the two reconciled.
+ */
+export async function keepLocal(blog: BlogSummary, filename: string): Promise<void> {
+  const token = await tokenFor(blog)
+  const remoteSha = await remoteShaFor(blog, filename, token)
+  if (remoteSha === null) return
+
+  const state = await syncStateFor(blog.id)
+  const previous = state.posts[filename]
+  if (previous === undefined) return
+
+  await saveSyncState(blog.id, {
+    lastSyncedAt: state.lastSyncedAt,
+    posts: { ...state.posts, [filename]: { remoteSha, localHash: previous.localHash } }
+  })
+}
+
+async function recordSynced(
+  blog: BlogSummary,
+  filename: string,
+  remoteSha: string | null
+): Promise<void> {
+  const state = await syncStateFor(blog.id)
+  const content = await readFile(localPath(blog, filename), "utf-8").catch(() => null)
+  if (content === null || remoteSha === null) return
+
+  await saveSyncState(blog.id, {
+    lastSyncedAt: state.lastSyncedAt,
+    posts: { ...state.posts, [filename]: { remoteSha, localHash: hashContent(content) } }
+  })
+}
+
+/**
+ * Trashes a local post and, when asked, removes the file from the blog too.
+ * The two are separate on purpose: deleting a draft locally should not quietly
+ * unpublish it.
+ */
+export async function deletePost(
+  blog: BlogSummary,
+  filename: string,
+  alsoRemote: boolean
+): Promise<void> {
+  if (alsoRemote) {
+    const token = await tokenFor(blog)
+    const path = `${blog.github.contentPath}${filename}`
+    const file = await readFileSha(blog.github.repo, blog.github.branch, path, token)
+
+    if (file !== null) {
+      await deleteFile(
+        blog.github.repo,
+        blog.github.branch,
+        path,
+        file.sha,
+        `Remove ${filename}`,
+        token
+      )
+    }
+  }
+
+  await trashNote(noteId(blog, filename))
+
+  const state = await syncStateFor(blog.id)
+  const { [filename]: _gone, ...posts } = state.posts
+  await saveSyncState(blog.id, { lastSyncedAt: state.lastSyncedAt, posts })
 }
