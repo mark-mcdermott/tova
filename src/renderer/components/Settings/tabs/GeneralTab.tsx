@@ -2,35 +2,7 @@ import { useEffect, useState } from "react"
 import { PREFERENCE_LIMITS } from "../../../../shared/preferences"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
-
-function Stepper({
-  id,
-  value,
-  limits,
-  suffix,
-  onChange
-}: {
-  id: string
-  value: number
-  limits: { min: number; max: number }
-  suffix?: string
-  onChange: (value: number) => void
-}) {
-  return (
-    <span className="stepper">
-      <input
-        id={id}
-        className="text-input"
-        type="number"
-        min={limits.min}
-        max={limits.max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
-      {suffix !== undefined && <span className="stepper-suffix">{suffix}</span>}
-    </span>
-  )
-}
+import { Stepper } from "../Stepper"
 
 export function GeneralTab() {
   const preferences = usePreferencesStore((state) => state.preferences)
@@ -44,30 +16,6 @@ export function GeneralTab() {
 
   return (
     <>
-      <section className="settings-section">
-        <h2 className="settings-section-title">Editing</h2>
-
-        <Field id="font-size" label="Font size" hint="The writing area, not the interface.">
-          <Stepper
-            id="font-size"
-            value={preferences.fontSize}
-            limits={PREFERENCE_LIMITS.fontSize}
-            suffix="px"
-            onChange={(fontSize) => void update({ fontSize })}
-          />
-        </Field>
-
-        <Field id="tab-size" label="Indent width">
-          <Stepper
-            id="tab-size"
-            value={preferences.tabSize}
-            limits={PREFERENCE_LIMITS.tabSize}
-            suffix="spaces"
-            onChange={(tabSize) => void update({ tabSize })}
-          />
-        </Field>
-      </section>
-
       <section className="settings-section">
         <h2 className="settings-section-title">Spelling</h2>
         <p className="settings-note">

@@ -30,6 +30,11 @@ interface UseCodeMirrorOptions {
   onSelectBlog?: (anchor: SelectorAnchor | null) => void
   /** Spaces an indent inserts. */
   tabSize?: number
+  /**
+   * Shift+Tab out of an empty document, back to the tag row. Only when empty:
+   * in a note with words in it, Shift+Tab is dedent and stays that way.
+   */
+  onLeaveBackwards?: () => void
 }
 
 export function useCodeMirror({
@@ -40,6 +45,7 @@ export function useCodeMirror({
   onError,
   onPublish,
   onSelectBlog,
+  onLeaveBackwards,
   tabSize = 2
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -68,6 +74,8 @@ export function useCodeMirror({
 
   const onSelectBlogRef = useRef(onSelectBlog)
   onSelectBlogRef.current = onSelectBlog
+  const onLeaveBackwardsRef = useRef(onLeaveBackwards)
+  onLeaveBackwardsRef.current = onLeaveBackwards
 
   useEffect(() => {
     const container = containerRef.current
@@ -99,6 +107,14 @@ export function useCodeMirror({
           pasteURLAsLink,
           // Format shortcuts win over the markdown and default keymaps below.
           keymap.of([
+            {
+              key: "Shift-Tab",
+              run: (view) => {
+                if (view.state.doc.length > 0) return false
+                onLeaveBackwardsRef.current?.()
+                return true
+              }
+            },
             ...formatKeymap,
             ...markdownKeymap,
             ...historyKeymap,

@@ -61,7 +61,7 @@
      down the column, and past about halfway it falls to 1.01:1. The tag
      survives that colour because it sits on a light pill; a row has no pill
      behind it. See PROGRESS.md before moving it. */
-  --accent-on-glass: #5a61de;
+  --accent-on-glass: #7d5d8e;
 
   /* Surface. --bg-photo is set at launch by backgrounds.ts; the gradient below
      stays as the layer beneath it, and as the whole background if no photo is

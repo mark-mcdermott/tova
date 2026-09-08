@@ -7,7 +7,6 @@ interface IconProps {
     | "ideas"
     | "posts"
     | "journal"
-    | "archive"
     | "trash"
     | "folder"
     | "tag"
@@ -71,13 +70,6 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
     <>
       <path d="M3.5 2.5h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
       <path d="M5.5 2.5v11M7.6 5.6h3M7.6 8h3" />
-    </>
-  ),
-  archive: (
-    <>
-      <path d="M2.4 3.4h11.2v2.4H2.4z" />
-      <path d="M3.4 5.8v6.3a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V5.8" />
-      <path d="M6.6 8.4h2.8" />
     </>
   ),
   tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />,

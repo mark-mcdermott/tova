@@ -110,8 +110,7 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
     // The flat sections beside Notes, minus wherever the note already is.
     for (const [section, label] of [
       ["ideas", "Ideas"],
-      ["journal", "Journal"],
-      ["archive", "Archive"]
+      ["journal", "Journal"]
     ] as const) {
       if (note.section === section) continue
       targets.push({ label, onSelect: () => moveNote(note.id, section, null) })

@@ -13,7 +13,7 @@ export const TITLE_FONTS: { value: TitleFont; label: string }[] = [
 export type ProseWidth = "narrow" | "full"
 
 export const PROSE_WIDTHS: { value: ProseWidth; label: string; hint: string }[] = [
-  { value: "narrow", label: "Narrow", hint: "As the mockup" },
+  { value: "narrow", label: "Narrow", hint: "Kind of poetic" },
   { value: "full", label: "Full", hint: "Uses the pane" }
 ]
 
@@ -40,7 +40,7 @@ export interface Preferences {
 export const DEFAULT_PREFERENCES: Preferences = {
   displayName: "",
   avatarFile: null,
-  fontSize: 23,
+  fontSize: 18,
   tabSize: 2,
   backupIntervalMinutes: 60,
   backupLimit: 30,

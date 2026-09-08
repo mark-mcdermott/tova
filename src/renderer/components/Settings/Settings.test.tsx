@@ -19,6 +19,7 @@ beforeEach(() => {
     folder: null,
     tags: [],
     updatedAt: 1,
+    createdAt: 1,
     deletedAt: null,
     favorite: false,
     body: ""
@@ -44,7 +45,8 @@ describe("Settings", () => {
     render(<Settings />)
 
     expect(screen.getByRole("tab", { name: "General" }).getAttribute("aria-selected")).toBe("true")
-    expect(screen.getByLabelText("Font size")).toBeDefined()
+    // Font size moved to Appearance, where the rest of the type lives.
+    expect(screen.getByLabelText("Check spelling")).toBeDefined()
   })
 
   it("shows every section as a tab", () => {

@@ -16,6 +16,7 @@ function note(overrides: Partial<Note> = {}): Note {
     tags: [],
     favorite: false,
     updatedAt: 0,
+    createdAt: 0,
     deletedAt: null,
     body: "",
     ...overrides
@@ -36,6 +37,7 @@ function renderHeader(active: Note = note()) {
       onTitleChange={() => undefined}
       onTitleCommit={() => undefined}
       onAddTag={() => undefined}
+      tagAddRef={{ current: null }}
     />
   )
 }
@@ -215,7 +217,7 @@ describe("EditorHeader note menu", () => {
     const user = await openMenu()
     await user.click(screen.getByRole("menuitem", { name: "Move to…" }))
 
-    for (const label of ["Ideas", "Journal", "Archive"]) {
+    for (const label of ["Ideas", "Journal"]) {
       expect(screen.getByRole("menuitem", { name: label })).toBeDefined()
     }
   })

@@ -1,43 +1,58 @@
 import { NoteSummary } from "../../../shared/types"
-import { Disclosure } from "./Disclosure"
+import { tagCounts } from "../../../shared/indexTarget"
+import { useNotesStore } from "../../stores/notesStore"
 
 interface TagListProps {
   notes: NoteSummary[]
 }
 
-/** A note carrying the same tag twice still counts once — tags are per note. */
-function countTags(notes: NoteSummary[]): [string, number][] {
-  const counts = new Map<string, number>()
-
-  for (const note of notes) {
-    if (note.section === "trash") continue
-    for (const tag of note.tags) {
-      const key = tag.toLowerCase()
-      counts.set(key, (counts.get(key) ?? 0) + 1)
-    }
-  }
-
-  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-}
-
+/**
+ * Always open, unlike the sections above it: the tags are the shortest list in
+ * the rail and the one most worth seeing at a glance. The heading opens an
+ * index of every tag; a row opens an index of that one.
+ */
 export function TagList({ notes }: TagListProps) {
-  const tags = countTags(notes)
+  const tags = tagCounts(notes)
+  const showIndex = useNotesStore((state) => state.showIndex)
+  const target = useNotesStore((state) => state.indexTarget)
+  const onIndex = useNotesStore((state) => state.view === "index")
+
+  const showing = (tag: string): boolean =>
+    onIndex && target?.kind === "tag" && target.tag.toLowerCase() === tag.toLowerCase()
 
   return (
-    <Disclosure sectionKey="tags" label="TAGS" variant="section">
-      {tags.length === 0 ? (
-        <p className="sidebar-empty">No tags yet</p>
-      ) : (
-        tags.map(([tag, count]) => (
-          <div key={tag} className="tag-row">
-            <span className="tag-row-name">
-              <span className="tag-row-hash">#</span>
-              {tag}
-            </span>
-            <span className="disclosure-count">{count}</span>
-          </div>
-        ))
-      )}
-    </Disclosure>
+    <div className="disclosure disclosure-section">
+      <button
+        type="button"
+        className={`disclosure-header disclosure-header-section${
+          onIndex && target?.kind === "tags" ? " is-active" : ""
+        }`}
+        data-depth={0}
+        onClick={() => showIndex({ kind: "tags" })}
+      >
+        <span className="disclosure-label">TAGS</span>
+      </button>
+
+      <div className="disclosure-body">
+        {tags.length === 0 ? (
+          <p className="sidebar-empty">No tags yet</p>
+        ) : (
+          tags.map(({ tag, count }) => (
+            <button
+              key={tag}
+              type="button"
+              className={`tag-row${showing(tag) ? " is-active" : ""}`}
+              onClick={() => showIndex({ kind: "tag", tag })}
+            >
+              <span className="tag-row-name">
+                <span className="tag-row-hash">#</span>
+                {tag}
+              </span>
+              <span className="disclosure-count">{count}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
   )
 }

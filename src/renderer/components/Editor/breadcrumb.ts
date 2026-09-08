@@ -11,7 +11,6 @@ const SECTION_LABELS: Record<NoteSummary["section"], string> = {
   daily: "Daily",
   ideas: "Ideas",
   journal: "Journal",
-  archive: "Archive",
   posts: "Posts",
   trash: "Trash"
 }

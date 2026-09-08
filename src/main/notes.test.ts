@@ -320,13 +320,13 @@ describe("favourites", () => {
 })
 
 describe("the flat sections beside Notes", () => {
-  it.each(["ideas", "journal", "archive"] as const)("creates a note in %s", async (section) => {
+  it.each(["ideas", "journal"] as const)("creates a note in %s", async (section) => {
     const note = await createNote({ section, title: "Seed" })
     expect(note.id).toBe(`${section}/seed.md`)
     expect(await exists(vaultFile(section, "seed.md"))).toBe(true)
   })
 
-  it.each(["ideas", "journal", "archive"] as const)("lists notes in %s", async (section) => {
+  it.each(["ideas", "journal"] as const)("lists notes in %s", async (section) => {
     await createNote({ section, title: "Seed" })
     const listed = await listNotes()
     expect(listed.find((n) => n.section === section)?.title).toBe("Seed")
@@ -344,8 +344,8 @@ describe("the flat sections beside Notes", () => {
 
   it("moves a note between flat sections", async () => {
     const note = await createNote({ section: "ideas", title: "Spark" })
-    const moved = await moveNote(note.id, { section: "archive", folder: null })
-    expect(moved.id).toBe("archive/spark.md")
+    const moved = await moveNote(note.id, { section: "journal", folder: null })
+    expect(moved.id).toBe("journal/spark.md")
     expect(await exists(vaultFile("ideas", "spark.md"))).toBe(false)
   })
 

@@ -90,4 +90,25 @@ describe("EditorTags", () => {
     expect(onAddTag).not.toHaveBeenCalled()
     expect(screen.queryByLabelText("New tag")).toBeNull()
   })
+
+  it("hands Tab onwards to the prose", async () => {
+    const onLeaveForwards = vi.fn()
+    render(<EditorTags tags={[]} onAddTag={vi.fn()} onLeaveForwards={onLeaveForwards} />)
+
+    screen.getByLabelText("Add tag").focus()
+    await userEvent.tab()
+
+    expect(onLeaveForwards).toHaveBeenCalled()
+  })
+
+  it("hands Shift+Tab back to the title", async () => {
+    const onLeaveBackwards = vi.fn()
+    render(<EditorTags tags={[]} onAddTag={vi.fn()} onLeaveBackwards={onLeaveBackwards} />)
+
+    screen.getByLabelText("Add tag").focus()
+    await userEvent.tab({ shift: true })
+
+    expect(onLeaveBackwards).toHaveBeenCalled()
+  })
 })
+

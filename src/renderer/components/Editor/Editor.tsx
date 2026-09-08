@@ -43,6 +43,7 @@ export function Editor({ note }: EditorProps) {
   // The debounced save reads through refs so it always writes the current
   // title and body, not whichever values existed when it was scheduled.
   const titleRef = useRef("")
+  const tagAddRef = useRef<HTMLButtonElement>(null)
   const bodyRef = useRef("")
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loading = useRef(false)
@@ -99,7 +100,8 @@ export function Editor({ note }: EditorProps) {
     onError: setDropError,
     onSelectBlog: setBlogAnchor,
     tabSize,
-    onPublish: (blog, headerLine) => void publishPost(blog, headerLine)
+    onPublish: (blog, headerLine) => void publishPost(blog, headerLine),
+    onLeaveBackwards: () => tagAddRef.current?.focus()
   })
 
   /**
@@ -198,6 +200,7 @@ export function Editor({ note }: EditorProps) {
   return (
     <div className="editor-shell">
       <EditorHeader
+        tagAddRef={tagAddRef}
         note={note}
         title={title}
         onTitleChange={handleTitleChange}

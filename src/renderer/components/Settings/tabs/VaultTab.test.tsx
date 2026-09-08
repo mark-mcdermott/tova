@@ -39,6 +39,7 @@ beforeEach(() => {
     folder: null,
     tags: [],
     updatedAt: 1,
+    createdAt: 1,
     deletedAt: null,
     body: ""
   })

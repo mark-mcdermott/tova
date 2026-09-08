@@ -1,30 +1,34 @@
 import { NoteSummary } from "../../../shared/types"
-import { displayName } from "../../../shared/noteName"
+import { formatEditedAgo } from "../../../shared/date"
 import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
-import { NOTE_MIME } from "./dragDrop"
-import { Icon } from "./icons"
+import { NOTE_MIME } from "../Sidebar/dragDrop"
+import { Icon } from "../Sidebar/icons"
 
-interface NoteRowProps {
+interface IndexRowProps {
   note: NoteSummary
-  depth?: number
 }
 
-export function NoteRow({ note, depth = 0 }: NoteRowProps) {
-  const activeId = useNotesStore((state) => state.activeId)
+/**
+ * One note on an index page. Carries everything the sidebar's note row used to:
+ * it is the drag source for filing a note into a folder, it holds the same
+ * context menu, and its trash sits under the pointer rather than on the row.
+ */
+export function IndexRow({ note }: IndexRowProps) {
   const open = useNotesStore((state) => state.open)
   const trash = useNotesStore((state) => state.trash)
   const restore = useNotesStore((state) => state.restore)
   const destroy = useNotesStore((state) => state.destroy)
+  const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
   const requestTitleFocus = useNotesStore((state) => state.requestTitleFocus)
   const setDraggingNote = useNotesStore((state) => state.setDraggingNote)
 
   const menu = useContextMenu()
   const isTrashed = note.section === "trash"
-  const label = note.title.trim() === "" ? "untitled" : displayName(note.title)
+  const label = note.title.trim() === "" ? "Untitled" : note.title
 
-  // Renaming has no sidebar widget by design: it opens the note and puts the
+  // Renaming has no widget of its own by design: it opens the note and puts the
   // caret in its title, which is the field the filename follows.
   async function rename() {
     await open(note.id)
@@ -35,25 +39,17 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
     ? [
         { label: "Restore", onSelect: () => restore(note.id) },
         "separator",
-        {
-          label: "Delete permanently",
-          destructive: true,
-          onSelect: () => destroy(note.id)
-        }
+        { label: "Delete permanently", destructive: true, onSelect: () => destroy(note.id) }
       ]
     : [
         { label: "Rename", onSelect: rename },
         "separator",
-        {
-          label: "Delete → Trash",
-          destructive: true,
-          onSelect: () => trash(note.id)
-        }
+        { label: "Delete → Trash", destructive: true, onSelect: () => trash(note.id) }
       ]
 
   return (
-    <div
-      className={`note-row${note.id === activeId ? " is-active" : ""}`}
+    <li
+      className="index-item"
       onContextMenu={menu.open}
       draggable={!isTrashed}
       onDragStart={(event) => {
@@ -65,21 +61,28 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
     >
       <button
         type="button"
-        className="note-row-open"
-        data-depth={depth}
-        onClick={() => open(note.id)}
+        className={`index-star${note.favorite ? " is-on" : ""}`}
+        title={note.favorite ? "Remove from favourites" : "Add to favourites"}
+        aria-label={note.favorite ? `Unfavourite ${label}` : `Favourite ${label}`}
+        aria-pressed={note.favorite}
+        onClick={() => void toggleFavorite(note.id)}
       >
-        {label}
+        <Icon name="star" className="index-star-icon" />
       </button>
 
-      <div className="note-row-actions">
+      <button type="button" className="index-row" onClick={() => void open(note.id)}>
+        <span className="index-row-title">{label}</span>
+        <span className="index-row-meta">{formatEditedAgo(note.updatedAt)}</span>
+      </button>
+
+      <div className="index-actions">
         {isTrashed ? (
           <>
             <button
               type="button"
               title="Restore"
               aria-label={`Restore ${label}`}
-              onClick={() => restore(note.id)}
+              onClick={() => void restore(note.id)}
             >
               ⤺
             </button>
@@ -88,7 +91,7 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
               className="is-destructive"
               title="Delete permanently"
               aria-label={`Permanently delete ${label}`}
-              onClick={() => destroy(note.id)}
+              onClick={() => void destroy(note.id)}
             >
               ✕
             </button>
@@ -98,7 +101,7 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
             type="button"
             title="Move to Trash"
             aria-label={`Move ${label} to Trash`}
-            onClick={() => trash(note.id)}
+            onClick={() => void trash(note.id)}
           >
             <Icon name="trash" className="row-action-icon" />
           </button>
@@ -108,6 +111,6 @@ export function NoteRow({ note, depth = 0 }: NoteRowProps) {
       {menu.position !== null && (
         <Menu x={menu.position.x} y={menu.position.y} items={items} onClose={menu.close} />
       )}
-    </div>
+    </li>
   )
 }

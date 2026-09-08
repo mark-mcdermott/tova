@@ -1,8 +1,10 @@
+import { useState } from "react"
 import { useNotesStore } from "../../stores/notesStore"
 import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
+import { composeTarget } from "../../../shared/composeTarget"
 import { Icon } from "./icons"
 import { Wordmark } from "./Wordmark"
 import { Avatar } from "./Avatar"
@@ -18,7 +20,27 @@ export function Sidebar() {
   const showSettings = useNotesStore((state) => state.showSettings)
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
   const chosenAvatar = usePreferencesStore((state) => state.avatarUrl)
+  const view = useNotesStore((state) => state.view)
+  const indexTarget = useNotesStore((state) => state.indexTarget)
+  const active = useNotesStore((state) => state.active)
+  const openToday = useNotesStore((state) => state.openToday)
+
+  const showIndex = useNotesStore((state) => state.showIndex)
+  const [query, setQuery] = useState("")
+
   const menu = useContextMenu()
+
+  // The button writes where you are standing. Daily is the exception: its notes
+  // are one a day and made for you, so it opens today's, creating it if the day
+  // has none rather than making a second.
+  async function compose() {
+    const target = composeTarget(view, indexTarget, active)
+    if (target === null) {
+      await openToday()
+      return
+    }
+    await createNote(target.section, target.folder)
+  }
 
   return (
     <aside className="sidebar">
@@ -30,11 +52,28 @@ export function Sidebar() {
           className="icon-button icon-button-framed"
           title="New note"
           aria-label="New note"
-          onClick={() => createNote("notes", null)}
+          onClick={() => void compose()}
         >
           <Icon name="compose" className="header-icon" />
         </button>
       </header>
+
+      {/* Above the list rather than beside it: a field says what it is, where a
+          lone magnifier would just be a symbol taking up the rail. */}
+      <div className="sidebar-search">
+        <input
+          type="search"
+          className="sidebar-search-input"
+          placeholder="Search"
+          aria-label="Search notes"
+          value={query}
+          onChange={(event) => {
+            const next = event.target.value
+            setQuery(next)
+            if (next.trim() !== "") showIndex({ kind: "search", query: next })
+          }}
+        />
+      </div>
 
       <div className="sidebar-scroll" onContextMenu={menu.open}>
         {error !== null && <p className="sidebar-error">{error}</p>}

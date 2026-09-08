@@ -18,6 +18,7 @@ const notes: NoteSummary[] = [
     tags: ["writing", "work"],
     favorite: false,
     updatedAt: 5,
+    createdAt: 5,
     deletedAt: null
   },
   {
@@ -28,6 +29,7 @@ const notes: NoteSummary[] = [
     tags: ["work"],
     favorite: false,
     updatedAt: 4,
+    createdAt: 4,
     deletedAt: null
   },
   {
@@ -38,6 +40,7 @@ const notes: NoteSummary[] = [
     tags: [],
     favorite: false,
     updatedAt: 3,
+    createdAt: 3,
     deletedAt: null
   },
   {
@@ -48,6 +51,7 @@ const notes: NoteSummary[] = [
     tags: ["work"],
     favorite: false,
     updatedAt: 2,
+    createdAt: 2,
     deletedAt: 2
   }
 ]
@@ -102,37 +106,6 @@ describe("Sidebar", () => {
     expect(screen.getByLabelText("New note")).toBeDefined()
   })
 
-  it("leaves Notes to the compose button rather than its own add row", () => {
-    render(<Sidebar />)
-
-    // Notes is expanded here, and its loose note proves the body is open.
-    expect(screen.getByText("loose note")).toBeDefined()
-    expect(screen.queryByRole("button", { name: "+ New note" })).toBeNull()
-    expect(screen.getByLabelText("New note")).toBeDefined()
-  })
-
-  it("keeps the add row in a section the compose button cannot reach", () => {
-    useNotesStore.setState({
-      notes: [
-        ...notes,
-        {
-          id: "archive/kept.md",
-          title: "Kept",
-          section: "archive",
-          folder: null,
-          tags: [],
-          favorite: false,
-          updatedAt: 1,
-          deletedAt: null
-        }
-      ],
-      expanded: { archive: true }
-    })
-    render(<Sidebar />)
-
-    expect(screen.getByRole("button", { name: "+ New note" })).toBeDefined()
-  })
-
   it("opens settings from the avatar and from the cog", async () => {
     render(<Sidebar />)
 
@@ -155,64 +128,11 @@ describe("Sidebar", () => {
     expect(trashHeader.textContent).toContain("1")
   })
 
-  it("says nothing where a section holds nothing", () => {
-    render(<Sidebar />)
-    const empty = screen.getByRole("button", { name: /^Journal/ })
-    const full = screen.getByRole("button", { name: /^Notes/ })
-
-    // A nought is noise: an empty section is already saying it is empty.
-    expect(empty.textContent).toBe("Journal")
-    expect(full.textContent).toContain("2")
-  })
-
-  it("lists loose notes but keeps folder contents collapsed", () => {
-    render(<Sidebar />)
-    expect(screen.getByText("loose note")).toBeDefined()
-    expect(screen.queryByText("project river")).toBeNull()
-  })
-
-  it("reveals a folder's notes once expanded", async () => {
-    const user = userEvent.setup()
-    render(<Sidebar />)
-
-    await user.click(screen.getByRole("button", { name: /^ideas/ }))
-    expect(screen.getByText("project river")).toBeDefined()
-  })
-
   it("aggregates tag counts and excludes trashed notes", () => {
     render(<Sidebar />)
     const work = screen.getByText("work").closest(".tag-row")
     // Two live notes carry #work; the trashed one is not counted.
     expect(work?.textContent).toContain("2")
-  })
-
-  it("opens a note when its row is clicked", async () => {
-    const user = userEvent.setup()
-    bridge.read.mockResolvedValue({ ...notes[1], body: "hello" })
-    render(<Sidebar />)
-
-    await user.click(screen.getByRole("button", { name: "loose note" }))
-    expect(bridge.read).toHaveBeenCalledWith("notes/loose.md")
-
-    await waitFor(() => expect(useNotesStore.getState().activeId).toBe("notes/loose.md"))
-  })
-
-  it("moves a note to trash from its row action", async () => {
-    const user = userEvent.setup()
-    bridge.remove.mockResolvedValue({ ...notes[1], id: "trash/loose.md", section: "trash" })
-    render(<Sidebar />)
-
-    await user.click(screen.getByLabelText("Move loose note to Trash"))
-    expect(bridge.remove).toHaveBeenCalledWith("notes/loose.md")
-  })
-
-  it("offers restore and permanent delete for trashed notes", async () => {
-    const user = userEvent.setup()
-    render(<Sidebar />)
-
-    await user.click(screen.getByRole("button", { name: /^Trash/ }))
-    expect(screen.getByLabelText("Restore old draft")).toBeDefined()
-    expect(screen.getByLabelText("Permanently delete old draft")).toBeDefined()
   })
 
   it("offers today's note from the Daily context menu", async () => {
@@ -285,84 +205,12 @@ describe("Sidebar", () => {
     expect(container.querySelector(".sidebar-rule")).not.toBeNull()
   })
 
-  it("does not open a section that holds nothing", async () => {
-    const user = userEvent.setup()
-    render(<Sidebar />)
-
-    // Ideas holds nothing in the fixture; Trash has a note in it.
-    const ideas = screen.getByRole("button", { name: /^Ideas/ })
-    await user.click(ideas)
-
-    expect(useNotesStore.getState().expanded.ideas).toBeUndefined()
-    expect(ideas.getAttribute("aria-disabled")).toBe("true")
-  })
-
-  it("still opens a section that holds something", async () => {
-    const user = userEvent.setup()
-    useNotesStore.setState({ expanded: { tags: true } })
-    render(<Sidebar />)
-
-    await user.click(screen.getByRole("button", { name: /^Notes/ }))
-    expect(useNotesStore.getState().expanded.notes).toBe(true)
-  })
-
-  it("starts with every section but Tags collapsed", () => {
-    // The store's own default, not the fixture the other tests set up.
-    const { expanded } = useNotesStore.getInitialState()
-    expect(expanded.notes).toBeUndefined()
-    expect(expanded.daily).toBeUndefined()
-    expect(expanded.trash).toBeUndefined()
-    expect(expanded.tags).toBe(true)
-  })
-
   it("drops the FOLDERS heading the mockup does not have", () => {
     render(<Sidebar />)
     expect(screen.queryByRole("button", { name: /^FOLDERS/ })).toBeNull()
     // The sections it used to wrap are still there.
     expect(screen.getByRole("button", { name: /^Notes/ })).toBeDefined()
     expect(screen.getByRole("button", { name: /^Daily/ })).toBeDefined()
-  })
-
-  it("offers rename and delete on a note", async () => {
-    const user = userEvent.setup()
-    render(<Sidebar />)
-
-    await user.pointer({
-      keys: "[MouseRight]",
-      target: screen.getByRole("button", { name: "loose note" })
-    })
-    expect(screen.getByRole("menuitem", { name: "Rename" })).toBeDefined()
-    expect(screen.getByRole("menuitem", { name: "Delete → Trash" })).toBeDefined()
-  })
-
-  it("offers recovery actions on a trashed note", async () => {
-    const user = userEvent.setup()
-    render(<Sidebar />)
-
-    await user.click(screen.getByRole("button", { name: /^Trash/ }))
-    await user.pointer({
-      keys: "[MouseRight]",
-      target: screen.getByRole("button", { name: "old draft" })
-    })
-
-    expect(screen.getByRole("menuitem", { name: "Restore" })).toBeDefined()
-    expect(screen.getByRole("menuitem", { name: "Delete permanently" })).toBeDefined()
-    expect(screen.queryByRole("menuitem", { name: "Delete → Trash" })).toBeNull()
-  })
-
-  it("renames by opening the note and asking for its title", async () => {
-    const user = userEvent.setup()
-    bridge.read.mockResolvedValue({ ...notes[1], body: "" })
-    render(<Sidebar />)
-
-    await user.pointer({
-      keys: "[MouseRight]",
-      target: screen.getByRole("button", { name: "loose note" })
-    })
-    await user.click(screen.getByRole("menuitem", { name: "Rename" }))
-
-    expect(bridge.read).toHaveBeenCalledWith("notes/loose.md")
-    await waitFor(() => expect(useNotesStore.getState().focusTitleSeq).toBe(1))
   })
 
   it("offers folder actions on a folder", async () => {
@@ -585,4 +433,74 @@ describe("Sidebar", () => {
     render(<Sidebar />)
     expect(screen.getByText("Vault unreachable")).toBeDefined()
   })
+
+  it("opens a section's index instead of unfolding it", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    const state = useNotesStore.getState()
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "section", section: "notes" })
+    // Nothing unfolded: the notes are on the index now, not in the rail.
+    expect(screen.queryByText("loose note")).toBeNull()
+  })
+
+  it("shows folders as destinations rather than drawers", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "folder", folder: "ideas" })
+  })
+
+  it("opens a section that holds nothing, so the index can say so", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^Journal/ }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "journal" })
+  })
+
+  it("opens every tag from the Tags heading", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: "TAGS" }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "tags" })
+  })
+
+  it("opens one tag from its row", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /work/ }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "tag", tag: "work" })
+  })
+
+  it("keeps the tags list open without being asked", () => {
+    useNotesStore.setState({ expanded: {} })
+    render(<Sidebar />)
+
+    // Every other section is a destination; this one is the list itself.
+    expect(screen.getByText("work")).toBeDefined()
+  })
+
+  it("searches from the field above the list", async () => {
+    render(<Sidebar />)
+
+    await userEvent.type(screen.getByLabelText("Search notes"), "loose")
+
+    const state = useNotesStore.getState()
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "search", query: "loose" })
+  })
+
+  it("stays put while the field is empty", async () => {
+    render(<Sidebar />)
+    const field = screen.getByLabelText("Search notes")
+
+    await userEvent.type(field, "a")
+    await userEvent.clear(field)
+
+    // Clearing is not a navigation: it leaves the last index showing.
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "search", query: "a" })
+  })
 })
+

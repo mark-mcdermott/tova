@@ -1,4 +1,4 @@
-export const SECTIONS = ["notes", "daily", "ideas", "journal", "archive", "posts", "trash"] as const
+export const SECTIONS = ["notes", "daily", "ideas", "journal", "posts", "trash"] as const
 
 /** Sections whose notes are filed one folder deep. Everything else is flat. */
 export const FOLDERED_SECTIONS: readonly Section[] = ["notes", "posts"]
@@ -21,6 +21,8 @@ export interface NoteSummary {
   /** Pinned to the top of its section by the user. */
   favorite: boolean
   updatedAt: number
+  /** Filesystem birth time — what "date created" sorts on. */
+  createdAt: number
   /** Present only in Trash. */
   deletedAt: number | null
 }

@@ -70,5 +70,12 @@ describe("AppearanceTab", () => {
       expect(write).toHaveBeenCalledWith(expect.objectContaining({ proseWidth: "full" }))
     )
   })
+
+  it("keeps the writing sizes with the rest of the type", () => {
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("Font size")).toBeDefined()
+    expect(screen.getByLabelText("Indent width")).toBeDefined()
+  })
 })
 

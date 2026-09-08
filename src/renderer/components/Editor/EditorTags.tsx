@@ -1,9 +1,15 @@
-import { KeyboardEvent, MouseEvent, useEffect, useRef, useState } from "react"
+import { KeyboardEvent, MouseEvent, RefObject, useEffect, useRef, useState } from "react"
 
 interface EditorTagsProps {
   tags: string[]
   /** Writes a tag into the prose. The row itself stores nothing. */
   onAddTag: (tag: string) => void
+  /** The way in, so the title can hand focus straight to it on Tab. */
+  addRef?: RefObject<HTMLButtonElement | null>
+  /** Tab onwards, into the prose. */
+  onLeaveForwards?: () => void
+  /** Shift+Tab back, into the title. */
+  onLeaveBackwards?: () => void
 }
 
 /**
@@ -17,7 +23,13 @@ interface EditorTagsProps {
  * editing the sentence it sits in, which is the writer's job and not a
  * chip's.
  */
-export function EditorTags({ tags, onAddTag }: EditorTagsProps) {
+export function EditorTags({
+  tags,
+  onAddTag,
+  addRef,
+  onLeaveForwards,
+  onLeaveBackwards
+}: EditorTagsProps) {
   const [adding, setAdding] = useState(false)
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -71,10 +83,19 @@ export function EditorTags({ tags, onAddTag }: EditorTagsProps) {
         />
       ) : (
         <button
+          ref={addRef}
           type="button"
           className="editor-tag-add"
           aria-label="Add tag"
           onClick={() => setAdding(true)}
+          onKeyDown={(event) => {
+            // The row sits between the title and the prose, and Tab walks that
+            // way through it rather than out to the window's controls.
+            if (event.key !== "Tab") return
+            event.preventDefault()
+            if (event.shiftKey) onLeaveBackwards?.()
+            else onLeaveForwards?.()
+          }}
         >
           + tag
         </button>

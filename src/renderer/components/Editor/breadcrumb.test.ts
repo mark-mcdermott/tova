@@ -11,6 +11,7 @@ function note(overrides: Partial<NoteSummary>): NoteSummary {
     tags: [],
     favorite: false,
     updatedAt: 0,
+    createdAt: 0,
     deletedAt: null,
     ...overrides
   }

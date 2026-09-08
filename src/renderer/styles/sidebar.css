@@ -368,11 +368,15 @@
 /*
  * The action appears only under the pointer that is actually on it, not
  * anywhere on the row — so passing along the list disturbs nothing. It keeps
- * its space while invisible, which is what makes it hoverable at all, and
- * still appears on keyboard focus, where there is no pointer to aim.
+ * its space while invisible, which is what makes it hoverable at all.
+ *
+ * :focus-visible rather than :focus-within, because clicking a row focuses the
+ * button inside it: the trash then sat there until focus moved elsewhere. The
+ * browser only matches :focus-visible for keyboard focus, which is the case
+ * that genuinely needs it — there is no pointer to aim.
  */
 .note-row-actions:hover,
-.note-row:focus-within .note-row-actions {
+.note-row:has(:focus-visible) .note-row-actions {
   opacity: 1;
 }
 
@@ -561,4 +565,32 @@
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
+}
+
+/* ── Search ───────────────────────────────────────────────────────────── */
+
+.sidebar-search {
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.sidebar-search-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 10%);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-row);
+  letter-spacing: var(--sidebar-tracking);
+}
+
+.sidebar-search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.sidebar-search-input:focus {
+  outline: none;
+  border-color: var(--accent-on-glass);
+  background: rgb(255 255 255 / 16%);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from "react"
+import { RefObject, useEffect, useReducer, useRef } from "react"
 import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { canGoBack, canGoForward } from "../../stores/history"
@@ -14,6 +14,8 @@ interface EditorHeaderProps {
   title: string
   onTitleChange: (value: string) => void
   onTitleCommit: () => void
+  /** The tag row's way in, owned by the editor so it can hand focus back. */
+  tagAddRef: RefObject<HTMLButtonElement | null>
   onAddTag: (tag: string) => void
 }
 
@@ -22,6 +24,7 @@ export function EditorHeader({
   title,
   onTitleChange,
   onTitleCommit,
+  tagAddRef,
   onAddTag
 }: EditorHeaderProps) {
   const back = useNotesStore((state) => state.back)
@@ -142,14 +145,27 @@ export function EditorHeader({
         value={title}
         onChange={(event) => onTitleChange(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Tab" || event.key === "Enter") {
+          // Enter is done with the title; Tab is the next thing along, which is
+          // the tag row rather than the prose.
+          if (event.key === "Enter") {
             event.preventDefault()
             onTitleCommit()
+            return
+          }
+          if (event.key === "Tab" && !event.shiftKey) {
+            event.preventDefault()
+            tagAddRef.current?.focus()
           }
         }}
       />
 
-      <EditorTags tags={note.tags} onAddTag={onAddTag} />
+      <EditorTags
+        tags={note.tags}
+        onAddTag={onAddTag}
+        addRef={tagAddRef}
+        onLeaveForwards={onTitleCommit}
+        onLeaveBackwards={() => titleRef.current?.focus()}
+      />
 
       {menu.position !== null && (
         <NoteMenu note={note} x={menu.position.x} y={menu.position.y} onClose={menu.close} />

@@ -153,6 +153,7 @@ describe("sortNotes", () => {
     tags: [],
     favorite: false,
     updatedAt,
+    createdAt: updatedAt,
     deletedAt: null
   })
 

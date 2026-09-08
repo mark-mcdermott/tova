@@ -13,8 +13,9 @@ import {
   forget as forgetHistory,
   rename as renameHistory
 } from "./history"
+import { IndexSort, IndexTarget } from "../../shared/indexTarget"
 
-export type View = "editor" | "settings"
+export type View = "editor" | "settings" | "index"
 
 export const SETTINGS_TABS = ["profile", "appearance", "vault", "blogs", "general", "docs"] as const
 
@@ -51,6 +52,10 @@ interface NotesState {
   view: View
   /** Which settings tab is showing. */
   settingsTab: SettingsTab
+  /** What the index page is listing, when the view is showing one. */
+  indexTarget: IndexTarget | null
+  /** How index pages order their rows. Kept across pages, as a reading habit. */
+  indexSort: IndexSort
 
   load: () => Promise<void>
   openToday: () => Promise<void>
@@ -60,6 +65,8 @@ interface NotesState {
   toggleSidebar: () => void
   showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
+  showIndex: (target: IndexTarget) => void
+  setIndexSort: (sort: IndexSort) => void
   expandSection: (key: string) => void
   checkVault: () => Promise<void>
   restoreFromBackup: (name: string) => Promise<void>
@@ -98,6 +105,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   sidebarCollapsed: false,
   view: "editor",
   settingsTab: "profile",
+  indexTarget: null,
+  indexSort: "updated",
   // Everything but Tags starts collapsed, as the mockup shows it. Nothing is
   // persisted, so this is the state on every launch.
   expanded: { tags: true },
@@ -153,6 +162,14 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   showSettings: (tab = "profile") => {
     set({ view: "settings", settingsTab: tab })
+  },
+
+  showIndex: (target) => {
+    set({ view: "index", indexTarget: target })
+  },
+
+  setIndexSort: (sort) => {
+    set({ indexSort: sort })
   },
 
   toggleSection: (key) => {

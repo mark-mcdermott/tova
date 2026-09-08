@@ -1,8 +1,7 @@
-import { DragEvent, MouseEvent, ReactNode, useState } from "react"
+import { DragEvent, MouseEvent, useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Disclosure } from "./Disclosure"
-import { NoteRow } from "./NoteRow"
 import { FolderNameInput } from "./FolderNameInput"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
@@ -13,17 +12,6 @@ import { blogLabel } from "../../../shared/blogConfig"
 interface FolderTreeProps {
   notes: NoteSummary[]
   folders: string[]
-}
-
-function NoteRows({ notes, depth }: { notes: NoteSummary[]; depth: number }) {
-  if (notes.length === 0) return <p className="sidebar-empty">Nothing here yet</p>
-  return (
-    <>
-      {notes.map((note) => (
-        <NoteRow key={note.id} note={note} depth={depth} />
-      ))}
-    </>
-  )
 }
 
 interface FolderMenuState {
@@ -46,15 +34,14 @@ function FolderRow({
   folder,
   notes,
   onContextMenu,
-  onMove,
-  children
+  onMove
 }: {
   folder: string
   notes: NoteSummary[]
   onContextMenu: (event: MouseEvent) => void
   onMove: (note: NoteSummary, folder: string) => void
-  children: ReactNode
 }) {
+  const showIndex = useNotesStore((state) => state.showIndex)
   const { isDropActive, dropHandlers } = useDropTarget({ kind: "folder", folder }, (note) =>
     onMove(note, folder)
   )
@@ -66,16 +53,16 @@ function FolderRow({
       count={notes.length}
       icon="folder"
       depth={2}
+      onActivate={() => showIndex({ kind: "folder", folder })}
       onContextMenu={onContextMenu}
       dropHandlers={dropHandlers}
       isDropActive={isDropActive}
-    >
-      {children}
-    </Disclosure>
+    />
   )
 }
 
 export function FolderTree({ notes, folders }: FolderTreeProps) {
+  const showIndex = useNotesStore((state) => state.showIndex)
   const createNote = useNotesStore((state) => state.createNote)
   const createFolder = useNotesStore((state) => state.createFolder)
   const renameFolder = useNotesStore((state) => state.renameFolder)
@@ -105,15 +92,13 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const blogs = useBlogsStore((state) => state.blogs)
   const posts = inSection("posts")
   const notesSection = inSection("notes")
-  const loose = notesSection.filter((note) => note.folder === null)
   const daily = inSection("daily")
   const trashed = inSection("trash")
 
   // Flat sections beside Notes: no folders, so each is a list plus a way in.
   const flatSections = [
     { key: "ideas", label: "Ideas", icon: "ideas" },
-    { key: "journal", label: "Journal", icon: "journal" },
-    { key: "archive", label: "Archive", icon: "archive" }
+    { key: "journal", label: "Journal", icon: "journal" }
   ] as const
 
   function openFolderMenu(folder: string) {
@@ -154,9 +139,8 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
             count={held.length}
             icon="posts"
             depth={1}
-          >
-            <NoteRows notes={held} depth={2} />
-          </Disclosure>
+            onActivate={() => showIndex({ kind: "blog", blog: blog.name })}
+          />
         )
       })}
 
@@ -166,54 +150,44 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         count={notesSection.length}
         icon="notes"
         depth={1}
+        onActivate={() => showIndex({ kind: "section", section: "notes" })}
         dropHandlers={notesRoot.dropHandlers}
         isDropActive={notesRoot.isDropActive}
-      >
-        {folders.map((folder) => {
-          const inFolder = notesSection.filter((note) => note.folder === folder)
+      />
 
-          if (renaming === folder) {
-            return (
-              <FolderNameInput
-                key={folder}
-                initialValue={folder}
-                onSubmit={(name) => {
-                  setRenaming(null)
-                  if (name !== folder) renameFolder(folder, name)
-                }}
-                onCancel={() => setRenaming(null)}
-              />
-            )
-          }
-
-          return (
-            <FolderRow
-              key={folder}
-              folder={folder}
-              notes={inFolder}
-              onContextMenu={openFolderMenu(folder)}
-              onMove={(note, destination) => moveNote(note.id, "notes", destination)}
-            >
-              <NoteRows notes={inFolder} depth={3} />
-            </FolderRow>
-          )
-        })}
-
-        {creatingFolder && (
+      {/* Always shown rather than unfolded: a folder is a destination beside
+          Notes, not a drawer inside it. */}
+      {folders.map((folder) =>
+        renaming === folder ? (
           <FolderNameInput
+            key={folder}
+            initialValue={folder}
             onSubmit={(name) => {
-              setCreatingFolder(false)
-              createFolder(name)
+              setRenaming(null)
+              if (name !== folder) renameFolder(folder, name)
             }}
-            onCancel={() => setCreatingFolder(false)}
+            onCancel={() => setRenaming(null)}
           />
-        )}
+        ) : (
+          <FolderRow
+            key={folder}
+            folder={folder}
+            notes={notesSection.filter((note) => note.folder === folder)}
+            onContextMenu={openFolderMenu(folder)}
+            onMove={(note, destination) => moveNote(note.id, "notes", destination)}
+          />
+        )
+      )}
 
-        {/* No "+ New note" here: the compose button at the top of the sidebar
-            already starts one in Notes. The other sections keep theirs, since
-            nothing else creates a note in them. */}
-        <NoteRows notes={loose} depth={2} />
-      </Disclosure>
+      {creatingFolder && (
+        <FolderNameInput
+          onSubmit={(name) => {
+            setCreatingFolder(false)
+            createFolder(name)
+          }}
+          onCancel={() => setCreatingFolder(false)}
+        />
+      )}
 
       <Disclosure
         sectionKey="daily"
@@ -222,11 +196,10 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         icon="daily"
         depth={1}
         onContextMenu={dailyMenu.open}
+        onActivate={() => showIndex({ kind: "section", section: "daily" })}
         dropHandlers={dailyDrop.dropHandlers}
         isDropActive={dailyDrop.isDropActive}
-      >
-        <NoteRows notes={daily} depth={2} />
-      </Disclosure>
+      />
 
       {flatSections.map(({ key, label, icon }) => {
         const held = inSection(key)
@@ -238,12 +211,8 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
             count={held.length}
             icon={icon}
             depth={1}
-          >
-            <NoteRows notes={held} depth={2} />
-            <button type="button" className="sidebar-add" onClick={() => createNote(key, null)}>
-              + New note
-            </button>
-          </Disclosure>
+            onActivate={() => showIndex({ kind: "section", section: key })}
+          />
         )
       })}
 
@@ -253,11 +222,10 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         count={trashed.length}
         icon="trash"
         depth={1}
+        onActivate={() => showIndex({ kind: "section", section: "trash" })}
         dropHandlers={trashDrop.dropHandlers}
         isDropActive={trashDrop.isDropActive}
-      >
-        <NoteRows notes={trashed} depth={2} />
-      </Disclosure>
+      />
 
       {dailyMenu.position !== null && (
         <Menu

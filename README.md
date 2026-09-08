@@ -58,6 +58,11 @@ Gatekeeper will refuse the app on any machine that did not build it.
 - **Several vaults.** One vault, at `~/Documents/Tova`. The Settings tab shows
   and reveals it; switching between vaults is unbuilt.
 - **A tooltips toggle**, from the original settings spec.
+- **Adding a background image from Settings.** The picker shows what is bundled;
+  a dashed tile with a plus, beside the thumbnails, would copy a chosen file
+  into the app's data directory and list it with the rest.
+- **Paging the vault's snapshot list.** It grows to whatever `backupLimit`
+  allows — 200 at the top of the range — and today renders every row.
 - **A licensed script face.** `Alagambe` is bundled for note titles and is
   proprietary, which is why this repository is private. Replacing it is the
   first step to making it public — see `tova/PROGRESS.md`.
@@ -74,8 +79,10 @@ record what the dark treatment needs to stay legible over a photograph.
 **Focus mode.** Hide the sidebar and centre the writing column, on
 `Cmd+Shift+F` and from the View menu.
 
-**Search.** A search control in the sidebar header opening to live full-text
-filtering across sections, with recent matches and a full results view.
+**Full-text search.** The sidebar's field searches titles and tags, which is
+everything the renderer already holds. Searching bodies means reading every
+file in the vault, so it wants an index in main rather than a filter in the
+renderer.
 
 **Folder reordering by drag.** Every other drag rule works. Reordering needs
 somewhere to persist a manual order, which collides with sorting notes by

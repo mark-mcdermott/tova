@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
 import { Settings } from "./components/Settings/Settings"
+import { IndexPage } from "./components/Index/IndexPage"
 import { VaultWarning } from "./components/VaultWarning"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
@@ -117,6 +118,8 @@ export default function App() {
             </div>
           ) : view === "settings" ? (
             <Settings />
+          ) : view === "index" ? (
+            <IndexPage />
           ) : active === null ? (
             <div className="editor-shell editor-shell-empty">
               <p className="editor-placeholder">Select a note, or create one to start writing.</p>

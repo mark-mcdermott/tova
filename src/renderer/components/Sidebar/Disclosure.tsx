@@ -2,6 +2,7 @@ import { DragEvent, MouseEvent, ReactNode } from "react"
 import { useNotesStore } from "../../stores/notesStore"
 import { Icon } from "./icons"
 import { containerKeyOf } from "./sectionKey"
+import { indexKey } from "../../../shared/indexTarget"
 
 interface DisclosureProps {
   /** Key in the store's expanded map — also what breadcrumbs target. */
@@ -9,9 +10,14 @@ interface DisclosureProps {
   label: string
   count?: number
   variant?: "section" | "group"
-  icon?: "notes" | "daily" | "ideas" | "journal" | "archive" | "posts" | "trash" | "folder"
+  icon?: "notes" | "daily" | "ideas" | "journal" | "posts" | "trash" | "folder"
   /** Nesting level, so a row can indent its text while its background does not. */
   depth?: number
+  /**
+   * Given instead of a fold: the row becomes a destination, opening an index in
+   * the body rather than unfolding a list in the rail.
+   */
+  onActivate?: () => void
   onContextMenu?: (event: MouseEvent) => void
   /** Drag handlers from useDropTarget, spread onto the header. */
   dropHandlers?: {
@@ -20,7 +26,8 @@ interface DisclosureProps {
     onDrop: (event: DragEvent) => void
   }
   isDropActive?: boolean
-  children: ReactNode
+  /** Not needed by a destination row, which never unfolds. */
+  children?: ReactNode
 }
 
 /**
@@ -35,6 +42,7 @@ export function Disclosure({
   variant = "group",
   icon,
   depth = 0,
+  onActivate,
   onContextMenu,
   dropHandlers,
   isDropActive = false,
@@ -45,7 +53,11 @@ export function Disclosure({
 
   // The purple marks where the reader is, so it belongs on whatever directly
   // holds the open note — the folder if it is in one, the section otherwise.
-  const isActive = useNotesStore((state) => containerKeyOf(state.active) === sectionKey)
+  const isActive = useNotesStore((state) =>
+    state.view === "index" && state.indexTarget !== null
+      ? indexKey(state.indexTarget) === sectionKey
+      : containerKeyOf(state.active) === sectionKey
+  )
 
   // A section with nothing in it has nothing to reveal, so it does not respond.
   // Notes still arrive through the compose control or the editor's Move menu.
@@ -57,13 +69,19 @@ export function Disclosure({
         type="button"
         className={`disclosure-header disclosure-header-${variant}${
           isDropActive ? " is-drop-active" : ""
-        }${empty ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
+        }${empty && onActivate === undefined ? " is-empty" : ""}${
+          isActive ? " is-active" : ""
+        }`}
         data-depth={depth}
         {...dropHandlers}
-        aria-expanded={empty ? undefined : open}
-        aria-disabled={empty || undefined}
+        aria-expanded={onActivate !== undefined || empty ? undefined : open}
+        aria-disabled={onActivate === undefined && empty ? true : undefined}
         onContextMenu={onContextMenu}
         onClick={() => {
+          if (onActivate !== undefined) {
+            onActivate()
+            return
+          }
           if (!empty) toggleSection(sectionKey)
         }}
       >
@@ -73,7 +91,9 @@ export function Disclosure({
         {count !== undefined && count > 0 && <span className="disclosure-count">{count}</span>}
       </button>
 
-      {open && !empty && <div className="disclosure-body">{children}</div>}
+      {onActivate === undefined && open && !empty && (
+        <div className="disclosure-body">{children}</div>
+      )}
     </div>
   )
 }

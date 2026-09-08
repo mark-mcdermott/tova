@@ -38,6 +38,7 @@ interface LoadedNote {
   deletedAt: number | null
   favorite: boolean
   updatedAt: number
+  createdAt: number
 }
 
 function stem(filename: string): string {
@@ -73,7 +74,8 @@ async function load(location: NoteLocation): Promise<LoadedNote> {
     body,
     deletedAt: readTimestamp(data.deletedAt),
     favorite: data.favorite === "true",
-    updatedAt: stats.mtimeMs
+    updatedAt: stats.mtimeMs,
+    createdAt: stats.birthtimeMs
   }
 }
 
@@ -99,6 +101,7 @@ function toNote(note: LoadedNote): Note {
     tags: extractTags(note.body),
     favorite: note.favorite,
     updatedAt: note.updatedAt,
+    createdAt: note.createdAt,
     deletedAt: note.deletedAt,
     body: note.body
   }
@@ -194,7 +197,8 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
     body: input.body ?? "",
     deletedAt: null,
     favorite: false,
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    createdAt: Date.now()
   })
 
   return toNote(await load(location))
