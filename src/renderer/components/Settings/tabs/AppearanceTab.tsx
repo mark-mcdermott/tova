@@ -1,3 +1,4 @@
+import { TITLE_FONTS, TitleFont } from "../../../../shared/preferences"
 import { backgroundUrls } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
@@ -9,6 +10,7 @@ function nameOf(url: string): string {
 
 export function AppearanceTab() {
   const background = usePreferencesStore((state) => state.preferences.background)
+  const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
   const update = usePreferencesStore((state) => state.update)
 
   return (
@@ -18,6 +20,28 @@ export function AppearanceTab() {
         Tova is a light theme over a photograph. A dark theme and a theme picker are on the roadmap
         rather than half-built here — the whole palette is tokenised for it.
       </p>
+
+      <Field
+        id="title-font"
+        label="Note titles"
+        hint="Shown in the face it sets, so the choice is made by eye."
+      >
+        <div className="title-font-choices">
+          {TITLE_FONTS.map((font) => (
+            <button
+              key={font.value}
+              type="button"
+              className={`title-font-choice${titleFont === font.value ? " is-chosen" : ""}`}
+              aria-pressed={titleFont === font.value}
+              data-title-font={font.value}
+              onClick={() => void update({ titleFont: font.value as TitleFont })}
+            >
+              <span className="title-font-sample">Tova</span>
+              <span className="title-font-name">{font.label}</span>
+            </button>
+          ))}
+        </div>
+      </Field>
 
       <Field
         id="background"

@@ -70,15 +70,37 @@ focusing it scrolls the panel's clipped box sideways.
 
 ## Phase 6 assets
 
-**Fonts are in.** `Alagambe` (note titles) and `Acumin Pro` (wordmark) are
-bundled under `src/renderer/assets/fonts/` and wired through `--font-script`
-and `--font-wordmark`.
+**Fonts are in.** `Alagambe` and `Fascinate Inline` are bundled under
+`src/renderer/assets/fonts/` and offered as the note title face; the choice
+lives in Settings → Appearance and resolves through `--font-script`.
+`Acumin Pro` has been removed from the app entirely, and no face is loaded for
+the wordmark at all.
 
-Both are proprietary — Acumin Pro is Adobe's, all rights reserved — which is
-why this repo is private. It cannot be made public again without removing them.
+**Alagambe is proprietary**, which is why this repo is private. Inter is under
+the SIL Open Font Licence and is no obstacle. Acumin Pro — Adobe's, all rights
+reserved — is no longer in the app, but its four weights remain tracked under
+`branding/fonts/`, and every copy remains in git history regardless. Going
+public means replacing Alagambe *and* dealing with the history; see the note at
+the foot of this file.
 
-Only Acumin Pro **Regular** was available; the mockup uses **Light**. The
-wordmark leans on tighter tracking and a smaller size to compensate.
+**The wordmark is drawn, not set.** Acumin Pro Light was the mockup's choice and
+was never licensed here; Inter Thin stood in for one commit before being
+dropped. `Wordmark.tsx` carries the mark as outlines instead — the exact
+hairline geometric form the mockup specified, with no face to license, embed or
+fall back from, and nothing that can reflow on a machine that lacks the font.
+The fill is `currentColor`, so its colour lives in CSS with everything else.
+
+Two versions were tried: a Thin and an ExtraLight set a little looser. The
+ExtraLight is what shipped — at the sidebar's 2.05rem the Thin's curves start
+dissolving into the photograph, while the ExtraLight holds a continuous line.
+The looser kerning arrives as a wider viewBox at the same height, so sizing by
+height preserves the spacing exactly as drawn.
+
+Measured, the backdrop under the wordmark carries white at **2.52:1**, short of
+the 3:1 that large text wants. A `drop-shadow` holds it together —
+`drop-shadow`, not `text-shadow`, because the mark is a shape now and
+`text-shadow` would do nothing to it. Neither moves the ratio, which measures
+flat colour rather than strokes; it is what the eye needs over a photograph.
 
 **One background is bundled** — `lake-sunset.jpg`, the backdrop extracted from
 the mockup. It is the only image measured with the luminance split the layout
@@ -399,3 +421,21 @@ no longer share an accessible name.
 ## To resume
 
 Read `CLAUDE.md`, `docs/SPEC.md`, `docs/BUILD_PHASES.md`, and this file.
+
+## If this repo ever goes public
+
+Deleting a font removes it from the working tree, not from git history: every
+past commit still carries the blob, and a clone gets all of them. Five font
+blobs are in this history — four Acumin weights and Alagambe — totalling about
+0.4 MB.
+
+Purging Acumin alone would not achieve anything, because **Alagambe is still in
+use** for note titles and is proprietary too. Going public is therefore a
+replacement job before it is a deletion job: find a licensed script face, swap
+`--font-script`, and only then worry about history.
+
+When that time comes, the surer path is a fresh repository from a squashed tree
+rather than a `git filter-repo` rewrite. A rewrite changes every SHA, needs a
+force push, and still leaves the old objects reachable by SHA on GitHub until
+they are garbage collected — while any fork or clone keeps them outright. The
+history of a solo project is not worth the uncertainty.

@@ -41,3 +41,17 @@ describe("normalizePreferences", () => {
     expect(normalizePreferences({ background: 42 }).background).toBeNull()
   })
 })
+
+describe("title font", () => {
+  it("defaults to Alagambe", () => {
+    expect(normalizePreferences({}).titleFont).toBe("alagambe")
+  })
+
+  it("keeps the other face when it is chosen", () => {
+    expect(normalizePreferences({ titleFont: "fascinate" }).titleFont).toBe("fascinate")
+  })
+
+  it("falls back rather than trusting a face that is not bundled", () => {
+    expect(normalizePreferences({ titleFont: "comic-sans" }).titleFont).toBe("alagambe")
+  })
+})

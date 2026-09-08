@@ -4,6 +4,7 @@ import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { Icon } from "./icons"
+import { Wordmark } from "./Wordmark"
 import bundledAvatar from "../../assets/avatar.jpg"
 import { usePreferencesStore } from "../../stores/preferencesStore"
 
@@ -22,7 +23,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <header className="sidebar-header">
-        <span className="wordmark">Tova</span>
+        <Wordmark />
 
         <button
           type="button"

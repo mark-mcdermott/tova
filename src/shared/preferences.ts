@@ -1,3 +1,11 @@
+/** The face note titles are set in. Both are bundled; the choice is the user's. */
+export type TitleFont = "alagambe" | "fascinate"
+
+export const TITLE_FONTS: { value: TitleFont; label: string }[] = [
+  { value: "alagambe", label: "Alagambe" },
+  { value: "fascinate", label: "Fascinate Inline" }
+]
+
 export interface Preferences {
   /** Shown beside the avatar in the sidebar footer. */
   displayName: string
@@ -14,6 +22,7 @@ export interface Preferences {
   spellcheck: boolean
   /** Bundled background filename, or null to pick one at each launch. */
   background: string | null
+  titleFont: TitleFont
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -24,7 +33,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backupIntervalMinutes: 60,
   backupLimit: 30,
   spellcheck: true,
-  background: null
+  background: null,
+  titleFont: "alagambe"
 }
 
 const LIMITS = {
@@ -66,7 +76,8 @@ export function normalizePreferences(value: unknown): Preferences {
       LIMITS.backupLimit
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
-    background: typeof raw.background === "string" ? raw.background : null
+    background: typeof raw.background === "string" ? raw.background : null,
+    titleFont: raw.titleFont === "fascinate" ? "fascinate" : DEFAULT_PREFERENCES.titleFont
   }
 }
 

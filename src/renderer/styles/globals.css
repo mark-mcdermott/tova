@@ -1,7 +1,7 @@
 /*
- * Bundled faces. Both are licensed and travel with the app rather than being
- * fetched, so font-display: block is safe — there is no network to wait on and
- * no reason to flash a fallback first.
+ * Bundled faces. Both travel with the app rather than being fetched, so
+ * font-display: block is safe — there is no network to wait on and no reason
+ * to flash a fallback first.
  */
 @font-face {
   font-family: "Alagambe";
@@ -11,9 +11,14 @@
   font-display: block;
 }
 
+/*
+ * Fascinate Inline, latin subset, from Google Fonts under the SIL Open Font
+ * Licence. Offered beside Alagambe as the note title face; the choice lives in
+ * Settings and resolves through --font-script below.
+ */
 @font-face {
-  font-family: "Acumin Pro";
-  src: url("../assets/fonts/acumin-pro-regular.otf") format("opentype");
+  font-family: "Fascinate Inline";
+  src: url("../assets/fonts/fascinate-inline.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: block;
@@ -84,9 +89,8 @@
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
   --font-script: "Alagambe", "Snell Roundhand", "Apple Chancery", cursive;
-  /* Acumin Pro Light is what the mockup uses; only Regular is licensed here,
-     so the wordmark leans on tracking and size to stay light in feel. */
-  --font-wordmark: "Acumin Pro", var(--font-sans);
+  /* The wordmark is drawn rather than set — see Wordmark.tsx — so there is no
+     face for it to load and no --font-wordmark to declare. */
 
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;
@@ -141,6 +145,10 @@
      two inks within a fraction of a pixel of each other. */
   --footer-glyph: 1.3rem;
   --footer-caret: 1.45rem;
+}
+
+:root[data-title-font="fascinate"] {
+  --font-script: "Fascinate Inline", "Snell Roundhand", "Apple Chancery", cursive;
 }
 
 *,

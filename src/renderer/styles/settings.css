@@ -468,3 +468,50 @@
 .doc + .doc {
   margin-top: var(--space-4);
 }
+
+/* Each option is set in its own face: the label says which, the sample says
+   what it looks like, and the sample is what the choice is actually about. */
+.title-font-choices {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.title-font-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 9rem;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 55%);
+  cursor: pointer;
+}
+
+.title-font-choice.is-chosen {
+  border-color: var(--accent);
+}
+
+.title-font-sample {
+  font-family: var(--font-script);
+  font-size: 2rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* The sample ignores the current selection and shows its own face. */
+.title-font-choice[data-title-font="alagambe"] .title-font-sample {
+  font-family: "Alagambe", cursive;
+}
+
+.title-font-choice[data-title-font="fascinate"] .title-font-sample {
+  font-family: "Fascinate Inline", cursive;
+}
+
+.title-font-name {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}

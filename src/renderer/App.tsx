@@ -24,6 +24,7 @@ export default function App() {
   const loadPreferences = usePreferencesStore((state) => state.load)
   const fontSize = usePreferencesStore((state) => state.preferences.fontSize)
   const background = usePreferencesStore((state) => state.preferences.background)
+  const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
 
   useEffect(() => {
@@ -48,6 +49,12 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.setProperty("--editor-font-size", `${fontSize}px`)
   }, [fontSize])
+
+  // Set on the root so the font stack itself stays in CSS with the rest of the
+  // type, rather than being assembled in JavaScript.
+  useEffect(() => {
+    document.documentElement.dataset.titleFont = titleFont
+  }, [titleFont])
 
   // Applied only once preferences have loaded, so a chosen background is not
   // overwritten by a shuffle a frame earlier.

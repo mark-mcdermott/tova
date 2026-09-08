@@ -40,14 +40,22 @@
   padding: 2.75rem var(--sidebar-gutter) var(--space-8);
 }
 
+/*
+ * Drawn, not set — see Wordmark.tsx. Height rather than font-size, and the
+ * viewBox carries the proportion, so there is no face to load and nothing to
+ * fall back to.
+ *
+ * White, inherited from the sidebar like every other mark here. Measured, the
+ * backdrop under it carries white at 2.52:1 — short of the 3:1 large text
+ * wants — so a soft shadow does the holding. drop-shadow, not text-shadow:
+ * this is a shape now, and text-shadow would do nothing to it.
+ */
 .wordmark {
-  font-family: var(--font-wordmark);
-  font-size: 2.625rem;
-  font-weight: 400;
-  /* The mockup sets the wordmark tight and small; with Regular rather than
-     Light standing in, the tracking carries more of that weight. */
-  letter-spacing: -0.035em;
+  display: block;
+  height: 2.05rem;
+  width: auto;
   color: var(--text-primary);
+  filter: drop-shadow(0 1px 10px rgb(38 30 58 / 60%));
 }
 
 .icon-button {

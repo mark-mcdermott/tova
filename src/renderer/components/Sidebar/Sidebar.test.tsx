@@ -97,7 +97,8 @@ afterEach(cleanup)
 describe("Sidebar", () => {
   it("shows the wordmark and a new note action", () => {
     render(<Sidebar />)
-    expect(screen.getByText("Tova")).toBeDefined()
+    // Drawn rather than set, so it is found by its label, not its text.
+    expect(screen.getByRole("img", { name: "Tova" })).toBeDefined()
     expect(screen.getByLabelText("New note")).toBeDefined()
   })
 
