@@ -53,6 +53,12 @@ Gatekeeper will refuse the app on any machine that did not build it.
 
 ## Possible future roadmap
 
+- **Grammar checking.** Needs a new dependency, and the credible ones are large
+  and noisy. Spelling is Chromium's and free; grammar is a real decision.
+- **Several vaults.** One vault, at `~/Documents/Tova`. The Settings tab shows
+  and reveals it; switching between vaults is unbuilt.
+- **A tooltips toggle**, from the original settings spec.
+
 Deliberately deferred. Each is understood and scoped, just not next.
 
 **Theme picker and dark theme.** The palette is light-only today. A second set

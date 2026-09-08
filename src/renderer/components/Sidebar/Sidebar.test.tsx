@@ -6,6 +6,8 @@ import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
 import { emptyHistory } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
+import { usePreferencesStore } from "../../stores/preferencesStore"
+import { DEFAULT_PREFERENCES } from "../../../shared/preferences"
 
 const notes: NoteSummary[] = [
   {
@@ -74,6 +76,7 @@ beforeEach(() => {
   window.tova = stubBridge({ notes: bridge })
   // Disclosure state lives in the store, so it has to be reset or an expanded
   // folder leaks into whichever test runs next.
+  usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
   useNotesStore.setState({
     notes,
     folders: ["ideas", "drafts"],
@@ -101,8 +104,10 @@ describe("Sidebar", () => {
   it("opens settings from the avatar and from the cog", async () => {
     render(<Sidebar />)
 
-    await userEvent.click(screen.getByRole("button", { name: "Mark" }))
+    // The two controls go to different places, so they do not share a name.
+    await userEvent.click(screen.getByRole("button", { name: "Profile" }))
     expect(useNotesStore.getState().view).toBe("settings")
+    expect(useNotesStore.getState().settingsTab).toBe("profile")
 
     useNotesStore.setState({ view: "editor" })
     await userEvent.click(screen.getByRole("button", { name: "Settings" }))
@@ -209,10 +214,21 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("menu")).toBeNull()
   })
 
-  it("shows who is signed in at the foot of the sidebar", () => {
+  it("shows the configured name at the foot of the sidebar", () => {
+    usePreferencesStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES, displayName: "Mark" },
+      avatarUrl: null
+    })
     const { container } = render(<Sidebar />)
 
     expect(screen.getByText("Mark")).toBeDefined()
+    expect(container.querySelector(".sidebar-avatar")).not.toBeNull()
+  })
+
+  it("shows the picture alone when no name is set", () => {
+    const { container } = render(<Sidebar />)
+
+    expect(container.querySelector(".sidebar-user")).toBeNull()
     expect(container.querySelector(".sidebar-avatar")).not.toBeNull()
   })
 

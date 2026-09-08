@@ -16,6 +16,10 @@ import {
 
 export type View = "editor" | "settings"
 
+export const SETTINGS_TABS = ["profile", "appearance", "vault", "blogs", "general", "docs"] as const
+
+export type SettingsTab = (typeof SETTINGS_TABS)[number]
+
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -45,6 +49,8 @@ interface NotesState {
   expanded: Record<string, boolean>
   /** What the workspace column shows. Opening any note returns it to the editor. */
   view: View
+  /** Which settings tab is showing. */
+  settingsTab: SettingsTab
 
   load: () => Promise<void>
   openToday: () => Promise<void>
@@ -52,7 +58,7 @@ interface NotesState {
   forward: () => Promise<void>
   rememberScroll: (scrollTop: number) => void
   toggleSidebar: () => void
-  showSettings: () => void
+  showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
   expandSection: (key: string) => void
   checkVault: () => Promise<void>
@@ -91,6 +97,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   draggingNoteId: null,
   sidebarCollapsed: false,
   view: "editor",
+  settingsTab: "profile",
   // Everything but Tags starts collapsed, as the mockup shows it. Nothing is
   // persisted, so this is the state on every launch.
   expanded: { tags: true },
@@ -115,6 +122,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.today()
       set((state) => ({
         view: "editor",
+        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -143,8 +151,8 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }))
   },
 
-  showSettings: () => {
-    set({ view: "settings" })
+  showSettings: (tab = "profile") => {
+    set({ view: "settings", settingsTab: tab })
   },
 
   toggleSection: (key) => {
@@ -179,6 +187,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.read(id)
       set((state) => ({
         view: "editor",
+        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -213,6 +222,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.create({ section, folder, title: "" })
       set((state) => ({
         view: "editor",
+        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -352,6 +362,7 @@ async function travel(
     const note = await window.tova.notes.read(entry.noteId)
     set({
       view: "editor",
+      settingsTab: "profile",
       history: next,
       activeId: note.id,
       active: note,

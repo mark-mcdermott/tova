@@ -5,7 +5,9 @@ import type {
   BlogApi,
   EventsApi,
   ImageApi,
-  PublishApi
+  PreferencesApi,
+  PublishApi,
+  SpellcheckApi
 } from "../shared/types"
 
 declare global {
@@ -16,6 +18,8 @@ declare global {
       images: ImageApi
       blogs: BlogApi
       publish: PublishApi
+      spellcheck: SpellcheckApi
+      preferences: PreferencesApi
       app: AppApi
       events: EventsApi
     }

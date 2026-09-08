@@ -300,6 +300,42 @@ icon is instead drawn by `tools/icon.html` and captured by Electron at 1024px:
 the app's own sunset, a low horizon, and the Alagambe `T`. Replacing it is one
 file and `pnpm run icon`.
 
+## Spelling, preferences and the settings tabs
+
+**Spellchecking is Chromium's, not a decoration layer.** The build plan asked
+for a CM6 layer and flagged Xin's timing bug; using the native checker makes
+that bug impossible rather than fixed — Chromium only marks a word once it is
+finished, so nothing squiggles under the cursor mid-word. What Tova adds is the
+correction popup, which appears on right-click and never on its own, and the
+personal dictionary is Chromium's too, surfaced under General.
+
+Grammar checking is **not** built. It needs a new dependency and the credible
+ones are large; that is a decision worth making deliberately rather than
+smuggling in beside spelling. It is on the README roadmap.
+
+**Preferences are normalised in one place.** `normalizePreferences` runs over
+anything read from disk or sent by the renderer, so a hand-edited file cannot
+put the app into a state its own UI could not produce — a 400px font, a backup
+every zero minutes. Every value has a floor and a ceiling.
+
+Two of them would have been decorative without more wiring, and both are wired:
+the indent width reconfigures a CodeMirror compartment rather than waiting for
+a restart, and the backup schedule is re-read on every tick rather than
+captured when the timer was armed.
+
+**Settings is tabbed**, and two tabs are honestly partial: Appearance has the
+background picker but no theme picker, and Vault shows the one vault rather
+than managing several. Both are on the roadmap; neither is half-built in the
+UI. The tip jar and feedback form from the original spec are not built either —
+they need a destination Tova does not have. The GitHub issues link is.
+
+**The sidebar's name and portrait are configurable**, so the hardcoded "Mark"
+is gone. The avatar is copied into the app's data directory rather than
+referenced where it was picked, because a portrait that vanishes when a folder
+moves is a poor way to learn how the reference worked. The identity control now
+opens the Profile tab while the cog opens Settings, so the two adjacent buttons
+no longer share an accessible name.
+
 ## Carried forward
 
 - **An empty section cannot be opened**, so the "+ New note" row inside it is

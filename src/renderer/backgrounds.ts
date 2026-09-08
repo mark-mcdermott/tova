@@ -31,3 +31,17 @@ export function applyBackground(url: string | null = pickBackground()): void {
   if (url === null) return
   document.documentElement.style.setProperty("--bg-photo", `url("${url}")`)
 }
+
+/** The URL for a stored filename, or null when it is no longer bundled. */
+export function backgroundByName(name: string): string | null {
+  return backgroundUrls.find((url) => url.endsWith(`/${name}`)) ?? null
+}
+
+/**
+ * A chosen background wins; anything else — no choice, or a choice whose file
+ * is no longer bundled — falls back to picking one.
+ */
+export function resolveBackground(chosen: string | null): string | null {
+  if (chosen === null) return pickBackground()
+  return backgroundByName(chosen) ?? pickBackground()
+}

@@ -6,8 +6,11 @@ import type {
   BlogApi,
   EventsApi,
   ImageApi,
+  Misspelling,
   PublishApi,
-  PublishUpdate
+  PreferencesApi,
+  PublishUpdate,
+  SpellcheckApi
 } from "../shared/types"
 
 /*
@@ -77,6 +80,28 @@ const publishing: PublishApi = {
   }
 }
 
+const spellcheck: SpellcheckApi = {
+  onSuggest: (listener) => {
+    const handler = (_event: unknown, misspelling: Misspelling): void => listener(misspelling)
+    ipcRenderer.on("spellcheck:suggest", handler)
+    return () => {
+      ipcRenderer.removeListener("spellcheck:suggest", handler)
+    }
+  },
+  replace: (word) => ipcRenderer.invoke("spellcheck:replace", word),
+  addWord: (word) => ipcRenderer.invoke("spellcheck:addWord", word),
+  removeWord: (word) => ipcRenderer.invoke("spellcheck:removeWord", word),
+  listWords: () => ipcRenderer.invoke("spellcheck:listWords"),
+  setEnabled: (enabled) => ipcRenderer.invoke("spellcheck:setEnabled", enabled)
+}
+
+const preferences: PreferencesApi = {
+  read: () => ipcRenderer.invoke("prefs:read"),
+  write: (value) => ipcRenderer.invoke("prefs:write", value),
+  chooseAvatar: () => ipcRenderer.invoke("prefs:chooseAvatar"),
+  avatarUrl: () => ipcRenderer.invoke("prefs:avatarUrl")
+}
+
 const events: EventsApi = {
   onNotesChanged: (listener) => {
     // The raw IpcRendererEvent is deliberately not forwarded — the renderer
@@ -95,6 +120,8 @@ contextBridge.exposeInMainWorld("tova", {
   images,
   blogs,
   publish: publishing,
+  spellcheck,
+  preferences,
   app: appInfo,
   events
 })

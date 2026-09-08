@@ -8,10 +8,10 @@ import { registerImageHandlers } from "./ipc/images"
 import { registerAppHandlers } from "./ipc/app"
 import { registerBlogHandlers } from "./ipc/blogs"
 import { registerPublishHandlers } from "./ipc/publish"
+import { configureSpellcheck, setSpellcheckEnabled } from "./spellcheck"
+import { readPreferences } from "./preferences"
 import { runBackup } from "./backup"
 import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from "./daily"
-
-const BACKUP_INTERVAL_MS = 60 * 60 * 1000
 
 /*
  * Images live in the vault, not in the bundle, so the renderer cannot reach
@@ -59,6 +59,9 @@ function createWindow(): void {
   // the dark window background.
   win.once("ready-to-show", () => win.show())
 
+  configureSpellcheck(win)
+  void readPreferences().then(({ spellcheck }) => setSpellcheckEnabled(spellcheck))
+
   if (process.env["ELECTRON_RENDERER_URL"]) {
     win.loadURL(process.env["ELECTRON_RENDERER_URL"])
   } else {
@@ -78,10 +81,24 @@ function reportBackupFailure(error: unknown): void {
   console.error("Backup failed", error)
 }
 
+/**
+ * Re-read on every tick rather than captured once, so changing the schedule in
+ * Settings takes effect without a restart. The timer runs at the shortest
+ * interval the preference allows and skips the ticks that are too early.
+ */
 function scheduleBackups(): void {
+  const TICK_MS = 5 * 60 * 1000
+  let lastRun = Date.now()
+
   setInterval(() => {
-    runBackup().catch(reportBackupFailure)
-  }, BACKUP_INTERVAL_MS)
+    void readPreferences()
+      .then(async ({ backupIntervalMinutes, backupLimit }) => {
+        if (Date.now() - lastRun < backupIntervalMinutes * 60 * 1000) return
+        lastRun = Date.now()
+        await runBackup(backupLimit)
+      })
+      .catch(reportBackupFailure)
+  }, TICK_MS)
 }
 
 app.whenReady().then(async () => {
@@ -89,7 +106,8 @@ app.whenReady().then(async () => {
 
   // The launch backup runs before cleanup, so anything the sweep removes is
   // already captured in a restorable snapshot.
-  await runBackup().catch(reportBackupFailure)
+  const preferences = await readPreferences()
+  await runBackup(preferences.backupLimit).catch(reportBackupFailure)
   await cleanupBlankDailyNotes().catch((error: unknown) => {
     console.error("Daily note cleanup failed", error)
   })

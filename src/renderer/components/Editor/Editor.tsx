@@ -12,7 +12,9 @@ import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
 import { PublishToasts } from "./PublishToast"
+import { SpellingMenu } from "./SpellingMenu"
 import { usePublishStore } from "../../stores/publishStore"
+import { usePreferencesStore } from "../../stores/preferencesStore"
 import { parsePosts, publishedFieldEdit } from "../../../shared/blogPost"
 import { flushPendingSave } from "../../stores/pendingSave"
 
@@ -29,6 +31,7 @@ export function Editor({ note }: EditorProps) {
   const showSettings = useNotesStore((state) => state.showSettings)
   const blogs = useBlogsStore((state) => state.blogs)
   const startPublish = usePublishStore((state) => state.start)
+  const tabSize = usePreferencesStore((state) => state.preferences.tabSize)
 
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
@@ -94,6 +97,7 @@ export function Editor({ note }: EditorProps) {
     resolveImage,
     onError: setDropError,
     onSelectBlog: setBlogAnchor,
+    tabSize,
     onPublish: (blog, headerLine) => void publishPost(blog, headerLine)
   })
 
@@ -218,6 +222,8 @@ export function Editor({ note }: EditorProps) {
       <Toolbar viewRef={viewRef} wordCount={wordCount} saveStatus={saveStatus} />
 
       <PublishToasts />
+
+      <SpellingMenu />
 
       {blogAnchor !== null && blogs.length > 0 && (
         <Menu

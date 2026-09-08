@@ -1,9 +1,48 @@
-import { app, ipcMain, shell } from "electron"
+import { app, ipcMain, shell, webContents } from "electron"
 import { AppInfo } from "../../shared/types"
 import { backupRoot } from "../backup"
 import { vaultRoot } from "../vault"
+import { readPreferences, writePreferences } from "../preferences"
+import { avatarDataUrl, chooseAvatar } from "../avatar"
+import {
+  addToDictionary,
+  listDictionary,
+  removeFromDictionary,
+  setSpellcheckEnabled
+} from "../spellcheck"
 
 export function registerAppHandlers(): void {
+  ipcMain.handle("spellcheck:replace", (event, word) => {
+    if (typeof word !== "string") throw new Error("word must be a string")
+    // Chromium knows which range the context menu was opened on; replacing
+    // through it keeps the editor's own undo history intact.
+    webContents.fromId(event.sender.id)?.replaceMisspelling(word)
+  })
+
+  ipcMain.handle("spellcheck:addWord", async (_event, word) => {
+    if (typeof word !== "string") throw new Error("word must be a string")
+    addToDictionary(word)
+    return listDictionary()
+  })
+
+  ipcMain.handle("spellcheck:removeWord", async (_event, word) => {
+    if (typeof word !== "string") throw new Error("word must be a string")
+    removeFromDictionary(word)
+    return listDictionary()
+  })
+
+  ipcMain.handle("spellcheck:listWords", () => listDictionary())
+
+  ipcMain.handle("prefs:read", () => readPreferences())
+  ipcMain.handle("prefs:write", (_event, preferences) => writePreferences(preferences))
+  ipcMain.handle("prefs:chooseAvatar", () => chooseAvatar())
+  ipcMain.handle("prefs:avatarUrl", () => avatarDataUrl())
+
+  ipcMain.handle("spellcheck:setEnabled", (_event, enabled) => {
+    if (typeof enabled !== "boolean") throw new Error("enabled must be a boolean")
+    setSpellcheckEnabled(enabled)
+  })
+
   ipcMain.handle(
     "app:info",
     (): AppInfo => ({

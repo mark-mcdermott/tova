@@ -140,11 +140,11 @@ Write Vitest tests: navigation history push/pop/forward.
 ## Phase 8 — Spellcheck & Grammar
 **Goal:** Writing quality feedback.
 
-- [ ] Spell check (CM6 decoration layer) + right-click correction popup (right-click only, never auto)
-- [ ] Timing: squiggle appears after word is finished (space/punct + debounce)
-- [ ] Personal dictionary (Add to dictionary in popup)
-- [ ] Grammar check (embedded JS library, no server) + right-click suggestion popup
-- [ ] Grammar toggle in Settings
+- [x] Spell check — Chromium's own, not a CM6 decoration layer; right-click correction popup
+- [x] Timing: correct by construction — Chromium only marks a finished word
+- [x] Personal dictionary (Add to dictionary in popup; managed under General)
+- [ ] Grammar check — deferred to the roadmap: needs a new dependency, and the good ones are heavy
+- [ ] Grammar toggle in Settings — with the check above
 
 **Deliverable:** Editor feels like a real writing tool. Timing correct (fixed Xin bug).
 
@@ -198,13 +198,13 @@ Write Playwright test: publish request sent, progress bar appears.
 ## Phase 12 — Full Settings Panel
 **Goal:** All tabs complete. Docs accessible. Support channels in place.
 
-- [ ] Settings with tabs: Profile | Appearance | Vaults | Blogs | General | Docs
-- [ ] Profile: avatar upload (circular, 512×512) + display name
-- [ ] Appearance: theme picker, tooltips toggle, background image pickers
-- [ ] Vaults: list + active badge + power/edit/delete + native file picker
-- [ ] General: font size, tab size, backup config, personal dictionary, grammar toggle
-- [ ] Docs tab: Getting Started, Daily Notes, Tags, Blog Publishing, CMS Setup, Settings reference (read-only, searchable)
-- [ ] Tip + bug report section (bottom of General or pinned): tip input + Tip button + GitHub issue link + feedback textarea + Send Feedback
+- [x] Settings with tabs: Profile | Appearance | Vault | Blogs | General | Docs
+- [x] Profile: avatar upload + display name
+- [x] Appearance: background picker — theme picker and tooltips toggle are on the roadmap
+- [ ] Vaults: the one vault is shown and revealed; several vaults is unbuilt
+- [x] General: font size, tab size, backup config, personal dictionary — grammar with the check above
+- [x] Docs tab: seven sections, read-only and searchable
+- [x] Bug report — a GitHub issues link. Tipping and a feedback form need a destination Tova does not have
 
 **Deliverable:** Fully configurable. App is self-explanatory.
 

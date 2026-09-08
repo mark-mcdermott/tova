@@ -6,6 +6,8 @@ import { VaultWarning } from "./components/VaultWarning"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
 import { useBlogsStore } from "./stores/blogsStore"
+import { usePreferencesStore } from "./stores/preferencesStore"
+import { applyBackground, resolveBackground } from "./backgrounds"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 import "./styles/settings.css"
@@ -19,6 +21,10 @@ export default function App() {
   const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
   const loadBlogs = useBlogsStore((state) => state.load)
+  const loadPreferences = usePreferencesStore((state) => state.load)
+  const fontSize = usePreferencesStore((state) => state.preferences.fontSize)
+  const background = usePreferencesStore((state) => state.preferences.background)
+  const preferencesLoaded = usePreferencesStore((state) => state.loaded)
 
   useEffect(() => {
     load()
@@ -26,7 +32,8 @@ export default function App() {
     // The sidebar lists blogs, so they are loaded once for the app rather than
     // by whichever component happens to need them first.
     void loadBlogs()
-  }, [load, checkVault, loadBlogs])
+    void loadPreferences()
+  }, [load, checkVault, loadBlogs, loadPreferences])
 
   // The date can roll over while the app is open; refresh the list so the new
   // daily note appears without reopening anything the user was editing.
@@ -35,6 +42,18 @@ export default function App() {
       load()
     })
   }, [load])
+
+  // One preference reaches the whole app through a variable rather than being
+  // threaded into the editor, the toolbar and the prose separately.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--editor-font-size", `${fontSize}px`)
+  }, [fontSize])
+
+  // Applied only once preferences have loaded, so a chosen background is not
+  // overwritten by a shuffle a frame earlier.
+  useEffect(() => {
+    if (preferencesLoaded) applyBackground(resolveBackground(background))
+  }, [preferencesLoaded, background])
 
   // Chromium navigates the window to any file dropped outside a handler, which
   // would replace the app with the image. Nothing else drops onto the window.

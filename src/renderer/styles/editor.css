@@ -98,6 +98,10 @@
  * The writing area is inset by the same amount on every side as the title is
  * from the sidebar, so the column reads as one box rather than three edges.
  */
+.cm-editor {
+  font-size: var(--editor-font-size, var(--text-base));
+}
+
 .cm-editor .cm-content {
   padding: 0 var(--editor-inset) var(--editor-inset);
   caret-color: var(--accent-bright);

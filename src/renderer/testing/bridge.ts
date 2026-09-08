@@ -1,4 +1,5 @@
 import { vi } from "vitest"
+import { DEFAULT_PREFERENCES } from "../../shared/preferences"
 
 type Bridge = Window["tova"]
 
@@ -51,6 +52,20 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       deletePost: vi.fn()
     },
     publish: { start: vi.fn(), onUpdate: vi.fn(() => () => undefined) },
+    spellcheck: {
+      onSuggest: vi.fn(() => () => undefined),
+      replace: vi.fn(),
+      addWord: vi.fn(async () => []),
+      removeWord: vi.fn(async () => []),
+      listWords: vi.fn(async () => []),
+      setEnabled: vi.fn()
+    },
+    preferences: {
+      read: vi.fn(async () => ({ ...DEFAULT_PREFERENCES })),
+      write: vi.fn(async (value: unknown) => value),
+      chooseAvatar: vi.fn(),
+      avatarUrl: vi.fn(async () => null)
+    },
     app: { info: vi.fn(), reveal: vi.fn(), openExternal: vi.fn() },
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   } as unknown as Bridge

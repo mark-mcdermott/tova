@@ -4,7 +4,8 @@ import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { Icon } from "./icons"
-import avatarUrl from "../../assets/avatar.jpg"
+import bundledAvatar from "../../assets/avatar.jpg"
+import { usePreferencesStore } from "../../stores/preferencesStore"
 
 export function Sidebar() {
   const notes = useNotesStore((state) => state.notes)
@@ -14,6 +15,8 @@ export function Sidebar() {
   const createNote = useNotesStore((state) => state.createNote)
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
   const showSettings = useNotesStore((state) => state.showSettings)
+  const displayName = usePreferencesStore((state) => state.preferences.displayName)
+  const chosenAvatar = usePreferencesStore((state) => state.avatarUrl)
   const menu = useContextMenu()
 
   return (
@@ -46,9 +49,17 @@ export function Sidebar() {
       </div>
 
       <footer className="sidebar-footer">
-        <button type="button" className="sidebar-identity" title="Settings" onClick={showSettings}>
-          <img className="sidebar-avatar" src={avatarUrl} alt="" />
-          <span className="sidebar-user">Mark</span>
+        {/* Distinct from the cog beside it: this one opens the Profile tab, so
+            the two controls do not share an accessible name. */}
+        <button
+          type="button"
+          className="sidebar-identity"
+          title="Profile"
+          aria-label="Profile"
+          onClick={() => showSettings("profile")}
+        >
+          <img className="sidebar-avatar" src={chosenAvatar ?? bundledAvatar} alt="" />
+          {displayName !== "" && <span className="sidebar-user">{displayName}</span>}
         </button>
 
         <button
@@ -56,7 +67,7 @@ export function Sidebar() {
           className="icon-button sidebar-footer-cog"
           title="Settings"
           aria-label="Settings"
-          onClick={showSettings}
+          onClick={() => showSettings()}
         >
           <Icon name="cog" className="footer-icon" />
         </button>

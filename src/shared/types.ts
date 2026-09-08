@@ -169,6 +169,36 @@ export interface PublishApi {
   onUpdate: (listener: (update: PublishUpdate) => void) => () => void
 }
 
+export interface Misspelling {
+  word: string
+  suggestions: string[]
+  /** Where the right-click landed, in renderer coordinates. */
+  x: number
+  y: number
+}
+
+export interface SpellcheckApi {
+  /** Fires when a right-click lands on a misspelling. Returns an unsubscribe. */
+  onSuggest: (listener: (misspelling: Misspelling) => void) => () => void
+  /** Replaces the word the context menu was opened on. */
+  replace: (word: string) => Promise<void>
+  addWord: (word: string) => Promise<string[]>
+  removeWord: (word: string) => Promise<string[]>
+  listWords: () => Promise<string[]>
+  setEnabled: (enabled: boolean) => Promise<void>
+}
+
+export interface PreferencesApi {
+  read: () => Promise<import("./preferences").Preferences>
+  write: (
+    preferences: import("./preferences").Preferences
+  ) => Promise<import("./preferences").Preferences>
+  /** Opens a picker and copies the chosen image in. Null if cancelled. */
+  chooseAvatar: () => Promise<string | null>
+  /** Data URL for the stored avatar, or null when the bundled one applies. */
+  avatarUrl: () => Promise<string | null>
+}
+
 export interface EventsApi {
   /** Subscribes to vault changes made by the main process. Returns an unsubscribe. */
   onNotesChanged: (listener: () => void) => () => void

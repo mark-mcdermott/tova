@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react"
 import { EditorView, keymap, drawSelection, dropCursor } from "@codemirror/view"
-import { EditorState } from "@codemirror/state"
+import { Compartment, EditorState } from "@codemirror/state"
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands"
 import {
   markdown,
@@ -27,6 +27,8 @@ interface UseCodeMirrorOptions {
   onPublish?: (blog: string, headerLine: number) => void
   /** Called as `@` is typed on an empty line, and with null when it stops applying. */
   onSelectBlog?: (anchor: SelectorAnchor | null) => void
+  /** Spaces an indent inserts. */
+  tabSize?: number
 }
 
 export function useCodeMirror({
@@ -36,10 +38,15 @@ export function useCodeMirror({
   resolveImage,
   onError,
   onPublish,
-  onSelectBlog
+  onSelectBlog,
+  tabSize = 2
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
+
+  // The view is built once, so a preference that changes an extension has to
+  // be swapped in rather than passed at construction.
+  const indent = useRef(new Compartment())
 
   // The view is built once, so every handler must reach the latest props
   // through a ref rather than capturing the ones present at mount.
@@ -73,7 +80,11 @@ export function useCodeMirror({
           drawSelection(),
           dropCursor(),
           EditorView.lineWrapping,
-          indentUnit.of("  "),
+          // CodeMirror disables this by default. Chromium's own checker is
+          // what draws the squiggles, and it only marks a word once it is
+          // finished — which is the timing the build plan asks for.
+          EditorView.contentAttributes.of({ spellcheck: "true" }),
+          indent.current.of(indentUnit.of(" ".repeat(tabSize))),
           markdown({ base: markdownLanguage }),
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null
@@ -112,6 +123,12 @@ export function useCodeMirror({
     // position; documents are swapped through setDoc instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: indent.current.reconfigure(indentUnit.of(" ".repeat(tabSize)))
+    })
+  }, [tabSize])
 
   const getValue = useCallback((): string => {
     return viewRef.current?.state.doc.toString() ?? ""
