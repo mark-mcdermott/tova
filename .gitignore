@@ -27,6 +27,9 @@ npm-debug.log*
 # TypeScript
 *.tsbuildinfo
 
+# Illustrator autosave and lock files
+branding/~*.tmp
+
 # Design source files and working mockups (196M of PSDs — kept local, not versioned)
 branding/rough/
 
