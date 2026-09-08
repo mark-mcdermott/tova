@@ -154,9 +154,9 @@ Write Vitest tests: navigation history push/pop/forward.
 **Goal:** Write and publish inline. Rocket → progress → checkmark.
 
 - [ ] `@` → blog selector popup → front-matter block inserted inline
-- [ ] Front-matter lines rendered italic + subdued color (no box/background)
-- [ ] `@blogname post 🚀` — rocket inline at end of line
-- [ ] `---` on its own line → thin `<hr>` separator
+- [x] Front-matter lines rendered italic + subdued color (no box/background)
+- [x] `@blogname post 🚀` — rocket inline at end of line
+- [x] `---` on its own line → thin `<hr>` separator
 - [ ] Click 🚀 → publish begins, non-blocking progress bar top-right
 - [ ] Progress bar: optimistic timing + CFP/Vercel API polling every 3s
 - [ ] Success → ✓. Failure → error message. Click ✓ → back to 🚀.

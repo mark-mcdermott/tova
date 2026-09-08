@@ -19,6 +19,7 @@ export function Editor({ note }: EditorProps) {
   const openSeq = useNotesStore((state) => state.openSeq)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
+  const showSettings = useNotesStore((state) => state.showSettings)
 
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
@@ -81,7 +82,10 @@ export function Editor({ note }: EditorProps) {
     onChange: handleBodyChange,
     noteId: note.id,
     resolveImage,
-    onError: setDropError
+    onError: setDropError,
+    // No blog is configured yet, so the rocket sends the writer where one gets
+    // set up. Publishing itself arrives with that configuration.
+    onPublish: showSettings
   })
 
   // Anything that moves the file underneath us — a drag, a menu move — flushes

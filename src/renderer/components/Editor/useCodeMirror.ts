@@ -11,6 +11,7 @@ import {
 import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
 import { imageDrop } from "./imageDrop"
+import { blogDecorations } from "./blogDecorations"
 import { formatKeymap } from "./formats"
 
 interface UseCodeMirrorOptions {
@@ -21,6 +22,8 @@ interface UseCodeMirrorOptions {
   /** Turns an image URL in the document into a source the renderer may load. */
   resolveImage?: (url: string) => string | null
   onError?: (message: string | null) => void
+  /** Called when the rocket at the end of an `@blog post` line is clicked. */
+  onPublish?: (blog: string) => void
 }
 
 export function useCodeMirror({
@@ -28,7 +31,8 @@ export function useCodeMirror({
   onChange,
   noteId = null,
   resolveImage,
-  onError
+  onError,
+  onPublish
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -47,6 +51,9 @@ export function useCodeMirror({
   const onErrorRef = useRef(onError)
   onErrorRef.current = onError
 
+  const onPublishRef = useRef(onPublish)
+  onPublishRef.current = onPublish
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -64,6 +71,7 @@ export function useCodeMirror({
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null
           }),
+          blogDecorations((blog) => onPublishRef.current?.(blog)),
           imageDrop(
             () => noteIdRef.current,
             (message) => onErrorRef.current?.(message)

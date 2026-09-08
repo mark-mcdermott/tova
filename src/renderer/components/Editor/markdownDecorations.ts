@@ -32,6 +32,7 @@ const codeBlockLine = Decoration.line({ class: "cm-code-block" })
 const codeBlockFirstLine = Decoration.line({ class: "cm-code-block-first" })
 const codeBlockLastLine = Decoration.line({ class: "cm-code-block-last" })
 const hiddenLine = Decoration.line({ class: "cm-line-hidden" })
+const ruleLine = Decoration.line({ class: "cm-rule-line" })
 
 class LinkIconWidget extends WidgetType {
   eq(): boolean {
@@ -202,6 +203,14 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
           toggleMarkers(node, false, "LinkMark", "URL", "LinkTitle")
           decorations.push(linkIcon.range(to))
           return
+        }
+
+        if (name === "HorizontalRule") {
+          // Doubles as the end marker of a blog post. The syntax tree decides
+          // what counts as a rule, so a setext heading underline is left alone.
+          decorations.push(ruleLine.range(state.doc.lineAt(from).from))
+          if (!open) decorations.push(hide.range(from, to))
+          return false
         }
 
         if (name === "FencedCode") {

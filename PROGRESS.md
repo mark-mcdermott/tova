@@ -168,6 +168,32 @@ Inline rendering follows the same contract as every other construct: the picture
 shows while the cursor is elsewhere, the markdown returns when the cursor moves
 in. A file that has since been deleted says so in place.
 
+## Blog authoring — the `@` format
+
+**`@` is the authoring syntax; YAML only exists at the edges.** A note stays
+readable prose while it is being written, and `shared/blogPost.ts` converts at
+the two boundaries: a post imported from a repo becomes `@` fields, and a post
+being published becomes Astro front matter. The two conversions are inverses,
+and unknown fields pass through in both directions so a blog with its own
+schema keeps working without Tova knowing about it.
+
+A post runs from its `@blog post` header to the first of a `---` marker, the
+next header, or the end of the note — so several posts in one note work without
+any extra syntax.
+
+**The filename is computed from the post, never from a stored template.** Xin
+shipped `{slug}.md` as a literal filename by keeping the template around and
+interpolating too late; `postFilename` derives `YY-MM-DD-slug.md` from the
+fields at the moment it is asked.
+
+**The rocket is mouse-only.** `tabIndex = -1` on the widget, because Xin let Tab
+reach it and that broke indenting a list inside a post. With no blog configured
+it opens Settings, which is where one will be set up.
+
+Still to come in phase 9: the `@` selector popup, and publishing itself — the
+GitHub push, the deploy polling and the progress toast. Both need blog
+configuration, which carries a GitHub token, so that lands with them.
+
 ## Carried forward
 
 - **An empty section cannot be opened**, so the "+ New note" row inside it is

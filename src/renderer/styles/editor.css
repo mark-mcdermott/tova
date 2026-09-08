@@ -250,6 +250,40 @@
   color: var(--accent-bright);
 }
 
+/* ── Blog authoring ───────────────────────────────────────────────────── */
+
+/*
+ * The `@` block is metadata sitting inside prose, so it steps back rather than
+ * boxing itself off: italic and subdued, no fill, no border.
+ */
+.cm-line.cm-post-line {
+  font-style: italic;
+  color: var(--text-faint);
+}
+
+.cm-line.cm-post-header {
+  color: var(--text-muted);
+}
+
+.cm-post-rocket {
+  padding-left: var(--space-2);
+  font-style: normal;
+  cursor: pointer;
+  /* Sits with the line rather than growing it. */
+  line-height: 1;
+}
+
+.cm-post-rocket:hover {
+  filter: brightness(1.15);
+}
+
+/* A post's end marker, and a thematic break anywhere else. */
+.cm-line.cm-rule-line {
+  border-bottom: 1px solid var(--rule-ink);
+  /* Holds the line open once the dashes are hidden. */
+  min-height: 1em;
+}
+
 /* ── Images ───────────────────────────────────────────────────────────── */
 
 /* Dropped images render in place; the markdown returns as soon as the cursor

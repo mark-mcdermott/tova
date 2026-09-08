@@ -72,6 +72,10 @@
   --text-muted: #474156;
   --text-faint: #6b6480;
 
+  /* A hairline that has to read over the photograph rather than over a panel;
+     the 12% used for code borders disappears against it. */
+  --rule-ink: rgb(23 20 31 / 30%);
+
   /* Code */
   --code-bg: rgb(23 20 31 / 7%);
   --code-border: rgb(23 20 31 / 12%);
