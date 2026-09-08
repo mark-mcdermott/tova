@@ -6,6 +6,7 @@ import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
 import { registerImageHandlers } from "./ipc/images"
 import { registerAppHandlers } from "./ipc/app"
+import { registerBlogHandlers } from "./ipc/blogs"
 import { runBackup } from "./backup"
 import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from "./daily"
 
@@ -100,6 +101,7 @@ app.whenReady().then(async () => {
   registerBackupHandlers()
   registerImageHandlers()
   registerAppHandlers()
+  registerBlogHandlers()
   scheduleBackups()
 
   const daily = startDailyNoteSchedule({

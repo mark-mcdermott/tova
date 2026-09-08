@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron"
-import type { AppApi, NoteApi, BackupApi, EventsApi, ImageApi } from "../shared/types"
+import type { AppApi, NoteApi, BackupApi, BlogApi, EventsApi, ImageApi } from "../shared/types"
 
 /*
  * The only bridge between renderer and main. Each method is a thin, typed
@@ -42,6 +42,14 @@ const appInfo: AppApi = {
   reveal: (target) => ipcRenderer.invoke("app:reveal", target)
 }
 
+const blogs: BlogApi = {
+  list: () => ipcRenderer.invoke("blog:list"),
+  save: (blog) => ipcRenderer.invoke("blog:save", blog),
+  remove: (id) => ipcRenderer.invoke("blog:delete", id),
+  setSecret: (id, secret, value) => ipcRenderer.invoke("blog:setSecret", id, secret, value),
+  canStoreSecrets: () => ipcRenderer.invoke("blog:canStoreSecrets")
+}
+
 const events: EventsApi = {
   onNotesChanged: (listener) => {
     // The raw IpcRendererEvent is deliberately not forwarded — the renderer
@@ -54,4 +62,4 @@ const events: EventsApi = {
   }
 }
 
-contextBridge.exposeInMainWorld("tova", { notes, backups, images, app: appInfo, events })
+contextBridge.exposeInMainWorld("tova", { notes, backups, images, blogs, app: appInfo, events })

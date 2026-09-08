@@ -5,6 +5,7 @@ import { Sidebar } from "./Sidebar"
 import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
 import { emptyHistory } from "../../stores/history"
+import { stubBridge } from "../../testing/bridge"
 
 const notes: NoteSummary[] = [
   {
@@ -70,20 +71,7 @@ const bridge = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  window.tova = {
-    notes: bridge,
-    images: { save: vi.fn() },
-    app: { info: vi.fn(), reveal: vi.fn() },
-    backups: {
-      run: vi.fn(),
-      list: vi.fn(),
-      restore: vi.fn(),
-      status: vi.fn(),
-      listVersions: vi.fn(),
-      readVersion: vi.fn()
-    },
-    events: { onNotesChanged: vi.fn(() => () => undefined) }
-  }
+  window.tova = stubBridge({ notes: bridge })
   // Disclosure state lives in the store, so it has to be reset or an expanded
   // folder leaks into whichever test runs next.
   useNotesStore.setState({

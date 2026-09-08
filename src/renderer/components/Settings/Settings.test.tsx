@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { Settings } from "./Settings"
 import { useNotesStore } from "../../stores/notesStore"
 import { emptyHistory } from "../../stores/history"
+import { stubBridge } from "../../testing/bridge"
 
 const info = {
   version: "1.0.0",
@@ -42,13 +43,11 @@ beforeEach(() => {
     body: ""
   })
 
-  window.tova = {
-    notes: { read, list: vi.fn(async () => []), listFolders: vi.fn(async () => []) } as never,
-    backups: { list: listBackups, run: runBackup, restore: restoreBackup } as never,
-    images: { save: vi.fn() },
-    app: { info: appInfo, reveal },
-    events: { onNotesChanged: vi.fn(() => () => undefined) }
-  }
+  window.tova = stubBridge({
+    notes: { read },
+    backups: { list: listBackups, run: runBackup, restore: restoreBackup },
+    app: { info: appInfo, reveal }
+  })
 
   useNotesStore.setState({
     view: "settings",

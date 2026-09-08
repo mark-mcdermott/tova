@@ -18,9 +18,11 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  /* Lines up with the prose the editor shows in the same column. */
+  /* Lines up with the prose the editor shows in the same column. Wider than a
+     reading measure, because the forms here want a large input; the prose
+     inside keeps its own cap below. */
   padding: 0 var(--editor-inset) var(--space-12);
-  max-width: calc(var(--measure) + var(--space-12));
+  max-width: 54rem;
 }
 
 .settings-section {
@@ -43,6 +45,7 @@
 }
 
 .settings-note {
+  max-width: var(--measure);
   color: var(--text-secondary);
   font-size: var(--text-base);
   line-height: 1.5;
@@ -200,4 +203,101 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
+}
+
+/* ── Forms ────────────────────────────────────────────────────────────── */
+
+/*
+ * Two columns: the label and its detail carry the reading weight on the left,
+ * the control sits on the right. Collapses to one column when there is no room
+ * for two.
+ */
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-3) 0;
+  border-top: 1px solid rgb(23 20 31 / 10%);
+}
+
+.field-label label {
+  display: block;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.field-hint {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.field-error {
+  margin-top: var(--space-1);
+  color: #7d1a21;
+  font-size: var(--text-sm);
+}
+
+.text-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgb(23 20 31 / 18%);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 72%);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
+
+.text-input::placeholder {
+  color: var(--text-faint);
+}
+
+.text-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.text-input:disabled {
+  opacity: 0.55;
+}
+
+.blog-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-2);
+}
+
+.blog-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+}
+
+.settings-row-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.settings-note code {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-style: normal;
+}
+
+@media (max-width: 900px) {
+  .field {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
 }

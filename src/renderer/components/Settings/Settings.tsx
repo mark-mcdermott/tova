@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { AppInfo, BackupSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Icon } from "../Sidebar/icons"
+import { BlogSection } from "./BlogSection"
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -193,6 +194,8 @@ export function Settings() {
             </ul>
           )}
         </section>
+
+        <BlogSection />
 
         <section className="settings-section">
           <h2 className="settings-section-title">About</h2>

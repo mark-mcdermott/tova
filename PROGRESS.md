@@ -190,9 +190,21 @@ fields at the moment it is asked.
 reach it and that broke indenting a list inside a post. With no blog configured
 it opens Settings, which is where one will be set up.
 
-Still to come in phase 9: the `@` selector popup, and publishing itself — the
-GitHub push, the deploy polling and the progress toast. Both need blog
-configuration, which carries a GitHub token, so that lands with them.
+**Blog configuration lives outside the vault, and tokens are encrypted.** Xin
+kept `publish-config.json` inside the vault with the GitHub token in cleartext,
+which also swept it into every backup. Tova keeps `blogs.json` in the app's own
+data directory; non-secret fields sit in the clear, tokens go through
+`safeStorage` against the OS keychain, and no token is ever returned to the
+renderer — the listing carries `hasGithubToken` booleans instead, and publishing
+reads the secret in main. Where there is no keychain, storing a token is
+refused rather than quietly written in the clear.
+
+Typing `@` on an empty line offers the configured blogs and leaves a starter
+block behind, dated by the local calendar. `toIsoDate` is now the one place
+that formats one, because `toISOString` rolls a late evening into tomorrow.
+
+Still to come in phase 9: publishing itself — the GitHub push, the deploy
+polling and the progress toast.
 
 ## Carried forward
 

@@ -4,6 +4,10 @@ import { createPortal } from "react-dom"
 export interface MenuAction {
   label: string
   onSelect: () => void
+  /** Right-aligned detail, subdued — what kind of thing the row is. */
+  hint?: string
+  /** Draws the label in the accent, for a row naming a thing rather than an action. */
+  accent?: boolean
   destructive?: boolean
   /** Keeps the menu open — for an item that swaps in a second set of choices. */
   keepOpen?: boolean
@@ -80,13 +84,21 @@ export function Menu({ x, y, items, onClose }: MenuProps) {
             key={item.label}
             type="button"
             role="menuitem"
-            className={item.destructive === true ? "is-destructive" : undefined}
+            className={
+              [
+                item.destructive === true ? "is-destructive" : "",
+                item.accent === true ? "is-accent" : ""
+              ]
+                .filter((name) => name !== "")
+                .join(" ") || undefined
+            }
             onClick={() => {
               item.onSelect()
               if (item.keepOpen !== true) onClose()
             }}
           >
             {item.label}
+            {item.hint !== undefined && <span className="popup-menu-hint">{item.hint}</span>}
           </button>
         )
       )}

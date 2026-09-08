@@ -12,6 +12,7 @@ import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
 import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
+import { blogSelector, SelectorAnchor } from "./blogSelector"
 import { formatKeymap } from "./formats"
 
 interface UseCodeMirrorOptions {
@@ -24,6 +25,8 @@ interface UseCodeMirrorOptions {
   onError?: (message: string | null) => void
   /** Called when the rocket at the end of an `@blog post` line is clicked. */
   onPublish?: (blog: string) => void
+  /** Called as `@` is typed on an empty line, and with null when it stops applying. */
+  onSelectBlog?: (anchor: SelectorAnchor | null) => void
 }
 
 export function useCodeMirror({
@@ -32,7 +35,8 @@ export function useCodeMirror({
   noteId = null,
   resolveImage,
   onError,
-  onPublish
+  onPublish,
+  onSelectBlog
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -54,6 +58,9 @@ export function useCodeMirror({
   const onPublishRef = useRef(onPublish)
   onPublishRef.current = onPublish
 
+  const onSelectBlogRef = useRef(onSelectBlog)
+  onSelectBlogRef.current = onSelectBlog
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -72,6 +79,7 @@ export function useCodeMirror({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null
           }),
           blogDecorations((blog) => onPublishRef.current?.(blog)),
+          blogSelector((anchor) => onSelectBlogRef.current?.(anchor)),
           imageDrop(
             () => noteIdRef.current,
             (message) => onErrorRef.current?.(message)

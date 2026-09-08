@@ -153,7 +153,7 @@ Write Vitest tests: navigation history push/pop/forward.
 ## Phase 9 — Blog Authoring & Publishing
 **Goal:** Write and publish inline. Rocket → progress → checkmark.
 
-- [ ] `@` → blog selector popup → front-matter block inserted inline
+- [x] `@` → blog selector popup → front-matter block inserted inline
 - [x] Front-matter lines rendered italic + subdued color (no box/background)
 - [x] `@blogname post 🚀` — rocket inline at end of line
 - [x] `---` on its own line → thin `<hr>` separator
@@ -187,9 +187,9 @@ Write Playwright test: publish request sent, progress bar appears.
 ## Phase 11 — Blog Configuration (Settings — Blogs Tab)
 **Goal:** Full blog CRUD in Settings.
 
-- [ ] Blogs tab: list + sync/edit/delete per blog
-- [ ] Add/Edit blog form (two-column layout): Blog Name, Sidebar Label, GitHub, Cloudflare Pages (optional), Vercel (optional), Content section
-- [ ] Delete blog → confirm + option to delete local synced posts
+- [ ] Blogs tab: list + sync/edit/delete per blog — list, edit and delete done; sync is phase 10
+- [x] Add/Edit blog form (two-column layout): Blog Name, Sidebar Label, GitHub, Cloudflare Pages (optional), Vercel (optional), Content section
+- [ ] Delete blog → confirm + option to delete local synced posts — confirm done; there are no synced posts to offer yet
 
 **Deliverable:** Self-contained blog management.
 

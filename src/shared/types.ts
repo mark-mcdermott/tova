@@ -59,6 +59,56 @@ export interface ImageApi {
   save: (name: string, data: Uint8Array) => Promise<string>
 }
 
+/** A blog's secrets never cross to the renderer; only whether it has them. */
+export type BlogSecret = "github" | "cloudflare" | "vercel"
+
+export interface BlogGithub {
+  /** `owner/repo`. */
+  repo: string
+  branch: string
+  /** Where posts live in the repo, e.g. `src/content/posts/`. */
+  contentPath: string
+}
+
+export type DeployProvider = "none" | "cloudflare" | "vercel"
+
+export interface BlogDeploy {
+  provider: DeployProvider
+  /** Cloudflare Pages, when that is the provider. */
+  accountId: string
+  projectName: string
+  /** Vercel, when that is the provider. */
+  projectId: string
+}
+
+export interface Blog {
+  id: string
+  /** Doubles as the `@handle` in `@handle post`, so it carries no whitespace. */
+  name: string
+  /** Overrides the name in the sidebar. Falls back to the name when empty. */
+  sidebarLabel: string
+  /** Base URL of the live site, used to link a published post. */
+  siteUrl: string
+  github: BlogGithub
+  deploy: BlogDeploy
+}
+
+export interface BlogSummary extends Blog {
+  hasGithubToken: boolean
+  hasDeployToken: boolean
+}
+
+export interface BlogApi {
+  list: () => Promise<BlogSummary[]>
+  /** Creates when the id is empty, updates otherwise. Secrets are untouched. */
+  save: (blog: Blog) => Promise<BlogSummary>
+  remove: (id: string) => Promise<void>
+  /** Write-only: an empty value clears the stored secret. */
+  setSecret: (id: string, secret: BlogSecret, value: string) => Promise<BlogSummary>
+  /** False when the OS has no keychain to encrypt against. */
+  canStoreSecrets: () => Promise<boolean>
+}
+
 export interface EventsApi {
   /** Subscribes to vault changes made by the main process. Returns an unsubscribe. */
   onNotesChanged: (listener: () => void) => () => void

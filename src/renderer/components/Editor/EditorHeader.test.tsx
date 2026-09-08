@@ -3,6 +3,7 @@ import { render, screen, cleanup, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { EditorHeader } from "./EditorHeader"
 import { useNotesStore } from "../../stores/notesStore"
+import { stubBridge } from "../../testing/bridge"
 import { emptyHistory, push } from "../../stores/history"
 import { Note } from "../../../shared/types"
 
@@ -40,13 +41,7 @@ function renderHeader(active: Note = note()) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  window.tova = {
-    notes: { read, exportMarkdown, move, remove, setFavorite } as never,
-    backups: {} as never,
-    images: { save: vi.fn() },
-    app: { info: vi.fn(), reveal: vi.fn() },
-    events: { onNotesChanged: vi.fn(() => () => undefined) }
-  }
+  window.tova = stubBridge({ notes: { read, exportMarkdown, move, remove, setFavorite } })
   useNotesStore.setState({
     folders: ["ideas", "drafts"],
     focusTitleSeq: 0,

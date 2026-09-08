@@ -8,6 +8,9 @@ import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
+import { useBlogsStore } from "../../stores/blogsStore"
+import { SelectorAnchor, insertPostBlock } from "./blogSelector"
+import { Menu } from "../Popup/Menu"
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -20,11 +23,15 @@ export function Editor({ note }: EditorProps) {
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
   const showSettings = useNotesStore((state) => state.showSettings)
+  const blogs = useBlogsStore((state) => state.blogs)
+  const loadBlogs = useBlogsStore((state) => state.load)
+  const blogsLoaded = useBlogsStore((state) => state.loaded)
 
   const [title, setTitle] = useState("")
   const [wordCount, setWordCount] = useState(0)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const [dropError, setDropError] = useState<string | null>(null)
+  const [blogAnchor, setBlogAnchor] = useState<SelectorAnchor | null>(null)
 
   // The debounced save reads through refs so it always writes the current
   // title and body, not whichever values existed when it was scheduled.
@@ -83,6 +90,7 @@ export function Editor({ note }: EditorProps) {
     noteId: note.id,
     resolveImage,
     onError: setDropError,
+    onSelectBlog: setBlogAnchor,
     // No blog is configured yet, so the rocket sends the writer where one gets
     // set up. Publishing itself arrives with that configuration.
     onPublish: showSettings
@@ -133,6 +141,12 @@ export function Editor({ note }: EditorProps) {
     }
   }, [])
 
+  // Loaded once for the app, not once per note; the `@` selector needs it
+  // ready before the writer types, not after.
+  useEffect(() => {
+    if (!blogsLoaded) void loadBlogs()
+  }, [blogsLoaded, loadBlogs])
+
   // Report scroll so back and forward return to where the note was left.
   // Coalesced to one update per frame; the store keeps it off the render path.
   useEffect(() => {
@@ -178,6 +192,23 @@ export function Editor({ note }: EditorProps) {
       )}
 
       <Toolbar viewRef={viewRef} wordCount={wordCount} saveStatus={saveStatus} />
+
+      {blogAnchor !== null && blogs.length > 0 && (
+        <Menu
+          x={blogAnchor.x}
+          y={blogAnchor.y}
+          items={blogs.map((blog) => ({
+            label: blog.name,
+            hint: "blog",
+            accent: true,
+            onSelect: () => {
+              const view = viewRef.current
+              if (view !== null) insertPostBlock(view, blogAnchor.from, blog.name, new Date())
+            }
+          }))}
+          onClose={() => setBlogAnchor(null)}
+        />
+      )}
     </div>
   )
 }

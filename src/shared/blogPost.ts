@@ -1,6 +1,6 @@
 import { parseFrontMatter } from "./frontMatter"
 import { slugify } from "./noteName"
-import { padTwo } from "./date"
+import { toIsoDate } from "./date"
 
 /**
  * Tova authors blog posts with `@` decorators rather than YAML, so a note stays
@@ -102,7 +102,7 @@ export function postDate(post: BlogPost, today: Date = new Date()): string {
   const normalized = declared === null ? null : normalizeDate(declared)
   if (normalized !== null) return normalized
 
-  return `${today.getFullYear()}-${padTwo(today.getMonth() + 1)}-${padTwo(today.getDate())}`
+  return toIsoDate(today)
 }
 
 export function postTags(post: BlogPost): string[] {

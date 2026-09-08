@@ -5,11 +5,17 @@ export function padTwo(value: number): string {
 }
 
 /**
- * Daily notes are keyed on the *local* calendar date, not UTC — a note written
- * at 11pm belongs to that evening, whatever the offset from UTC happens to be.
+ * `YYYY-MM-DD` from the *local* calendar date, not UTC — something written at
+ * 11pm belongs to that evening, whatever the offset from UTC happens to be.
+ * `toISOString` would roll it forward a day.
  */
-export function toDailyNoteName(date: Date): string {
+export function toIsoDate(date: Date): string {
   return `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}-${padTwo(date.getDate())}`
+}
+
+/** Daily notes are keyed on that same local date. */
+export function toDailyNoteName(date: Date): string {
+  return toIsoDate(date)
 }
 
 /** Accepts `2026-09-03` or `2026-09-03.md`. Returns null for anything else. */
