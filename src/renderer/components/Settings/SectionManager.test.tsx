@@ -36,21 +36,30 @@ describe("SectionManager", () => {
     expect(screen.getAllByRole("textbox").length).toBe(6) // five sections plus the add field
   })
 
-  it("locks Daily against every change", () => {
+  it("lets Daily be renamed, re-iconed, hidden and moved — everything but removed", () => {
     render(<SectionManager />)
 
-    expect((screen.getByLabelText("Name of Daily") as HTMLInputElement).disabled).toBe(true)
-    expect((screen.getByLabelText("Icon for Daily") as HTMLSelectElement).disabled).toBe(true)
-    expect((screen.getByLabelText("Show Daily") as HTMLInputElement).disabled).toBe(true)
+    expect((screen.getByLabelText("Name of Daily") as HTMLInputElement).disabled).toBe(false)
+    expect((screen.getByLabelText("Icon for Daily") as HTMLSelectElement).disabled).toBe(false)
+    expect((screen.getByLabelText("Show Daily") as HTMLInputElement).disabled).toBe(false)
+    expect((screen.getByLabelText("Move Daily up") as HTMLButtonElement).disabled).toBe(false)
+    // The one thing it cannot do: its notes are made for you, one a day.
     expect((screen.getByLabelText("Remove Daily") as HTMLButtonElement).disabled).toBe(true)
-    expect((screen.getByLabelText("Move Daily up") as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it("keeps Trash, but lets it be renamed", () => {
+  it("does the same for Trash", () => {
     render(<SectionManager />)
 
-    expect((screen.getByLabelText("Remove Trash") as HTMLButtonElement).disabled).toBe(true)
     expect((screen.getByLabelText("Name of Trash") as HTMLInputElement).disabled).toBe(false)
+    expect((screen.getByLabelText("Show Trash") as HTMLInputElement).disabled).toBe(false)
+    expect((screen.getByLabelText("Remove Trash") as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it("says what the two kept sections are for, so a rename does not hide it", () => {
+    render(<SectionManager />)
+
+    expect(screen.getByText("today's note, made for you")).toBeDefined()
+    expect(screen.getByText("where deleted notes go")).toBeDefined()
   })
 
   it("renames without touching the vault", async () => {
@@ -71,12 +80,12 @@ describe("SectionManager", () => {
     await waitFor(() => expect(saved()).toEqual(["notes", "daily", "journal", "ideas", "trash"]))
   })
 
-  it("will not let a move shove Daily out of the way", async () => {
+  it("moves a section past Daily rather than stopping at it", async () => {
     render(<SectionManager />)
     await userEvent.click(screen.getByLabelText("Move Ideas up"))
 
-    // Ideas sits directly under Daily, so up would displace the one fixed row.
-    await waitFor(() => expect(saved()).toEqual(["notes", "daily", "ideas", "journal", "trash"]))
+    // Daily used to be a wall; Ideas now passes it.
+    await waitFor(() => expect(saved()).toEqual(["notes", "ideas", "daily", "journal", "trash"]))
   })
 
   it("hides a section without removing it", async () => {

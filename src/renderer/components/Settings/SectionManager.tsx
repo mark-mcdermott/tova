@@ -5,9 +5,7 @@ import {
   SectionIcon,
   addSection,
   canDelete,
-  canDisable,
-  canRename,
-  canReorder,
+  sectionRole,
   moveSection,
   removeSection,
   renameSection,
@@ -76,7 +74,7 @@ export function SectionManager() {
             <button
               type="button"
               aria-label={`Move ${section.label} up`}
-              disabled={!canReorder(section.id) || index === 0}
+              disabled={index === 0}
               onClick={() => void save(moveSection(sections, section.id, -1))}
             >
               ↑
@@ -84,7 +82,7 @@ export function SectionManager() {
             <button
               type="button"
               aria-label={`Move ${section.label} down`}
-              disabled={!canReorder(section.id) || index === sections.length - 1}
+              disabled={index === sections.length - 1}
               onClick={() => void save(moveSection(sections, section.id, 1))}
             >
               ↓
@@ -95,19 +93,26 @@ export function SectionManager() {
             <Icon name={section.icon} />
           </span>
 
-          <input
-            className="text-input section-label"
-            aria-label={`Name of ${section.label}`}
-            value={section.label}
-            disabled={!canRename(section.id)}
-            onChange={(event) => void save(renameSection(sections, section.id, event.target.value))}
-          />
+          <span className="section-name">
+            <input
+              className="text-input section-label"
+              aria-label={`Name of ${section.label}`}
+              value={section.label}
+              onChange={(event) =>
+                void save(renameSection(sections, section.id, event.target.value))
+              }
+            />
+            {/* Call it what you like — this still says which one it is, and by
+                extension why it has no delete button. */}
+            {sectionRole(section.id) !== null && (
+              <span className="section-role">{sectionRole(section.id)}</span>
+            )}
+          </span>
 
           <select
             className="section-icon"
             aria-label={`Icon for ${section.label}`}
             value={section.icon}
-            disabled={!canRename(section.id)}
             onChange={(event) =>
               void save(setSectionIcon(sections, section.id, event.target.value as SectionIcon))
             }
@@ -124,7 +129,6 @@ export function SectionManager() {
               type="checkbox"
               aria-label={`Show ${section.label}`}
               checked={section.enabled}
-              disabled={!canDisable(section.id)}
               onChange={() => void save(toggleSection(sections, section.id))}
             />
             <span>{section.enabled ? "Shown" : "Hidden"}</span>
@@ -161,8 +165,9 @@ export function SectionManager() {
       {error !== null && <p className="settings-error">{error}</p>}
 
       <p className="settings-note">
-        Daily cannot be changed — its notes are one a day, named by date and made for you. Trash
-        stays too, because deleted notes need somewhere to go.
+        Daily and Trash can be renamed, moved and hidden like the rest — they only cannot be
+        removed, because today's note has to be written somewhere and a deleted note has to go
+        somewhere. Hiding one takes it out of this rail and changes nothing else.
       </p>
     </div>
   )
