@@ -107,3 +107,20 @@ export function addTagEdit(doc: string, input: string): TagEdit | null {
   // paragraph, pushed down by the blank line between.
   return { from: 0, to: 0, insert: doc.trim() === "" ? `#${tag}\n` : `#${tag}\n\n` }
 }
+
+/**
+ * Where the caret belongs after the tag row writes a tag in.
+ *
+ * Never inside the line just written: the tag row already shows that line, so
+ * the editor hides it — and a caret inside keeps it revealed, which is the tag
+ * appearing in two places at once. A caret already out in the prose is left
+ * where the writer put it, only shifted by what was inserted above it.
+ */
+export function caretAfterTagEdit(doc: string, edit: TagEdit, head: number): number {
+  const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+  const shift = edit.insert.length - (edit.to - edit.from)
+  const moved = head >= edit.from ? head + shift : head
+
+  return Math.max(moved, bodyStart(next))
+}
+

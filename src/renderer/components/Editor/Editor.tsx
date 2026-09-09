@@ -8,7 +8,7 @@ import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
-import { addTagEdit } from "../../../shared/tags"
+import { addTagEdit, caretAfterTagEdit } from "../../../shared/tags"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
@@ -230,10 +230,14 @@ export function Editor({ note }: EditorProps) {
 
           // Computed off the live document, not the note as it was loaded —
           // the writer may have typed the same tag a moment ago.
-          const edit = addTagEdit(view.state.doc.toString(), tag)
+          const doc = view.state.doc.toString()
+          const edit = addTagEdit(doc, tag)
           if (edit === null) return
 
-          view.dispatch({ changes: edit })
+          view.dispatch({
+            changes: edit,
+            selection: { anchor: caretAfterTagEdit(doc, edit, view.state.selection.main.head) }
+          })
         }}
       />
 
