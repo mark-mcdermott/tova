@@ -652,6 +652,76 @@
   gap: var(--space-1);
   /* Glyphs left, word count pushed to the far right. */
   margin-right: auto;
+  /* Or the row refuses to shrink below its content and pushes the last glyphs
+     out through the card's own border. */
+  min-width: 0;
+}
+
+/*
+ * Narrow windows drop controls rather than spilling them.
+ *
+ * The card is the container, not the viewport: the sidebar collapses and the
+ * prose width is a preference, so the same window can give the toolbar very
+ * different widths. Breakpoints are the measured cost of each control — the
+ * full row needs 556px, and each step below is what remains once the one above
+ * it goes.
+ *
+ * Order is by how often a thing is reached for. Bold and italic never go; the
+ * word count goes first, being the only part that is not a control at all.
+ */
+.toolbar {
+  container: toolbar / inline-size;
+  /* A floor under all of it. If a face ever renders wider than measured here,
+     the card clips rather than letting a glyph cross its border. */
+  overflow: hidden;
+}
+
+@container toolbar (max-width: 556px) {
+  .toolbar-status:last-child {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 462px) {
+  .toolbar-actions [data-glyph="strike"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 419px) {
+  .toolbar-actions [data-glyph="codeBlock"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 360px) {
+  .toolbar-actions [data-glyph="inlineCode"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 307px) {
+  .toolbar-actions [data-glyph="list"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 265px) {
+  .toolbar-actions [data-glyph="plain"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 222px) {
+  .toolbar-actions [data-glyph="h2"] {
+    display: none;
+  }
+}
+
+@container toolbar (max-width: 168px) {
+  .toolbar-actions [data-glyph="h1"] {
+    display: none;
+  }
 }
 
 .toolbar-actions button {
@@ -763,6 +833,10 @@
   align-items: center;
   gap: var(--space-1);
   min-height: 1.75rem;
+  /* Lets the crumbs shrink at all; without it the row keeps its content width
+     and the overflow lands on whatever is beside it. */
+  min-width: 0;
+  container: editor-nav / inline-size;
 
   /* White across the row, as the mockup has it. Scoped rather than global so
      the prose below keeps its dark ink. */
@@ -795,6 +869,9 @@
   align-items: center;
   gap: var(--space-3);
   margin-left: auto;
+  /* The crumbs give way, never these: an edited time and two controls are a
+     fixed cost, and a title is the part that can be shortened. */
+  flex-shrink: 0;
 }
 
 .editor-edited {
@@ -839,6 +916,9 @@
   font-size: var(--text-chrome);
   font-weight: 400;
   min-width: 0;
+  /* The floor, as on the toolbar: whatever the crumbs do, nothing crosses into
+     the edited time and the controls. */
+  overflow: hidden;
 }
 
 .breadcrumb li {
@@ -859,6 +939,15 @@
   background: transparent;
   padding: 0;
   color: var(--text-primary);
+  /* Truncates like the final crumb does. Without this an early crumb — a blog
+     name is the long one — overflowed its item and the next crumb drew over
+     the top of it. min-width for the same reason the tag row needs it: nowrap
+     text resolves min-width:auto to the whole string, so the box will not
+     shrink and the ellipsis never gets a chance to fire. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: inherit;
   /* A button does not inherit weight on its own, so the crumbs would drift
      from the separators and the note name whenever this rule changes. */
@@ -875,9 +964,24 @@
 
 .breadcrumb-current {
   color: var(--text-primary);
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/*
+ * The controls hold their size, so on a narrow window they took the whole row
+ * and the crumbs clipped to nothing — no overlap, but no answer to "where am
+ * I" either. The edited time is the one part of that row carrying no action,
+ * and it is 109px against the 124px the crumbs want, so it goes first and they
+ * survive. Measured on the row itself: the crumbs start being squeezed below
+ * about 420px of it.
+ */
+@container editor-nav (max-width: 420px) {
+  .editor-edited {
+    display: none;
+  }
 }
 
 /* ── Sidebar collapsed ────────────────────────────────────────────────── */
