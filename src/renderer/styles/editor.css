@@ -48,9 +48,23 @@
 }
 
 .title-input {
+  /*
+   * Room for a glyph that reaches left of where its text begins. An input
+   * clips ink at its content edge, and a script capital overhangs it — Vibur's
+   * A by 3.13px at this size, which is why the corner of an A came off flat.
+   *
+   * Indenting the text and pulling the padding back by the same amount leaves
+   * the origin exactly where it was, so nothing moves; it only puts the clip
+   * edge behind the origin, where the overhang can land. In em because the
+   * overhang scales with the type, and generous because the title face is
+   * whatever the reader uploads.
+   */
+  --title-overhang: 0.08em;
+
   width: 100%;
   margin-top: var(--space-title-above);
-  padding-left: var(--title-inset);
+  padding-left: calc(var(--title-inset) - var(--title-overhang));
+  text-indent: var(--title-overhang);
   /* Held to the same measure as the prose; the nav row above is not, so the
      edited time and its controls can sit against the panel's right edge. */
   max-width: var(--measure);
