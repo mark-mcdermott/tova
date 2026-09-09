@@ -2,22 +2,22 @@
 
 ## Current state
 
-| Phase | Status |
-|-------|--------|
-| 0 — Project scaffold | Complete |
-| 1 — Editor core | Complete |
-| 2 — File system & note management | Complete |
-| 3 — Backups & data safety | Complete |
-| 4 — Daily notes | Complete |
-| 5 — Navigation & sidebar polish | Complete |
-| 6 — Glassmorphic UI | Complete |
-| 7 — Search & tags | Complete |
-| 8 — Spellcheck & grammar | Complete |
-| 9 — Blog authoring & publishing | Complete |
-| 10 — Blog sync & posts sidebar | Complete |
-| 11 — Blog configuration | Complete |
-| 12 — Full settings panel | Complete |
-| 13 — Packaging | Signed `.dmg`; notarization needs Apple credentials |
+| Phase                             | Status                                              |
+| --------------------------------- | --------------------------------------------------- |
+| 0 — Project scaffold              | Complete                                            |
+| 1 — Editor core                   | Complete                                            |
+| 2 — File system & note management | Complete                                            |
+| 3 — Backups & data safety         | Complete                                            |
+| 4 — Daily notes                   | Complete                                            |
+| 5 — Navigation & sidebar polish   | Complete                                            |
+| 6 — Glassmorphic UI               | Complete                                            |
+| 7 — Search & tags                 | Complete                                            |
+| 8 — Spellcheck & grammar          | Complete                                            |
+| 9 — Blog authoring & publishing   | Complete                                            |
+| 10 — Blog sync & posts sidebar    | Complete                                            |
+| 11 — Blog configuration           | Complete                                            |
+| 12 — Full settings panel          | Complete                                            |
+| 13 — Packaging                    | Signed `.dmg`; notarization needs Apple credentials |
 
 **Deferred by choice, not left undone** — paging the snapshot list. All are in the README's roadmap with the reason
 each was set aside.
@@ -98,7 +98,7 @@ it — choosing by eye is the only reason that picker exists.
 
 **Added faces are data URLs, not a scheme**, though they began as one to match
 the backgrounds. The renderer runs from `file://`, and Chromium refuses
-cross-origin *font* requests from there to any custom scheme; no response header
+cross-origin _font_ requests from there to any custom scheme; no response header
 lifts it, because the blocked origin is the page's, not the font's. Images are
 not fetched under CORS, which is why the backgrounds' scheme is fine and this
 one never could be. `resolveTitleFont` stays as the path choke point either way.
@@ -144,7 +144,7 @@ against its own backdrop gives `result = 1.00 x backdrop + 0` for the editor and
 `result = 0.72 x backdrop + 42` for the sidebar. The second solves to a 28%
 overlay of `#908d9d`, a mid grey-lavender.
 
-Its direction is the reverse of how it reads: it *lifts* the shadows rather than
+Its direction is the reverse of how it reads: it _lifts_ the shadows rather than
 deepening them — a sample at (57,61,67) comes out (84,91,102), while a bright
 one barely moves. The headlands behind the sidebar go hazy, not dark, and look
 darker only because the editor beside them is untouched and vivid.
@@ -299,7 +299,7 @@ read. Two fingerprints per post decide it: the remote blob SHA and a hash of
 the local file, both recorded at the last sync.
 
 **An imported post records the filename it came from.** Without that, the
-rocket would compute a name from the title and push a *second* file beside the
+rocket would compute a name from the title and push a _second_ file beside the
 one it was imported from — a blog whose filenames predate Tova would quietly
 grow duplicates.
 
@@ -319,7 +319,7 @@ honest, and a wrong automatic merge in something already published is worse than
 a moment's reading.
 
 "Take the blog's" overwrites locally and settles. "Keep mine" pushes nothing and
-deliberately leaves the *local* fingerprint as it was, marking only the blog's
+deliberately leaves the _local_ fingerprint as it was, marking only the blog's
 version as seen — so the next sync reports the post as waiting for the rocket,
 which is true, because the blog is still carrying the older text. Recording the
 local edit as reconciled instead would have hidden that.
@@ -396,7 +396,7 @@ no longer share an accessible name.
 
 **The divider between sidebar and editor is a rim light, not a glow.** It looks
 like a glowing line in the mockup, but sampling the mockup column by column says
-otherwise: a bright core about two pixels wide sitting *inside* the sidebar,
+otherwise: a bright core about two pixels wide sitting _inside_ the sidebar,
 falling back to the sidebar's own tone over some five pixels, and nothing at all
 spilling into the editor. What reads as a shadow on the editor side is only the
 body being darker than the sidebar's 28% overlay.
@@ -427,7 +427,7 @@ have, because it looks like an answer. A `stat` is cheap next to a `read`, so a
 keystroke re-reads only what actually changed.
 
 Every term has to match, but not all in the same field: "slow writing" finds a
-note titled *Slow Morning* tagged `#writing`. Only a body hit carries a snippet —
+note titled _Slow Morning_ tagged `#writing`. Only a body hit carries a snippet —
 repeating the title back underneath the title says nothing. Trash is skipped: it
 is a holding pen, not a place to find things.
 
@@ -524,7 +524,6 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   `correspondence` truncated. The value is `--sidebar-width`; it sits in a flex
   basis rather than a `width`, which is why it is worth having a name.
 
-
 - **The roadmap is empty.** The proprietary script face is replaced and the
   repository carries nothing licensed. Focus mode, folder reordering and a
   theme picker were dropped rather than deferred.
@@ -553,6 +552,45 @@ a suggestion about a sentence is a softer claim than a misspelt word.
 - Blockquotes, tables and the Cmd+K link popup are specified but belong to later
   phases.
 
+## Resuming notarization
+
+Not started, and blocked outside this repository: `notarytool` returns a 403,
+"a required agreement is missing or has expired", which is an Apple account
+state — a membership renewal — rather than anything here.
+
+Everything on this side is ready. The Developer ID certificate is valid to
+March 2031, the hardened runtime is on, and `build/entitlements.mac.plist`
+carries the two JIT allowances Chromium needs or a notarized build launches to
+a blank window. No config change is needed either: in electron-builder 26 the
+`mac.notarize` option means _whether to disable_ notarization, so its absence
+from `electron-builder.yml` enables it. It runs as soon as credentials are in
+the environment.
+
+Team ID is `VRFF4MSHAC`. That is not a secret — it is embedded in the code
+signature of every build and readable with `codesign -dv` on any copy. The
+app-specific password is the secret, which is why it goes into the keychain and
+only a profile _name_ reaches the environment.
+
+```bash
+xcrun notarytool store-credentials "tova" --apple-id "<your apple id>" --team-id "VRFF4MSHAC"
+APPLE_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db" APPLE_KEYCHAIN_PROFILE="tova" pnpm run package
+xcrun stapler validate release/Tova-<version>-arm64.dmg
+```
+
+**Verifying on the machine that built it proves almost nothing.** Gatekeeper
+only challenges files carrying `com.apple.quarantine`, which is set when a file
+arrives from a browser, AirDrop or mail — never on a local build. Either copy
+the `.dmg` to a second Mac, or set the attribute by hand:
+
+```bash
+xattr -w com.apple.quarantine "0081;00000000;Safari;" release/Tova-<version>-arm64.dmg
+```
+
+The baseline to compare against: today `spctl -a -vvv -t install` on the built
+app says `rejected`, `source=Unnotarized Developer ID`. The signature itself is
+already correct — `Developer ID Application: Mark McDermott (VRFF4MSHAC)` with
+`flags=0x10000(runtime)`. Notarization is the only missing piece.
+
 ## To resume
 
 Read `CLAUDE.md`, `docs/SPEC.md`, `docs/BUILD_PHASES.md`, and this file.
@@ -570,7 +608,7 @@ here, but three things were removed from every commit they ever appeared in:
 - `branding/` entirely, including four Acumin Pro weights (Adobe's, all rights
   reserved) and `alagambe.otf`.
 - `src/renderer/assets/fonts/alagambe.otf` and `acumin-pro-regular.otf`, which
-  were bundled *inside* the app in earlier commits. These were the ones that
+  were bundled _inside_ the app in earlier commits. These were the ones that
   nearly got missed: removing `branding/` looks like it solves the problem, and
   it does not.
 - `TUTORIAL.md`, retired long before the move.
