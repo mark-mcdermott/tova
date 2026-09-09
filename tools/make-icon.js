@@ -1,6 +1,6 @@
 /*
- * Places branding/app-icon.png on the 1024x1024 canvas macOS expects and writes
- * build/icon.png. The artwork is supplied rather than drawn, so all this does
+ * Places branding/icons/app-icon.png on the 1024x1024 canvas macOS expects and
+ * writes build/icon.png. The artwork is supplied rather than drawn, so all this does
  * is scale it to the 824px body and centre it — but it stays a script so the
  * icon can be rebuilt when the artwork changes, instead of being a binary
  * somebody once produced by hand.

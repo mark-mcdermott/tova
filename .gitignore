@@ -33,3 +33,11 @@ branding/~*.tmp
 # Design source files and working mockups (196M of PSDs — kept local, not versioned)
 branding/rough/
 
+# Licensed faces, kept locally but never committed. branding/ IS part of this
+# repository — the git root is tova-proj, not tova — so anything here ships to
+# GitHub. Acumin Pro is Adobe's and Alagambe is proprietary; both were tracked
+# for months by accident. The OFL faces beside them stay tracked on purpose.
+branding/fonts/Acumin-*.otf
+branding/fonts/acumin-*.otf
+branding/fonts/alagambe.otf
+

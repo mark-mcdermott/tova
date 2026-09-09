@@ -82,19 +82,29 @@ through `--font-script`. `Acumin Pro` and `Alagambe` have both been removed from
 the app, and no face is loaded for the wordmark at all.
 
 **Every face the app ships is now OFL.** Vibur, Fascinate Inline and Noto Sans
-Mono are all under the SIL Open Font Licence, so nothing in the working tree
-blocks going public any more. Acumin Pro and Alagambe are gone from the tree but
-remain in git history; see the note at the foot of this file for what that does
-and does not mean.
+Mono are all under the SIL Open Font Licence. Alagambe left with the app; the
+four Acumin weights outlasted it under `branding/fonts/`, tracked but unused,
+and are only now removed — the claim that the tree was clean was written a
+commit too early. Both faces remain in git history regardless; see the note at
+the foot of this file for what that does and does not mean.
 
 **The title face is replaceable.** Settings → Appearance takes any `.otf`,
-`.ttf`, `.woff` or `.woff2`, copies it into `userData/fonts`, and serves it over
-a `tova-font://` scheme of its own — a separate scheme from the vault's and the
-backgrounds', so no handler can be talked into serving another's files. An added
-face registers as the family `Tova Title`, which is what `--font-script` names,
-so the stack stays in CSS rather than being assembled in JavaScript. A file that
+`.ttf`, `.woff` or `.woff2` and copies it into `userData/fonts`. An added face
+registers as the family `Tova Title`, which is what `--font-script` names, so
+the stack stays in CSS rather than being assembled in JavaScript. A file that
 will not decode never becomes the preference: it is loaded first, and the picker
-says so instead of leaving the reader with a silent fallback.
+says so instead of leaving the reader with a silent fallback. Each added face
+also registers under a family of its own, so its chip in the picker is set in
+it — choosing by eye is the only reason that picker exists.
+
+**Added faces are data URLs, not a scheme**, though they began as one to match
+the backgrounds. The renderer runs from `file://`, and Chromium refuses
+cross-origin *font* requests from there to any custom scheme; no response header
+lifts it, because the blocked origin is the page's, not the font's. Images are
+not fetched under CORS, which is why the backgrounds' scheme is fine and this
+one never could be. `resolveTitleFont` stays as the path choke point either way.
+Worth remembering that the jsdom tests were green throughout: only running the
+app found it.
 
 **The wordmark is drawn, not set.** Acumin Pro Light was the mockup's choice and
 was never licensed here; Inter Thin stood in for one commit before being
@@ -557,8 +567,14 @@ Read `CLAUDE.md`, `docs/SPEC.md`, `docs/BUILD_PHASES.md`, and this file.
 ## If this repo ever goes public
 
 **The replacement job is done.** Alagambe is out and Vibur — SIL Open Font
-Licence — is the bundled script face. Nothing proprietary is in the working
-tree, so a fresh clone of the current state carries no licensing problem.
+Licence — is the bundled script face, and the four Acumin weights have gone
+from `branding/fonts/` with it. Nothing proprietary is in the working tree, so a
+squashed tree taken from the current state carries no licensing problem.
+
+Note the two halves of that: the app stopped *using* Acumin long ago, but the
+files stayed tracked under `branding/` for months afterwards. "Removed from the
+app" and "gone from the tree" are different claims, and only the second one is
+the one that matters here.
 
 **The history job is not.** Deleting a font removes it from the working tree,
 not from git history: every past commit still carries the blob, and a clone gets
