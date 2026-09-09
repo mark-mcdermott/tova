@@ -28,7 +28,8 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       createFolder: vi.fn(),
       renameFolder: vi.fn(),
       deleteFolder: vi.fn(),
-      exportMarkdown: vi.fn()
+      exportMarkdown: vi.fn(),
+      search: vi.fn().mockResolvedValue([])
     },
     backups: {
       run: vi.fn(),

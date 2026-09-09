@@ -26,6 +26,7 @@ export function Sidebar() {
   const openToday = useNotesStore((state) => state.openToday)
 
   const showIndex = useNotesStore((state) => state.showIndex)
+  const runSearch = useNotesStore((state) => state.runSearch)
   const [query, setQuery] = useState("")
 
   const menu = useContextMenu()
@@ -61,16 +62,19 @@ export function Sidebar() {
       {/* Above the list rather than beside it: a field says what it is, where a
           lone magnifier would just be a symbol taking up the rail. */}
       <div className="sidebar-search">
+        <Icon name="search" className="sidebar-search-icon" />
         <input
           type="search"
           className="sidebar-search-input"
-          placeholder="Search"
+          placeholder="Search notes…"
           aria-label="Search notes"
           value={query}
           onChange={(event) => {
             const next = event.target.value
             setQuery(next)
-            if (next.trim() !== "") showIndex({ kind: "search", query: next })
+            if (next.trim() === "") return
+            showIndex({ kind: "search", query: next })
+            void runSearch(next)
           }}
         />
       </div>

@@ -9,19 +9,22 @@
 | 2 — File system & note management | Complete |
 | 3 — Backups & data safety | Complete |
 | 4 — Daily notes | Complete |
-| 5 — Navigation & sidebar polish | Complete, bar folder reordering (see below) |
-| 6 — Glassmorphic UI | Complete, bar the theme picker and focus mode (deferred) |
-| 7 — Search & tags | Tag counts done; search deferred |
+| 5 — Navigation & sidebar polish | Complete |
+| 6 — Glassmorphic UI | Complete |
+| 7 — Search & tags | Complete |
 | 8 — Spellcheck & grammar | Spelling complete; grammar deferred |
 | 9 — Blog authoring & publishing | Complete |
 | 10 — Blog sync & posts sidebar | Complete |
 | 11 — Blog configuration | Complete |
-| 12 — Full settings panel | Complete, bar the theme picker and several vaults |
+| 12 — Full settings panel | Complete, bar several vaults |
 | 13 — Packaging | Signed `.dmg`; notarization needs Apple credentials |
 
-**Deferred by choice, not left undone** — theme picker and dark theme, focus
-mode, search, grammar checking, several vaults, folder reordering. All are in
-the README's roadmap with the reason each was set aside.
+**Deferred by choice, not left undone** — grammar checking and several vaults. All are in the README's roadmap with the reason
+each was set aside.
+
+A dark theme, a theme picker, focus mode and folder reordering were dropped
+outright rather than deferred: Tova is a light app over a photograph, and that
+is the whole of the intent.
 
 `pnpm run check`, `pnpm run test` and `pnpm run build` are green. The count is
 deliberately not recorded here — it went stale every phase.
@@ -356,10 +359,9 @@ the indent width reconfigures a CodeMirror compartment rather than waiting for
 a restart, and the backup schedule is re-read on every tick rather than
 captured when the timer was armed.
 
-**Settings is tabbed**, and two tabs are honestly partial: Appearance has the
-background picker but no theme picker, and Vault shows the one vault rather
-than managing several. Both are on the roadmap; neither is half-built in the
-UI. The tip jar and feedback form from the original spec are not built either —
+**Settings is tabbed**, and one tab is honestly partial: Vault shows the one
+vault rather than managing several. It is on the roadmap; nothing is half-built
+in the UI. The tip jar and feedback form from the original spec are not built either —
 they need a destination Tova does not have. The GitHub issues link is.
 
 **The sidebar's name and portrait are configurable**, so the hardcoded "Mark"
@@ -390,6 +392,35 @@ columns either side of the core match exactly.
   are a near-white lavender (`#f0ecff`, 2.11:1 throughout, barely purple) or
   giving the active row a pill of its own.
 
+## Search
+
+Bodies live on disk and the renderer never holds them, so searching them happens
+in main and comes back as results rather than as text.
+
+**The body cache is keyed by modification time, not invalidated by hand.** Every
+write path would otherwise have to remember to tell the index, and the one that
+forgot would return stale results silently — the worst failure a search can
+have, because it looks like an answer. A `stat` is cheap next to a `read`, so a
+keystroke re-reads only what actually changed.
+
+Every term has to match, but not all in the same field: "slow writing" finds a
+note titled *Slow Morning* tagged `#writing`. Only a body hit carries a snippet —
+repeating the title back underneath the title says nothing. Trash is skipped: it
+is a holding pen, not a place to find things.
+
+**Results are scored, not bucketed by field.** Bucketing left every body hit
+tied, so ten notes mentioning a word came back in whatever order the vault
+listed them. A title typed exactly beats a title that starts with the word,
+which beats the word anywhere in the title, which beats a tag, which beats a
+mention in a paragraph; repeats past the first count, capped at five so length
+stops being the signal; and the terms in order as a phrase are worth more than
+the same words scattered. Scores from different queries are not comparable, and
+ties fall back to recency so they are never arbitrary.
+
+Titles and tags could be filtered in the renderer, which already holds them, but
+splitting the rules across two processes would mean two definitions of what
+counts as a match. `matchNote` is one pure function and main is its only caller.
+
 ## Carried forward
 
 - **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against
@@ -403,9 +434,9 @@ columns either side of the core match exactly.
   the editor's Move menu files a note into any of the flat sections. Only the
   in-section shortcut is unreachable while the section is empty.
 
-- **Theme picker, dark theme, focus mode and search are deferred**, along with
-  folder reordering, code highlighting and PDF export. See the roadmap in
-  `README.md` for what each needs.
+- **Code highlighting and PDF export are deferred.** See the roadmap in
+  `README.md` for what each needs. A dark theme, a theme picker, focus mode and
+  folder reordering are not planned.
 
 - **Prose no longer wraps at a readable measure.** The writing area now spans
   the panel so its insets match the title's, which meant dropping the 68ch cap
@@ -425,15 +456,6 @@ columns either side of the core match exactly.
   — a new dependency with real bundle cost.
 - **Export .pdf is not implemented.** The `...` menu offers Export .md only.
   A PDF needs a markdown-to-HTML renderer, which Tova does not have.
-- **Folder reordering is not implemented.** Every drag rule in the spec works —
-  note into a folder, note out to the root, note to Trash with a confirmation,
-  Daily refusing everything — except "drag folder → reorder within Notes". That
-  one needs somewhere to persist a manual order, and notes currently sort by
-  recency with folders alphabetical. Adding an explicit order also raises the
-  question of whether editing a note should still float it to the top. Worth a
-  decision rather than a guess.
-- **Light theme is untokenised.** The token block is dark-only; Phase 6 adds the
-  picker and the second palette.
 - **No Playwright.** The lifecycle tests the build plan wanted from it run in
   Vitest against a real temp filesystem instead, which needs no extra dependency.
 - `TUTORIAL.md` is a frozen historical record and still shows `npm` commands.

@@ -570,27 +570,56 @@
 /* ── Search ───────────────────────────────────────────────────────────── */
 
 .sidebar-search {
+  position: relative;
   padding: 0 var(--space-4) var(--space-3);
+}
+
+/* Inside the field rather than beside it, so the row stays one object. */
+.sidebar-search-icon {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--space-4) + var(--space-3));
+  width: 0.85rem;
+  height: 0.85rem;
+  /* The padding below the field is not part of the field, so centring on the
+     box would sit the glyph low. */
+  transform: translateY(calc(-50% - var(--space-3) / 2));
+  color: var(--text-faint);
+  pointer-events: none;
+  transition: color 120ms ease;
 }
 
 .sidebar-search-input {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--frame-border);
+  /* Room for the glyph on the left, and the same again on the right so the
+     text sits between two equal edges rather than shunted. */
+  padding: var(--space-2) calc(var(--space-3) + 1.35rem) var(--space-2)
+    calc(var(--space-3) + 1.35rem);
+  /* Quieter at rest than the framed controls: this sits above the whole list
+     and would otherwise be the first thing the eye lands on. */
+  border: 1px solid color-mix(in oklab, var(--frame-border) 65%, transparent);
   border-radius: var(--radius-sm);
   background: rgb(255 255 255 / 10%);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-row);
   letter-spacing: var(--sidebar-tracking);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .sidebar-search-input::placeholder {
   color: var(--text-faint);
 }
 
+/* The full-strength frame, kept for the moment the field is actually in use. */
 .sidebar-search-input:focus {
   outline: none;
-  border-color: var(--accent-on-glass);
+  border-color: var(--frame-border);
   background: rgb(255 255 255 / 16%);
+}
+
+.sidebar-search:focus-within .sidebar-search-icon {
+  color: var(--text-muted);
 }

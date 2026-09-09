@@ -66,27 +66,8 @@ Gatekeeper will refuse the app on any machine that did not build it.
 - **A licensed script face.** `Alagambe` is bundled for note titles and is
   proprietary, which is why this repository is private. Replacing it is the
   first step to making it public — see `tova/PROGRESS.md`.
-- **Folder reordering.** Every other drag rule works; this one needs somewhere
-  to persist a manual order, and raises whether editing a note should still
-  float it to the top. Worth a decision rather than a guess.
 
 Deliberately deferred. Each is understood and scoped, just not next.
-
-**Theme picker and dark theme.** The palette is light-only today. A second set
-of tokens plus a light/dark/system picker. The measurements in `PROGRESS.md`
-record what the dark treatment needs to stay legible over a photograph.
-
-**Focus mode.** Hide the sidebar and centre the writing column, on
-`Cmd+Shift+F` and from the View menu.
-
-**Full-text search.** The sidebar's field searches titles and tags, which is
-everything the renderer already holds. Searching bodies means reading every
-file in the vault, so it wants an index in main rather than a filter in the
-renderer.
-
-**Folder reordering by drag.** Every other drag rule works. Reordering needs
-somewhere to persist a manual order, which collides with sorting notes by
-recency — a product decision rather than an implementation detail.
 
 **Syntax highlighting inside code blocks.** Needs `@codemirror/language-data`,
 which carries real bundle cost.

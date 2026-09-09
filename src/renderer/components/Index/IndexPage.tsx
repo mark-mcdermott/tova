@@ -1,6 +1,7 @@
 import { useNotesStore } from "../../stores/notesStore"
 import {
   INDEX_SORTS,
+  SEARCH_SORTS,
   IndexSort,
   IndexTarget,
   indexNotes,
@@ -19,6 +20,10 @@ export function IndexPage() {
   const sort = useNotesStore((state) => state.indexSort)
   const setIndexSort = useNotesStore((state) => state.setIndexSort)
   const showIndex = useNotesStore((state) => state.showIndex)
+  const searchHits = useNotesStore((state) => state.searchHits)
+  const searchSort = useNotesStore((state) => state.searchSort)
+  const setSearchSort = useNotesStore((state) => state.setSearchSort)
+  const searching = useNotesStore((state) => state.searching)
 
   if (target === null) return null
 
@@ -29,7 +34,19 @@ export function IndexPage() {
       : target.kind === "tag"
         ? { label: "Tags", target: { kind: "tags" } as IndexTarget }
         : null
-  const rows = indexNotes(notes, target, sort)
+  // Search answers from main, which is the only side that has the bodies; the
+  // other indexes are a filter over what the renderer already holds.
+  const onSearch = target.kind === "search"
+  const rows = onSearch
+    ? searchSort === "relevance"
+      ? searchHits.map((hit) => hit.note)
+      : indexNotes(
+          searchHits.map((hit) => hit.note),
+          { kind: "section", section: "notes" },
+          searchSort
+        )
+    : indexNotes(notes, target, sort)
+  const snippets = new Map(searchHits.map((hit) => [hit.note.id, hit.match]))
   const tags = target.kind === "tags" ? tagCounts(notes) : []
 
   return (
@@ -62,10 +79,14 @@ export function IndexPage() {
                 <select
                   className="index-sort-select"
                   aria-label="Sort by"
-                  value={sort}
-                  onChange={(event) => setIndexSort(event.target.value as IndexSort)}
+                  value={onSearch ? searchSort : sort}
+                  onChange={(event) => {
+                    const next = event.target.value as IndexSort
+                    if (onSearch) setSearchSort(next)
+                    else setIndexSort(next)
+                  }}
                 >
-                  {INDEX_SORTS.map((option) => (
+                  {(onSearch ? SEARCH_SORTS : INDEX_SORTS).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -102,11 +123,17 @@ export function IndexPage() {
             </ul>
           )
         ) : rows.length === 0 ? (
-          <p className="index-empty">Nothing here yet.</p>
+          <p className="index-empty">
+            {target.kind === "search"
+              ? searching
+                ? "Searching…"
+                : "Nothing matches that."
+              : "Nothing here yet."}
+          </p>
         ) : (
           <ul className="index-list">
             {rows.map((note) => (
-              <IndexRow key={note.id} note={note} />
+              <IndexRow key={note.id} note={note} match={snippets.get(note.id)} />
             ))}
           </ul>
         )}

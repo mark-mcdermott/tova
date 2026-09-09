@@ -111,4 +111,108 @@ describe("IndexPage", () => {
     render(<IndexPage />)
     expect(screen.queryByLabelText("Sort by")).toBeNull()
   })
+
+  it("shows what main found rather than filtering what it already holds", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "quiet" },
+      searchHits: [{ note: notes[2], match: { where: "body", snippet: "…a kind of quiet…", score: 10 } }]
+    })
+    render(<IndexPage />)
+
+    // Gamma has no "quiet" in its title or tags — only main can know it matched.
+    expect(screen.getByText("Gamma")).toBeDefined()
+    expect(screen.getByText("…a kind of quiet…")).toBeDefined()
+  })
+
+  it("shows no snippet for a title hit, which needs no explaining", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "gamma" },
+      searchHits: [{ note: notes[2], match: { where: "title", snippet: "some body text", score: 45 } }]
+    })
+    const { container } = render(<IndexPage />)
+
+    expect(container.querySelector(".index-row-snippet")).toBeNull()
+  })
+
+  it("says it is searching rather than that nothing matched", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "quiet" },
+      searchHits: [],
+      searching: true
+    })
+    render(<IndexPage />)
+
+    expect(screen.getByText("Searching…")).toBeDefined()
+  })
+
+  it("says nothing matched once it has finished looking", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "zzz" },
+      searchHits: [],
+      searching: false
+    })
+    render(<IndexPage />)
+
+    expect(screen.getByText("Nothing matches that.")).toBeDefined()
+  })
+
+  it("offers relevance on search, and starts there", () => {
+    useNotesStore.setState({ indexTarget: { kind: "search", query: "a" }, searchSort: "relevance" })
+    render(<IndexPage />)
+
+    const sort = screen.getByLabelText("Sort by") as HTMLSelectElement
+    expect(sort.value).toBe("relevance")
+    expect([...sort.options].map((o) => o.value)).toEqual([
+      "relevance",
+      "updated",
+      "created",
+      "title"
+    ])
+  })
+
+  it("leaves the ranking alone while relevance is chosen", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "a" },
+      searchSort: "relevance",
+      searchHits: [
+        { note: notes[1], match: { where: "body", snippet: null, score: 4 } },
+        { note: notes[0], match: { where: "title", snippet: null, score: 60 } }
+      ]
+    })
+    const { container } = render(<IndexPage />)
+
+    // Main ranked these; the page must not re-sort them into its own order.
+    expect([...container.querySelectorAll(".index-row-title")].map((t) => t.textContent)).toEqual([
+      "Alpha",
+      "Beta"
+    ])
+  })
+
+  it("re-sorts the results when another order is chosen", () => {
+    useNotesStore.setState({
+      indexTarget: { kind: "search", query: "a" },
+      searchSort: "title",
+      searchHits: [
+        { note: notes[0], match: { where: "title", snippet: null, score: 60 } },
+        { note: notes[1], match: { where: "body", snippet: null, score: 4 } }
+      ]
+    })
+    const { container } = render(<IndexPage />)
+
+    expect([...container.querySelectorAll(".index-row-title")].map((t) => t.textContent)).toEqual([
+      "Alpha",
+      "Beta"
+    ])
+  })
+
+  it("keeps the search sort clear of the one the other indexes use", async () => {
+    useNotesStore.setState({ indexTarget: { kind: "search", query: "a" }, indexSort: "updated" })
+    render(<IndexPage />)
+
+    await userEvent.selectOptions(screen.getByLabelText("Sort by"), "title")
+
+    expect(useNotesStore.getState().searchSort).toBe("title")
+    expect(useNotesStore.getState().indexSort).toBe("updated")
+  })
 })
+

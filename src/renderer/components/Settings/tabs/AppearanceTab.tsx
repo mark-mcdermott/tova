@@ -27,8 +27,8 @@ export function AppearanceTab() {
       <section className="settings-section">
         <h2 className="settings-section-title">Appearance</h2>
         <p className="settings-note">
-          Tova is a light theme over a photograph. A dark theme and a theme picker are on the
-          roadmap rather than half-built here — the whole palette is tokenised for it.
+          Tova is a light theme over a photograph, and stays one. What changes is the type, how
+          far the prose runs, and which photograph sits behind it.
         </p>
 
         <Field

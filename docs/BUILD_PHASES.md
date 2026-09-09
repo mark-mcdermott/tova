@@ -112,7 +112,7 @@ Write Vitest tests: navigation history push/pop/forward.
 - [x] Acumin Pro for wordmark — only Regular is licensed, so tracking and size carry the weight
 - [x] Monospace body font in editor
 - [ ] Dark / light / system theme — deferred to the roadmap
-- [ ] Focus mode — deferred to the roadmap
+- [x] Focus mode — dropped, not deferred: Tova is one light view over a photograph
 - [x] Window state persistence
 - [x] macOS title bar / traffic lights (hiddenInset, with drag regions declared)
 - [x] User avatar + display name at sidebar bottom (click → Settings)
@@ -200,7 +200,7 @@ Write Playwright test: publish request sent, progress bar appears.
 
 - [x] Settings with tabs: Profile | Appearance | Vault | Blogs | General | Docs
 - [x] Profile: avatar upload + display name
-- [x] Appearance: background picker — theme picker and tooltips toggle are on the roadmap
+- [x] Appearance: background picker — the tooltips toggle is on the roadmap; a theme picker is not planned
 - [ ] Vaults: the one vault is shown and revealed; several vaults is unbuilt
 - [x] General: font size, tab size, backup config, personal dictionary — grammar with the check above
 - [x] Docs tab: seven sections, read-only and searchable

@@ -14,6 +14,7 @@ import {
   rename as renameHistory
 } from "./history"
 import { IndexSort, IndexTarget } from "../../shared/indexTarget"
+import { SearchHit } from "../../shared/types"
 
 export type View = "editor" | "settings" | "index"
 
@@ -56,6 +57,12 @@ interface NotesState {
   indexTarget: IndexTarget | null
   /** How index pages order their rows. Kept across pages, as a reading habit. */
   indexSort: IndexSort
+  /** How search results are ordered. Separate from indexSort, which has no
+   * relevance to offer. */
+  searchSort: IndexSort
+  /** Results for the query the search index is showing, bodies included. */
+  searchHits: SearchHit[]
+  searching: boolean
 
   load: () => Promise<void>
   openToday: () => Promise<void>
@@ -67,6 +74,8 @@ interface NotesState {
   toggleSection: (key: string) => void
   showIndex: (target: IndexTarget) => void
   setIndexSort: (sort: IndexSort) => void
+  setSearchSort: (sort: IndexSort) => void
+  runSearch: (query: string) => Promise<void>
   expandSection: (key: string) => void
   checkVault: () => Promise<void>
   restoreFromBackup: (name: string) => Promise<void>
@@ -107,6 +116,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   settingsTab: "profile",
   indexTarget: null,
   indexSort: "updated",
+  searchSort: "relevance",
+  searchHits: [],
+  searching: false,
   // Everything but Tags starts collapsed, as the mockup shows it. Nothing is
   // persisted, so this is the state on every launch.
   expanded: { tags: true },
@@ -170,6 +182,29 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   setIndexSort: (sort) => {
     set({ indexSort: sort })
+  },
+
+  setSearchSort: (sort) => {
+    set({ searchSort: sort })
+  },
+
+  runSearch: async (query) => {
+    if (query.trim() === "") {
+      set({ searchHits: [], searching: false })
+      return
+    }
+
+    set({ searching: true })
+    try {
+      const hits = await window.tova.notes.search(query)
+      // Only answer the query still on screen: a slow search for "wri" must not
+      // land after the reader has typed "writing".
+      const target = get().indexTarget
+      if (target?.kind === "search" && target.query !== query) return
+      set({ searchHits: hits, searching: false })
+    } catch (error) {
+      set({ error: describe(error), searching: false })
+    }
   },
 
   toggleSection: (key) => {

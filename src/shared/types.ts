@@ -9,6 +9,11 @@ export function isSection(value: string): value is Section {
   return (SECTIONS as readonly string[]).includes(value)
 }
 
+export interface SearchHit {
+  note: NoteSummary
+  match: { where: "title" | "tag" | "body"; snippet: string | null; score: number }
+}
+
 export interface NoteSummary {
   /** Vault-relative path, e.g. `notes/ideas/river.md`. Changes when renamed. */
   id: string
@@ -247,4 +252,6 @@ export interface NoteApi {
   deleteFolder: (name: string) => Promise<string[]>
   /** Resolves to the written path, or null if the user cancelled. */
   exportMarkdown: (id: string) => Promise<string | null>
+  /** Full-text search, bodies included — they only exist in main. */
+  search: (query: string) => Promise<SearchHit[]>
 }

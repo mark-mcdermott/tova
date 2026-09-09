@@ -40,7 +40,7 @@
 
 /*
  * Design tokens. Every colour, space and radius in Tova resolves to one of
- * these, so the Phase 6 theme picker only has to swap this block.
+ * these, so a palette change is one block rather than a search of the sheet.
  */
 :root {
   color-scheme: light;

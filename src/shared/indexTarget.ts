@@ -14,12 +14,18 @@ export type IndexTarget =
   | { kind: "tags" }
   | { kind: "search"; query: string }
 
-export type IndexSort = "title" | "created" | "updated"
+export type IndexSort = "relevance" | "title" | "created" | "updated"
 
 export const INDEX_SORTS: { value: IndexSort; label: string }[] = [
   { value: "updated", label: "Last edited" },
   { value: "created", label: "Created" },
   { value: "title", label: "Title" }
+]
+
+/** Search can also leave the ranking alone, which is usually what you want. */
+export const SEARCH_SORTS: { value: IndexSort; label: string }[] = [
+  { value: "relevance", label: "Relevance" },
+  ...INDEX_SORTS
 ]
 
 const SECTION_LABELS: Record<Section, string> = {
@@ -101,6 +107,10 @@ function held(notes: NoteSummary[], target: IndexTarget): NoteSummary[] {
 
 function compare(a: NoteSummary, b: NoteSummary, sort: IndexSort): number {
   switch (sort) {
+    case "relevance":
+      // Only search ranks, and it arrives ranked. Anywhere else this is a
+      // no-op rather than a wrong answer.
+      return 0
     case "title":
       return a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
     case "created":

@@ -8,6 +8,8 @@ import { Icon } from "../Sidebar/icons"
 
 interface IndexRowProps {
   note: NoteSummary
+  /** Present on search results: why this note is in the list. */
+  match?: { where: "title" | "tag" | "body"; snippet: string | null }
 }
 
 /**
@@ -15,7 +17,7 @@ interface IndexRowProps {
  * it is the drag source for filing a note into a folder, it holds the same
  * context menu, and its trash sits under the pointer rather than on the row.
  */
-export function IndexRow({ note }: IndexRowProps) {
+export function IndexRow({ note, match }: IndexRowProps) {
   const open = useNotesStore((state) => state.open)
   const trash = useNotesStore((state) => state.trash)
   const restore = useNotesStore((state) => state.restore)
@@ -71,7 +73,14 @@ export function IndexRow({ note }: IndexRowProps) {
       </button>
 
       <button type="button" className="index-row" onClick={() => void open(note.id)}>
-        <span className="index-row-title">{label}</span>
+        <span className="index-row-text">
+          <span className="index-row-title">{label}</span>
+          {/* Only on a body hit: repeating the title back under the title, or
+              the tag that is already visible, tells the reader nothing. */}
+          {match?.where === "body" && match.snippet !== null && (
+            <span className="index-row-snippet">{match.snippet}</span>
+          )}
+        </span>
         <span className="index-row-meta">{formatEditedAgo(note.updatedAt)}</span>
       </button>
 

@@ -15,6 +15,7 @@ interface IconProps {
     | "back"
     | "star"
     | "more"
+    | "search"
   className?: string
 }
 
@@ -70,6 +71,12 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
     <>
       <path d="M3.5 2.5h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
       <path d="M5.5 2.5v11M7.6 5.6h3M7.6 8h3" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="7" cy="7" r="4.2" />
+      <path d="M10.1 10.1 13.5 13.5" />
     </>
   ),
   tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />,

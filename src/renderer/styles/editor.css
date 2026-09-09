@@ -1066,3 +1066,20 @@
 .index-actions .is-destructive:hover {
   color: var(--danger, #b3261e);
 }
+
+/* A body hit shows the line it matched on, under the title it belongs to. */
+.index-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.index-row-snippet {
+  color: var(--text-muted);
+  font-size: var(--text-chrome);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

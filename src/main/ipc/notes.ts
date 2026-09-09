@@ -18,6 +18,7 @@ import {
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
 import { ensureDailyNote } from "../daily"
 import { exportNoteMarkdown } from "../export"
+import { searchNotes } from "../search"
 
 /*
  * Everything arriving here crossed a process boundary from the renderer, so it
@@ -101,6 +102,8 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("folder:delete", (_event, name) => deleteFolder(asString(name, "name")))
 
   ipcMain.handle("note:export", (_event, id) => exportNoteMarkdown(asString(id, "id")))
+
+  ipcMain.handle("note:search", (_event, query) => searchNotes(asString(query, "query")))
 
   ipcMain.handle("note:favorite", (_event, id, favorite) =>
     setFavorite(asString(id, "id"), favorite === true)
