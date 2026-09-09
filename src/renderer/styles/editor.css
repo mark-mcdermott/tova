@@ -59,7 +59,11 @@
   color: var(--text-primary);
   font-family: var(--font-script);
   font-size: var(--text-title);
-  line-height: 1.15;
+  /* The font's own metrics, not a number. An input clips to its line box, and
+     1.15 cut 13px off Vibur's descenders — the tail of a `g` simply vanished.
+     A larger constant would only move the problem to the next face, and the
+     title font is now anything the reader uploads. */
+  line-height: normal;
 }
 
 .title-input::placeholder {
