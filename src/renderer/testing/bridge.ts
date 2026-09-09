@@ -29,6 +29,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       renameFolder: vi.fn(),
       deleteFolder: vi.fn(),
       exportMarkdown: vi.fn(),
+      exportPdf: vi.fn(),
       search: vi.fn().mockResolvedValue([]),
       createSection: vi.fn(),
       deleteSection: vi.fn().mockResolvedValue([])
@@ -68,7 +69,13 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       read: vi.fn(async () => ({ ...DEFAULT_PREFERENCES })),
       write: vi.fn(async (value: unknown) => value),
       chooseAvatar: vi.fn(),
-      avatarUrl: vi.fn(async () => null)
+      avatarUrl: vi.fn(async () => null),
+      listBackgrounds: vi.fn(async () => []),
+      addBackground: vi.fn(async () => null),
+      listVaults: vi.fn(async () => []),
+      addVault: vi.fn(async () => []),
+      useVault: vi.fn(async () => []),
+      forgetVault: vi.fn(async () => [])
     },
     app: { info: vi.fn(), reveal: vi.fn(), openExternal: vi.fn() },
     events: { onNotesChanged: vi.fn(() => () => undefined) }

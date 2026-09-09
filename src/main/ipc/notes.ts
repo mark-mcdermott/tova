@@ -19,7 +19,7 @@ import {
 } from "../notes"
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
 import { ensureDailyNote } from "../daily"
-import { exportNoteMarkdown } from "../export"
+import { exportNoteMarkdown, exportNotePdf } from "../export"
 import { searchNotes } from "../search"
 
 /*
@@ -104,6 +104,7 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("folder:delete", (_event, name) => deleteFolder(asString(name, "name")))
 
   ipcMain.handle("note:export", (_event, id) => exportNoteMarkdown(asString(id, "id")))
+  ipcMain.handle("note:exportPdf", (_event, id) => exportNotePdf(asString(id, "id")))
 
   ipcMain.handle("note:search", (_event, query) => searchNotes(asString(query, "query")))
 

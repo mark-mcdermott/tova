@@ -8,6 +8,7 @@ import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { EditorTags } from "./EditorTags"
+import { useTooltip } from "../../useTooltip"
 
 interface EditorHeaderProps {
   note: Note
@@ -50,6 +51,7 @@ export function EditorHeader({
     return () => clearInterval(timer)
   }, [])
   const titleRef = useRef<HTMLInputElement>(null)
+  const tip = useTooltip()
   const crumbs = breadcrumbFor(note)
 
   // Rename selects the existing title so typing replaces it outright.
@@ -71,7 +73,7 @@ export function EditorHeader({
         <button
           type="button"
           className="icon-button"
-          title="Back"
+          {...tip("Back")}
           aria-label="Back"
           disabled={!hasBack}
           onClick={() => back()}
@@ -84,7 +86,7 @@ export function EditorHeader({
           <button
             type="button"
             className="icon-button"
-            title="Forward"
+            {...tip("Forward")}
             aria-label="Forward"
             onClick={() => forward()}
           >
@@ -116,7 +118,7 @@ export function EditorHeader({
           <button
             type="button"
             className={`icon-button editor-star${note.favorite ? " is-on" : ""}`}
-            title={note.favorite ? "Remove from favourites" : "Add to favourites"}
+            {...tip(note.favorite ? "Remove from favourites" : "Add to favourites")}
             aria-label={note.favorite ? "Remove from favourites" : "Add to favourites"}
             aria-pressed={note.favorite}
             onClick={() => toggleFavorite(note.id)}
@@ -127,7 +129,7 @@ export function EditorHeader({
           <button
             type="button"
             className="icon-button editor-menu-button"
-            title="Note actions"
+            {...tip("Note actions")}
             aria-label="Note actions"
             aria-haspopup="menu"
             onClick={(event) => menu.open(event)}

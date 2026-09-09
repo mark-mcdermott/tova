@@ -5,12 +5,19 @@ import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
 import { avatarDataUrl, chooseAvatar } from "../avatar"
 import { addBackground, listBackgrounds } from "../backgrounds"
+import { addVault, forgetVault, listVaults, useVault } from "../vaults"
 import {
   addToDictionary,
   listDictionary,
   removeFromDictionary,
   setSpellcheckEnabled
 } from "../spellcheck"
+
+/** Everything from the renderer is untrusted; a path must at least be a string. */
+function asString(value: unknown, name: string): string {
+  if (typeof value !== "string") throw new Error(`Expected ${name} to be a string`)
+  return value
+}
 
 export function registerAppHandlers(): void {
   ipcMain.handle("spellcheck:replace", (event, word) => {
@@ -41,6 +48,11 @@ export function registerAppHandlers(): void {
 
   ipcMain.handle("background:list", () => listBackgrounds())
   ipcMain.handle("background:add", () => addBackground())
+
+  ipcMain.handle("vault:list", () => listVaults())
+  ipcMain.handle("vault:add", () => addVault())
+  ipcMain.handle("vault:use", (_event, path) => useVault(asString(path, "path")))
+  ipcMain.handle("vault:forget", (_event, path) => forgetVault(asString(path, "path")))
 
   ipcMain.handle("spellcheck:setEnabled", (_event, enabled) => {
     if (typeof enabled !== "boolean") throw new Error("enabled must be a boolean")

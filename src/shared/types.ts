@@ -13,6 +13,12 @@ export function isSection(value: string): value is Section {
   return /^[a-z0-9][a-z0-9-]*$/.test(value)
 }
 
+export interface VaultChoice {
+  path: string
+  name: string
+  active: boolean
+}
+
 export interface SearchHit {
   note: NoteSummary
   match: { where: "title" | "tag" | "body"; snippet: string | null; score: number }
@@ -215,6 +221,12 @@ export interface PreferencesApi {
   listBackgrounds: () => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */
   addBackground: () => Promise<string | null>
+  listVaults: () => Promise<VaultChoice[]>
+  /** Opens a directory picker and switches to what was chosen. */
+  addVault: () => Promise<VaultChoice[]>
+  useVault: (path: string) => Promise<VaultChoice[]>
+  /** Stops listing a vault. The directory and its notes are left alone. */
+  forgetVault: (path: string) => Promise<VaultChoice[]>
 }
 
 export interface EventsApi {
@@ -260,6 +272,8 @@ export interface NoteApi {
   deleteFolder: (name: string) => Promise<string[]>
   /** Resolves to the written path, or null if the user cancelled. */
   exportMarkdown: (id: string) => Promise<string | null>
+  /** Printed by Chromium itself; returns where it was saved, or null if cancelled. */
+  exportPdf: (id: string) => Promise<string | null>
   /** Full-text search, bodies included — they only exist in main. */
   search: (query: string) => Promise<SearchHit[]>
   /** Makes a new section's directory in the vault. */

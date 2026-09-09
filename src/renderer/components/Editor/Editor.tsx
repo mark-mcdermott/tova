@@ -14,6 +14,8 @@ import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
 import { PublishToasts } from "./PublishToast"
 import { SpellingMenu } from "./SpellingMenu"
+import { checkGrammar } from "../../grammarLinter"
+import { setGrammarNotes } from "./grammar"
 import { usePublishStore } from "../../stores/publishStore"
 import { usePreferencesStore } from "../../stores/preferencesStore"
 import { parsePosts, publishedFieldEdit } from "../../../shared/blogPost"
@@ -26,6 +28,8 @@ interface EditorProps {
 }
 
 export function Editor({ note }: EditorProps) {
+  const grammarOn = usePreferencesStore((state) => state.preferences.grammar)
+  const grammarRef = useRef<(text: string) => void>(() => undefined)
   const openSeq = useNotesStore((state) => state.openSeq)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
@@ -101,8 +105,23 @@ export function Editor({ note }: EditorProps) {
     onSelectBlog: setBlogAnchor,
     tabSize,
     onPublish: (blog, headerLine) => void publishPost(blog, headerLine),
-    onLeaveBackwards: () => tagAddRef.current?.focus()
+    onLeaveBackwards: () => tagAddRef.current?.focus(),
+    onCheckGrammar: grammarOn ? (text) => void grammarRef.current(text) : undefined
   })
+
+  /**
+   * Assigned after the hook, because the view it dispatches into is what the
+   * hook returns. The wrapper handed to CodeMirror stays stable, so turning
+   * grammar on does not rebuild the editor.
+   */
+  grammarRef.current = async (text: string) => {
+    try {
+      const notes = await checkGrammar(text)
+      viewRef.current?.dispatch({ effects: setGrammarNotes.of(notes) })
+    } catch {
+      // A checker that will not load is not a reason to stop writing.
+    }
+  }
 
   /**
    * The file on disk is what gets published, so a debounced save is flushed

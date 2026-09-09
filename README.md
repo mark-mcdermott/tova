@@ -53,25 +53,11 @@ Gatekeeper will refuse the app on any machine that did not build it.
 
 ## Possible future roadmap
 
-- **Grammar checking.** Needs a new dependency, and the credible ones are large
-  and noisy. Spelling is Chromium's and free; grammar is a real decision.
-- **Several vaults.** One vault, at `~/Documents/Tova`. The Settings tab shows
-  and reveals it; switching between vaults is unbuilt.
-- **A tooltips toggle**, from the original settings spec.
-- **Paging the vault's snapshot list.** It grows to whatever `backupLimit`
-  allows — 200 at the top of the range — and today renders every row.
 - **A licensed script face.** `Alagambe` is bundled for note titles and is
   proprietary, which is why this repository is private. Replacing it is the
   first step to making it public — see `tova/PROGRESS.md`.
+- **Paging the vault's snapshot list.** It grows to whatever `backupLimit`
+  allows — 200 at the top of the range — and today renders every row.
 
-Deliberately deferred. Each is understood and scoped, just not next.
-
-**Syntax highlighting inside code blocks.** Needs `@codemirror/language-data`,
-which carries real bundle cost.
-
-**Export to PDF.** The editor's menu exports Markdown today. A PDF needs a
-Markdown-to-HTML renderer, which Tova does not have.
-
-**A readable measure for prose.** The writing area spans the panel so its
-insets match the title's, which means long lines on a wide window. Capping and
-centring the column would restore it.
+Focus mode, folder reordering and a theme picker were dropped rather than
+deferred; light and dark are built, and the rest are not planned.

@@ -10,6 +10,7 @@ import { Icon } from "./icons"
 import { Wordmark } from "./Wordmark"
 import { Avatar } from "./Avatar"
 import { usePreferencesStore } from "../../stores/preferencesStore"
+import { useTooltip } from "../../useTooltip"
 
 export function Sidebar() {
   const notes = useNotesStore((state) => state.notes)
@@ -33,6 +34,7 @@ export function Sidebar() {
   const [query, setQuery] = useState("")
 
   const menu = useContextMenu()
+  const tip = useTooltip()
 
   // The button writes where you are standing. Daily is the exception: its notes
   // are one a day and made for you, so it opens today's, creating it if the day
@@ -54,7 +56,7 @@ export function Sidebar() {
         <button
           type="button"
           className="wordmark-button"
-          title={home === undefined ? "Tova" : `Tova — open ${home.label}`}
+          {...tip(home === undefined ? "Tova" : `Tova — open ${home.label}`)}
           aria-label={home === undefined ? "Tova" : `Tova — open ${home.label}`}
           disabled={home === undefined}
           onClick={() => {
@@ -67,7 +69,7 @@ export function Sidebar() {
         <button
           type="button"
           className="icon-button icon-button-framed"
-          title="New note"
+          {...tip("New note")}
           aria-label="New note"
           onClick={() => void compose()}
         >
@@ -114,7 +116,7 @@ export function Sidebar() {
         <button
           type="button"
           className="sidebar-identity"
-          title="Profile"
+          {...tip("Profile")}
           aria-label="Profile"
           onClick={() => showSettings("profile")}
         >
@@ -125,7 +127,7 @@ export function Sidebar() {
         <button
           type="button"
           className="icon-button sidebar-footer-cog"
-          title="Settings"
+          {...tip("Settings")}
           aria-label="Settings"
           onClick={() => showSettings()}
         >

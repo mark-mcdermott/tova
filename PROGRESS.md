@@ -12,14 +12,14 @@
 | 5 — Navigation & sidebar polish | Complete |
 | 6 — Glassmorphic UI | Complete |
 | 7 — Search & tags | Complete |
-| 8 — Spellcheck & grammar | Spelling complete; grammar deferred |
+| 8 — Spellcheck & grammar | Complete |
 | 9 — Blog authoring & publishing | Complete |
 | 10 — Blog sync & posts sidebar | Complete |
 | 11 — Blog configuration | Complete |
-| 12 — Full settings panel | Complete, bar several vaults |
+| 12 — Full settings panel | Complete |
 | 13 — Packaging | Signed `.dmg`; notarization needs Apple credentials |
 
-**Deferred by choice, not left undone** — grammar checking and several vaults. All are in the README's roadmap with the reason
+**Deferred by choice, not left undone** — paging the snapshot list. All are in the README's roadmap with the reason
 each was set aside.
 
 Focus mode and folder reordering were dropped outright rather than deferred.
@@ -476,6 +476,26 @@ notes in a section since removed are still found rather than quietly vanishing;
 restoring one whose home is gone brings it back to Notes, because visible beats
 faithful.
 
+## Grammar
+
+Harper, chosen over LanguageTool because it runs on this machine. The app tells
+the reader on its own Vault tab that nothing leaves it, and a hosted checker
+would have made that untrue for every sentence they wrote.
+
+**It is 15.6MB of WebAssembly, not the 1-3MB first estimated.** That number is
+why the preference is off by default and why the module is imported on demand:
+nothing about Harper is fetched until the reader turns it on. The `.dmg` grows
+by the file either way; startup does not.
+
+Harper is told the text is markdown, so it reads `**bold**` as emphasis rather
+than as a typo — the difference between useful and unusable in this editor.
+
+Notes are mapped through every edit rather than cleared, so an underline stays
+under its own words while the writing carries on; a note whose own span is
+edited is dropped rather than left pointing at the wrong sentence. The mark is
+a dotted amber underline, deliberately unlike Chromium's red spelling squiggle:
+a suggestion about a sentence is a softer claim than a misspelt word.
+
 ## Carried forward
 
 - **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against
@@ -489,9 +509,9 @@ faithful.
   the editor's Move menu files a note into any of the flat sections. Only the
   in-section shortcut is unreachable while the section is empty.
 
-- **Code highlighting and PDF export are deferred.** See the roadmap in
-  `README.md` for what each needs. Focus mode and folder reordering are not
-  planned.
+- **The roadmap is nearly empty.** What remains is paging the snapshot list and
+  replacing the proprietary script face, which is what going public waits on.
+  Focus mode and folder reordering are not planned.
 
 - **Prose no longer wraps at a readable measure.** The writing area now spans
   the panel so its insets match the title's, which meant dropping the 68ch cap

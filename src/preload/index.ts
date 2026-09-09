@@ -33,6 +33,7 @@ const notes: NoteApi = {
   renameFolder: (from, to) => ipcRenderer.invoke("folder:rename", from, to),
   deleteFolder: (name) => ipcRenderer.invoke("folder:delete", name),
   exportMarkdown: (id) => ipcRenderer.invoke("note:export", id),
+  exportPdf: (id) => ipcRenderer.invoke("note:exportPdf", id),
   search: (query) => ipcRenderer.invoke("note:search", query),
   createSection: (id) => ipcRenderer.invoke("section:create", id),
   deleteSection: (id) => ipcRenderer.invoke("section:delete", id),
@@ -105,7 +106,11 @@ const preferences: PreferencesApi = {
   chooseAvatar: () => ipcRenderer.invoke("prefs:chooseAvatar"),
   avatarUrl: () => ipcRenderer.invoke("prefs:avatarUrl"),
   listBackgrounds: () => ipcRenderer.invoke("background:list"),
-  addBackground: () => ipcRenderer.invoke("background:add")
+  addBackground: () => ipcRenderer.invoke("background:add"),
+  listVaults: () => ipcRenderer.invoke("vault:list"),
+  addVault: () => ipcRenderer.invoke("vault:add"),
+  useVault: (path) => ipcRenderer.invoke("vault:use", path),
+  forgetVault: (path) => ipcRenderer.invoke("vault:forget", path)
 }
 
 const events: EventsApi = {

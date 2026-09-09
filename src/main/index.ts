@@ -1,7 +1,7 @@
 import { app, BrowserWindow, net, powerMonitor, protocol } from "electron"
 import { join } from "path"
 import { pathToFileURL } from "url"
-import { ensureVault, resolveInVault } from "./vault"
+import { ensureVault, resolveInVault, setActiveVault } from "./vault"
 import { resolveBackground } from "./backgrounds"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
@@ -130,6 +130,9 @@ function scheduleBackups(): void {
 }
 
 app.whenReady().then(async () => {
+  // Before anything touches the vault: which one is open is a preference.
+  const { activeVault } = await readPreferences()
+  setActiveVault(activeVault)
   await ensureVault()
 
   // The launch backup runs before cleanup, so anything the sweep removes is

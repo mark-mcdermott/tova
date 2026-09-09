@@ -122,6 +122,20 @@
   /* Code */
   --code-bg: rgb(23 20 31 / 7%);
   --code-border: rgb(23 20 31 / 12%);
+  /* Quiet on purpose: a note is prose with the occasional block in it, not a
+     source file. These mark the few things worth telling apart. */
+  --code-keyword: #6b4bbb;
+  --code-string: #3d7a58;
+  --code-comment: #6b6480;
+  --code-number: #9a5a22;
+  --code-name: #2e2a3a;
+  --code-type: #3a6a8a;
+  --code-operator: #575070;
+  --code-property: #4a4560;
+
+  /* Grammar, kept away from spelling's red: a note about a sentence is a
+     softer claim than a misspelt word. */
+  --grammar-ink: #8a6d3b;
 
   /* Type */
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
@@ -264,6 +278,15 @@
 
   --code-bg: rgb(255 255 255 / 8%);
   --code-border: rgb(255 255 255 / 14%);
+  --code-keyword: #c4b2ff;
+  --code-string: #96d3ae;
+  --code-comment: rgb(243 240 249 / 52%);
+  --code-number: #e8b487;
+  --code-name: #ece8f6;
+  --code-type: #9fd0e8;
+  --code-operator: rgb(243 240 249 / 72%);
+  --code-property: #d6cdf0;
+  --grammar-ink: #d8b88a;
 
   /* Still an opaque pill with white ink, and still clears AA — the fill has to
      stay dark for that even though everything around it lightened. */

@@ -1083,3 +1083,15 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/*
+ * Grammar. A different mark from Chromium's red spelling squiggle on purpose:
+ * a suggestion about a sentence is not the same claim as a misspelt word, and
+ * the two should not look alike.
+ */
+.cm-grammar {
+  text-decoration: underline dotted var(--grammar-ink);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  cursor: help;
+}

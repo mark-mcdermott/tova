@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
-import { AppInfo, BackupSummary } from "../../../../shared/types"
+import { AppInfo, VaultChoice, BackupSummary } from "../../../../shared/types"
 import { useNotesStore } from "../../../stores/notesStore"
+import { useBlogsStore } from "../../../stores/blogsStore"
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -22,12 +23,63 @@ const VISIBLE_BACKUPS = 6
 
 export function VaultTab() {
   const restoreFromBackup = useNotesStore((state) => state.restoreFromBackup)
+  const load = useNotesStore((state) => state.load)
+  const loadBlogs = useBlogsStore((state) => state.load)
 
   const [info, setInfo] = useState<AppInfo | null>(null)
   const [backups, setBackups] = useState<BackupSummary[]>([])
   const [confirming, setConfirming] = useState<string | null>(null)
   const [backingUp, setBackingUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [vaults, setVaults] = useState<VaultChoice[]>([])
+  const [switching, setSwitching] = useState(false)
+
+  // The first is always the default, which cannot be forgotten.
+  const defaultPath = vaults[0]?.path
+
+  useEffect(() => {
+    void window.tova.preferences.listVaults().then(setVaults)
+  }, [])
+
+  /** Everything the app is showing belongs to the old vault, so it all reloads. */
+  async function after(next: VaultChoice[]) {
+    setVaults(next)
+    await Promise.all([load(), loadBlogs()])
+    setInfo(await window.tova.app.info())
+  }
+
+  async function switchTo(path: string) {
+    setSwitching(true)
+    try {
+      await after(await window.tova.preferences.useVault(path))
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : String(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  async function addVault() {
+    setSwitching(true)
+    try {
+      await after(await window.tova.preferences.addVault())
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : String(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  async function forget(path: string) {
+    setSwitching(true)
+    try {
+      await after(await window.tova.preferences.forgetVault(path))
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : String(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -77,14 +129,50 @@ export function VaultTab() {
       )}
 
       <section className="settings-section">
-        <h2 className="settings-section-title">Vault</h2>
+        <h2 className="settings-section-title">Vaults</h2>
         <p className="settings-note">
-          Every note is a plain markdown file on this machine. Nothing leaves it. Tova keeps one
-          vault; several is on the roadmap rather than half-built here.
+          Every note is a plain markdown file on this machine. Nothing leaves it. Switching changes
+          which folder Tova reads; removing one only stops listing it — the folder and its notes
+          stay exactly where they are.
         </p>
 
+        <div className="vaults">
+          {vaults.map((vault) => (
+            <div key={vault.path} className={`vault-row${vault.active ? " is-active" : ""}`}>
+              <button
+                type="button"
+                className="vault-choose"
+                aria-label={vault.active ? `${vault.name}, in use` : `Use ${vault.name}`}
+                aria-pressed={vault.active}
+                disabled={vault.active || switching}
+                onClick={() => void switchTo(vault.path)}
+              >
+                <span className="vault-name">{vault.name}</span>
+                <span className="vault-path">{vault.path}</span>
+              </button>
+
+              <button
+                type="button"
+                className="settings-button"
+                aria-label={`Forget ${vault.name}`}
+                disabled={vault.path === defaultPath || switching}
+                onClick={() => void forget(vault.path)}
+              >
+                Forget
+              </button>
+            </div>
+          ))}
+        </div>
+
         <div className="settings-row">
-          <span className="settings-path">{info?.vaultPath ?? "…"}</span>
+          <button
+            type="button"
+            className="settings-button settings-button-primary"
+            disabled={switching}
+            onClick={() => void addVault()}
+          >
+            Add a vault…
+          </button>
           <button type="button" className="settings-button" onClick={() => void reveal("vault")}>
             Open folder
           </button>

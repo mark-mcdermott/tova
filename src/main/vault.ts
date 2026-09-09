@@ -7,14 +7,25 @@ import { readPreferences } from "./preferences"
 const ALWAYS = ["posts"]
 import { NoteLocation, parseNoteId, toNoteId } from "../shared/noteLocation"
 
-/*
- * Deliberately not cached. Caching made the root depend on which call happened
- * first, which is a hidden global in production and a source of cross-test
- * bleed besides. `app.getPath` is a lookup, and every caller here is about to
- * touch the filesystem anyway.
- */
-export function vaultRoot(): string {
+/** Where a vault lives unless the reader has chosen another. */
+export function defaultVaultRoot(): string {
   return join(app.getPath("documents"), "Tova")
+}
+
+/*
+ * The vault in use. State, not a cache: the reader can hold several and switch
+ * between them, so this has to be settable. It is set deliberately at startup
+ * and on every switch rather than filled in by whichever call happened to run
+ * first — which is the accident an earlier cache here caused.
+ */
+let active: string | null = null
+
+export function setActiveVault(path: string | null): void {
+  active = path
+}
+
+export function vaultRoot(): string {
+  return active ?? defaultVaultRoot()
 }
 
 export async function ensureVault(): Promise<void> {

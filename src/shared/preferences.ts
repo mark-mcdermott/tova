@@ -45,7 +45,15 @@ export interface Preferences {
   /** How many snapshots to keep before the oldest is dropped. */
   backupLimit: number
   spellcheck: boolean
+  /** Hover hints on the app's controls. Labels are unaffected. */
+  tooltips: boolean
+  /** Grammar checking. Off to begin with: the checker is 15.6MB and loads on demand. */
+  grammar: boolean
   theme: ThemeChoice
+  /** Extra vaults the reader has added; the default is never stored. */
+  vaults: string[]
+  /** Which one is open, or null for the default. */
+  activeVault: string | null
   /** The sidebar's sections: which exist, what they are called, in what order. */
   sections: SectionConfig[]
   /** Background filename per theme, or null to pick one at each launch. A dark
@@ -64,7 +72,11 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backupIntervalMinutes: 60,
   backupLimit: 30,
   spellcheck: true,
+  tooltips: true,
+  grammar: false,
   theme: "system",
+  vaults: [],
+  activeVault: null,
   sections: DEFAULT_SECTIONS,
   backgroundLight: null,
   backgroundDark: null,
@@ -111,6 +123,12 @@ export function normalizePreferences(value: unknown): Preferences {
       LIMITS.backupLimit
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
+    tooltips: typeof raw.tooltips === "boolean" ? raw.tooltips : true,
+    grammar: raw.grammar === true,
+    vaults: Array.isArray(raw.vaults)
+      ? raw.vaults.filter((path): path is string => typeof path === "string")
+      : [],
+    activeVault: typeof raw.activeVault === "string" ? raw.activeVault : null,
     sections: normalizeSections(raw.sections),
     theme: THEMES.some((theme) => theme.value === raw.theme)
       ? (raw.theme as ThemeChoice)

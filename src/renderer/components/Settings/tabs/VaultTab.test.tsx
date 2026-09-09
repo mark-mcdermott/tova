@@ -19,6 +19,15 @@ const backups = [
   { name: "2026-09-05T09-00-00", createdAt: Date.UTC(2026, 8, 5, 9), noteCount: 11 }
 ]
 
+const vaults = [
+  { path: "/Users/writer/Documents/Tova", name: "Tova", active: true },
+  { path: "/Volumes/Ink/Second", name: "Second", active: false }
+]
+
+const listVaults = vi.fn()
+const useVault = vi.fn()
+const addVault = vi.fn()
+const forgetVault = vi.fn()
 const appInfo = vi.fn()
 const reveal = vi.fn()
 const listBackups = vi.fn()
@@ -29,6 +38,10 @@ const read = vi.fn()
 beforeEach(() => {
   vi.clearAllMocks()
   appInfo.mockResolvedValue(info)
+  listVaults.mockResolvedValue(vaults)
+  useVault.mockResolvedValue(vaults)
+  addVault.mockResolvedValue(vaults)
+  forgetVault.mockResolvedValue(vaults)
   listBackups.mockResolvedValue(backups)
   runBackup.mockResolvedValue(backups[0])
   restoreBackup.mockResolvedValue(backups[0])
@@ -47,7 +60,8 @@ beforeEach(() => {
   window.tova = stubBridge({
     notes: { read },
     backups: { list: listBackups, run: runBackup, restore: restoreBackup },
-    app: { info: appInfo, reveal }
+    app: { info: appInfo, reveal },
+    preferences: { listVaults, useVault, addVault, forgetVault }
   })
 
   useNotesStore.setState({
@@ -119,4 +133,50 @@ describe("VaultTab", () => {
     render(<VaultTab />)
     expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Vault unreachable")
   })
+
+  it("lists every vault and marks the one in use", async () => {
+    render(<VaultTab />)
+
+    expect(await screen.findByText("Second")).toBeDefined()
+    const inUse = screen.getByRole("button", { name: "Tova, in use" })
+    expect(inUse.getAttribute("aria-pressed")).toBe("true")
+    // The one in use is a statement, not an offer.
+    expect((inUse as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it("switches vault and reloads what was on screen", async () => {
+    render(<VaultTab />)
+    await screen.findByText("Second")
+
+    await userEvent.click(screen.getByRole("button", { name: "Use Second" }))
+
+    expect(useVault).toHaveBeenCalledWith("/Volumes/Ink/Second")
+    // Everything showing belonged to the old vault.
+    await waitFor(() => expect(appInfo).toHaveBeenCalledTimes(2))
+  })
+
+  it("refuses to forget the default vault", async () => {
+    render(<VaultTab />)
+    await screen.findByText("Second")
+
+    expect((screen.getByLabelText("Forget Tova") as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByLabelText("Forget Second") as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it("forgets a vault without touching its folder", async () => {
+    render(<VaultTab />)
+    await screen.findByText("Second")
+
+    await userEvent.click(screen.getByLabelText("Forget Second"))
+    expect(forgetVault).toHaveBeenCalledWith("/Volumes/Ink/Second")
+  })
+
+  it("adds one through the picker", async () => {
+    render(<VaultTab />)
+    await screen.findByText("Second")
+
+    await userEvent.click(screen.getByRole("button", { name: "Add a vault…" }))
+    expect(addVault).toHaveBeenCalled()
+  })
 })
+

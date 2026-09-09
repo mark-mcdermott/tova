@@ -23,6 +23,7 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
   const destroy = useNotesStore((state) => state.destroy)
   const moveNote = useNotesStore((state) => state.moveNote)
   const exportNote = useNotesStore((state) => state.exportNote)
+  const exportPdf = useNotesStore((state) => state.exportPdf)
   const requestTitleFocus = useNotesStore((state) => state.requestTitleFocus)
 
   const deletePost = useBlogsStore((state) => state.deletePost)
@@ -35,12 +36,19 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
     onSelect: () => exportNote(note.id)
   }
 
+  const exportPdfItem: MenuItem = {
+    label: "Export .pdf",
+    onSelect: () => exportPdf(note.id)
+  }
+
   function mainItems(): MenuItem[] {
     if (note.section === "trash") {
       return [
         { label: "Restore", onSelect: () => restore(note.id) },
         "separator",
         exportItem,
+      exportPdfItem,
+        exportPdfItem,
         "separator",
         {
           label: "Delete permanently",
@@ -66,6 +74,7 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
     items.push(
       "separator",
       exportItem,
+      exportPdfItem,
       "separator",
       note.section === "posts"
         ? {

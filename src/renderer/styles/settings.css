@@ -675,3 +675,59 @@
   color: var(--danger, #b3261e);
   font-size: var(--text-sm);
 }
+
+/* ── Vaults ───────────────────────────────────────────────────────────── */
+
+.vaults {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.vault-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 35%);
+}
+
+.vault-row.is-active {
+  border-color: var(--accent);
+}
+
+.vault-choose {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The one in use is a statement, not an offer. */
+.vault-choose:disabled {
+  cursor: default;
+}
+
+.vault-name {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+}
+
+.vault-path {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

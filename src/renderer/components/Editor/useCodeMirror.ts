@@ -8,8 +8,11 @@ import {
   markdownKeymap,
   pasteURLAsLink
 } from "@codemirror/lang-markdown"
+import { languages } from "@codemirror/language-data"
 import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
+import { codeHighlight } from "./codeHighlight"
+import { grammarChecking } from "./grammar"
 import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
 import { blogSelector, SelectorAnchor } from "./blogSelector"
@@ -30,6 +33,8 @@ interface UseCodeMirrorOptions {
   onSelectBlog?: (anchor: SelectorAnchor | null) => void
   /** Spaces an indent inserts. */
   tabSize?: number
+  /** Asked for a fresh grammar pass once the writing pauses. */
+  onCheckGrammar?: (text: string) => void
   /**
    * Shift+Tab out of an empty document, back to the tag row. Only when empty:
    * in a note with words in it, Shift+Tab is dedent and stays that way.
@@ -46,6 +51,7 @@ export function useCodeMirror({
   onPublish,
   onSelectBlog,
   onLeaveBackwards,
+  onCheckGrammar,
   tabSize = 2
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -76,6 +82,8 @@ export function useCodeMirror({
   onSelectBlogRef.current = onSelectBlog
   const onLeaveBackwardsRef = useRef(onLeaveBackwards)
   onLeaveBackwardsRef.current = onLeaveBackwards
+  const onCheckGrammarRef = useRef(onCheckGrammar)
+  onCheckGrammarRef.current = onCheckGrammar
 
   useEffect(() => {
     const container = containerRef.current
@@ -94,7 +102,12 @@ export function useCodeMirror({
           // finished — which is the timing the build plan asks for.
           EditorView.contentAttributes.of({ spellcheck: "true" }),
           indent.current.of(indentUnit.of(" ".repeat(tabSize))),
-          markdown({ base: markdownLanguage }),
+          // Fenced blocks get their language's highlighting. `languages` is a
+          // table of dynamic imports, so a grammar is fetched the first time a
+          // block actually uses it rather than bundled into the app.
+          markdown({ base: markdownLanguage, codeLanguages: languages }),
+          codeHighlight(),
+          grammarChecking((text) => onCheckGrammarRef.current?.(text)),
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null
           }),

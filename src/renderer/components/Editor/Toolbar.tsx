@@ -1,5 +1,6 @@
 import { EditorView } from "@codemirror/view"
 import { applyFormat, toolbarItems } from "./formats"
+import { useTooltip } from "../../useTooltip"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
 
@@ -17,6 +18,7 @@ const statusLabels: Record<SaveStatus, string> = {
 }
 
 export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
+  const tip = useTooltip()
   return (
     <div className="toolbar">
       <div className="toolbar-actions">
@@ -24,7 +26,7 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
           <button
             key={item.key}
             type="button"
-            title={item.title}
+            {...tip(item.title)}
             aria-label={item.title}
             data-glyph={item.key}
             // mousedown-with-preventDefault keeps focus in the editor, so the

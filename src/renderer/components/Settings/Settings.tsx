@@ -6,6 +6,7 @@ import { DocsTab } from "./tabs/DocsTab"
 import { GeneralTab } from "./tabs/GeneralTab"
 import { ProfileTab } from "./tabs/ProfileTab"
 import { VaultTab } from "./tabs/VaultTab"
+import { useTooltip } from "../../useTooltip"
 
 const LABELS: Record<SettingsTab, string> = {
   profile: "Profile",
@@ -30,6 +31,7 @@ function panelFor(tab: SettingsTab) {
  * sidebar stays put and the back arrow returns to the note that was open.
  */
 export function Settings() {
+  const tip = useTooltip()
   const activeId = useNotesStore((state) => state.activeId)
   const open = useNotesStore((state) => state.open)
   const openToday = useNotesStore((state) => state.openToday)
@@ -50,7 +52,7 @@ export function Settings() {
           <button
             type="button"
             className="icon-button"
-            title="Back to writing"
+            {...tip("Back to writing")}
             aria-label="Back to writing"
             onClick={close}
           >

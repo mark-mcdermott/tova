@@ -5,6 +5,7 @@ import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { NOTE_MIME } from "../Sidebar/dragDrop"
 import { Icon } from "../Sidebar/icons"
+import { useTooltip } from "../../useTooltip"
 
 interface IndexRowProps {
   note: NoteSummary
@@ -27,6 +28,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
   const setDraggingNote = useNotesStore((state) => state.setDraggingNote)
 
   const menu = useContextMenu()
+  const tip = useTooltip()
   const isTrashed = note.section === "trash"
   const label = note.title.trim() === "" ? "Untitled" : note.title
 
@@ -64,7 +66,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
       <button
         type="button"
         className={`index-star${note.favorite ? " is-on" : ""}`}
-        title={note.favorite ? "Remove from favourites" : "Add to favourites"}
+        {...tip(note.favorite ? "Remove from favourites" : "Add to favourites")}
         aria-label={note.favorite ? `Unfavourite ${label}` : `Favourite ${label}`}
         aria-pressed={note.favorite}
         onClick={() => void toggleFavorite(note.id)}
@@ -89,7 +91,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
           <>
             <button
               type="button"
-              title="Restore"
+              {...tip("Restore")}
               aria-label={`Restore ${label}`}
               onClick={() => void restore(note.id)}
             >
@@ -98,7 +100,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
             <button
               type="button"
               className="is-destructive"
-              title="Delete permanently"
+              {...tip("Delete permanently")}
               aria-label={`Permanently delete ${label}`}
               onClick={() => void destroy(note.id)}
             >
@@ -108,7 +110,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
         ) : (
           <button
             type="button"
-            title="Move to Trash"
+            {...tip("Move to Trash")}
             aria-label={`Move ${label} to Trash`}
             onClick={() => void trash(note.id)}
           >

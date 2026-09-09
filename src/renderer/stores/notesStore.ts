@@ -87,6 +87,7 @@ interface NotesState {
   deleteFolder: (name: string) => Promise<void>
   moveNote: (id: string, section: Section, folder: string | null) => Promise<void>
   exportNote: (id: string) => Promise<void>
+  exportPdf: (id: string) => Promise<void>
   toggleFavorite: (id: string) => Promise<void>
   requestTitleFocus: () => void
   setCreatingFolder: (value: boolean) => void
@@ -338,6 +339,14 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   exportNote: async (id) => {
     try {
       await window.tova.notes.exportMarkdown(id)
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  exportPdf: async (id) => {
+    try {
+      await window.tova.notes.exportPdf(id)
     } catch (error) {
       set({ error: describe(error) })
     }
