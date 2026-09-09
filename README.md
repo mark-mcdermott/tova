@@ -9,8 +9,7 @@ architecture, better editor behaviour, and fewer edge cases.
 
 ## Running it
 
-```
-cd tova
+```bash
 pnpm install
 pnpm run dev
 ```
@@ -22,11 +21,12 @@ loop; all three stay green.
 
 | Path | What |
 |------|------|
-| `tova/` | The application |
-| `docs/SPEC.md` | What to build |
-| `docs/BUILD_PHASES.md` | The order to build it in |
-| `tova/PROGRESS.md` | Current state, architecture notes, carried-forward items |
-| `branding/` | Mockups, logo, background originals |
+| `src/main/` | Filesystem, IPC, publishing — everything privileged |
+| `src/renderer/` | The interface, and the CodeMirror editor |
+| `src/shared/` | Types and pure logic both sides use |
+| `docs/SPEC.md` | What to build, and what was deliberately cut |
+| `docs/BUILD_PHASES.md` | The order it was built in |
+| `PROGRESS.md` | Current state, architecture notes, carried-forward items |
 
 ## Stack
 
@@ -42,9 +42,9 @@ pnpm run dev        # run it
 pnpm run package    # signed .dmg for arm64 and x64, into release/
 ```
 
-`pnpm run icon` regenerates `build/icon.png` from `tools/icon.html` — Electron
-renders it, so the icon is drawn by the same engine that draws the app rather
-than by adding an image toolchain.
+`pnpm run icon` regenerates `build/icon.png` from `tools/icon-source.png`,
+placing it as the 824px body on the 1024px canvas macOS expects. Electron does
+the rasterising, so the icon needs no image toolchain of its own.
 
 Packaging signs automatically from whatever Developer ID is in the keychain.
 Notarization is configured but not run: it needs an Apple ID, an
@@ -53,10 +53,8 @@ Gatekeeper will refuse the app on any machine that did not build it.
 
 ## Possible future roadmap
 
-- **Clearing the font history.** Every face the app ships is now OFL, but
-  Alagambe and four Acumin weights remain in past commits, and a clone gets
-  them. Publishing means dealing with the history, not just the tree — see
-  `tova/PROGRESS.md`.
+Nothing outstanding. Every face the app ships is under the SIL Open Font
+Licence, and the repository carries no proprietary artwork.
 
 Focus mode, folder reordering and a theme picker were dropped rather than
 deferred; light and dark are built, and the rest are not planned.

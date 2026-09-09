@@ -3,12 +3,12 @@
 All four are from [Unsplash](https://unsplash.com), whose licence permits free
 use commercially and non-commercially without attribution. Credited anyway.
 
-| File | Photographer | Source |
-|------|--------------|--------|
-| `amber-ridges.jpg` | Daniil Silantev | https://unsplash.com/photos/l9XWp3S9yuk |
-| `dusk-sun.jpg` | Daniel Mirlea | https://unsplash.com/photos/HvRnuUFI3Jk |
-| `rose-peaks.jpg` | Hugo L. Casanova | https://unsplash.com/photos/ualRCC1D3YA |
-| `violet-dusk.jpg` | Darya Karaliova | https://unsplash.com/photos/sLevNKufpBo |
+| File               | Photographer     | Source                                  |
+| ------------------ | ---------------- | --------------------------------------- |
+| `amber-ridges.jpg` | Daniil Silantev  | https://unsplash.com/photos/l9XWp3S9yuk |
+| `dusk-sun.jpg`     | Daniel Mirlea    | https://unsplash.com/photos/HvRnuUFI3Jk |
+| `rose-peaks.jpg`   | Hugo L. Casanova | https://unsplash.com/photos/ualRCC1D3YA |
+| `violet-dusk.jpg`  | Darya Karaliova  | https://unsplash.com/photos/sLevNKufpBo |
 
 `lake-sunset.jpg` is not from Unsplash — it is the backdrop from the design
 mockup in `branding/`, extracted by hand, and since re-graded to lift the right
@@ -23,11 +23,12 @@ white text where it was (2.10:1). The right headland was the dark prose's worst
 case, and that is the part that changed. Neither figure clears AA — see
 `PROGRESS.md` on why the panels carry no scrim.
 
-Source: `branding/backgrounds/background-lighter.png`. It is 1402px wide and is
+Source: `branding/backgrounds/background-lighter.png`, outside the repository. It is 1402px wide and is
 bundled at that size rather than upscaled; the image is blurred far past the
 point where the extra pixels would show.
 
-Originals are kept out of the app at `branding/backgrounds/`. Regenerate the
+Originals are kept outside the repository, in the parent directory's
+`branding/backgrounds/`. Regenerate the
 bundled copies with:
 
 ```

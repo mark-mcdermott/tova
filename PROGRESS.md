@@ -83,10 +83,9 @@ the app, and no face is loaded for the wordmark at all.
 
 **Every face the app ships is now OFL.** Vibur, Fascinate Inline and Noto Sans
 Mono are all under the SIL Open Font Licence. Alagambe left with the app; the
-four Acumin weights outlasted it under `branding/fonts/`, tracked but unused,
-and are only now removed — the claim that the tree was clean was written a
-commit too early. Both faces remain in git history regardless; see the note at
-the foot of this file for what that does and does not mean.
+four Acumin weights outlasted it in the branding directory, tracked but unused,
+before being removed too. Neither is in this repository's history; see the note
+at the foot of this file.
 
 **The title face is replaceable.** Settings → Appearance takes any `.otf`,
 `.ttf`, `.woff` or `.woff2` and copies it into `userData/fonts`. An added face
@@ -355,7 +354,7 @@ square, face-on art, so at 32px the render would be an unreadable smudge. The
 icon is instead drawn by `tools/icon.html` and captured by Electron at 1024px:
 the app's own sunset, a low horizon, and the Alagambe `T`.
 
-That has since been replaced by supplied artwork: `branding/app-icon.png`, which
+That has since been replaced by supplied artwork: `tools/icon-source.png`, which
 `tools/icon.html` now only places — 826px of art centred on a 1024 canvas, the
 Big Sur proportion. Swapping the artwork and running `pnpm run icon` is the
 whole job.
@@ -564,26 +563,32 @@ a suggestion about a sentence is a softer claim than a misspelt word.
 
 Read `CLAUDE.md`, `docs/SPEC.md`, `docs/BUILD_PHASES.md`, and this file.
 
-## If this repo ever goes public
+## Licensing, and why this history is short of one thing
 
-**The replacement job is done.** Alagambe is out and Vibur — SIL Open Font
-Licence — is the bundled script face, and the four Acumin weights have gone
-from `branding/fonts/` with it. Nothing proprietary is in the working tree, so a
-squashed tree taken from the current state carries no licensing problem.
+**This repository was migrated.** It began as `tova-proj/`, a directory holding
+the app in `tova/` alongside `branding/` — mockups, logo drafts and licensed
+faces. The app is now the repository root and `branding/` lives outside it, in
+the parent directory, where it never reaches git.
 
-Note the two halves of that: the app stopped *using* Acumin long ago, but the
-files stayed tracked under `branding/` for months afterwards. "Removed from the
-app" and "gone from the tree" are different claims, and only the second one is
-the one that matters here.
+The migration rewrote history rather than starting fresh, so all 46 commits are
+here, but three things were removed from every commit they ever appeared in:
 
-**The history job is not.** Deleting a font removes it from the working tree,
-not from git history: every past commit still carries the blob, and a clone gets
-all of them. Five font blobs are in this history — four Acumin weights and
-Alagambe — totalling about 0.4 MB. Publishing this repository as it stands would
-redistribute both faces to anyone who clones it.
+- `branding/` entirely, including four Acumin Pro weights (Adobe's, all rights
+  reserved) and `alagambe.otf`.
+- `src/renderer/assets/fonts/alagambe.otf` and `acumin-pro-regular.otf`, which
+  were bundled *inside* the app in earlier commits. These were the ones that
+  nearly got missed: removing `branding/` looks like it solves the problem, and
+  it does not.
+- `TUTORIAL.md`, retired long before the move.
 
-When that time comes, the surer path is a fresh repository from a squashed tree
-rather than a `git filter-repo` rewrite. A rewrite changes every SHA, needs a
-force push, and still leaves the old objects reachable by SHA on GitHub until
-they are garbage collected — while any fork or clone keeps them outright. The
-history of a solo project is not worth the uncertainty.
+**A consequence worth knowing.** Old commits reference font files that are no
+longer in the tree, so checking one out and building it will not reproduce what
+shipped at the time. The history is honest about what was written; it is not a
+buildable archive.
+
+**Every face here is OFL** — Vibur, Fascinate Inline, Noto Sans Mono — so there
+is no licensing obstacle to this repository being public.
+
+The original repository, with its pull requests and their reasoning, is kept
+private at `mark-mcdermott/tova-bak`. It still carries the proprietary blobs in
+its history and should not be made public.

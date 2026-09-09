@@ -13,9 +13,13 @@ Original project:
 - ~/Dev/xin-proj
 - https://github.com/mark-mcdermott/xin
 
-The app lives in `tova/`. Planning docs live in `docs/SPEC.md` (what to build) and
-`docs/BUILD_PHASES.md` (the order to build it in). `tova/PROGRESS.md` tracks the
-current phase.
+This repository is the app. Planning docs live in `docs/SPEC.md` (what to build)
+and `docs/BUILD_PHASES.md` (the order it was built in). `PROGRESS.md` is the
+running record of what is built, what was deliberately left out, and why.
+
+Branding sources — mockups, logo drafts, licensed faces — are kept outside the
+repository in the parent directory, deliberately. Nothing here should reach for
+them at build time.
 
 ---
 
@@ -54,7 +58,6 @@ no waiting for approval on ordinary implementation work.
   a bug's root cause, an architectural fork worth knowing about. Skip the lecture.
 - Ask before large architectural changes, new dependencies, or anything that
   reshapes the spec. Not before writing a component.
-- `TUTORIAL.md` is retired. Do not append to it.
 
 ---
 
