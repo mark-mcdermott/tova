@@ -128,6 +128,9 @@
      same 46% the settings cards use, for the same reason. */
   --post-bg: rgb(255 255 255 / 46%);
   --post-border: rgb(255 255 255 / 60%);
+  /* A dialog asks a question and waits, so it does not get to be translucent
+     the way a panel you read past can. */
+  --confirm-bg: #f6f3f0;
   /* Quiet on purpose: a note is prose with the occasional block in it, not a
      source file. These mark the few things worth telling apart. */
   --code-keyword: #6b4bbb;
@@ -291,6 +294,7 @@
      only has to say "one object" rather than rescue contrast. */
   --post-bg: rgb(255 255 255 / 7%);
   --post-border: rgb(255 255 255 / 13%);
+  --confirm-bg: #241f31;
   --code-keyword: #c4b2ff;
   --code-string: #96d3ae;
   --code-comment: rgb(243 240 249 / 52%);
