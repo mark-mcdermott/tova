@@ -29,14 +29,19 @@ export interface SectionConfig {
 }
 
 /**
- * Daily is fixed: its notes are one per day, named by date and made for the
- * reader, so a renamed or missing Daily would break the thing that creates
- * them. Trash cannot go either — deleted notes need somewhere to be — but it
- * can be renamed and moved like any other. Posts belongs to the blogs that
- * sync into it and is not listed here at all.
+ * Two sections cannot be removed. Daily's notes are made for the reader, one a
+ * day, and Trash is where deleting a note puts it — neither has anywhere else
+ * to go. Everything else about them is the reader's: both can be renamed,
+ * moved and hidden like any other section.
+ *
+ * That works because a section's id is its directory and never changes. Daily
+ * can be called anything and the scheduler still writes into `daily/`; hiding
+ * it stops it appearing in the rail and stops nothing else — the notes are
+ * still made, still on disk, still found by search.
+ *
+ * Posts belongs to the blogs that sync into it and is not listed here at all.
  */
-export const FIXED = "daily"
-export const UNDELETABLE = [FIXED, "trash"] as const
+export const UNDELETABLE = ["daily", "trash"] as const
 
 export const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: "notes", label: "Notes", icon: "notes", enabled: true },
@@ -46,20 +51,19 @@ export const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: "trash", label: "Trash", icon: "trash", enabled: true }
 ]
 
-export function canRename(id: string): boolean {
-  return id !== FIXED
-}
-
-export function canReorder(id: string): boolean {
-  return id !== FIXED
-}
-
-export function canDisable(id: string): boolean {
-  return !(UNDELETABLE as readonly string[]).includes(id)
-}
-
 export function canDelete(id: string): boolean {
   return !(UNDELETABLE as readonly string[]).includes(id)
+}
+
+/**
+ * True for the sections the app gives meaning to beyond being a folder, so the
+ * manager can say which one is which once it has been renamed to something
+ * else entirely.
+ */
+export function sectionRole(id: string): string | null {
+  if (id === "daily") return "today's note, made for you"
+  if (id === "trash") return "where deleted notes go"
+  return null
 }
 
 /** A directory name: lowercase, no spaces, nothing that could climb a path. */
@@ -99,7 +103,7 @@ export function renameSection(
   id: string,
   label: string
 ): SectionConfig[] {
-  if (!canRename(id) || label.trim() === "") return sections
+  if (label.trim() === "") return sections
   return sections.map((section) =>
     section.id === id ? { ...section, label: label.trim() } : section
   )
@@ -110,12 +114,10 @@ export function setSectionIcon(
   id: string,
   icon: SectionIcon
 ): SectionConfig[] {
-  if (id === FIXED) return sections
   return sections.map((section) => (section.id === id ? { ...section, icon } : section))
 }
 
 export function toggleSection(sections: SectionConfig[], id: string): SectionConfig[] {
-  if (!canDisable(id)) return sections
   return sections.map((section) =>
     section.id === id ? { ...section, enabled: !section.enabled } : section
   )
@@ -126,21 +128,15 @@ export function removeSection(sections: SectionConfig[], id: string): SectionCon
   return sections.filter((section) => section.id !== id)
 }
 
-/**
- * Moves a section one place. Daily stays where it is, and nothing may be moved
- * across it — otherwise a drag could shuffle the one fixed row by pushing it.
- */
+/** Moves a section one place. Every section may move, including Daily. */
 export function moveSection(
   sections: SectionConfig[],
   id: string,
   direction: -1 | 1
 ): SectionConfig[] {
-  if (!canReorder(id)) return sections
-
   const from = sections.findIndex((section) => section.id === id)
   const to = from + direction
   if (from === -1 || to < 0 || to >= sections.length) return sections
-  if (sections[to].id === FIXED) return sections
 
   const next = [...sections]
   const [moved] = next.splice(from, 1)
@@ -178,8 +174,7 @@ export function normalizeSections(value: unknown): SectionConfig[] {
       icon: SECTION_ICONS.includes(raw.icon as SectionIcon)
         ? (raw.icon as SectionIcon)
         : (fallback?.icon ?? "folder"),
-      // Daily and Trash are always on, whatever a hand-edited file says.
-      enabled: canDisable(id) ? raw.enabled !== false : true
+      enabled: raw.enabled !== false
     })
   }
 

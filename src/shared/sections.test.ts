@@ -3,8 +3,7 @@ import {
   DEFAULT_SECTIONS,
   addSection,
   canDelete,
-  canDisable,
-  canRename,
+  sectionRole,
   moveSection,
   normalizeSections,
   removeSection,
@@ -18,26 +17,48 @@ import {
 const ids = (sections: { id: string }[]) => sections.map((section) => section.id)
 
 describe("what may be changed", () => {
-  it("leaves Daily alone", () => {
-    // Its notes are one a day, named by date and made for the reader.
-    expect(canRename("daily")).toBe(false)
+  it("keeps Daily and Trash, since neither has anywhere else to go", () => {
     expect(canDelete("daily")).toBe(false)
-    expect(canDisable("daily")).toBe(false)
-  })
-
-  it("keeps Trash, but lets it be renamed and moved", () => {
-    // Deleted notes need somewhere to go.
     expect(canDelete("trash")).toBe(false)
-    expect(canDisable("trash")).toBe(false)
-    expect(canRename("trash")).toBe(true)
   })
 
-  it("lets everything else be changed", () => {
+  it("lets everything else be removed", () => {
     for (const id of ["notes", "ideas", "journal", "recipes"]) {
-      expect(canRename(id)).toBe(true)
       expect(canDelete(id)).toBe(true)
-      expect(canDisable(id)).toBe(true)
     }
+  })
+
+  it("says what the two kept sections are for, so a rename does not hide it", () => {
+    expect(sectionRole("daily")).not.toBeNull()
+    expect(sectionRole("trash")).not.toBeNull()
+    expect(sectionRole("notes")).toBeNull()
+  })
+
+  it("renames Daily, because the label is not what the scheduler uses", () => {
+    // The id is the directory; only the label moves.
+    const renamed = renameSection(DEFAULT_SECTIONS, "daily", "Journal of Days")
+    const daily = renamed.find((section) => section.id === "daily")
+
+    expect(daily?.label).toBe("Journal of Days")
+    expect(daily?.id).toBe("daily")
+  })
+
+  it("hides Daily and Trash when asked", () => {
+    for (const id of ["daily", "trash"]) {
+      const hidden = toggleSection(DEFAULT_SECTIONS, id)
+      expect(hidden.find((section) => section.id === id)?.enabled).toBe(false)
+    }
+  })
+
+  it("moves Daily like any other section", () => {
+    const moved = moveSection(DEFAULT_SECTIONS, "daily", -1)
+    expect(ids(moved)).toEqual(["daily", "notes", "ideas", "journal", "trash"])
+  })
+
+  it("lets a section move across Daily rather than being blocked by it", () => {
+    // Daily used to be a wall: nothing could pass it in either direction.
+    const moved = moveSection(DEFAULT_SECTIONS, "ideas", -1)
+    expect(ids(moved)).toEqual(["notes", "ideas", "daily", "journal", "trash"])
   })
 })
 
@@ -84,9 +105,13 @@ describe("renameSection", () => {
     expect(ids(next)).toEqual(ids(DEFAULT_SECTIONS))
   })
 
-  it("refuses to rename Daily", () => {
+  it("renames Daily like anything else — only the label moves", () => {
     const next = renameSection(DEFAULT_SECTIONS, "daily", "Journal-ish")
-    expect(next.find((section) => section.id === "daily")?.label).toBe("Daily")
+    const daily = next.find((section) => section.id === "daily")
+
+    expect(daily?.label).toBe("Journal-ish")
+    // The id is the directory the scheduler writes into, and it is untouched.
+    expect(daily?.id).toBe("daily")
   })
 
   it("ignores an empty name", () => {
@@ -101,9 +126,9 @@ describe("setSectionIcon", () => {
     expect(next.find((section) => section.id === "ideas")?.icon).toBe("star")
   })
 
-  it("leaves Daily's alone", () => {
+  it("changes Daily's too", () => {
     const next = setSectionIcon(DEFAULT_SECTIONS, "daily", "star")
-    expect(next.find((section) => section.id === "daily")?.icon).toBe("daily")
+    expect(next.find((section) => section.id === "daily")?.icon).toBe("star")
   })
 })
 
@@ -116,9 +141,13 @@ describe("toggleSection", () => {
     expect(ids(visibleSections(next))).not.toContain("ideas")
   })
 
-  it("refuses to hide Daily or Trash", () => {
-    expect(toggleSection(DEFAULT_SECTIONS, "daily")).toEqual(DEFAULT_SECTIONS)
-    expect(toggleSection(DEFAULT_SECTIONS, "trash")).toEqual(DEFAULT_SECTIONS)
+  it("hides Daily and Trash when asked", () => {
+    // Hiding takes them out of the rail and nothing else: daily notes are still
+    // made, deleted notes still land in trash, and search still finds both.
+    for (const id of ["daily", "trash"]) {
+      const next = toggleSection(DEFAULT_SECTIONS, id)
+      expect(next.find((section) => section.id === id)?.enabled).toBe(false)
+    }
   })
 })
 
@@ -144,14 +173,25 @@ describe("moveSection", () => {
     expect(ids(next)).toEqual(["notes", "daily", "journal", "ideas", "trash"])
   })
 
-  it("will not move Daily", () => {
-    expect(moveSection(DEFAULT_SECTIONS, "daily", -1)).toEqual(DEFAULT_SECTIONS)
+  it("moves Daily", () => {
+    expect(ids(moveSection(DEFAULT_SECTIONS, "daily", -1))).toEqual([
+      "daily",
+      "notes",
+      "ideas",
+      "journal",
+      "trash"
+    ])
   })
 
-  it("will not shove Daily out of the way either", () => {
-    // Notes sits above Daily; moving it down would displace the fixed row.
-    expect(moveSection(DEFAULT_SECTIONS, "notes", 1)).toEqual(DEFAULT_SECTIONS)
-    expect(moveSection(DEFAULT_SECTIONS, "ideas", -1)).toEqual(DEFAULT_SECTIONS)
+  it("lets a section pass Daily rather than stopping at it", () => {
+    // Daily used to be a wall in both directions.
+    expect(ids(moveSection(DEFAULT_SECTIONS, "notes", 1))).toEqual([
+      "daily",
+      "notes",
+      "ideas",
+      "journal",
+      "trash"
+    ])
   })
 
   it("stops at the ends rather than wrapping", () => {
@@ -192,14 +232,14 @@ describe("normalizeSections", () => {
     )
   })
 
-  it("turns Daily and Trash back on however the file was edited", () => {
+  it("keeps Daily and Trash hidden if that is what the file says", () => {
     const next = normalizeSections([
       { id: "daily", label: "Daily", icon: "daily", enabled: false },
       { id: "trash", label: "Trash", icon: "trash", enabled: false }
     ])
 
-    expect(next.find((section) => section.id === "daily")?.enabled).toBe(true)
-    expect(next.find((section) => section.id === "trash")?.enabled).toBe(true)
+    expect(next.find((section) => section.id === "daily")?.enabled).toBe(false)
+    expect(next.find((section) => section.id === "trash")?.enabled).toBe(false)
   })
 
   it("falls back to a known label and icon for a damaged entry", () => {

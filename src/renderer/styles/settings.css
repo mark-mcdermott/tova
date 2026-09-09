@@ -812,3 +812,19 @@
 .choice-warn {
   color: var(--text-faint);
 }
+
+/* Says which section this is once it has been renamed to something else, and
+   why it is the one without a delete button. */
+.section-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.section-role {
+  padding-left: var(--space-2);
+  color: var(--text-faint);
+  font-size: var(--text-chrome);
+}
