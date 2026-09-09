@@ -322,13 +322,49 @@
  * The `@` block is metadata sitting inside prose, so it steps back rather than
  * boxing itself off: italic and subdued, no fill, no border.
  */
+/*
+ * A post's decorators are one object, so they get a ground of their own rather
+ * than floating on the photograph. Measured on the bundled sunset, the field
+ * ink ran from 3.6:1 over the sky to 1.5:1 over the water — the block was not
+ * too pale so much as standing on nothing. The panel alone was not enough
+ * either: even at 75% white the old --text-faint only reached 4.2, so the ink
+ * comes up a step as well. Muted on this ground holds 5.1 at its worst, and
+ * still reads as set back from the prose, which was the point of dimming it.
+ *
+ * Same construction as a fenced code block, for the same reason.
+ */
 .cm-line.cm-post-line {
+  background: var(--post-bg);
+  border-inline: 1px solid var(--post-border);
+  padding-inline: var(--space-4);
   font-style: italic;
-  color: var(--text-faint);
+  color: var(--text-muted);
 }
 
+.cm-line.cm-post-first {
+  border-top: 1px solid var(--post-border);
+  border-start-start-radius: var(--radius-md);
+  border-start-end-radius: var(--radius-md);
+  padding-top: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.cm-line.cm-post-last {
+  border-bottom: 1px solid var(--post-border);
+  border-end-start-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+/* A post opening the note gets no leading gap. */
+.cm-content > .cm-line.cm-post-first:first-child {
+  margin-top: 0;
+}
+
+/* The line carrying the rocket, and the only one that does anything. */
 .cm-line.cm-post-header {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .cm-post-rocket {

@@ -99,3 +99,33 @@ describe("blogDecorations", () => {
     expect(view.dom.querySelectorAll(".cm-post-rocket")).toHaveLength(2)
   })
 })
+
+describe("the post block reads as one object", () => {
+  it("rounds the first and last lines, not the ones between", () => {
+    const { view } = mount(doc)
+    const lines = [...view.dom.querySelectorAll(".cm-post-line")]
+
+    expect(lines).toHaveLength(3)
+    expect(lines[0].classList.contains("cm-post-first")).toBe(true)
+    expect(lines[1].classList.contains("cm-post-first")).toBe(false)
+    expect(lines[1].classList.contains("cm-post-last")).toBe(false)
+    expect(lines[2].classList.contains("cm-post-last")).toBe(true)
+  })
+
+  it("gives a post with no fields both ends at once", () => {
+    // One line is the whole block, so it opens and closes it.
+    const { view } = mount("@a.com post\n\nBody.\n")
+    const only = view.dom.querySelector(".cm-post-line")
+
+    expect(only?.classList.contains("cm-post-first")).toBe(true)
+    expect(only?.classList.contains("cm-post-last")).toBe(true)
+  })
+
+  it("closes each post separately when a note holds several", () => {
+    const { view } = mount("@one.com post\n@title A\n\nA.\n\n@two.com post\n@title B\n\nB.\n")
+
+    expect(view.dom.querySelectorAll(".cm-post-first")).toHaveLength(2)
+    expect(view.dom.querySelectorAll(".cm-post-last")).toHaveLength(2)
+  })
+})
+
