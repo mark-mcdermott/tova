@@ -1,8 +1,12 @@
 /*
- * Renders tools/icon.html at 1024x1024 and writes build/icon.png, then leaves
- * `sips` and `iconutil` to make the .icns. Electron is already the project's
- * rasteriser, so the icon is built with the same engine that draws the app
- * rather than by adding an image toolchain.
+ * Places branding/app-icon.png on the 1024x1024 canvas macOS expects and writes
+ * build/icon.png. The artwork is supplied rather than drawn, so all this does
+ * is scale it to the 824px body and centre it — but it stays a script so the
+ * icon can be rebuilt when the artwork changes, instead of being a binary
+ * somebody once produced by hand.
+ *
+ * Electron is already the project's rasteriser, so this needs no image
+ * toolchain of its own.
  *
  *   npx electron tools/make-icon.js
  */
@@ -23,10 +27,13 @@ app.whenReady().then(async () => {
   })
 
   await win.loadFile(join(__dirname, "icon.html"))
-  // The bundled face loads from disk; give it a beat to be applied.
+  // The artwork loads from disk; give it a beat to decode.
   await new Promise((resolve) => setTimeout(resolve, 600))
 
-  const image = await win.capturePage()
+  // capturePage() shoots at the display's scale factor, so on a Retina Mac this
+  // comes back 2048 wide. Resize here rather than leaving it to `sips`, which
+  // is macOS-only and easy to drop by mistake.
+  const image = (await win.capturePage()).resize({ width: 1024, height: 1024, quality: "best" })
   await writeFile(join(__dirname, "..", "build", "icon.png"), image.toPNG())
 
   console.log("build/icon.png written")

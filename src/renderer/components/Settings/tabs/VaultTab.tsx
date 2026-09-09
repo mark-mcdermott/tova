@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { paginate } from "../../../../shared/paging"
 import { AppInfo, VaultChoice, BackupSummary } from "../../../../shared/types"
 import { useNotesStore } from "../../../stores/notesStore"
 import { useBlogsStore } from "../../../stores/blogsStore"
@@ -19,7 +20,12 @@ function countLabel(count: number): string {
 }
 
 /** How many snapshots are worth showing before the list stops being a list. */
-const VISIBLE_BACKUPS = 6
+/*
+ * A page, not a cap. This was a slice of the first six, which meant every
+ * snapshot past the sixth was unreachable — the list is the only way back to
+ * one, so hiding them hid the feature.
+ */
+const PER_PAGE = 6
 
 export function VaultTab() {
   const restoreFromBackup = useNotesStore((state) => state.restoreFromBackup)
@@ -28,6 +34,7 @@ export function VaultTab() {
 
   const [info, setInfo] = useState<AppInfo | null>(null)
   const [backups, setBackups] = useState<BackupSummary[]>([])
+  const [page, setPage] = useState(1)
   const [confirming, setConfirming] = useState<string | null>(null)
   const [backingUp, setBackingUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -120,6 +127,10 @@ export function VaultTab() {
     }
   }
 
+  // Clamped inside paginate, so deleting the last snapshot on a page falls back
+  // to the new last page rather than showing an empty list.
+  const shown = paginate(backups, page, PER_PAGE)
+
   return (
     <>
       {error !== null && (
@@ -205,7 +216,7 @@ export function VaultTab() {
           <p className="settings-empty">No snapshots yet.</p>
         ) : (
           <ul className="settings-list">
-            {backups.slice(0, VISIBLE_BACKUPS).map((backup) => (
+            {shown.items.map((backup) => (
               <li key={backup.name} className="settings-list-row">
                 <span className="settings-list-label">
                   {formatWhen(backup.createdAt)}
@@ -242,6 +253,30 @@ export function VaultTab() {
               </li>
             ))}
           </ul>
+        )}
+
+        {shown.pages > 1 && (
+          <div className="settings-pager">
+            <button
+              type="button"
+              className="settings-button"
+              disabled={shown.page === 1}
+              onClick={() => setPage(shown.page - 1)}
+            >
+              Newer
+            </button>
+            <span className="settings-pager-count">
+              {shown.first}–{shown.last} of {shown.total}
+            </span>
+            <button
+              type="button"
+              className="settings-button"
+              disabled={shown.page === shown.pages}
+              onClick={() => setPage(shown.page + 1)}
+            >
+              Older
+            </button>
+          </div>
         )}
       </section>
 

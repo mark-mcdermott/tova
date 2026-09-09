@@ -509,7 +509,7 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   the editor's Move menu files a note into any of the flat sections. Only the
   in-section shortcut is unreachable while the section is empty.
 
-- **The roadmap is nearly empty.** What remains is paging the snapshot list and
+- **The roadmap is nearly empty.** What remains is
   replacing the proprietary script face, which is what going public waits on.
   Focus mode and folder reordering are not planned.
 
@@ -527,10 +527,11 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   still drive it, and the store, styles and tests are intact — restoring the
   control is putting a button back, not rebuilding the feature.
 
-- **No syntax highlighting inside code blocks.** Needs `@codemirror/language-data`
-  — a new dependency with real bundle cost.
-- **Export .pdf is not implemented.** The `...` menu offers Export .md only.
-  A PDF needs a markdown-to-HTML renderer, which Tova does not have.
+- **Syntax highlighting inside code blocks is on**, through
+  `@codemirror/language-data`. The grammars load per language on demand rather
+  than shipping in the main bundle.
+- **Export .pdf goes through Electron**, not a markdown-to-HTML dependency:
+  the note renders in an offscreen window and `printToPDF` writes the file.
 - **No Playwright.** The lifecycle tests the build plan wanted from it run in
   Vitest against a real temp filesystem instead, which needs no extra dependency.
 - `TUTORIAL.md` is a frozen historical record and still shows `npm` commands.

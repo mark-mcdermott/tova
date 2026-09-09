@@ -180,3 +180,65 @@ describe("VaultTab", () => {
   })
 })
 
+describe("VaultTab snapshot paging", () => {
+  /** More snapshots than fit on a page, newest first. */
+  const many = Array.from({ length: 15 }, (_, index) => ({
+    name: `snap-${index}`,
+    createdAt: Date.UTC(2026, 8, 20 - index, 9),
+    noteCount: 30 - index
+  }))
+
+  beforeEach(() => {
+    listBackups.mockResolvedValue(many)
+  })
+
+  it("shows one page and says where it is in the list", async () => {
+    render(<VaultTab />)
+
+    await waitFor(() => expect(screen.getByText("1–6 of 15")).toBeDefined())
+    expect(screen.getAllByRole("button", { name: "Restore" })).toHaveLength(6)
+  })
+
+  it("reaches the snapshots a plain cap used to hide", async () => {
+    // The list was sliced to the first six, so everything older was
+    // unreachable — and the list is the only route back to a snapshot.
+    render(<VaultTab />)
+    await waitFor(() => expect(screen.getByText("1–6 of 15")).toBeDefined())
+
+    await userEvent.click(screen.getByRole("button", { name: "Older" }))
+    expect(screen.getByText("7–12 of 15")).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: "Older" }))
+    expect(screen.getByText("13–15 of 15")).toBeDefined()
+    expect(screen.getAllByRole("button", { name: "Restore" })).toHaveLength(3)
+  })
+
+  it("stops at each end rather than running off it", async () => {
+    render(<VaultTab />)
+    await waitFor(() => expect(screen.getByText("1–6 of 15")).toBeDefined())
+
+    expect(screen.getByRole("button", { name: "Newer" })).toHaveProperty("disabled", true)
+
+    await userEvent.click(screen.getByRole("button", { name: "Older" }))
+    await userEvent.click(screen.getByRole("button", { name: "Older" }))
+    expect(screen.getByRole("button", { name: "Older" })).toHaveProperty("disabled", true)
+  })
+
+  it("goes back to the newest page from the pager", async () => {
+    render(<VaultTab />)
+    await waitFor(() => expect(screen.getByText("1–6 of 15")).toBeDefined())
+
+    await userEvent.click(screen.getByRole("button", { name: "Older" }))
+    await userEvent.click(screen.getByRole("button", { name: "Newer" }))
+    expect(screen.getByText("1–6 of 15")).toBeDefined()
+  })
+
+  it("shows no pager when everything fits on one page", async () => {
+    listBackups.mockResolvedValue(many.slice(0, 4))
+    render(<VaultTab />)
+
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Restore" })).toHaveLength(4))
+    expect(screen.queryByRole("button", { name: "Older" })).toBeNull()
+  })
+})
+

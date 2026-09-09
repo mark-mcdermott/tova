@@ -61,7 +61,10 @@
  */
 .wordmark {
   display: block;
-  height: 2.05rem;
+  /* Set against the compose button beside it rather than in the abstract: the
+     script mark carries more internal air than the geometric one it replaced,
+     so the same height read a size small. */
+  height: 2.35rem;
   width: auto;
   color: var(--text-primary);
   filter: drop-shadow(0 1px 10px rgb(38 30 58 / 60%));

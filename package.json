@@ -11,7 +11,7 @@
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
     "package:dir": "electron-vite build && electron-builder --dir",
-    "icon": "electron tools/make-icon.js && sips -z 1024 1024 build/icon.png --out build/icon.png"
+    "icon": "electron tools/make-icon.js"
   },
   "keywords": [],
   "author": "Mark McDermott <mark@markmcdermott.io>",

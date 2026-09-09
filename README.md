@@ -56,8 +56,6 @@ Gatekeeper will refuse the app on any machine that did not build it.
 - **A licensed script face.** `Alagambe` is bundled for note titles and is
   proprietary, which is why this repository is private. Replacing it is the
   first step to making it public — see `tova/PROGRESS.md`.
-- **Paging the vault's snapshot list.** It grows to whatever `backupLimit`
-  allows — 200 at the top of the range — and today renders every row.
 
 Focus mode, folder reordering and a theme picker were dropped rather than
 deferred; light and dark are built, and the rest are not planned.

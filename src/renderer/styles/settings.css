@@ -731,3 +731,18 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* Snapshots run to whatever backupLimit allows, so the list is paged. */
+.settings-pager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.settings-pager-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
