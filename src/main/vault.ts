@@ -1,7 +1,10 @@
 import { app } from "electron"
 import { join, resolve, sep } from "path"
 import { mkdir } from "fs/promises"
-import { Section, SECTIONS } from "../shared/types"
+import { Section } from "../shared/types"
+import { readPreferences } from "./preferences"
+/** Posts is not a configurable section: the blogs that sync into it own it. */
+const ALWAYS = ["posts"]
 import { NoteLocation, parseNoteId, toNoteId } from "../shared/noteLocation"
 
 /*
@@ -15,7 +18,10 @@ export function vaultRoot(): string {
 }
 
 export async function ensureVault(): Promise<void> {
-  for (const section of SECTIONS) {
+  const { sections } = await readPreferences()
+  const wanted = [...sections.map((section) => section.id), ...ALWAYS]
+
+  for (const section of new Set(wanted)) {
     await mkdir(join(vaultRoot(), section), { recursive: true })
   }
 }

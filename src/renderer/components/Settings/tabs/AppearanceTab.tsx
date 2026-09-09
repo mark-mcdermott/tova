@@ -10,6 +10,7 @@ import { backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
 import { Stepper } from "../Stepper"
+import { SectionManager } from "../SectionManager"
 
 /** The glob gives URLs; the filename inside one is what gets stored. */
 function nameOf(url: string): string {
@@ -180,6 +181,16 @@ export function AppearanceTab() {
             theme="dark"
           />
         </Field>
+      </section>
+
+      <section className="settings-section">
+        <h2 className="settings-section-title">Sidebar</h2>
+        <p className="settings-note">
+          Which sections the rail shows, what they are called and in what order. Renaming one only
+          changes its label — nothing on disk moves, and no note changes its name.
+        </p>
+
+        <SectionManager />
       </section>
 
       <section className="settings-section">

@@ -3,6 +3,7 @@ import { useNotesStore } from "../../stores/notesStore"
 import { Icon } from "./icons"
 import { containerKeyOf } from "./sectionKey"
 import { indexKey } from "../../../shared/indexTarget"
+import { SectionIcon } from "../../../shared/sections"
 
 interface DisclosureProps {
   /** Key in the store's expanded map — also what breadcrumbs target. */
@@ -10,7 +11,7 @@ interface DisclosureProps {
   label: string
   count?: number
   variant?: "section" | "group"
-  icon?: "notes" | "daily" | "ideas" | "journal" | "posts" | "trash" | "folder"
+  icon?: SectionIcon | "folder"
   /** Nesting level, so a row can indent its text while its background does not. */
   depth?: number
   /**

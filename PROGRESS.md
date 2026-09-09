@@ -447,6 +447,35 @@ Note that `app.getPath("userData")` is `Application Support/Electron` for an
 unpackaged dev run and `Application Support/tova` for the packaged app. Anything
 poking at that directory by hand needs to know which one it is looking at.
 
+## Sections
+
+The sidebar's rows are configuration: which exist, what they are called, what
+icon they wear, in what order, and whether they are shown at all.
+
+**The id is the directory; the label is what the reader sees.** They are
+separate on purpose — renaming a section rewrites a string and touches no
+files, so no note changes its name and no id in the trash's front matter goes
+stale. Adding and removing do touch the vault and go through main.
+
+**Daily is fixed.** Its notes are one a day, named by date and created for the
+reader, so a renamed or missing Daily breaks the thing that makes them. Nothing
+may be moved across it either — otherwise a reorder could shove the one fixed
+row. **Trash cannot be removed or hidden**, because deleted notes need
+somewhere to go, but it renames and moves like anything else. **Posts is not
+listed at all**: the blogs that sync into it own it.
+
+Removing a section moves its notes to Trash and then removes the directory, the
+same bargain deleting a folder makes. Main refuses to remove Daily, Trash or
+Posts whatever the renderer asks for.
+
+`Section` is a shape rather than a closed set, since which ones exist is the
+reader's business. Safety did not move with it: the vault's choke point still
+refuses any id that could climb a path, and `isSection` is that shape test.
+Listing walks the vault's own directories rather than the configured list, so
+notes in a section since removed are still found rather than quietly vanishing;
+restoring one whose home is gone brings it back to Notes, because visible beats
+faithful.
+
 ## Carried forward
 
 - **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against

@@ -1,3 +1,5 @@
+import { DEFAULT_SECTIONS, SectionConfig, normalizeSections } from "./sections"
+
 /** The face note titles are set in. Both are bundled; the choice is the user's. */
 export type TitleFont = "alagambe" | "fascinate"
 
@@ -44,6 +46,8 @@ export interface Preferences {
   backupLimit: number
   spellcheck: boolean
   theme: ThemeChoice
+  /** The sidebar's sections: which exist, what they are called, in what order. */
+  sections: SectionConfig[]
   /** Background filename per theme, or null to pick one at each launch. A dark
    * room wants a dark photograph; the same image rarely serves both. */
   backgroundLight: string | null
@@ -61,6 +65,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backupLimit: 30,
   spellcheck: true,
   theme: "system",
+  sections: DEFAULT_SECTIONS,
   backgroundLight: null,
   backgroundDark: null,
   titleFont: "alagambe",
@@ -106,6 +111,7 @@ export function normalizePreferences(value: unknown): Preferences {
       LIMITS.backupLimit
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
+    sections: normalizeSections(raw.sections),
     theme: THEMES.some((theme) => theme.value === raw.theme)
       ? (raw.theme as ThemeChoice)
       : DEFAULT_PREFERENCES.theme,

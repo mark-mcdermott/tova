@@ -623,3 +623,19 @@
 .sidebar-search:focus-within .sidebar-search-icon {
   color: var(--text-muted);
 }
+
+/* The mark is a control, but should not look like one until it is used. */
+.wordmark-button {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wordmark-button:focus-visible {
+  outline: 2px solid var(--accent-on-glass);
+  outline-offset: 4px;
+}

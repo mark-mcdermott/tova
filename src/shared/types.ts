@@ -1,12 +1,16 @@
-export const SECTIONS = ["notes", "daily", "ideas", "journal", "posts", "trash"] as const
+/**
+ * A section is a directory in the vault, and the reader configures which ones
+ * exist — see `sections.ts`. So this is the shape of an id rather than a list
+ * of them: what makes it safe is that it cannot climb a path, and the vault's
+ * own choke point refuses anything that tries.
+ */
+export type Section = string
 
 /** Sections whose notes are filed one folder deep. Everything else is flat. */
 export const FOLDERED_SECTIONS: readonly Section[] = ["notes", "posts"]
 
-export type Section = (typeof SECTIONS)[number]
-
 export function isSection(value: string): value is Section {
-  return (SECTIONS as readonly string[]).includes(value)
+  return /^[a-z0-9][a-z0-9-]*$/.test(value)
 }
 
 export interface SearchHit {
@@ -258,4 +262,8 @@ export interface NoteApi {
   exportMarkdown: (id: string) => Promise<string | null>
   /** Full-text search, bodies included — they only exist in main. */
   search: (query: string) => Promise<SearchHit[]>
+  /** Makes a new section's directory in the vault. */
+  createSection: (id: string) => Promise<void>
+  /** Removes a section, moving whatever it held to Trash. Returns their new ids. */
+  deleteSection: (id: string) => Promise<string[]>
 }

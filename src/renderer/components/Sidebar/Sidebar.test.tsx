@@ -101,9 +101,45 @@ afterEach(cleanup)
 describe("Sidebar", () => {
   it("shows the wordmark and a new note action", () => {
     render(<Sidebar />)
-    // Drawn rather than set, so it is found by its label, not its text.
-    expect(screen.getByRole("img", { name: "Tova" })).toBeDefined()
+    // Drawn rather than set, so it is found by its label, not its text. The
+    // button around it carries the name now that the mark is the way home.
+    expect(screen.getByRole("button", { name: /^Tova/ })).toBeDefined()
     expect(screen.getByLabelText("New note")).toBeDefined()
+  })
+
+  it("goes home from the wordmark, to whichever section is at the top", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+
+    const state = useNotesStore.getState()
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "section", section: "notes" })
+  })
+
+  it("follows the rail when the top section is not Notes", async () => {
+    usePreferencesStore.setState({
+      preferences: {
+        ...DEFAULT_PREFERENCES,
+        sections: [
+          { id: "journal", label: "Journal", icon: "journal", enabled: true },
+          { id: "notes", label: "Notes", icon: "notes", enabled: true }
+        ]
+      }
+    })
+
+    render(<Sidebar />)
+    expect(screen.getByRole("button", { name: "Tova — open Journal" })).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "journal" })
+  })
+
+  it("marks that section as where you are", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+
+    const row = screen.getByRole("button", { name: /^Notes/ })
+    expect(row.className).toContain("is-active")
   })
 
   it("opens settings from the avatar and from the cog", async () => {

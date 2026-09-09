@@ -11,8 +11,9 @@ export function Wordmark() {
     <svg
       className="wordmark"
       viewBox="0 0 479.81 221.92"
-      role="img"
-      aria-label="Tova"
+      // The button around it carries the name; a second one here would have a
+      // screen reader announce the mark twice.
+      aria-hidden="true"
       fill="currentColor"
     >
       <path d="M0,12.74V0h153.22v12.74h-69.73v205.52h-13.77V12.74H0Z" />

@@ -7,7 +7,7 @@ import {
   CreateNoteInput,
   MoveNoteInput,
   Section,
-  SECTIONS
+  isSection
 } from "../shared/types"
 import {
   NoteLocation,
@@ -21,6 +21,7 @@ import {
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
 import { slugify, uniqueSlug } from "../shared/noteName"
 import { extractTags } from "../shared/tags"
+import { canDelete } from "../shared/sections"
 import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
 import { saveVersion } from "./backup"
 
@@ -129,7 +130,15 @@ function normalizeFolder(section: Section, folder: string | null | undefined): s
 async function listLocations(): Promise<NoteLocation[]> {
   const locations: NoteLocation[] = []
 
-  for (const section of SECTIONS) {
+  // The vault's own directories rather than the configured list: a section the
+  // reader has since removed may still hold notes, and they should still be
+  // found rather than quietly disappearing.
+  const sections = (await readdir(vaultRoot(), { withFileTypes: true }).catch(() => []))
+    .filter((entry) => entry.isDirectory() && isSection(entry.name))
+    .map((entry) => entry.name)
+    .sort()
+
+  for (const section of sections) {
     const sectionDir = resolveInVault(section)
     const entries = await readdir(sectionDir, { withFileTypes: true }).catch(() => [])
 
@@ -293,10 +302,18 @@ export async function restoreNote(id: string): Promise<NoteSummary> {
   const note = await load(requireLocation(id))
   if (note.location.section !== "trash") return toSummary(note)
 
-  const target = restoreLocation(
+  const home = restoreLocation(
     { section: note.home.section, folder: note.home.folder ?? "" },
     note.location.filename
   )
+
+  // A note can outlive the section it came from. Restoring it into a directory
+  // no longer configured would put it somewhere the sidebar cannot show, so it
+  // comes back to Notes instead — visible beats faithful here.
+  const homeExists = await stat(resolveInVault(home.section))
+    .then((entry) => entry.isDirectory())
+    .catch(() => false)
+  const target: NoteLocation = homeExists ? home : { ...home, section: "notes", folder: null }
 
   const directory = directoryOf(target.section, target.folder)
   await mkdir(directory, { recursive: true })
@@ -382,6 +399,35 @@ export async function renameFolder(from: string, to: string): Promise<string> {
  * Removes a folder, moving everything inside it to Trash first. Notes are never
  * destroyed by a folder delete — they stay recoverable like any other deletion.
  */
+/**
+ * Removes a section's directory, moving whatever it held to Trash first — the
+ * same bargain deleting a folder makes. Daily and Trash are refused here as
+ * well as in the UI: main does not trust the renderer to have checked.
+ */
+export async function deleteSection(id: string): Promise<string[]> {
+  if (!isSection(id)) throw new Error(`Invalid section: ${id}`)
+  if (!canDelete(id) || id === "posts") throw new Error(`${id} cannot be removed`)
+
+  const directory = resolveInVault(id)
+  const entries = await readdir(directory, { withFileTypes: true }).catch(() => [])
+
+  const trashed: string[] = []
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue
+    const summary = await trashNote(toNoteId({ section: id, folder: null, filename: entry.name }))
+    trashed.push(summary.id)
+  }
+
+  await rm(directory, { recursive: true, force: true })
+  return trashed
+}
+
+/** Makes the directory a newly configured section will keep its notes in. */
+export async function createSection(id: string): Promise<void> {
+  if (!isSection(id)) throw new Error(`Invalid section: ${id}`)
+  await mkdir(resolveInVault(id), { recursive: true })
+}
+
 export async function deleteFolder(name: string): Promise<string[]> {
   if (!isValidFolderName(name)) throw new Error(`Invalid folder name: ${name}`)
 

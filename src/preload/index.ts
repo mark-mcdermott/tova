@@ -34,6 +34,8 @@ const notes: NoteApi = {
   deleteFolder: (name) => ipcRenderer.invoke("folder:delete", name),
   exportMarkdown: (id) => ipcRenderer.invoke("note:export", id),
   search: (query) => ipcRenderer.invoke("note:search", query),
+  createSection: (id) => ipcRenderer.invoke("section:create", id),
+  deleteSection: (id) => ipcRenderer.invoke("section:delete", id),
   setFavorite: (id, favorite) => ipcRenderer.invoke("note:favorite", id, favorite)
 }
 

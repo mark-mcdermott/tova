@@ -5,6 +5,7 @@ import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { composeTarget } from "../../../shared/composeTarget"
+import { visibleSections } from "../../../shared/sections"
 import { Icon } from "./icons"
 import { Wordmark } from "./Wordmark"
 import { Avatar } from "./Avatar"
@@ -26,6 +27,8 @@ export function Sidebar() {
   const openToday = useNotesStore((state) => state.openToday)
 
   const showIndex = useNotesStore((state) => state.showIndex)
+  const sections = usePreferencesStore((state) => state.preferences.sections)
+  const [home] = visibleSections(sections)
   const runSearch = useNotesStore((state) => state.runSearch)
   const [query, setQuery] = useState("")
 
@@ -46,7 +49,20 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <header className="sidebar-header">
-        <Wordmark />
+        {/* The mark is the way home: it opens whatever section sits at the top
+            of the rail, which the reader chooses. */}
+        <button
+          type="button"
+          className="wordmark-button"
+          title={home === undefined ? "Tova" : `Tova — open ${home.label}`}
+          aria-label={home === undefined ? "Tova" : `Tova — open ${home.label}`}
+          disabled={home === undefined}
+          onClick={() => {
+            if (home !== undefined) showIndex({ kind: "section", section: home.id })
+          }}
+        >
+          <Wordmark />
+        </button>
 
         <button
           type="button"

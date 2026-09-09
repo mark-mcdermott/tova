@@ -1,6 +1,8 @@
-import { DragEvent, MouseEvent, useState } from "react"
+import { DragEvent, Fragment, MouseEvent, useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
+import { usePreferencesStore } from "../../stores/preferencesStore"
+import { visibleSections } from "../../../shared/sections"
 import { Disclosure } from "./Disclosure"
 import { FolderNameInput } from "./FolderNameInput"
 import { Menu, MenuItem } from "../Popup/Menu"
@@ -92,14 +94,14 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const blogs = useBlogsStore((state) => state.blogs)
   const posts = inSection("posts")
   const notesSection = inSection("notes")
-  const daily = inSection("daily")
-  const trashed = inSection("trash")
 
-  // Flat sections beside Notes: no folders, so each is a list plus a way in.
-  const flatSections = [
-    { key: "ideas", label: "Ideas", icon: "ideas" },
-    { key: "journal", label: "Journal", icon: "journal" }
-  ] as const
+  // The rail is configuration now: what exists, what it is called, in what
+  // order. Notes and Trash still take drop targets of their own, and Notes
+  // still carries its folders.
+  const sections = visibleSections(usePreferencesStore((state) => state.preferences.sections))
+
+  const dropFor = (id: string) =>
+    id === "notes" ? notesRoot : id === "daily" ? dailyDrop : id === "trash" ? trashDrop : null
 
   function openFolderMenu(folder: string) {
     return (event: MouseEvent) => {
@@ -144,88 +146,61 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
         )
       })}
 
-      <Disclosure
-        sectionKey="notes"
-        label="Notes"
-        count={notesSection.length}
-        icon="notes"
-        depth={1}
-        onActivate={() => showIndex({ kind: "section", section: "notes" })}
-        dropHandlers={notesRoot.dropHandlers}
-        isDropActive={notesRoot.isDropActive}
-      />
+      {sections.map((section) => {
+        const held = inSection(section.id)
+        const drop = dropFor(section.id)
 
-      {/* Always shown rather than unfolded: a folder is a destination beside
-          Notes, not a drawer inside it. */}
-      {folders.map((folder) =>
-        renaming === folder ? (
-          <FolderNameInput
-            key={folder}
-            initialValue={folder}
-            onSubmit={(name) => {
-              setRenaming(null)
-              if (name !== folder) renameFolder(folder, name)
-            }}
-            onCancel={() => setRenaming(null)}
-          />
-        ) : (
-          <FolderRow
-            key={folder}
-            folder={folder}
-            notes={notesSection.filter((note) => note.folder === folder)}
-            onContextMenu={openFolderMenu(folder)}
-            onMove={(note, destination) => moveNote(note.id, "notes", destination)}
-          />
-        )
-      )}
-
-      {creatingFolder && (
-        <FolderNameInput
-          onSubmit={(name) => {
-            setCreatingFolder(false)
-            createFolder(name)
-          }}
-          onCancel={() => setCreatingFolder(false)}
-        />
-      )}
-
-      <Disclosure
-        sectionKey="daily"
-        label="Daily"
-        count={daily.length}
-        icon="daily"
-        depth={1}
-        onContextMenu={dailyMenu.open}
-        onActivate={() => showIndex({ kind: "section", section: "daily" })}
-        dropHandlers={dailyDrop.dropHandlers}
-        isDropActive={dailyDrop.isDropActive}
-      />
-
-      {flatSections.map(({ key, label, icon }) => {
-        const held = inSection(key)
         return (
-          <Disclosure
-            key={key}
-            sectionKey={key}
-            label={label}
-            count={held.length}
-            icon={icon}
-            depth={1}
-            onActivate={() => showIndex({ kind: "section", section: key })}
-          />
+          <Fragment key={section.id}>
+            <Disclosure
+              sectionKey={section.id}
+              label={section.label}
+              count={held.length}
+              icon={section.icon}
+              depth={1}
+              onActivate={() => showIndex({ kind: "section", section: section.id })}
+              onContextMenu={section.id === "daily" ? dailyMenu.open : undefined}
+              dropHandlers={drop?.dropHandlers}
+              isDropActive={drop?.isDropActive}
+            />
+
+            {/* Folders live under Notes and are always shown rather than
+                unfolded: each is a destination beside it, not a drawer in it. */}
+            {section.id === "notes" &&
+              folders.map((folder) =>
+                renaming === folder ? (
+                  <FolderNameInput
+                    key={folder}
+                    initialValue={folder}
+                    onSubmit={(name) => {
+                      setRenaming(null)
+                      if (name !== folder) renameFolder(folder, name)
+                    }}
+                    onCancel={() => setRenaming(null)}
+                  />
+                ) : (
+                  <FolderRow
+                    key={folder}
+                    folder={folder}
+                    notes={notesSection.filter((note) => note.folder === folder)}
+                    onContextMenu={openFolderMenu(folder)}
+                    onMove={(note, destination) => moveNote(note.id, "notes", destination)}
+                  />
+                )
+              )}
+
+            {section.id === "notes" && creatingFolder && (
+              <FolderNameInput
+                onSubmit={(name) => {
+                  setCreatingFolder(false)
+                  createFolder(name)
+                }}
+                onCancel={() => setCreatingFolder(false)}
+              />
+            )}
+          </Fragment>
         )
       })}
-
-      <Disclosure
-        sectionKey="trash"
-        label="Trash"
-        count={trashed.length}
-        icon="trash"
-        depth={1}
-        onActivate={() => showIndex({ kind: "section", section: "trash" })}
-        dropHandlers={trashDrop.dropHandlers}
-        isDropActive={trashDrop.isDropActive}
-      />
 
       {dailyMenu.position !== null && (
         <Menu

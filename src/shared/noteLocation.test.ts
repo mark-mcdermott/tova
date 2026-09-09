@@ -54,8 +54,12 @@ describe("parseNoteId", () => {
     expect(parseNoteId("notes//river.md")).toBeNull()
   })
 
-  it("rejects an unknown section", () => {
-    expect(parseNoteId("secrets/river.md")).toBeNull()
+  it("takes any well-formed section, since the reader configures them", () => {
+    // Which sections exist is configuration; what makes an id safe is its
+    // shape, and the vault refuses anything that could climb a path.
+    expect(parseNoteId("secrets/river.md")?.section).toBe("secrets")
+    expect(parseNoteId("../etc/river.md")).toBeNull()
+    expect(parseNoteId("Notes/river.md")).toBeNull()
   })
 
   it("rejects a non-markdown file", () => {
@@ -118,8 +122,10 @@ describe("trash and restore transitions", () => {
     expect(toNoteId(restoreLocation({}, "river.md"))).toBe("notes/river.md")
   })
 
-  it("falls back to notes when the section is nonsense", () => {
-    expect(toNoteId(restoreLocation({ section: "nope" }, "river.md"))).toBe("notes/river.md")
+  it("falls back to notes when the section is not a section at all", () => {
+    // A section that merely no longer exists is caught in main, which can see
+    // the vault; this is for a home that was never a usable id.
+    expect(toNoteId(restoreLocation({ section: "NOPE!" }, "river.md"))).toBe("notes/river.md")
   })
 
   it("never restores back into trash", () => {

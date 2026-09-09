@@ -13,7 +13,9 @@ import {
   createFolder,
   renameFolder,
   deleteFolder,
-  setFavorite
+  setFavorite,
+  createSection,
+  deleteSection
 } from "../notes"
 import { CreateNoteInput, MoveNoteInput, isSection } from "../../shared/types"
 import { ensureDailyNote } from "../daily"
@@ -104,6 +106,9 @@ export function registerNoteHandlers(): void {
   ipcMain.handle("note:export", (_event, id) => exportNoteMarkdown(asString(id, "id")))
 
   ipcMain.handle("note:search", (_event, query) => searchNotes(asString(query, "query")))
+
+  ipcMain.handle("section:create", (_event, id) => createSection(asString(id, "id")))
+  ipcMain.handle("section:delete", (_event, id) => deleteSection(asString(id, "id")))
 
   ipcMain.handle("note:favorite", (_event, id, favorite) =>
     setFavorite(asString(id, "id"), favorite === true)
