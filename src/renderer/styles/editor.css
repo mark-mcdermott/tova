@@ -1194,7 +1194,13 @@
   font-size: var(--text-base);
 }
 
-/* Same contract as the sidebar's actions had: under the pointer, not on click. */
+/*
+ * Two stages rather than one. Anywhere on the row shows the controls, faintly,
+ * so you can see the row has them; the control under the pointer comes up to
+ * full strength. Showing them only on their own hover meant aiming at
+ * something invisible, and showing them at full strength on any hover put a
+ * delete button at the reader's eye every time they moved the mouse.
+ */
 .index-actions {
   display: flex;
   gap: 2px;
@@ -1202,8 +1208,15 @@
   transition: opacity 120ms ease;
 }
 
-.index-actions:hover,
+.index-item:hover .index-actions,
 .index-item:has(:focus-visible) .index-actions {
+  opacity: 0.45;
+}
+
+/* Outranks the row rule above it, which is three selectors deep and otherwise
+   wins — hovering a control hovers the row it sits in. */
+.index-item:hover .index-actions:hover,
+.index-item:has(.index-actions :focus-visible) .index-actions {
   opacity: 1;
 }
 
@@ -1252,4 +1265,71 @@
   text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
   cursor: help;
+}
+
+/* ── Confirm dialog ───────────────────────────────────────────────────── */
+
+/*
+ * The app's own, rather than window.confirm — that one is Chromium's, ignores
+ * the theme, and announces the origin at the reader. This sits over the whole
+ * window because what it asks about is not scoped to one pane.
+ */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: rgb(23 20 31 / 38%);
+  backdrop-filter: blur(2px);
+}
+
+.confirm-panel {
+  width: min(28rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  /* Opaque enough to carry dark text whatever the photograph is doing behind
+     it — the same problem the settings cards and the post block have. */
+  background: var(--confirm-bg);
+  box-shadow: 0 18px 48px rgb(23 20 31 / 34%);
+}
+
+.confirm-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.confirm-body {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .confirm-panel {
+    animation: confirm-in 120ms ease-out;
+  }
+}
+
+@keyframes confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
