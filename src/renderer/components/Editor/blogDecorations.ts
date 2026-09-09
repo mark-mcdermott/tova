@@ -9,8 +9,18 @@ import {
 import { Range } from "@codemirror/state"
 import { parsePosts, publishedAs } from "../../../shared/blogPost"
 
-const headerLine = Decoration.line({ class: "cm-post-line cm-post-header" })
+/*
+ * The header is always the first line of a block and gets the rounded top; the
+ * last field gets the bottom. A post with no fields is one line, so it carries
+ * both — same shape as the fenced-code decorations, for the same reason: these
+ * lines read as one object, not a run of similar ones.
+ */
+const headerLine = Decoration.line({ class: "cm-post-line cm-post-header cm-post-first" })
+const headerOnlyLine = Decoration.line({
+  class: "cm-post-line cm-post-header cm-post-first cm-post-last"
+})
 const fieldLine = Decoration.line({ class: "cm-post-line cm-post-field" })
+const lastFieldLine = Decoration.line({ class: "cm-post-line cm-post-field cm-post-last" })
 
 class RocketWidget extends WidgetType {
   constructor(
@@ -66,7 +76,7 @@ export function blogDecorations(onPublish: (blog: string, headerLine: number) =>
 
     for (const post of parsePosts(doc.toString())) {
       const header = doc.line(post.headerLine + 1)
-      decorations.push(headerLine.range(header.from))
+      decorations.push((post.fields.length === 0 ? headerOnlyLine : headerLine).range(header.from))
       // A tick once the post has gone out at least once. It says "published",
       // not "in sync" — comparing filenames would call a post current after a
       // body edit and stale after a retitle, which is worse than not claiming.
@@ -80,9 +90,10 @@ export function blogDecorations(onPublish: (blog: string, headerLine: number) =>
         }).range(header.to)
       )
 
-      for (const field of post.fields) {
-        decorations.push(fieldLine.range(doc.line(field.line + 1).from))
-      }
+      post.fields.forEach((field, index) => {
+        const line = index === post.fields.length - 1 ? lastFieldLine : fieldLine
+        decorations.push(line.range(doc.line(field.line + 1).from))
+      })
     }
 
     return Decoration.set(decorations, true)
