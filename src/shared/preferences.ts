@@ -17,6 +17,18 @@ export const PROSE_WIDTHS: { value: ProseWidth; label: string; hint: string }[] 
   { value: "full", label: "Full", hint: "Uses the pane" }
 ]
 
+/** What the reader chose; "system" follows the OS and can change under them. */
+export type ThemeChoice = "light" | "dark" | "system"
+
+export const THEMES: { value: ThemeChoice; label: string }[] = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" }
+]
+
+/** What the app is actually painting, once "system" has been resolved. */
+export type Theme = "light" | "dark"
+
 export interface Preferences {
   /** Shown beside the avatar in the sidebar footer. */
   displayName: string
@@ -31,8 +43,11 @@ export interface Preferences {
   /** How many snapshots to keep before the oldest is dropped. */
   backupLimit: number
   spellcheck: boolean
-  /** Bundled background filename, or null to pick one at each launch. */
-  background: string | null
+  theme: ThemeChoice
+  /** Background filename per theme, or null to pick one at each launch. A dark
+   * room wants a dark photograph; the same image rarely serves both. */
+  backgroundLight: string | null
+  backgroundDark: string | null
   titleFont: TitleFont
   proseWidth: ProseWidth
 }
@@ -45,7 +60,9 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backupIntervalMinutes: 60,
   backupLimit: 30,
   spellcheck: true,
-  background: null,
+  theme: "system",
+  backgroundLight: null,
+  backgroundDark: null,
   titleFont: "alagambe",
   proseWidth: "narrow"
 }
@@ -89,7 +106,18 @@ export function normalizePreferences(value: unknown): Preferences {
       LIMITS.backupLimit
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
-    background: typeof raw.background === "string" ? raw.background : null,
+    theme: THEMES.some((theme) => theme.value === raw.theme)
+      ? (raw.theme as ThemeChoice)
+      : DEFAULT_PREFERENCES.theme,
+    // `background` was the single choice before there were two. A file written
+    // by an older build still names the light one.
+    backgroundLight:
+      typeof raw.backgroundLight === "string"
+        ? raw.backgroundLight
+        : typeof raw.background === "string"
+          ? raw.background
+          : null,
+    backgroundDark: typeof raw.backgroundDark === "string" ? raw.backgroundDark : null,
     titleFont: raw.titleFont === "fascinate" ? "fascinate" : DEFAULT_PREFERENCES.titleFont,
     proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth
   }

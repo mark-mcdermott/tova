@@ -4,6 +4,7 @@ import { backupRoot } from "../backup"
 import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
 import { avatarDataUrl, chooseAvatar } from "../avatar"
+import { addBackground, listBackgrounds } from "../backgrounds"
 import {
   addToDictionary,
   listDictionary,
@@ -37,6 +38,9 @@ export function registerAppHandlers(): void {
   ipcMain.handle("prefs:write", (_event, preferences) => writePreferences(preferences))
   ipcMain.handle("prefs:chooseAvatar", () => chooseAvatar())
   ipcMain.handle("prefs:avatarUrl", () => avatarDataUrl())
+
+  ipcMain.handle("background:list", () => listBackgrounds())
+  ipcMain.handle("background:add", () => addBackground())
 
   ipcMain.handle("spellcheck:setEnabled", (_event, enabled) => {
     if (typeof enabled !== "boolean") throw new Error("enabled must be a boolean")

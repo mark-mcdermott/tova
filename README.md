@@ -58,9 +58,6 @@ Gatekeeper will refuse the app on any machine that did not build it.
 - **Several vaults.** One vault, at `~/Documents/Tova`. The Settings tab shows
   and reveals it; switching between vaults is unbuilt.
 - **A tooltips toggle**, from the original settings spec.
-- **Adding a background image from Settings.** The picker shows what is bundled;
-  a dashed tile with a plus, beside the thumbnails, would copy a chosen file
-  into the app's data directory and list it with the rest.
 - **Paging the vault's snapshot list.** It grows to whatever `backupLimit`
   allows — 200 at the top of the range — and today renders every row.
 - **A licensed script face.** `Alagambe` is bundled for note titles and is

@@ -28,20 +28,39 @@ export function pickBackground(
  * folder is all it takes to have one chosen per launch again.
  */
 export function applyBackground(url: string | null = pickBackground()): void {
-  if (url === null) return
-  document.documentElement.style.setProperty("--bg-photo", `url("${url}")`)
+  const root = document.documentElement
+  // Cleared rather than left behind: in dark mode with no dark photograph, the
+  // light one behind white text is unreadable, and the gradient underneath is
+  // built for exactly that case.
+  if (url === null) root.style.removeProperty("--bg-photo")
+  else root.style.setProperty("--bg-photo", `url("${url}")`)
 }
 
-/** The URL for a stored filename, or null when it is no longer bundled. */
-export function backgroundByName(name: string): string | null {
-  return backgroundUrls.find((url) => url.endsWith(`/${name}`)) ?? null
+/** Where an added background is served from — see the tova-bg scheme in main. */
+export function userBackgroundUrl(name: string): string {
+  return `tova-bg://local/${encodeURIComponent(name)}`
 }
 
 /**
- * A chosen background wins; anything else — no choice, or a choice whose file
- * is no longer bundled — falls back to picking one.
+ * The URL for a stored filename: bundled first, then the ones the reader added,
+ * then null when the file is gone from both.
  */
-export function resolveBackground(chosen: string | null): string | null {
-  if (chosen === null) return pickBackground()
-  return backgroundByName(chosen) ?? pickBackground()
+export function backgroundByName(name: string, added: string[] = []): string | null {
+  const bundled = backgroundUrls.find((url) => url.endsWith(`/${name}`))
+  if (bundled !== undefined) return bundled
+  return added.includes(name) ? userBackgroundUrl(name) : null
+}
+
+/**
+ * A chosen background wins. With no choice, light shuffles through what is
+ * bundled; dark shows the gradient instead, because every bundled photograph is
+ * a bright one and none of them can carry white text.
+ */
+export function resolveBackground(
+  chosen: string | null,
+  theme: "light" | "dark",
+  added: string[] = []
+): string | null {
+  if (chosen === null) return theme === "dark" ? null : pickBackground()
+  return backgroundByName(chosen, added) ?? (theme === "dark" ? null : pickBackground())
 }

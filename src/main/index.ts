@@ -2,6 +2,7 @@ import { app, BrowserWindow, net, powerMonitor, protocol } from "electron"
 import { join } from "path"
 import { pathToFileURL } from "url"
 import { ensureVault, resolveInVault } from "./vault"
+import { resolveBackground } from "./backgrounds"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
 import { registerImageHandlers } from "./ipc/images"
@@ -21,9 +22,12 @@ import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from 
  * choke point that guards note writes.
  */
 const ASSET_SCHEME = "tova-asset"
+/** Backgrounds the reader added; they live in userData, not in the vault. */
+const BACKGROUND_SCHEME = "tova-bg"
 
 protocol.registerSchemesAsPrivileged([
-  { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }
+  { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } },
+  { scheme: BACKGROUND_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }
 ])
 
 function serveVaultAssets(): void {
@@ -34,6 +38,23 @@ function serveVaultAssets(): void {
       return await net.fetch(pathToFileURL(file).toString())
     } catch {
       // A missing or out-of-vault asset is a broken image, never an app error.
+      return new Response(null, { status: 404 })
+    }
+  })
+}
+
+/*
+ * The same window for backgrounds, onto a different directory. A separate
+ * scheme rather than a path prefix on the vault's, so neither handler can ever
+ * be talked into serving the other's files.
+ */
+function serveBackgrounds(): void {
+  protocol.handle(BACKGROUND_SCHEME, async (request) => {
+    try {
+      const { pathname } = new URL(request.url)
+      const file = resolveBackground(decodeURIComponent(pathname).replace(/^\/+/, ""))
+      return await net.fetch(pathToFileURL(file).toString())
+    } catch {
       return new Response(null, { status: 404 })
     }
   })
@@ -123,6 +144,7 @@ app.whenReady().then(async () => {
   })
 
   serveVaultAssets()
+  serveBackgrounds()
   registerNoteHandlers()
   registerBackupHandlers()
   registerImageHandlers()

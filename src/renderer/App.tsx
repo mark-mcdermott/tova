@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
 import { Settings } from "./components/Settings/Settings"
@@ -9,6 +9,8 @@ import { useNotesStore } from "./stores/notesStore"
 import { useBlogsStore } from "./stores/blogsStore"
 import { usePreferencesStore } from "./stores/preferencesStore"
 import { applyBackground, resolveBackground } from "./backgrounds"
+import { systemTheme, watchSystemTheme } from "./theme"
+import { Theme } from "../shared/preferences"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 import "./styles/settings.css"
@@ -24,10 +26,15 @@ export default function App() {
   const loadBlogs = useBlogsStore((state) => state.load)
   const loadPreferences = usePreferencesStore((state) => state.load)
   const fontSize = usePreferencesStore((state) => state.preferences.fontSize)
-  const background = usePreferencesStore((state) => state.preferences.background)
+  const backgroundLight = usePreferencesStore((state) => state.preferences.backgroundLight)
+  const backgroundDark = usePreferencesStore((state) => state.preferences.backgroundDark)
+  const themeChoice = usePreferencesStore((state) => state.preferences.theme)
+  const [systemIs, setSystemIs] = useState<Theme>(() => systemTheme())
+  const theme: Theme = themeChoice === "system" ? systemIs : themeChoice
   const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
   const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
+  const userBackgrounds = usePreferencesStore((state) => state.userBackgrounds)
 
   useEffect(() => {
     load()
@@ -62,11 +69,24 @@ export default function App() {
     document.documentElement.dataset.proseWidth = proseWidth
   }, [proseWidth])
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  // Only while following the OS: an explicit choice should not move under the
+  // reader because the sun went down.
+  useEffect(() => {
+    if (themeChoice !== "system") return
+    return watchSystemTheme(setSystemIs)
+  }, [themeChoice])
+
   // Applied only once preferences have loaded, so a chosen background is not
   // overwritten by a shuffle a frame earlier.
   useEffect(() => {
-    if (preferencesLoaded) applyBackground(resolveBackground(background))
-  }, [preferencesLoaded, background])
+    if (!preferencesLoaded) return
+    const chosen = theme === "dark" ? backgroundDark : backgroundLight
+    applyBackground(resolveBackground(chosen, theme, userBackgrounds))
+  }, [preferencesLoaded, backgroundLight, backgroundDark, theme, userBackgrounds])
 
   // Chromium navigates the window to any file dropped outside a handler, which
   // would replace the app with the image. Nothing else drops onto the window.

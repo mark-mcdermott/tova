@@ -214,6 +214,63 @@
   --footer-caret: 1.45rem;
 }
 
+/*
+ * Dark. Only the colours move — every space, radius and size above is shared,
+ * which is the point of having tokens at all.
+ *
+ * The light palette is dark ink on a pale panel over a bright photograph. This
+ * is the inverse, and it is not a matter of flipping the text: a purple that
+ * holds against a pale panel disappears against a dark one, so the accents
+ * lighten rather than invert. Backgrounds are chosen per theme for the same
+ * reason — a sunset behind white text is unreadable, and no amount of ink
+ * colour fixes it.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --accent: #a396ee;
+  --accent-bright: #c3b8ff;
+  --accent-tint: color-mix(in oklab, var(--accent) 26%, transparent);
+  --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
+  --caret: #b4a9ff;
+  --tag-ink: #bcb2ff;
+  /* The open note's ink: the light theme's mauve, lifted until it holds over a
+     dark ground the way #7d5d8e holds over a pale one. */
+  --accent-on-glass: #d3b9e6;
+
+  --bg-base: #17141f;
+  --bg-image:
+    radial-gradient(120% 90% at 18% 8%, #2a2438 0%, transparent 60%),
+    radial-gradient(110% 80% at 82% 22%, #3a2b33 0%, transparent 58%),
+    linear-gradient(170deg, #1e1a29 0%, #191622 55%, #12101a 100%);
+
+  --glass-bg: transparent;
+  --glass-bg-raised: rgb(255 255 255 / 8%);
+  --glass-border: rgb(255 255 255 / 16%);
+  --frame-border: rgb(255 255 255 / 22%);
+  --sidebar-rule: rgb(255 255 255 / 12%);
+  --divider-core: rgb(255 255 255 / 10%);
+  --divider-rim: rgb(255 255 255 / 11%);
+  --divider-rim-soft: rgb(255 255 255 / 8%);
+
+  /* Not pure white: at this size on a dark ground it glares, and the descent
+     through secondary and muted is what carries the hierarchy. */
+  --text-primary: #f3f0f9;
+  --text-secondary: rgb(243 240 249 / 88%);
+  --text-muted: rgb(243 240 249 / 70%);
+  --text-faint: rgb(243 240 249 / 50%);
+
+  --rule-ink: rgb(255 255 255 / 26%);
+
+  --code-bg: rgb(255 255 255 / 8%);
+  --code-border: rgb(255 255 255 / 14%);
+
+  /* Still an opaque pill with white ink, and still clears AA — the fill has to
+     stay dark for that even though everything around it lightened. */
+  --selection-bg: #5344b8;
+  --selection-ink: #ffffff;
+}
+
 :root[data-title-font="fascinate"] {
   --font-script: "Fascinate Inline", "Snell Roundhand", "Apple Chancery", cursive;
 }

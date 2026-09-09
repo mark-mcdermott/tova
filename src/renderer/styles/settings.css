@@ -535,3 +535,29 @@
   font-family: var(--font-sans);
   font-size: var(--text-sm);
 }
+
+/* A choice with nothing to show but its name — the mode buttons. */
+.choice-compact {
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+}
+
+/*
+ * The way in, beside the pictures rather than under them: dashed and empty, so
+ * it reads as a slot waiting for something instead of a picture of a plus.
+ */
+.background-add {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  border-color: var(--frame-border);
+  background: transparent;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+}
+
+.background-add:hover {
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
-import { pickBackground, applyBackground } from "./backgrounds"
+import { pickBackground, applyBackground, resolveBackground } from "./backgrounds"
 
 const urls = ["a.jpg", "b.jpg", "c.jpg"]
 
@@ -47,5 +47,22 @@ describe("applyBackground", () => {
   it("leaves the gradient fallback in place when there is no photo", () => {
     applyBackground(null)
     expect(document.documentElement.style.getPropertyValue("--bg-photo")).toBe("")
+  })
+})
+
+describe("resolveBackground", () => {
+  it("shuffles for light when nothing is chosen", () => {
+    expect(resolveBackground(null, "light")).not.toBeNull()
+  })
+
+  it("shows no photograph for dark when nothing is chosen", () => {
+    // Every bundled image is a bright one; the gradient underneath is built
+    // for this and can carry white text.
+    expect(resolveBackground(null, "dark")).toBeNull()
+  })
+
+  it("falls back the same way when the chosen file is gone", () => {
+    expect(resolveBackground("deleted.jpg", "dark")).toBeNull()
+    expect(resolveBackground("deleted.jpg", "light")).not.toBeNull()
   })
 })

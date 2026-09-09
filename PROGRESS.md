@@ -22,9 +22,11 @@
 **Deferred by choice, not left undone** — grammar checking and several vaults. All are in the README's roadmap with the reason
 each was set aside.
 
-A dark theme, a theme picker, focus mode and folder reordering were dropped
-outright rather than deferred: Tova is a light app over a photograph, and that
-is the whole of the intent.
+Focus mode and folder reordering were dropped outright rather than deferred.
+
+Light, dark and system are built, each with its own background — a bright
+photograph cannot carry white text however the ink is coloured, so the two
+modes never share one.
 
 `pnpm run check`, `pnpm run test` and `pnpm run build` are green. The count is
 deliberately not recorded here — it went stale every phase.
@@ -421,6 +423,30 @@ Titles and tags could be filtered in the renderer, which already holds them, but
 splitting the rules across two processes would mean two definitions of what
 counts as a match. `matchNote` is one pure function and main is its only caller.
 
+## Theme
+
+Only the colours move between light and dark: every space, radius and size is
+shared, which is what the tokens were for.
+
+**The accents lighten rather than invert.** A purple that holds against a pale
+panel disappears against a dark one. Measured on the dark ground: text 16:1,
+accents 8.7-10.3, selection 7.3 with white ink.
+
+**Backgrounds are per theme, and dark starts with none.** Every bundled
+photograph is a bright one; behind white text it is unreadable, and no ink
+colour fixes that. With nothing chosen, dark falls through to the gradient the
+tokens already define. Added backgrounds are copied into `userData/backgrounds`
+and served over a `tova-bg://` scheme of their own — a separate scheme rather
+than a path prefix on the vault's, so neither handler can be talked into
+serving the other's files.
+
+**"System" is watched only while it is chosen.** An explicit choice should not
+move under the reader because the sun went down.
+
+Note that `app.getPath("userData")` is `Application Support/Electron` for an
+unpackaged dev run and `Application Support/tova` for the packaged app. Anything
+poking at that directory by hand needs to know which one it is looking at.
+
 ## Carried forward
 
 - **The sidebar is now 17.25rem** — 276px of a 1280px window, or 21.6%, against
@@ -435,8 +461,8 @@ counts as a match. `matchNote` is one pure function and main is its only caller.
   in-section shortcut is unreachable while the section is empty.
 
 - **Code highlighting and PDF export are deferred.** See the roadmap in
-  `README.md` for what each needs. A dark theme, a theme picker, focus mode and
-  folder reordering are not planned.
+  `README.md` for what each needs. Focus mode and folder reordering are not
+  planned.
 
 - **Prose no longer wraps at a readable measure.** The writing area now spans
   the panel so its insets match the title's, which meant dropping the 68ch cap

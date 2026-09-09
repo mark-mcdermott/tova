@@ -5,24 +5,40 @@ interface PreferencesState {
   preferences: Preferences
   /** Data URL of a chosen avatar, or null when the bundled one applies. */
   avatarUrl: string | null
+  /** Backgrounds the reader has added. */
+  userBackgrounds: string[]
   loaded: boolean
 
   load: () => Promise<void>
   update: (patch: Partial<Preferences>) => Promise<void>
   chooseAvatar: () => Promise<void>
+  /** Adds a background and assigns it to the theme that asked for it. */
+  addBackground: (theme: "light" | "dark") => Promise<void>
 }
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   preferences: DEFAULT_PREFERENCES,
   avatarUrl: null,
+  userBackgrounds: [],
   loaded: false,
 
   load: async () => {
-    const [preferences, avatarUrl] = await Promise.all([
+    const [preferences, avatarUrl, userBackgrounds] = await Promise.all([
       window.tova.preferences.read(),
-      window.tova.preferences.avatarUrl()
+      window.tova.preferences.avatarUrl(),
+      window.tova.preferences.listBackgrounds()
     ])
-    set({ preferences, avatarUrl, loaded: true })
+    set({ preferences, avatarUrl, userBackgrounds, loaded: true })
+  },
+
+  addBackground: async (theme) => {
+    const name = await window.tova.preferences.addBackground()
+    if (name === null) return
+
+    const userBackgrounds = await window.tova.preferences.listBackgrounds()
+    set({ userBackgrounds })
+    // Chosen as well as added: nobody picks a file in order to not use it.
+    await get().update(theme === "dark" ? { backgroundDark: name } : { backgroundLight: name })
   },
 
   update: async (patch) => {

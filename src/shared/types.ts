@@ -207,6 +207,10 @@ export interface PreferencesApi {
   chooseAvatar: () => Promise<string | null>
   /** Data URL for the stored avatar, or null when the bundled one applies. */
   avatarUrl: () => Promise<string | null>
+  /** Backgrounds the reader added, served over the tova-bg scheme. */
+  listBackgrounds: () => Promise<string[]>
+  /** Opens a picker, copies the chosen image in, and returns its stored name. */
+  addBackground: () => Promise<string | null>
 }
 
 export interface EventsApi {

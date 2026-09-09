@@ -77,5 +77,79 @@ describe("AppearanceTab", () => {
     expect(screen.getByLabelText("Font size")).toBeDefined()
     expect(screen.getByLabelText("Indent width")).toBeDefined()
   })
+
+  it("offers light, dark and system, starting on system", () => {
+    render(<AppearanceTab />)
+    const modes = screen.getAllByRole("button", { name: /^(Light|Dark|System)$/ })
+
+    expect(modes.map((m) => m.textContent)).toEqual(["Light", "Dark", "System"])
+    expect(screen.getByRole("button", { name: "System" }).getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("saves the mode when one is chosen", async () => {
+    render(<AppearanceTab />)
+    await userEvent.click(screen.getByRole("button", { name: "Dark" }))
+
+    await waitFor(() => expect(write).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" })))
+  })
+
+  it("keeps a background per mode", async () => {
+    render(<AppearanceTab />)
+    const [light, dark] = screen.getAllByRole("button", { name: /lake-sunset/ })
+
+    await userEvent.click(dark)
+    await waitFor(() =>
+      expect(write).toHaveBeenCalledWith(
+        expect.objectContaining({ backgroundDark: "lake-sunset.jpg", backgroundLight: null })
+      )
+    )
+    expect(light.getAttribute("aria-label")).toContain("light")
+  })
+
+  it("offers dark no photograph rather than a shuffle of bright ones", () => {
+    render(<AppearanceTab />)
+    expect(screen.getByText("None")).toBeDefined()
+    expect(screen.getByText("Shuffle")).toBeDefined()
+  })
+
+  it("offers a way to add a background to each mode", () => {
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("Add a background for light")).toBeDefined()
+    expect(screen.getByLabelText("Add a background for dark")).toBeDefined()
+  })
+
+  it("adds a background and assigns it to the mode that asked", async () => {
+    const addBackground = vi.fn().mockResolvedValue("dusk.jpg")
+    const listBackgrounds = vi.fn().mockResolvedValue(["dusk.jpg"])
+    window.tova = stubBridge({
+      preferences: { write, addBackground, listBackgrounds }
+    })
+
+    render(<AppearanceTab />)
+    await userEvent.click(screen.getByLabelText("Add a background for dark"))
+
+    await waitFor(() =>
+      expect(write).toHaveBeenCalledWith(expect.objectContaining({ backgroundDark: "dusk.jpg" }))
+    )
+  })
+
+  it("does nothing when the picker is cancelled", async () => {
+    const addBackground = vi.fn().mockResolvedValue(null)
+    window.tova = stubBridge({ preferences: { write, addBackground } })
+
+    render(<AppearanceTab />)
+    await userEvent.click(screen.getByLabelText("Add a background for light"))
+
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  it("lists an added background beside the bundled ones", () => {
+    usePreferencesStore.setState({ userBackgrounds: ["dusk.jpg"] })
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("dusk.jpg for dark")).toBeDefined()
+    expect(screen.getByLabelText("dusk.jpg for light")).toBeDefined()
+  })
 })
 

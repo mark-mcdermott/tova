@@ -101,7 +101,9 @@ const preferences: PreferencesApi = {
   read: () => ipcRenderer.invoke("prefs:read"),
   write: (value) => ipcRenderer.invoke("prefs:write", value),
   chooseAvatar: () => ipcRenderer.invoke("prefs:chooseAvatar"),
-  avatarUrl: () => ipcRenderer.invoke("prefs:avatarUrl")
+  avatarUrl: () => ipcRenderer.invoke("prefs:avatarUrl"),
+  listBackgrounds: () => ipcRenderer.invoke("background:list"),
+  addBackground: () => ipcRenderer.invoke("background:add")
 }
 
 const events: EventsApi = {

@@ -1,11 +1,12 @@
 import {
   PREFERENCE_LIMITS,
   PROSE_WIDTHS,
+  THEMES,
   ProseWidth,
   TITLE_FONTS,
   TitleFont
 } from "../../../../shared/preferences"
-import { backgroundUrls } from "../../../backgrounds"
+import { backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
 import { Stepper } from "../Stepper"
@@ -15,8 +16,71 @@ function nameOf(url: string): string {
   return url.split("/").pop() ?? url
 }
 
+function BackgroundChoices({
+  chosen,
+  onChoose,
+  theme
+}: {
+  chosen: string | null
+  onChoose: (name: string | null) => void
+  theme: "light" | "dark"
+}) {
+  const added = usePreferencesStore((state) => state.userBackgrounds)
+  const addBackground = usePreferencesStore((state) => state.addBackground)
+
+  return (
+    <div className="background-choices">
+      <button
+        type="button"
+        className={`background-choice${chosen === null ? " is-chosen" : ""}`}
+        aria-pressed={chosen === null}
+        onClick={() => onChoose(null)}
+      >
+        <span className="background-shuffle">{theme === "dark" ? "None" : "Shuffle"}</span>
+      </button>
+
+      {backgroundUrls.map((url) => (
+        <button
+          key={url}
+          type="button"
+          className={`background-choice${chosen === nameOf(url) ? " is-chosen" : ""}`}
+          aria-pressed={chosen === nameOf(url)}
+          aria-label={`${nameOf(url)} for ${theme}`}
+          onClick={() => onChoose(nameOf(url))}
+        >
+          <img src={url} alt="" />
+        </button>
+      ))}
+
+      {added.map((name) => (
+        <button
+          key={name}
+          type="button"
+          className={`background-choice${chosen === name ? " is-chosen" : ""}`}
+          aria-pressed={chosen === name}
+          aria-label={`${name} for ${theme}`}
+          onClick={() => onChoose(name)}
+        >
+          <img src={userBackgroundUrl(name)} alt="" />
+        </button>
+      ))}
+
+      <button
+        type="button"
+        className="background-choice background-add"
+        aria-label={`Add a background for ${theme}`}
+        onClick={() => void addBackground(theme)}
+      >
+        <span aria-hidden="true">+</span>
+      </button>
+    </div>
+  )
+}
+
 export function AppearanceTab() {
-  const background = usePreferencesStore((state) => state.preferences.background)
+  const backgroundLight = usePreferencesStore((state) => state.preferences.backgroundLight)
+  const backgroundDark = usePreferencesStore((state) => state.preferences.backgroundDark)
+  const theme = usePreferencesStore((state) => state.preferences.theme)
   const titleFont = usePreferencesStore((state) => state.preferences.titleFont)
   const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const preferences = usePreferencesStore((state) => state.preferences)
@@ -27,9 +91,25 @@ export function AppearanceTab() {
       <section className="settings-section">
         <h2 className="settings-section-title">Appearance</h2>
         <p className="settings-note">
-          Tova is a light theme over a photograph, and stays one. What changes is the type, how
-          far the prose runs, and which photograph sits behind it.
+          Tova is a photograph with writing over it. Light and dark each keep their own background,
+          because a bright photograph cannot carry white text however the ink is coloured.
         </p>
+
+        <Field id="theme" label="Mode" hint="System follows the Mac and changes with it.">
+          <div className="choices">
+            {THEMES.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`choice choice-compact${theme === option.value ? " is-chosen" : ""}`}
+                aria-pressed={theme === option.value}
+                onClick={() => void update({ theme: option.value })}
+              >
+                <span className="choice-name">{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </Field>
 
         <Field
           id="title-font"
@@ -78,37 +158,27 @@ export function AppearanceTab() {
         </Field>
 
         <Field
-          id="background"
-          label="Background"
-          hint={
-            backgroundUrls.length > 1
-              ? "Shuffle picks a different one each launch."
-              : "One photograph is bundled. Adding another to the assets folder puts it here."
-          }
+          id="background-light"
+          label="Background — light"
+          hint="Shuffle picks a different one each launch."
         >
-          <div className="background-choices">
-            <button
-              type="button"
-              className={`background-choice${background === null ? " is-chosen" : ""}`}
-              aria-pressed={background === null}
-              onClick={() => void update({ background: null })}
-            >
-              <span className="background-shuffle">Shuffle</span>
-            </button>
+          <BackgroundChoices
+            chosen={backgroundLight}
+            onChoose={(name) => void update({ backgroundLight: name })}
+            theme="light"
+          />
+        </Field>
 
-            {backgroundUrls.map((url) => (
-              <button
-                key={url}
-                type="button"
-                className={`background-choice${background === nameOf(url) ? " is-chosen" : ""}`}
-                aria-pressed={background === nameOf(url)}
-                aria-label={nameOf(url)}
-                onClick={() => void update({ background: nameOf(url) })}
-              >
-                <img src={url} alt="" />
-              </button>
-            ))}
-          </div>
+        <Field
+          id="background-dark"
+          label="Background — dark"
+          hint="Every bundled photograph is a bright one, so dark starts on the gradient."
+        >
+          <BackgroundChoices
+            chosen={backgroundDark}
+            onChoose={(name) => void update({ backgroundDark: name })}
+            theme="dark"
+          />
         </Field>
       </section>
 

@@ -38,7 +38,7 @@ describe("normalizePreferences", () => {
   })
 
   it("treats a missing background as shuffle", () => {
-    expect(normalizePreferences({ background: 42 }).background).toBeNull()
+    expect(normalizePreferences({ backgroundLight: 42 }).backgroundLight).toBeNull()
   })
 })
 
