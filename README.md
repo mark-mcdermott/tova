@@ -4,9 +4,6 @@ A calm, local-first desktop writing application. Markdown notes, lightweight
 blogging, and a hybrid of work and personal writing, with quick publishing and
 fast export.
 
-Tova is a rebuild of [Xin](https://github.com/mark-mcdermott/xin) with cleaner
-architecture, better editor behaviour, and fewer edge cases.
-
 ## Running it
 
 ```bash

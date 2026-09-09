@@ -525,23 +525,18 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   basis rather than a `width`, which is why it is worth having a name.
 
 
-- **An empty section cannot be opened**, so the "+ New note" row inside it is
-  out of reach. Notes still get there: the compose control creates in Notes, and
-  the editor's Move menu files a note into any of the flat sections. Only the
-  in-section shortcut is unreachable while the section is empty.
+- **The roadmap is empty.** The proprietary script face is replaced and the
+  repository carries nothing licensed. Focus mode, folder reordering and a
+  theme picker were dropped rather than deferred.
 
-- **The roadmap is nearly empty.** What remains is
-  replacing the proprietary script face, which is what going public waits on.
-  Focus mode and folder reordering are not planned.
+- **Prose wraps at a measure again**, and it is a preference. "Narrow" holds
+  the column to 45 characters — measured off the mockup — and is the default;
+  "Full" lets it use the pane, which is what the app shipped with for a while.
+  The setting is in Appearance.
 
-- **Prose no longer wraps at a readable measure.** The writing area now spans
-  the panel so its insets match the title's, which meant dropping the 68ch cap
-  on `.cm-content`. On a 1900px window that wraps around 105 characters, above
-  the 45-90 usually considered comfortable, and it grows with the window.
-  `--measure` still exists and still caps the title.
-
-- **Sidebar sections start collapsed**, Tags aside, so the sidebar opens as the
-  flat list the mockup shows. Nothing is persisted, so this is every launch.
+- **Sidebar sections do not unfold at all** any more. Clicking one opens its
+  index page in the body instead, which is also how tags and folders behave.
+  The sidebar is a rail of destinations, not a tree.
 
 - **Sidebar collapse has no visible control.** The caret was removed to match
   the mockup, which puts an avatar there instead. `Cmd+\` and the reveal tab
@@ -555,7 +550,6 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   the note renders in an offscreen window and `printToPDF` writes the file.
 - **No Playwright.** The lifecycle tests the build plan wanted from it run in
   Vitest against a real temp filesystem instead, which needs no extra dependency.
-- `TUTORIAL.md` is a frozen historical record and still shows `npm` commands.
 - Blockquotes, tables and the Cmd+K link popup are specified but belong to later
   phases.
 
