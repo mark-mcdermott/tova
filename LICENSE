@@ -1,0 +1,48 @@
+Copyright (c) 2026 Mark McDermott. All rights reserved.
+
+Tova is source-available, not open source. The source is published so that it
+can be read. No licence to use it is granted by publication.
+
+
+PERMITTED
+
+  1. Reading this source code.
+  2. Forking this repository on GitHub for the sole purpose of proposing a
+     change back to it.
+
+
+NOT PERMITTED without prior written permission from the copyright holder
+
+  1. Using this software, in source or compiled form, for any purpose.
+  2. Copying, modifying, translating, or creating derivative works from it.
+  3. Distributing, publishing, sublicensing, selling, renting, or hosting it,
+     in whole or in part.
+  4. Incorporating any portion of it into another work.
+  5. Removing or altering this notice.
+
+
+THIRD-PARTY COMPONENTS
+
+This repository contains, and this software depends upon, material licensed
+separately by its authors. Nothing above alters those licences, and nothing
+above applies to them:
+
+  - Typefaces in src/renderer/assets/fonts/ — Vibur, Fascinate Inline and
+    Noto Sans Mono — are each licensed under the SIL Open Font Licence 1.1.
+  - Background photographs in src/renderer/assets/backgrounds/ carry their own
+    terms; see the CREDITS.md file beside them.
+  - npm dependencies are licensed by their respective authors; see each
+    package's own licence.
+
+
+NO WARRANTY
+
+This software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose and non-infringement. In no event shall the
+copyright holder be liable for any claim, damages or other liability, whether
+in an action of contract, tort or otherwise, arising from, out of or in
+connection with this software or its use.
+
+
+These terms may be relaxed in future. Until they are, they are the terms.
