@@ -1,12 +1,22 @@
 import { DEFAULT_SECTIONS, SectionConfig, normalizeSections } from "./sections"
 
-/** The face note titles are set in. Both are bundled; the choice is the user's. */
-export type TitleFont = "alagambe" | "fascinate"
+/**
+ * The face note titles are set in. The two bundled ids, or the filename of a
+ * face the reader added — which is why this is a string and not a union: the
+ * set is open, and a name that no longer resolves falls back to the stack in
+ * globals.css rather than failing.
+ */
+export type TitleFont = string
 
-export const TITLE_FONTS: { value: TitleFont; label: string }[] = [
-  { value: "alagambe", label: "Alagambe" },
+export const BUNDLED_TITLE_FONTS: { value: string; label: string }[] = [
+  { value: "vibur", label: "Vibur" },
   { value: "fascinate", label: "Fascinate Inline" }
 ]
+
+/** True for the bundled ids, which are served by CSS rather than from disk. */
+export function isBundledTitleFont(value: string): boolean {
+  return BUNDLED_TITLE_FONTS.some((font) => font.value === value)
+}
 
 /**
  * How wide the prose runs. "narrow" is the mockup's column, about 45
@@ -80,7 +90,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   sections: DEFAULT_SECTIONS,
   backgroundLight: null,
   backgroundDark: null,
-  titleFont: "alagambe",
+  titleFont: "vibur",
   proseWidth: "narrow"
 }
 
@@ -142,7 +152,13 @@ export function normalizePreferences(value: unknown): Preferences {
           ? raw.background
           : null,
     backgroundDark: typeof raw.backgroundDark === "string" ? raw.backgroundDark : null,
-    titleFont: raw.titleFont === "fascinate" ? "fascinate" : DEFAULT_PREFERENCES.titleFont,
+    // Any non-empty string: a bundled id, or the filename of an added face.
+    // "alagambe" arrives here from an older preferences file and is not one of
+    // ours any more, so it lands on the default like any other stale name.
+    titleFont:
+      typeof raw.titleFont === "string" && raw.titleFont.trim() !== "" && raw.titleFont !== "alagambe"
+        ? raw.titleFont
+        : DEFAULT_PREFERENCES.titleFont,
     proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth
   }
 }

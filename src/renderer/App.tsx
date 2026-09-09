@@ -8,6 +8,7 @@ import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
 import { useBlogsStore } from "./stores/blogsStore"
 import { usePreferencesStore } from "./stores/preferencesStore"
+import { applyTitleFont } from "./titleFont"
 import { applyBackground, resolveBackground } from "./backgrounds"
 import { systemTheme, watchSystemTheme } from "./theme"
 import { Theme } from "../shared/preferences"
@@ -59,10 +60,11 @@ export default function App() {
     document.documentElement.style.setProperty("--editor-font-size", `${fontSize}px`)
   }, [fontSize])
 
-  // Set on the root so the font stack itself stays in CSS with the rest of the
-  // type, rather than being assembled in JavaScript.
+  // A bundled face is served by CSS through the attribute; an added one is a
+  // file, so it has to be registered before the attribute means anything. Both
+  // paths end in the attribute, so the stack itself stays in CSS.
   useEffect(() => {
-    document.documentElement.dataset.titleFont = titleFont
+    void applyTitleFont(titleFont)
   }, [titleFont])
 
   useEffect(() => {

@@ -5,6 +5,12 @@ import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
 import { avatarDataUrl, chooseAvatar } from "../avatar"
 import { addBackground, listBackgrounds } from "../backgrounds"
+import {
+  addTitleFont,
+  listTitleFonts,
+  removeTitleFont,
+  titleFontDataUrl
+} from "../titleFonts"
 import { addVault, forgetVault, listVaults, useVault } from "../vaults"
 import {
   addToDictionary,
@@ -48,6 +54,10 @@ export function registerAppHandlers(): void {
 
   ipcMain.handle("background:list", () => listBackgrounds())
   ipcMain.handle("background:add", () => addBackground())
+  ipcMain.handle("font:list", () => listTitleFonts())
+  ipcMain.handle("font:add", () => addTitleFont())
+  ipcMain.handle("font:remove", (_event, name: string) => removeTitleFont(name))
+  ipcMain.handle("font:url", (_event, name: string) => titleFontDataUrl(name))
 
   ipcMain.handle("vault:list", () => listVaults())
   ipcMain.handle("vault:add", () => addVault())

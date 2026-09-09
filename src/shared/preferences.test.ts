@@ -43,16 +43,30 @@ describe("normalizePreferences", () => {
 })
 
 describe("title font", () => {
-  it("defaults to Alagambe", () => {
-    expect(normalizePreferences({}).titleFont).toBe("alagambe")
+  it("defaults to Vibur", () => {
+    expect(normalizePreferences({}).titleFont).toBe("vibur")
   })
 
-  it("keeps the other face when it is chosen", () => {
+  it("keeps the other bundled face when it is chosen", () => {
     expect(normalizePreferences({ titleFont: "fascinate" }).titleFont).toBe("fascinate")
   })
 
-  it("falls back rather than trusting a face that is not bundled", () => {
-    expect(normalizePreferences({ titleFont: "comic-sans" }).titleFont).toBe("alagambe")
+  it("keeps the filename of a face the reader added", () => {
+    // The set is open now, so an unrecognised name is a file on disk rather
+    // than a mistake. A name that no longer resolves falls through to the
+    // stack in globals.css, which is a visual fallback, not a broken app.
+    expect(normalizePreferences({ titleFont: "my-script.otf" }).titleFont).toBe("my-script.otf")
+  })
+
+  it("drops Alagambe, which is no longer bundled", () => {
+    // It reaches here from a preferences file written before it was removed.
+    expect(normalizePreferences({ titleFont: "alagambe" }).titleFont).toBe("vibur")
+  })
+
+  it("falls back on a value that is not a usable name", () => {
+    expect(normalizePreferences({ titleFont: "" }).titleFont).toBe("vibur")
+    expect(normalizePreferences({ titleFont: "   " }).titleFont).toBe("vibur")
+    expect(normalizePreferences({ titleFont: 7 }).titleFont).toBe("vibur")
   })
 })
 

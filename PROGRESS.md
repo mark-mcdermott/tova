@@ -75,18 +75,26 @@ focusing it scrolls the panel's clipped box sideways.
 
 ## Phase 6 assets
 
-**Fonts are in.** `Alagambe` and `Fascinate Inline` are bundled under
-`src/renderer/assets/fonts/` and offered as the note title face; the choice
-lives in Settings → Appearance and resolves through `--font-script`.
-`Acumin Pro` has been removed from the app entirely, and no face is loaded for
-the wordmark at all.
+**Fonts are in.** `Vibur` and `Fascinate Inline` are bundled under
+`src/renderer/assets/fonts/` and offered as the note title face, alongside any
+face the reader adds; the choice lives in Settings → Appearance and resolves
+through `--font-script`. `Acumin Pro` and `Alagambe` have both been removed from
+the app, and no face is loaded for the wordmark at all.
 
-**Alagambe is proprietary**, which is why this repo is private. Inter is under
-the SIL Open Font Licence and is no obstacle. Acumin Pro — Adobe's, all rights
-reserved — is no longer in the app, but its four weights remain tracked under
-`branding/fonts/`, and every copy remains in git history regardless. Going
-public means replacing Alagambe *and* dealing with the history; see the note at
-the foot of this file.
+**Every face the app ships is now OFL.** Vibur, Fascinate Inline and Noto Sans
+Mono are all under the SIL Open Font Licence, so nothing in the working tree
+blocks going public any more. Acumin Pro and Alagambe are gone from the tree but
+remain in git history; see the note at the foot of this file for what that does
+and does not mean.
+
+**The title face is replaceable.** Settings → Appearance takes any `.otf`,
+`.ttf`, `.woff` or `.woff2`, copies it into `userData/fonts`, and serves it over
+a `tova-font://` scheme of its own — a separate scheme from the vault's and the
+backgrounds', so no handler can be talked into serving another's files. An added
+face registers as the family `Tova Title`, which is what `--font-script` names,
+so the stack stays in CSS rather than being assembled in JavaScript. A file that
+will not decode never becomes the preference: it is loaded first, and the picker
+says so instead of leaving the reader with a silent fallback.
 
 **The wordmark is drawn, not set.** Acumin Pro Light was the mockup's choice and
 was never licensed here; Inter Thin stood in for one commit before being
@@ -335,8 +343,12 @@ marketing render — tilted in perspective, with a baked-in cream background and
 its own drop shadow. macOS supplies the mask and the shadow itself and expects
 square, face-on art, so at 32px the render would be an unreadable smudge. The
 icon is instead drawn by `tools/icon.html` and captured by Electron at 1024px:
-the app's own sunset, a low horizon, and the Alagambe `T`. Replacing it is one
-file and `pnpm run icon`.
+the app's own sunset, a low horizon, and the Alagambe `T`.
+
+That has since been replaced by supplied artwork: `branding/app-icon.png`, which
+`tools/icon.html` now only places — 826px of art centred on a 1024 canvas, the
+Big Sur proportion. Swapping the artwork and running `pnpm run icon` is the
+whole job.
 
 ## Spelling, preferences and the settings tabs
 
@@ -544,15 +556,15 @@ Read `CLAUDE.md`, `docs/SPEC.md`, `docs/BUILD_PHASES.md`, and this file.
 
 ## If this repo ever goes public
 
-Deleting a font removes it from the working tree, not from git history: every
-past commit still carries the blob, and a clone gets all of them. Five font
-blobs are in this history — four Acumin weights and Alagambe — totalling about
-0.4 MB.
+**The replacement job is done.** Alagambe is out and Vibur — SIL Open Font
+Licence — is the bundled script face. Nothing proprietary is in the working
+tree, so a fresh clone of the current state carries no licensing problem.
 
-Purging Acumin alone would not achieve anything, because **Alagambe is still in
-use** for note titles and is proprietary too. Going public is therefore a
-replacement job before it is a deletion job: find a licensed script face, swap
-`--font-script`, and only then worry about history.
+**The history job is not.** Deleting a font removes it from the working tree,
+not from git history: every past commit still carries the blob, and a clone gets
+all of them. Five font blobs are in this history — four Acumin weights and
+Alagambe — totalling about 0.4 MB. Publishing this repository as it stands would
+redistribute both faces to anyone who clones it.
 
 When that time comes, the surer path is a fresh repository from a squashed tree
 rather than a `git filter-repo` rewrite. A rewrite changes every SHA, needs a

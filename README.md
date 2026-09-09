@@ -53,9 +53,10 @@ Gatekeeper will refuse the app on any machine that did not build it.
 
 ## Possible future roadmap
 
-- **A licensed script face.** `Alagambe` is bundled for note titles and is
-  proprietary, which is why this repository is private. Replacing it is the
-  first step to making it public — see `tova/PROGRESS.md`.
+- **Clearing the font history.** Every face the app ships is now OFL, but
+  Alagambe and four Acumin weights remain in past commits, and a clone gets
+  them. Publishing means dealing with the history, not just the tree — see
+  `tova/PROGRESS.md`.
 
 Focus mode, folder reordering and a theme picker were dropped rather than
 deferred; light and dark are built, and the rest are not planned.

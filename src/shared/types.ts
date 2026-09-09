@@ -221,6 +221,13 @@ export interface PreferencesApi {
   listBackgrounds: () => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */
   addBackground: () => Promise<string | null>
+  /** Title faces the reader added, served over the tova-font scheme. */
+  listTitleFonts: () => Promise<string[]>
+  /** Opens a picker, copies the chosen font in, and returns its stored name. */
+  addTitleFont: () => Promise<string | null>
+  removeTitleFont: (name: string) => Promise<void>
+  /** An added face as a data URL — see titleFonts.ts on why not a scheme. */
+  titleFontUrl: (name: string) => Promise<string | null>
   listVaults: () => Promise<VaultChoice[]>
   /** Opens a directory picker and switches to what was chosen. */
   addVault: () => Promise<VaultChoice[]>

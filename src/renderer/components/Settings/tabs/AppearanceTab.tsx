@@ -1,13 +1,15 @@
+import { useEffect, useState } from "react"
 import {
   PREFERENCE_LIMITS,
   PROSE_WIDTHS,
   THEMES,
   ProseWidth,
-  TITLE_FONTS,
-  TitleFont
+  BUNDLED_TITLE_FONTS,
+  DEFAULT_PREFERENCES
 } from "../../../../shared/preferences"
 import { backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
+import { applyTitleFont, loadSampleFace } from "../../../titleFont"
 import { Field } from "../Field"
 import { Stepper } from "../Stepper"
 import { SectionManager } from "../SectionManager"
@@ -87,6 +89,63 @@ export function AppearanceTab() {
   const preferences = usePreferencesStore((state) => state.preferences)
   const update = usePreferencesStore((state) => state.update)
 
+  const [addedFonts, setAddedFonts] = useState<string[]>([])
+  const [sampleFamilies, setSampleFamilies] = useState<Record<string, string | null>>({})
+  const [fontError, setFontError] = useState<string | null>(null)
+
+  useEffect(() => {
+    void (async () => {
+      const names = await window.tova.preferences.listTitleFonts()
+      setAddedFonts(names)
+
+      // Each face is registered under a family of its own so its chip can be
+      // set in it — the applied family only ever holds one face at a time.
+      const families = await Promise.all(names.map(loadSampleFace))
+      setSampleFamilies(Object.fromEntries(names.map((name, at) => [name, families[at]])))
+    })()
+  }, [])
+
+  /** "my-script.otf" reads as a face named My Script in the picker. */
+  function labelFor(name: string): string {
+    return name
+      .replace(/\.(otf|ttf|woff2?)$/i, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase())
+  }
+
+  /** The face's own family once it has loaded; the fallback stack until then. */
+  function sampleFor(name: string): string {
+    const family = sampleFamilies[name]
+    return family === undefined || family === null ? "cursive" : `"${family}", cursive`
+  }
+
+  async function addFont() {
+    setFontError(null)
+    const name = await window.tova.preferences.addTitleFont()
+    if (name === null) return
+
+    setAddedFonts(await window.tova.preferences.listTitleFonts())
+    await chooseAdded(name)
+  }
+
+  async function chooseAdded(name: string) {
+    // Load before storing it, so a file that will not decode never becomes the
+    // preference — otherwise every launch after this would fall back silently.
+    if (!(await applyTitleFont(name))) {
+      setFontError(`${labelFor(name)} could not be read as a font.`)
+      return
+    }
+    setFontError(null)
+    await update({ titleFont: name })
+  }
+
+  async function removeAdded(name: string) {
+    await window.tova.preferences.removeTitleFont(name)
+    setAddedFonts(await window.tova.preferences.listTitleFonts())
+    // The face in use just went; fall back rather than leaving a dead name.
+    if (titleFont === name) await update({ titleFont: DEFAULT_PREFERENCES.titleFont })
+  }
+
   return (
     <>
       <section className="settings-section">
@@ -118,20 +177,70 @@ export function AppearanceTab() {
           hint="Shown in the face it sets, so the choice is made by eye."
         >
           <div className="choices">
-            {TITLE_FONTS.map((font) => (
+            {BUNDLED_TITLE_FONTS.map((font) => (
               <button
                 key={font.value}
                 type="button"
                 className={`choice${titleFont === font.value ? " is-chosen" : ""}`}
                 aria-pressed={titleFont === font.value}
                 data-title-font={font.value}
-                onClick={() => void update({ titleFont: font.value as TitleFont })}
+                onClick={() => void update({ titleFont: font.value })}
               >
                 <span className="title-font-sample">Tova</span>
                 <span className="choice-name">{font.label}</span>
               </button>
             ))}
+
+            {addedFonts.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={`choice${titleFont === name ? " is-chosen" : ""}`}
+                aria-pressed={titleFont === name}
+                onClick={() => void chooseAdded(name)}
+              >
+                {/* Set in its own face, like the bundled ones — which is only
+                    possible once it has loaded, so the sample doubles as proof
+                    that the file decoded. */}
+                <span className="title-font-sample" style={{ fontFamily: sampleFor(name) }}>
+                  Tova
+                </span>
+                <span className="choice-name">
+                  {labelFor(name)}
+                  {sampleFamilies[name] === null && (
+                    <span className="choice-warn"> · unreadable</span>
+                  )}
+                </span>
+                <span
+                  className="choice-remove"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Remove ${labelFor(name)}`}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    void removeAdded(name)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" && event.key !== " ") return
+                    event.preventDefault()
+                    event.stopPropagation()
+                    void removeAdded(name)
+                  }}
+                >
+                  ×
+                </span>
+              </button>
+            ))}
+
+            <button type="button" className="choice choice-add" onClick={() => void addFont()}>
+              <span className="choice-add-glyph" aria-hidden="true">
+                +
+              </span>
+              <span className="choice-name">Add a font</span>
+            </button>
           </div>
+
+          {fontError !== null && <p className="settings-error">{fontError}</p>}
         </Field>
 
         <Field

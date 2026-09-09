@@ -4,8 +4,8 @@
  * to flash a fallback first.
  */
 @font-face {
-  font-family: "Alagambe";
-  src: url("../assets/fonts/alagambe.otf") format("opentype");
+  font-family: "Vibur";
+  src: url("../assets/fonts/vibur.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: block;
@@ -13,7 +13,7 @@
 
 /*
  * Fascinate Inline, latin subset, from Google Fonts under the SIL Open Font
- * Licence. Offered beside Alagambe as the note title face; the choice lives in
+ * Licence. Offered beside Vibur as the note title face; the choice lives in
  * Settings and resolves through --font-script below.
  */
 @font-face {
@@ -140,7 +140,10 @@
   /* Type */
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: "Noto Sans Mono", ui-monospace, Menlo, monospace;
-  --font-script: "Alagambe", "Snell Roundhand", "Apple Chancery", cursive;
+  /* A face the reader can replace, so the stack behind it has to stand on its
+     own — an uploaded font that fails to decode falls through to these rather
+     than to the body face. */
+  --font-script: "Tova Title", "Vibur", "Snell Roundhand", "Apple Chancery", cursive;
   /* The wordmark is drawn rather than set — see Wordmark.tsx — so there is no
      face for it to load and no --font-wordmark to declare. */
 
@@ -296,6 +299,13 @@
 
 :root[data-title-font="fascinate"] {
   --font-script: "Fascinate Inline", "Snell Roundhand", "Apple Chancery", cursive;
+}
+
+/* An uploaded face registers itself as "Tova Title" — see titleFont.ts — and
+   the stack above already prefers it, so this only has to stop a bundled
+   choice from winning over it. */
+:root[data-title-font="custom"] {
+  --font-script: "Tova Title", "Snell Roundhand", "Apple Chancery", cursive;
 }
 
 :root[data-prose-width="narrow"] {

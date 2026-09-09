@@ -20,15 +20,15 @@ afterEach(cleanup)
 describe("AppearanceTab", () => {
   it("offers both bundled title faces", () => {
     render(<AppearanceTab />)
-    expect(screen.getByText("Alagambe")).toBeDefined()
+    expect(screen.getByText("Vibur")).toBeDefined()
     expect(screen.getByText("Fascinate Inline")).toBeDefined()
   })
 
   it("marks the one in use", () => {
     render(<AppearanceTab />)
-    const [alagambe, fascinate] = screen.getAllByRole("button", { name: /Tova/ })
+    const [vibur, fascinate] = screen.getAllByRole("button", { name: /Tova/ })
 
-    expect(alagambe.getAttribute("aria-pressed")).toBe("true")
+    expect(vibur.getAttribute("aria-pressed")).toBe("true")
     expect(fascinate.getAttribute("aria-pressed")).toBe("false")
   })
 
@@ -44,9 +44,9 @@ describe("AppearanceTab", () => {
 
   it("shows each sample in its own face rather than the chosen one", () => {
     render(<AppearanceTab />)
-    const [alagambe, fascinate] = screen.getAllByRole("button", { name: /Tova/ })
+    const [vibur, fascinate] = screen.getAllByRole("button", { name: /Tova/ })
 
-    expect(alagambe.getAttribute("data-title-font")).toBe("alagambe")
+    expect(vibur.getAttribute("data-title-font")).toBe("vibur")
     expect(fascinate.getAttribute("data-title-font")).toBe("fascinate")
   })
 
@@ -150,6 +150,72 @@ describe("AppearanceTab", () => {
 
     expect(screen.getByLabelText("dusk.jpg for dark")).toBeDefined()
     expect(screen.getByLabelText("dusk.jpg for light")).toBeDefined()
+  })
+})
+
+describe("AppearanceTab added title faces", () => {
+  beforeEach(() => {
+    // jsdom has no CSS Font Loading API; Electron does.
+    vi.stubGlobal(
+      "FontFace",
+      class {
+        async load() {
+          return this
+        }
+      }
+    )
+    vi.stubGlobal("document", Object.assign(document, { fonts: { add: vi.fn() } }))
+  })
+
+  it("lists the faces the reader added beside the bundled ones", async () => {
+    window.tova = stubBridge({
+      preferences: { write, listTitleFonts: vi.fn(async () => ["my-script.otf"]) }
+    })
+    render(<AppearanceTab />)
+
+    // "my-script.otf" reads as a face, not as a filename.
+    await waitFor(() => expect(screen.getByText("My Script")).toBeDefined())
+    expect(screen.getByText("Vibur")).toBeDefined()
+  })
+
+  it("offers a way in, and stores what the picker returned", async () => {
+    const addTitleFont = vi.fn(async () => "chosen.woff2")
+    window.tova = stubBridge({
+      preferences: { write, addTitleFont, listTitleFonts: vi.fn(async () => []) }
+    })
+    render(<AppearanceTab />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Add a font/ }))
+    expect(addTitleFont).toHaveBeenCalled()
+    await waitFor(() =>
+      expect(write).toHaveBeenCalledWith(expect.objectContaining({ titleFont: "chosen.woff2" }))
+    )
+  })
+
+  it("stores nothing when the picker was cancelled", async () => {
+    window.tova = stubBridge({
+      preferences: { write, addTitleFont: vi.fn(async () => null) }
+    })
+    render(<AppearanceTab />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Add a font/ }))
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  it("removes an added face without touching the bundled ones", async () => {
+    const removeTitleFont = vi.fn(async () => undefined)
+    window.tova = stubBridge({
+      preferences: {
+        write,
+        removeTitleFont,
+        listTitleFonts: vi.fn(async () => ["my-script.otf"])
+      }
+    })
+    render(<AppearanceTab />)
+    await waitFor(() => expect(screen.getByText("My Script")).toBeDefined())
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove My Script" }))
+    expect(removeTitleFont).toHaveBeenCalledWith("my-script.otf")
   })
 })
 
