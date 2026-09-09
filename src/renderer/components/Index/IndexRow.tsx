@@ -1,8 +1,10 @@
+import { useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { formatEditedAgo } from "../../../shared/date"
 import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
+import { ConfirmDialog } from "../Popup/ConfirmDialog"
 import { NOTE_MIME } from "../Sidebar/dragDrop"
 import { Icon } from "../Sidebar/icons"
 import { useTooltip } from "../../useTooltip"
@@ -28,6 +30,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
   const setDraggingNote = useNotesStore((state) => state.setDraggingNote)
 
   const menu = useContextMenu()
+  const [asking, setAsking] = useState<"trash" | "destroy" | null>(null)
   const tip = useTooltip()
   const isTrashed = note.section === "trash"
   const label = note.title.trim() === "" ? "Untitled" : note.title
@@ -48,7 +51,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
     : [
         { label: "Rename", onSelect: rename },
         "separator",
-        { label: "Delete → Trash", destructive: true, onSelect: () => trash(note.id) }
+        { label: "Delete → Trash", destructive: true, onSelect: () => setAsking("trash") }
       ]
 
   return (
@@ -63,17 +66,6 @@ export function IndexRow({ note, match }: IndexRowProps) {
       }}
       onDragEnd={() => setDraggingNote(null)}
     >
-      <button
-        type="button"
-        className={`index-star${note.favorite ? " is-on" : ""}`}
-        {...tip(note.favorite ? "Remove from favourites" : "Add to favourites")}
-        aria-label={note.favorite ? `Unfavourite ${label}` : `Favourite ${label}`}
-        aria-pressed={note.favorite}
-        onClick={() => void toggleFavorite(note.id)}
-      >
-        <Icon name="star" className="index-star-icon" />
-      </button>
-
       <button type="button" className="index-row" onClick={() => void open(note.id)}>
         <span className="index-row-text">
           <span className="index-row-title">{label}</span>
@@ -84,6 +76,19 @@ export function IndexRow({ note, match }: IndexRowProps) {
           )}
         </span>
         <span className="index-row-meta">{formatEditedAgo(note.updatedAt)}</span>
+      </button>
+
+      {/* After the edited time, with the trash after it: the row reads title,
+          when, then what you can do about it. */}
+      <button
+        type="button"
+        className={`index-star${note.favorite ? " is-on" : ""}`}
+        {...tip(note.favorite ? "Remove from favourites" : "Add to favourites")}
+        aria-label={note.favorite ? `Unfavourite ${label}` : `Favourite ${label}`}
+        aria-pressed={note.favorite}
+        onClick={() => void toggleFavorite(note.id)}
+      >
+        <Icon name="star" className="index-star-icon" />
       </button>
 
       <div className="index-actions">
@@ -102,7 +107,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
               className="is-destructive"
               {...tip("Delete permanently")}
               aria-label={`Permanently delete ${label}`}
-              onClick={() => void destroy(note.id)}
+              onClick={() => setAsking("destroy")}
             >
               ✕
             </button>
@@ -112,7 +117,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
             type="button"
             {...tip("Move to Trash")}
             aria-label={`Move ${label} to Trash`}
-            onClick={() => void trash(note.id)}
+            onClick={() => setAsking("trash")}
           >
             <Icon name="trash" className="row-action-icon" />
           </button>
@@ -121,6 +126,34 @@ export function IndexRow({ note, match }: IndexRowProps) {
 
       {menu.position !== null && (
         <Menu x={menu.position.x} y={menu.position.y} items={items} onClose={menu.close} />
+      )}
+
+      {asking === "trash" && (
+        <ConfirmDialog
+          title={`Move "${label}" to Trash?`}
+          body="It stays in Trash until you empty it, and can be restored from there."
+          confirmLabel="Move to Trash"
+          destructive
+          onCancel={() => setAsking(null)}
+          onConfirm={() => {
+            setAsking(null)
+            void trash(note.id)
+          }}
+        />
+      )}
+
+      {asking === "destroy" && (
+        <ConfirmDialog
+          title={`Delete "${label}" permanently?`}
+          body="This removes the file from the vault. It cannot be undone from inside Tova — only a snapshot would bring it back."
+          confirmLabel="Delete permanently"
+          destructive
+          onCancel={() => setAsking(null)}
+          onConfirm={() => {
+            setAsking(null)
+            void destroy(note.id)
+          }}
+        />
       )}
     </li>
   )

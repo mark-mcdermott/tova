@@ -216,3 +216,49 @@ describe("IndexPage", () => {
   })
 })
 
+describe("deleting from a row asks first", () => {
+  it("does not trash on the click alone", async () => {
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Move Beta to Trash/ }))
+
+    // The row's trash now shows on any hover of the row, so it is much easier
+    // to hit by accident than it was.
+    expect(remove).not.toHaveBeenCalled()
+    expect(screen.getByRole("alertdialog")).toBeDefined()
+  })
+
+  it("trashes once confirmed", async () => {
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Move Beta to Trash/ }))
+    await userEvent.click(screen.getByRole("button", { name: "Move to Trash" }))
+
+    expect(remove).toHaveBeenCalledWith(notes[0].id)
+  })
+
+  it("leaves the note alone when the dialog is dismissed", async () => {
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Move Beta to Trash/ }))
+    await userEvent.keyboard("{Escape}")
+
+    expect(remove).not.toHaveBeenCalled()
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+  })
+
+  it("names the note in the question, so the wrong row is obvious", async () => {
+    window.tova = stubBridge({ notes: { read } })
+    render(<IndexPage />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Move Gamma to Trash/ }))
+    expect(screen.getByRole("alertdialog", { name: /Gamma/ })).toBeDefined()
+  })
+})
+
