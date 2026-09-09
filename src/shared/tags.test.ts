@@ -6,7 +6,8 @@ import {
   normalizeTag,
   addTagEdit,
   tagHeaderLines,
-  bodyStart
+  bodyStart,
+  caretAfterTagEdit
 } from "./tags"
 
 describe("findTags", () => {
@@ -154,3 +155,41 @@ describe("bodyStart", () => {
     expect(bodyStart("#a")).toBe(0)
   })
 })
+
+describe("caretAfterTagEdit", () => {
+  const caretIn = (doc: string, tag: string, head = 0) => {
+    const edit = addTagEdit(doc, tag)
+    if (edit === null) throw new Error("expected an edit")
+    const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    return { at: caretAfterTagEdit(doc, edit, head), rest: next.slice(caretAfterTagEdit(doc, edit, head)) }
+  }
+
+  it("puts the caret past the tags line on an empty note", () => {
+    // Left at 0 it sits inside the line the tag row already shows, and the
+    // editor keeps that line revealed — the tag then appears twice.
+    expect(caretIn("", "mynotes").rest).toBe("")
+    expect(caretIn("", "mynotes").at).toBe("#mynotes\n".length)
+  })
+
+  it("puts it at the first word of the prose", () => {
+    expect(caretIn("Coffee.\n", "mynotes").rest).toBe("Coffee.\n")
+  })
+
+  it("does the same when a tags line already exists", () => {
+    expect(caretIn("#thoughts\n\nCoffee.\n", "mynotes").rest).toBe("Coffee.\n")
+  })
+
+  it("leaves a caret that is already in the prose where it was", () => {
+    // Writer is mid-sentence and adds a tag from the row; the caret should not
+    // jump to the top of the note.
+    const doc = "Coffee. Empty streets.\n"
+    const head = 8
+    const edit = addTagEdit(doc, "mynotes")
+    if (edit === null) throw new Error("expected an edit")
+
+    const at = caretAfterTagEdit(doc, edit, head)
+    const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
+    expect(next.slice(at)).toBe("Empty streets.\n")
+  })
+})
+
