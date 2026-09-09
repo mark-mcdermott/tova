@@ -122,6 +122,12 @@
   /* Code */
   --code-bg: rgb(23 20 31 / 7%);
   --code-border: rgb(23 20 31 / 12%);
+  /* A post's @ block needs a ground, not a tint: it carries recessive ink over
+     a photograph whose luminance swings, and measured against the bundled
+     sunset the same line ran from 3.6:1 on the sky to 1.5:1 on the water. The
+     same 46% the settings cards use, for the same reason. */
+  --post-bg: rgb(255 255 255 / 46%);
+  --post-border: rgb(255 255 255 / 60%);
   /* Quiet on purpose: a note is prose with the occasional block in it, not a
      source file. These mark the few things worth telling apart. */
   --code-keyword: #6b4bbb;
@@ -281,6 +287,10 @@
 
   --code-bg: rgb(255 255 255 / 8%);
   --code-border: rgb(255 255 255 / 14%);
+  /* Dark needs far less: the ink is light and the ground already dark, so this
+     only has to say "one object" rather than rescue contrast. */
+  --post-bg: rgb(255 255 255 / 7%);
+  --post-border: rgb(255 255 255 / 13%);
   --code-keyword: #c4b2ff;
   --code-string: #96d3ae;
   --code-comment: rgb(243 240 249 / 52%);
