@@ -38,3 +38,17 @@ export function breadcrumbFor(note: NoteSummary): Crumb[] {
 
   return crumbs
 }
+
+/**
+ * Whether a trail is worth drawing at all.
+ *
+ * A lone crumb that only repeats the heading under it says nothing twice — the
+ * index pages for Ideas, Journal and Trash each had "Ideas" above "Ideas". Two
+ * or more crumbs always earn their place, even when the last one matches the
+ * heading: "Notes / untitled-2" is saying where the note lives, not what it is
+ * called.
+ */
+export function showsTrail(crumbs: { label: string }[], title: string): boolean {
+  if (crumbs.length === 0) return false
+  return crumbs.length > 1 || crumbs[0].label !== title
+}

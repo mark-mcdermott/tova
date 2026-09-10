@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { breadcrumbFor } from "./breadcrumb"
+import { breadcrumbFor, showsTrail } from "./breadcrumb"
 import { NoteSummary } from "../../../shared/types"
 
 function note(overrides: Partial<NoteSummary>): NoteSummary {
@@ -56,5 +56,46 @@ describe("breadcrumbFor", () => {
   it("targets the sidebar keys the tree uses", () => {
     const crumbs = breadcrumbFor(note({ folder: "ideas" }))
     expect(crumbs.map((crumb) => crumb.target)).toEqual(["notes", "folder:ideas", null])
+  })
+})
+
+describe("whether a trail is worth drawing", () => {
+  it("drops a lone crumb that only repeats the heading", () => {
+    // The section indexes: "Ideas" above "Ideas" said nothing twice.
+    expect(showsTrail([{ label: "Ideas" }], "Ideas")).toBe(false)
+    expect(showsTrail([{ label: "Trash" }], "Trash")).toBe(false)
+  })
+
+  it("keeps a lone crumb that says something the heading does not", () => {
+    expect(showsTrail([{ label: "Tags" }], "#writing")).toBe(true)
+  })
+
+  it("keeps two crumbs even when the last one matches the heading", () => {
+    // "Notes / untitled-2" over "untitled-2" is saying where the note lives,
+    // which is not what the heading says.
+    expect(showsTrail([{ label: "Notes" }, { label: "untitled-2" }], "untitled-2")).toBe(true)
+  })
+
+  it("draws nothing for an empty trail rather than an empty list", () => {
+    expect(showsTrail([], "Ideas")).toBe(false)
+  })
+
+  it("always draws a note's trail, which carries its section as well as its name", () => {
+    const base = {
+      id: "notes/loose.md",
+      title: "Loose",
+      section: "notes" as const,
+      folder: null,
+      tags: [],
+      favorite: false,
+      updatedAt: 1,
+      createdAt: 1,
+      deletedAt: null
+    }
+
+    for (const note of [base, { ...base, folder: "ideas" }, { ...base, title: "" }]) {
+      const crumbs = breadcrumbFor(note)
+      expect(showsTrail(crumbs, crumbs[crumbs.length - 1].label)).toBe(true)
+    }
   })
 })

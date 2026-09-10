@@ -106,6 +106,37 @@ describe("IndexPage", () => {
     expect(screen.queryByRole("button", { name: "Tags" })).toBeNull()
   })
 
+  it("draws no trail on a section, where it would only repeat the heading", () => {
+    // "Ideas" sat above "Ideas". The heading stays; the crumb goes.
+    useNotesStore.setState({ indexTarget: { kind: "section", section: "ideas" } })
+    render(<IndexPage />)
+
+    expect(screen.getByRole("heading", { name: "Ideas" })).toBeDefined()
+    expect(document.querySelector(".breadcrumb")).toBeNull()
+  })
+
+  it("keeps the trail where it says something the heading does not", () => {
+    // A folder names its parent; a tag names where tags live.
+    useNotesStore.setState({ indexTarget: { kind: "folder", folder: "ideas" } })
+    const { rerender } = render(<IndexPage />)
+    expect(document.querySelector(".breadcrumb")).not.toBeNull()
+    expect(screen.getByRole("button", { name: "Notes" })).toBeDefined()
+
+    useNotesStore.setState({ indexTarget: { kind: "tag", tag: "writing" } })
+    rerender(<IndexPage />)
+    expect(document.querySelector(".breadcrumb")).not.toBeNull()
+  })
+
+  it("keeps the sort control on its right edge once the trail is gone", () => {
+    useNotesStore.setState({ indexTarget: { kind: "section", section: "ideas" } })
+    render(<IndexPage />)
+
+    // margin-left: auto does the work, so the control must still be the last
+    // thing in the nav rather than sliding left into the vacated space.
+    const nav = document.querySelector(".editor-nav")
+    expect(nav?.lastElementChild?.className).toContain("editor-nav-end")
+  })
+
   it("hides the sort on the tag list, which sorts itself by use", () => {
     useNotesStore.setState({ indexTarget: { kind: "tags" } })
     render(<IndexPage />)
@@ -115,7 +146,9 @@ describe("IndexPage", () => {
   it("shows what main found rather than filtering what it already holds", () => {
     useNotesStore.setState({
       indexTarget: { kind: "search", query: "quiet" },
-      searchHits: [{ note: notes[2], match: { where: "body", snippet: "…a kind of quiet…", score: 10 } }]
+      searchHits: [
+        { note: notes[2], match: { where: "body", snippet: "…a kind of quiet…", score: 10 } }
+      ]
     })
     render(<IndexPage />)
 
@@ -127,7 +160,9 @@ describe("IndexPage", () => {
   it("shows no snippet for a title hit, which needs no explaining", () => {
     useNotesStore.setState({
       indexTarget: { kind: "search", query: "gamma" },
-      searchHits: [{ note: notes[2], match: { where: "title", snippet: "some body text", score: 45 } }]
+      searchHits: [
+        { note: notes[2], match: { where: "title", snippet: "some body text", score: 45 } }
+      ]
     })
     const { container } = render(<IndexPage />)
 
@@ -261,4 +296,3 @@ describe("deleting from a row asks first", () => {
     expect(screen.getByRole("alertdialog", { name: /Gamma/ })).toBeDefined()
   })
 })
-
