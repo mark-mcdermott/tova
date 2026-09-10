@@ -31,6 +31,7 @@ export function Editor({ note }: EditorProps) {
   const grammarOn = usePreferencesStore((state) => state.preferences.grammar)
   const grammarRef = useRef<(text: string) => void>(() => undefined)
   const openSeq = useNotesStore((state) => state.openSeq)
+  const showIndex = useNotesStore((state) => state.showIndex)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
   const showSettings = useNotesStore((state) => state.showSettings)
@@ -101,6 +102,7 @@ export function Editor({ note }: EditorProps) {
     onChange: handleBodyChange,
     noteId: note.id,
     resolveImage,
+    onOpenTag: (tag) => showIndex({ kind: "tag", tag }),
     onError: setDropError,
     onSelectBlog: setBlogAnchor,
     tabSize,

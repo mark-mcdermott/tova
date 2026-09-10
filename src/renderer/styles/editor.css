@@ -317,28 +317,28 @@
 }
 
 /*
- * The × on a rendered tag. It is the pill's next sibling rather than a child —
- * a mark decoration wraps text and has no inside to put a control in — so the
- * pill reveals it with an adjacent-sibling rule.
+ * The × on a rendered tag. It carries which pill it belongs to as a class,
+ * because it is not actually the pill's next sibling: CodeMirror puts a buffer
+ * element between a mark and the widget after it, so `+` never matches. That
+ * silently cost this control its colours, its width and its reveal.
  *
- * It holds its space at all times. A control that appears on hover and takes up
- * room as it does re-wraps the sentence under the pointer, which moves the very
- * thing being aimed at.
+ * The reveal still needs the relationship, so both shapes are named — with the
+ * buffer and without — and a test holds the selector to the DOM CodeMirror
+ * actually builds.
  */
 .cm-tag-remove {
+  /* Relative and lifted, so it draws over the words it sits on rather than
+     under them. */
+  position: relative;
+  z-index: 1;
   display: inline-grid;
   place-items: center;
   width: 1.15em;
   height: 1.15em;
-  /* Clear of the pill, not tucked into it: the pill carries 0.6em of its own
-     right padding and a full radius, so a negative margin puts the x over the
-     curve rather than beside it. */
   margin-left: 0.2em;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: transparent;
-  color: var(--accent-bright);
   font-family: inherit;
   font-size: 0.88em;
   line-height: 1;
@@ -348,22 +348,58 @@
   transition: opacity 120ms ease;
 }
 
-.cm-tag:hover + .cm-tag-remove,
-.cm-tag-remove:hover,
-.cm-tag-remove:focus-visible {
-  opacity: 0.62;
+/*
+ * In prose it costs no width at all: the negative margin cancels its own, so
+ * the sentence sets exactly as it would with no control in it and the × lies
+ * over the words that follow. Reserving the space pushed the text along, which
+ * is a strange thing for a sentence to do because a tag is in it.
+ *
+ * Opaque, unlike the pill. The pill's fill is 72% of the accent over whatever
+ * is behind it, which is fine when that is the page — but this lies over words,
+ * and they read straight through it. Same mix, taken against the ground rather
+ * than against nothing.
+ */
+.cm-tag-remove.is-body {
+  margin-right: -1.35em;
+  background: color-mix(in oklab, var(--accent) 72%, var(--bg-base));
+  color: #f7f6fc;
 }
 
+/*
+ * On a line of nothing but tags it keeps its space. There is no prose to push
+ * around, and lying over the next thing would mean lying over the next tag.
+ */
+.cm-tag-remove.is-top {
+  background: color-mix(in oklab, var(--accent) 26%, var(--bg-base));
+  color: var(--accent-bright);
+}
+
+/*
+ * The margin between the pill and the × is a strip belonging to neither, so
+ * crossing it flickered the pointer back to a caret and forward again. This
+ * reaches back over it — nothing to see, only somewhere to be.
+ */
+.cm-tag-remove::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 0;
+  width: 0.45em;
+  height: 100%;
+}
+
+/* The pill is the way to its own listing, so it says so. */
+.cm-tag-body,
+.cm-tag-top {
+  cursor: pointer;
+}
+
+/* Fully there once shown, or the words underneath come through the fade. */
+.cm-tag:hover + .cm-tag-remove,
+.cm-tag:hover + .cm-widgetBuffer + .cm-tag-remove,
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
   opacity: 1;
-  background: var(--accent-tint);
-}
-
-/* Raw text is the writer editing the tag themselves; a control on top of that
-   is one more thing in the way of the caret. */
-.cm-tag-raw + .cm-tag-remove {
-  display: none;
 }
 
 /* ── Blog authoring ───────────────────────────────────────────────────── */
