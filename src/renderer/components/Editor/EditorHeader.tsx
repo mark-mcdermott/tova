@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useReducer, useRef } from "react"
+import { ReactNode, RefObject, useEffect, useReducer, useRef } from "react"
 import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { breadcrumbFor } from "./breadcrumb"
@@ -24,6 +24,8 @@ interface EditorHeaderProps {
   onAddTag: (tag: string) => void
   onRemoveTag: (tag: string) => void
   onOpenTag: (tag: string) => void
+  /** The find bar, drawn under the nav row when it is open. */
+  find?: ReactNode
 }
 
 export function EditorHeader({
@@ -34,7 +36,8 @@ export function EditorHeader({
   tagAddRef,
   onAddTag,
   onRemoveTag,
-  onOpenTag
+  onOpenTag,
+  find
 }: EditorHeaderProps) {
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
 
@@ -103,6 +106,8 @@ export function EditorHeader({
           </button>
         </div>
       </nav>
+
+      {find}
 
       <input
         ref={titleRef}

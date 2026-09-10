@@ -12,6 +12,7 @@ import { languages } from "@codemirror/language-data"
 import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
 import { codeHighlight } from "./codeHighlight"
+import { searchHighlighting } from "./searchHighlight"
 import { grammarChecking } from "./grammar"
 import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
@@ -37,6 +38,8 @@ interface UseCodeMirrorOptions {
   tabSize?: number
   /** Asked for a fresh grammar pass once the writing pauses. */
   onCheckGrammar?: (text: string) => void
+  /** Cmd+F from inside the editor. */
+  onFind?: () => void
   /**
    * Shift+Tab out of an empty document, back to the tag row. Only when empty:
    * in a note with words in it, Shift+Tab is dedent and stays that way.
@@ -55,6 +58,7 @@ export function useCodeMirror({
   onSelectBlog,
   onLeaveBackwards,
   onCheckGrammar,
+  onFind,
   tabSize = 2
 }: UseCodeMirrorOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -76,6 +80,8 @@ export function useCodeMirror({
   resolveImageRef.current = resolveImage
   const onOpenTagRef = useRef(onOpenTag)
   onOpenTagRef.current = onOpenTag
+  const onFindRef = useRef(onFind)
+  onFindRef.current = onFind
 
   const onErrorRef = useRef(onError)
   onErrorRef.current = onError
@@ -112,6 +118,7 @@ export function useCodeMirror({
           // block actually uses it rather than bundled into the app.
           markdown({ base: markdownLanguage, codeLanguages: languages }),
           codeHighlight(),
+          searchHighlighting(),
           grammarChecking((text) => onCheckGrammarRef.current?.(text)),
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null,
@@ -131,6 +138,14 @@ export function useCodeMirror({
               run: (view) => {
                 if (view.state.doc.length > 0) return false
                 onLeaveBackwardsRef.current?.()
+                return true
+              }
+            },
+            {
+              key: "Mod-f",
+              preventDefault: true,
+              run: () => {
+                onFindRef.current?.()
                 return true
               }
             },

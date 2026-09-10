@@ -1556,3 +1556,85 @@
 .index-item.is-selected .index-row {
   background: rgb(255 255 255 / 22%);
 }
+
+/*
+ * Finding inside the note you are reading, as against the rail's search across
+ * every one. It sits under the nav row and hugs its right edge, below the
+ * controls it belongs with.
+ *
+ * In flow rather than floating: a bar laid over the header would cover the
+ * title on a note whose title is long, and the one thing a find bar must never
+ * do is hide the words being searched.
+ */
+.note-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-end;
+  margin: 0 var(--space-8) var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-raised);
+  backdrop-filter: blur(20px) saturate(160%);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+  /* The header paints white across itself for the nav row; the bar is part of
+     that band and takes the same ink. */
+  color: var(--text-primary);
+}
+
+.note-search-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--text-muted);
+  flex: none;
+}
+
+.note-search-field {
+  width: 12rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.note-search-field::placeholder {
+  color: var(--text-faint);
+}
+
+.note-search-field:focus {
+  outline: none;
+}
+
+.note-search-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A query that finds nothing says so in the same place the count would be,
+   rather than leaving the reader to notice an absence. */
+.note-search-count.is-empty {
+  color: var(--text-faint);
+}
+
+.note-search .icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Every match, and the one being stood on. The current one has to win on a
+   ground that is already tinted, so it takes the accent rather than more of
+   the same wash. */
+.cm-search-hit {
+  background: rgb(255 214 102 / 34%);
+  border-radius: 2px;
+}
+
+.cm-search-hit-current {
+  background: var(--accent-tint-strong);
+  color: #f7f6fc;
+}
