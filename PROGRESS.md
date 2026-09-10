@@ -347,6 +347,24 @@ blank window without them and that is a miserable thing to debug later.
 refuses to package otherwise, and it is right to: the runtime is bundled from
 its own copy, so a runtime dependency would have shipped a second one.
 
+**`files` adds to electron-builder's default, it does not replace it.** The
+default packs production `node_modules` whole, so the asar carried the entire
+dependency tree that electron-vite had already compiled into `out/` — 104MB
+around 19MB of real build output. Harper's WASM was in there three times: the
+chunk the renderer actually loads, plus the slim and full models still sitting
+in `node_modules/harper.js`, which nothing reads at runtime. One `!node_modules/**`
+line takes the asar to 18.7MB and the bundle from 374MB to 289MB. Verified by
+running the packaged app against a throwaway profile: it boots clean and grammar
+still lints, which is the check that matters — grammar is the one feature that
+resolves its payload lazily.
+
+**The signed build rewrites `package.json`.** Somewhere in the signing path,
+electron-builder re-serialises the manifest in place and drops `scripts`,
+`keywords` and `devDependencies`. `pnpm run package --dir` does not do this. If
+a packaging run leaves the file looking short, that is why — `git checkout --
+package.json` and carry on. Worth watching, because it is exactly the kind of
+change that gets committed by accident.
+
 **The app icon is generated, not `branding/logo.png`.** That file is a
 marketing render — tilted in perspective, with a baked-in cream background and
 its own drop shadow. macOS supplies the mask and the shadow itself and expects

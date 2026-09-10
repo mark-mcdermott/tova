@@ -8,9 +8,17 @@ directories:
 
 # electron-vite has already bundled everything into out/, so the app ships that
 # and the manifest — never src/, and never the dependency tree it compiled away.
+#
+# The exclusion is not redundant: `files` adds to electron-builder's default,
+# which packs production node_modules whole. Left in, the asar was 104MB against
+# 19MB of real build output, and carried harper's WASM three times — the copy the
+# renderer loads, plus the slim and full models still sitting in node_modules.
+# Nothing reads from there at runtime; the bundler resolved those imports at
+# build time.
 files:
   - out/**
   - package.json
+  - "!node_modules/**"
 
 # The vault lives in ~/Documents, so nothing about the user's notes is packaged
 # with the app and nothing is written inside the bundle.
