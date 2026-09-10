@@ -6,6 +6,8 @@ import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
 import { emptyHistory, push } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
+import { usePreferencesStore } from "../../stores/preferencesStore"
+import { DEFAULT_PREFERENCES, Preferences } from "../../../shared/preferences"
 
 function note(partial: Partial<NoteSummary> & { title: string }): NoteSummary {
   return {
@@ -465,5 +467,36 @@ describe("picking several rows", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /^Beta/ }))
     expect(screen.queryByLabelText("Selected notes")).toBeNull()
+  })
+})
+
+describe("the appearance button on an index", () => {
+  it("sits at the end of the row, after the sort", () => {
+    useNotesStore.setState({ indexTarget: { kind: "section", section: "notes" } })
+    render(<IndexPage />)
+
+    const end = document.querySelector(".editor-nav-end")
+    expect(end?.querySelector(".index-sort")).not.toBeNull()
+    expect(end?.lastElementChild?.getAttribute("aria-label")).toMatch(/^Appearance:/)
+  })
+
+  it("is there on the tag list too, which has no sort of its own", () => {
+    // The tag list orders itself by use, and the theme is not about this page.
+    useNotesStore.setState({ indexTarget: { kind: "tags" } })
+    render(<IndexPage />)
+
+    expect(screen.queryByLabelText("Sort by")).toBeNull()
+    expect(screen.getByLabelText(/^Appearance:/)).toBeDefined()
+  })
+
+  it("steps the theme from here as it does from a note", async () => {
+    const write = vi.fn(async (value: Preferences) => value)
+    window.tova = stubBridge({ notes: { read }, preferences: { write } })
+    usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES, theme: "light" } })
+    useNotesStore.setState({ indexTarget: { kind: "section", section: "notes" } })
+    render(<IndexPage />)
+
+    await userEvent.setup().click(screen.getByLabelText(/^Appearance:/))
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" }))
   })
 })
