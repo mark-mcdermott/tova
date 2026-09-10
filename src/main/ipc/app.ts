@@ -5,12 +5,8 @@ import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
 import { avatarDataUrl, chooseAvatar } from "../avatar"
 import { addBackground, listBackgrounds } from "../backgrounds"
-import {
-  addTitleFont,
-  listTitleFonts,
-  removeTitleFont,
-  titleFontDataUrl
-} from "../titleFonts"
+import { readSession, writeSession } from "../session"
+import { addTitleFont, listTitleFonts, removeTitleFont, titleFontDataUrl } from "../titleFonts"
 import { addVault, forgetVault, listVaults, useVault } from "../vaults"
 import {
   addToDictionary,
@@ -46,6 +42,9 @@ export function registerAppHandlers(): void {
   })
 
   ipcMain.handle("spellcheck:listWords", () => listDictionary())
+
+  ipcMain.handle("session:read", () => readSession())
+  ipcMain.handle("session:write", (_event, screen: unknown) => writeSession(screen))
 
   ipcMain.handle("prefs:read", () => readPreferences())
   ipcMain.handle("prefs:write", (_event, preferences) => writePreferences(preferences))

@@ -1,4 +1,4 @@
-import { IndexTarget } from "../../shared/indexTarget"
+import { Screen } from "../../shared/screen"
 
 /**
  * A place the reader has been. Notes were the only kind for a long while, so
@@ -6,7 +6,7 @@ import { IndexTarget } from "../../shared/indexTarget"
  * without a trace — clicking Ideas, then a note in it, then back, skipped the
  * listing entirely.
  */
-export type Screen = { kind: "note"; noteId: string } | { kind: "index"; target: IndexTarget }
+export type { Screen }
 
 export interface HistoryEntry {
   screen: Screen

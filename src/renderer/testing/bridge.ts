@@ -65,6 +65,10 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       listWords: vi.fn(async () => []),
       setEnabled: vi.fn()
     },
+    session: {
+      read: vi.fn(async () => null),
+      write: vi.fn(async () => undefined)
+    },
     preferences: {
       read: vi.fn(async () => ({ ...DEFAULT_PREFERENCES })),
       write: vi.fn(async (value: unknown) => value),
