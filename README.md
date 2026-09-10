@@ -6,11 +6,25 @@ leaving the window.
 
 ![Tova, with a note open](docs/screenshot.jpg)
 
-## Your notes are just files
+## Why Tova?
+
+- A lightweight note-taking app.
+- **Still powerful.** Write several posts in a single note, each with its own
+  `@` block, and publish them from where you wrote them. Configure as many blogs
+  as you like and pick the target as you write.
+- **Can be 100% offline and private**, if you want.
+- **TODO:** you can write under different tags in one file, and if you ever need
+  to delete everything for one tag — you leave your job, say — you can do that
+  with one click without losing your other notes.
+- **Everything else you would expect is here:** daily notes, tags, spellcheck,
+  sections you can rename and reorder, full-text search, live preview with no
+  pane or toggle, autosave as you type, dated snapshots of the whole vault, and
+  export to markdown or PDF.
+
+## Delete Tova and your notes are still there
 
 Everything lives in `~/Documents/Tova` as plain markdown, one file per note, in
 folders you can see. Open them in any editor. Grep them. Put them in Dropbox.
-Delete the app and they are all still there, still readable.
 
 Nothing is uploaded, there is no account, and the app works with the network
 off. The only time Tova reaches the internet is when you ask it to publish.
@@ -75,7 +89,7 @@ Electron 42 · React 19 · TypeScript 6 (strict) · CodeMirror 6 · electron-vit
 tokens — no utility framework and no component library. The dependency list is
 short on purpose.
 
-## Where things are
+## Structure
 
 | Path            | What                                                      |
 | --------------- | --------------------------------------------------------- |
