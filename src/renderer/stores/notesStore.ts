@@ -66,6 +66,8 @@ interface NotesState {
 
   load: () => Promise<void>
   openToday: () => Promise<void>
+  /** Reopens the last screen; false when there is not one to reopen. */
+  resume: () => Promise<boolean>
   back: () => Promise<void>
   forward: () => Promise<void>
   rememberScroll: (scrollTop: number) => void
@@ -132,10 +134,42 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       ])
       set({ notes, folders, loading: false, error: null })
 
-      // Tova always opens on today's daily note, with no prompt.
-      if (get().activeId === null) await get().openToday()
+      // Back where you were, or today's note if there is nowhere to go back to.
+      if (get().activeId === null && get().indexTarget === null) {
+        if (!(await get().resume())) await get().openToday()
+      }
     } catch (error) {
       set({ loading: false, error: describe(error) })
+    }
+  },
+
+  /**
+   * Reopens the screen the app was last on. False when there is none, or when
+   * what it named has since gone — a note deleted between launches should cost
+   * you today's note, not an error.
+   */
+  resume: async () => {
+    const screen = await window.tova.session.read()
+    if (screen === null) return false
+
+    if (screen.kind === "index") {
+      get().showIndex(screen.target)
+      return true
+    }
+
+    try {
+      const note = await window.tova.notes.read(screen.noteId)
+      set((state) => ({
+        view: "editor",
+        activeId: note.id,
+        active: note,
+        openSeq: state.openSeq + 1,
+        history: pushHistory(state.history, { kind: "note", noteId: note.id }),
+        error: null
+      }))
+      return true
+    } catch {
+      return false
     }
   },
 

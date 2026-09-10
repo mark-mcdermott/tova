@@ -9,6 +9,7 @@ import type {
   Misspelling,
   PublishApi,
   PreferencesApi,
+  SessionApi,
   PublishUpdate,
   SpellcheckApi
 } from "../shared/types"
@@ -100,6 +101,11 @@ const spellcheck: SpellcheckApi = {
   setEnabled: (enabled) => ipcRenderer.invoke("spellcheck:setEnabled", enabled)
 }
 
+const session: SessionApi = {
+  read: () => ipcRenderer.invoke("session:read"),
+  write: (screen) => ipcRenderer.invoke("session:write", screen)
+}
+
 const preferences: PreferencesApi = {
   read: () => ipcRenderer.invoke("prefs:read"),
   write: (value) => ipcRenderer.invoke("prefs:write", value),
@@ -137,6 +143,7 @@ contextBridge.exposeInMainWorld("tova", {
   publish: publishing,
   spellcheck,
   preferences,
+  session,
   app: appInfo,
   events
 })

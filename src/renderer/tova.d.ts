@@ -7,6 +7,7 @@ import type {
   ImageApi,
   PreferencesApi,
   PublishApi,
+  SessionApi,
   SpellcheckApi
 } from "../shared/types"
 
@@ -20,6 +21,7 @@ declare global {
       publish: PublishApi
       spellcheck: SpellcheckApi
       preferences: PreferencesApi
+      session: SessionApi
       app: AppApi
       events: EventsApi
     }

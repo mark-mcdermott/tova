@@ -6,6 +6,7 @@ import { IndexPage } from "./components/Index/IndexPage"
 import { VaultWarning } from "./components/VaultWarning"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
+import { current as currentEntry } from "./stores/history"
 import { useBlogsStore } from "./stores/blogsStore"
 import { usePreferencesStore } from "./stores/preferencesStore"
 import { applyTitleFont } from "./titleFont"
@@ -36,6 +37,16 @@ export default function App() {
   const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
   const userBackgrounds = usePreferencesStore((state) => state.userBackgrounds)
+
+  /*
+   * Written on every move rather than on quit. The window remembers its frame
+   * on close, which is fine for a frame — losing your place to a crash is not,
+   * and a crash is exactly when nothing gets to happen on the way out.
+   */
+  const here = useNotesStore((state) => currentEntry(state.history)?.screen ?? null)
+  useEffect(() => {
+    if (here !== null) void window.tova.session.write(here)
+  }, [here])
 
   useEffect(() => {
     load()

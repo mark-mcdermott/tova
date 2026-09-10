@@ -1,3 +1,5 @@
+import type { Screen } from "./screen"
+
 /**
  * A section is a directory in the vault, and the reader configures which ones
  * exist — see `sections.ts`. So this is the shape of an id rather than a list
@@ -74,6 +76,13 @@ export interface AppApi {
   reveal: (target: "vault" | "backups") => Promise<void>
   /** Opens an http(s) link in the OS browser. */
   openExternal: (url: string) => Promise<void>
+}
+
+export interface SessionApi {
+  /** Where the reader was when the app last had their attention, or null. */
+  read: () => Promise<Screen | null>
+  /** Written on every move, so a crash costs no more than a tidy quit. */
+  write: (screen: Screen) => Promise<void>
 }
 
 export interface ImageApi {
