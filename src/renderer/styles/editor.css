@@ -1201,26 +1201,20 @@
  * something invisible, and showing them at full strength on any hover put a
  * delete button at the reader's eye every time they moved the mouse.
  */
+/*
+ * Always drawn, and lit the way the star beside it is: muted at rest, full
+ * white under the pointer. It used to fade in on row hover and again on its
+ * own, which meant the one control that deletes something was also the one you
+ * had to go looking for.
+ */
 .index-actions {
   display: flex;
   gap: 2px;
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
-
-.index-item:hover .index-actions,
-.index-item:has(:focus-visible) .index-actions {
-  opacity: 0.45;
-}
-
-/* Outranks the row rule above it, which is three selectors deep and otherwise
-   wins — hovering a control hovers the row it sits in. */
-.index-item:hover .index-actions:hover,
-.index-item:has(.index-actions :focus-visible) .index-actions {
-  opacity: 1;
 }
 
 .index-actions button {
+  display: grid;
+  place-items: center;
   padding: var(--space-1);
   border: none;
   border-radius: var(--radius-sm);
@@ -1234,8 +1228,17 @@
   color: var(--text-primary);
 }
 
+/* The fallback is the colour this carried before the theme had a token for it,
+   so this reads the same either side of that change. */
 .index-actions .is-destructive:hover {
-  color: var(--danger, #b3261e);
+  color: var(--danger-ink, #b3261e);
+}
+
+/* Larger than the sidebar's, which is why it is scoped here: a row on an index
+   page has room the rail does not, and the trash is the row's real verb. */
+.index-actions .row-action-icon {
+  width: 1.235rem;
+  height: 1.235rem;
 }
 
 /* A body hit shows the line it matched on, under the title it belongs to. */
