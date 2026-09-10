@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { NoteSummary } from "./types"
 import { indexNotes, indexTitle, indexKey, tagCounts } from "./indexTarget"
+import { DEFAULT_SECTIONS } from "./sections"
 
 function note(partial: Partial<NoteSummary> & { title: string }): NoteSummary {
   return {
@@ -18,10 +19,10 @@ function note(partial: Partial<NoteSummary> & { title: string }): NoteSummary {
 
 describe("indexTitle", () => {
   it("names each kind of index", () => {
-    expect(indexTitle({ kind: "section", section: "daily" })).toBe("Daily")
-    expect(indexTitle({ kind: "folder", folder: "drafts" })).toBe("drafts")
-    expect(indexTitle({ kind: "tag", tag: "writing" })).toBe("#writing")
-    expect(indexTitle({ kind: "tags" })).toBe("Tags")
+    expect(indexTitle({ kind: "section", section: "daily" }, DEFAULT_SECTIONS)).toBe("Daily")
+    expect(indexTitle({ kind: "folder", folder: "drafts" }, DEFAULT_SECTIONS)).toBe("drafts")
+    expect(indexTitle({ kind: "tag", tag: "writing" }, DEFAULT_SECTIONS)).toBe("#writing")
+    expect(indexTitle({ kind: "tags" }, DEFAULT_SECTIONS)).toBe("Tags")
   })
 })
 
@@ -127,7 +128,10 @@ describe("tagCounts", () => {
   })
 
   it("folds case together, keeping the spelling it first saw", () => {
-    const notes = [note({ title: "One", tags: ["Writing"] }), note({ title: "Two", tags: ["writing"] })]
+    const notes = [
+      note({ title: "One", tags: ["Writing"] }),
+      note({ title: "Two", tags: ["writing"] })
+    ]
     expect(tagCounts(notes)).toEqual([{ tag: "Writing", count: 2 }])
   })
 
@@ -165,7 +169,38 @@ describe("search", () => {
   })
 
   it("quotes the query as its title", () => {
-    expect(indexTitle({ kind: "search", query: "morning" })).toBe("“morning”")
+    expect(indexTitle({ kind: "search", query: "morning" }, DEFAULT_SECTIONS)).toBe("“morning”")
   })
 })
 
+describe("headings follow the rail", () => {
+  const renamed = [
+    {
+      id: "ideas",
+      kind: "section" as const,
+      label: "Thoughts",
+      icon: "ideas" as const,
+      enabled: true
+    },
+    {
+      id: "markmcdermott.io",
+      kind: "blog" as const,
+      label: "Writing",
+      icon: "posts" as const,
+      enabled: true
+    }
+  ]
+
+  it("names a renamed section by its new name", () => {
+    expect(indexTitle({ kind: "section", section: "ideas" }, renamed)).toBe("Thoughts")
+  })
+
+  it("names a renamed blog by its new name rather than its handle", () => {
+    expect(indexTitle({ kind: "blog", blog: "markmcdermott.io" }, renamed)).toBe("Writing")
+  })
+
+  it("leaves a folder and a tag alone, which name themselves", () => {
+    expect(indexTitle({ kind: "folder", folder: "ideas" }, renamed)).toBe("ideas")
+    expect(indexTitle({ kind: "tag", tag: "writing" }, renamed)).toBe("#writing")
+  })
+})

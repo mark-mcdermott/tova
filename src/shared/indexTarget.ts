@@ -1,4 +1,5 @@
 import { NoteSummary, Section } from "./types"
+import { SectionConfig, railLabel } from "./sections"
 
 /**
  * What an index page is showing. Clicking a section, a folder or a tag in the
@@ -28,23 +29,19 @@ export const SEARCH_SORTS: { value: IndexSort; label: string }[] = [
   ...INDEX_SORTS
 ]
 
-const SECTION_LABELS: Record<Section, string> = {
-  notes: "Notes",
-  daily: "Daily",
-  ideas: "Ideas",
-  journal: "Journal",
-  posts: "Posts",
-  trash: "Trash"
-}
-
-export function indexTitle(target: IndexTarget): string {
+/**
+ * The heading over a listing. Sections and blogs are named by the rail, so a
+ * row renamed in Settings is renamed here too; a folder and a tag are named by
+ * themselves and take no lookup.
+ */
+export function indexTitle(target: IndexTarget, sections: SectionConfig[]): string {
   switch (target.kind) {
     case "section":
-      return SECTION_LABELS[target.section]
+      return railLabel(sections, "section", target.section)
     case "folder":
       return target.folder
     case "blog":
-      return target.blog
+      return railLabel(sections, "blog", target.blog)
     case "tag":
       return `#${target.tag}`
     case "tags":

@@ -3,6 +3,7 @@ import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { canGoBack, canGoForward } from "../../stores/history"
 import { breadcrumbFor } from "./breadcrumb"
+import { useRail } from "../../useRail"
 import { NoteMenu } from "./NoteMenu"
 import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
@@ -42,6 +43,7 @@ export function EditorHeader({
   const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
 
   const menu = useContextMenu()
+  const rail = useRail()
 
   // The edited time is derived, so it only moves when something re-renders.
   // A slow tick keeps it honest while a note sits open.
@@ -52,7 +54,7 @@ export function EditorHeader({
   }, [])
   const titleRef = useRef<HTMLInputElement>(null)
   const tip = useTooltip()
-  const crumbs = breadcrumbFor(note)
+  const crumbs = breadcrumbFor(note, rail)
 
   // Rename selects the existing title so typing replaces it outright.
   useEffect(() => {

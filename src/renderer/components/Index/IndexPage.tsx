@@ -10,6 +10,8 @@ import {
 } from "../../../shared/indexTarget"
 import { IndexRow } from "./IndexRow"
 import { showsTrail } from "../Editor/breadcrumb"
+import { useRail } from "../../useRail"
+import { railLabel } from "../../../shared/sections"
 
 /**
  * The listing behind a section, a folder or a tag. The sidebar names places;
@@ -25,13 +27,17 @@ export function IndexPage() {
   const searchSort = useNotesStore((state) => state.searchSort)
   const setSearchSort = useNotesStore((state) => state.setSearchSort)
   const searching = useNotesStore((state) => state.searching)
+  const rail = useRail()
 
   if (target === null) return null
 
-  const title = indexTitle(target)
+  const title = indexTitle(target, rail)
   const parent =
     target.kind === "folder"
-      ? { label: "Notes", target: { kind: "section", section: "notes" } as IndexTarget }
+      ? {
+          label: railLabel(rail, "section", "notes"),
+          target: { kind: "section", section: "notes" } as IndexTarget
+        }
       : target.kind === "tag"
         ? { label: "Tags", target: { kind: "tags" } as IndexTarget }
         : null
