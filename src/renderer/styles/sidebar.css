@@ -54,10 +54,12 @@
  * viewBox carries the proportion, so there is no face to load and nothing to
  * fall back to.
  *
- * White, inherited from the sidebar like every other mark here. Measured, the
- * backdrop under it carries white at 2.52:1 — short of the 3:1 large text
- * wants — so a soft shadow does the holding. drop-shadow, not text-shadow:
- * this is a shape now, and text-shadow would do nothing to it.
+ * White, inherited from the sidebar like every other mark here. It once carried
+ * a soft drop-shadow to hold itself off a light backdrop, and the shadow read as
+ * a smudge under a script face — the strokes are thin enough that a 10px blur
+ * doubles them rather than seating them. What holds it now is the sidebar's own
+ * 28% overlay, which is less: against a bright background photograph the mark
+ * will sit light. That is the trade, and it was made deliberately.
  */
 .wordmark {
   display: block;
@@ -67,7 +69,6 @@
   height: 2.35rem;
   width: auto;
   color: var(--text-primary);
-  filter: drop-shadow(0 1px 10px rgb(38 30 58 / 60%));
 }
 
 .icon-button {
