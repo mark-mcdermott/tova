@@ -113,3 +113,59 @@ describe("the control's styling hooks", () => {
     ).toBe(true)
   })
 })
+
+describe("opening a tag from the prose", () => {
+  function mountWith(doc: string, anchor: number, onOpenTag: (tag: string) => void) {
+    view = new EditorView({
+      state: EditorState.create({
+        doc,
+        selection: { anchor },
+        extensions: [markdown({ base: markdownLanguage }), markdownDecorations({ onOpenTag })]
+      }),
+      parent: document.body
+    })
+    return view
+  }
+
+  const clickOn = (element: Element) =>
+    element.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 })
+    )
+
+  it("opens the tag's listing when its pill is clicked", () => {
+    const opened: string[] = []
+    const view = mountWith("Coffee and #streets today.", 0, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelector(".cm-tag-body") as Element)
+    expect(opened).toEqual(["streets"])
+  })
+
+  it("opens the right one when a line carries several", () => {
+    const opened: string[] = []
+    const doc = "#one #two\n\nProse."
+    const view = mountWith(doc, doc.length, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelectorAll(".cm-tag-top")[1])
+    expect(opened).toEqual(["two"])
+  })
+
+  it("leaves a tag the caret is inside alone", () => {
+    // There it is raw text the writer is editing, and clicking around in it
+    // has to keep working.
+    const doc = "Coffee and #streets today."
+    const opened: string[] = []
+    const view = mountWith(doc, doc.indexOf("#streets") + 3, (tag) => opened.push(tag))
+
+    const raw = view.dom.querySelector(".cm-tag-raw")
+    if (raw !== null) clickOn(raw)
+    expect(opened).toEqual([])
+  })
+
+  it("ignores a click on ordinary prose", () => {
+    const opened: string[] = []
+    const view = mountWith("Coffee and streets today.", 0, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelector(".cm-line") as Element)
+    expect(opened).toEqual([])
+  })
+})

@@ -259,3 +259,30 @@ export function applyEdits(doc: string, edits: TagEdit[]): string {
   }
   return out
 }
+
+/**
+ * What typing `#` should do to a selection.
+ *
+ * Over a tag it takes the tag off; over a plain word it makes one. Returns null
+ * where neither applies, which is the signal to let `#` type itself — a caret
+ * sitting in prose is someone starting a tag, not toggling one.
+ *
+ * A caret has to be strictly inside a tag to count. Resting against one is not
+ * being in it, and typing `#` there is how a tag gets written in the first
+ * place.
+ */
+export function tagToggleEdits(doc: string, from: number, to: number): TagEdit[] | null {
+  const caret = from === to
+
+  const covering = findTags(doc).find((match) =>
+    caret ? match.from < from && from < match.to : match.from < to && from < match.to
+  )
+  if (covering !== undefined) return removeOccurrenceEdits(doc, covering.from, covering.to)
+
+  if (caret) return null
+
+  // Only a bare word. A selection carrying spaces or punctuation is not a tag
+  // name, and quietly rewriting it into one would be a worse surprise than
+  // typing the character.
+  return /^[A-Za-z][\w-]*$/.test(doc.slice(from, to)) ? [{ from, to: from, insert: "#" }] : null
+}
