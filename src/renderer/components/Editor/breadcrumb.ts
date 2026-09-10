@@ -60,3 +60,18 @@ export function showsTrail(crumbs: { label: string }[], title: string): boolean 
   if (crumbs.length === 0) return false
   return crumbs.length > 1 || crumbs[0].label !== title
 }
+
+/**
+ * The listing a note lives in — where to land when the note itself is no
+ * longer somewhere to be. The same place the last linked crumb points at,
+ * which is what the trail already says is one step up.
+ */
+export function noteHome(note: NoteSummary): IndexTarget {
+  if (note.section === "posts" && note.folder !== null) {
+    return { kind: "blog", blog: note.folder }
+  }
+  if (note.section === "notes" && note.folder !== null) {
+    return { kind: "folder", folder: note.folder }
+  }
+  return { kind: "section", section: note.section }
+}

@@ -318,3 +318,46 @@ describe("EditorHeader favourite", () => {
     expect(setFavorite).toHaveBeenCalledWith("notes/river.md", false)
   })
 })
+
+describe("deleting from the note menu leaves the note", () => {
+  async function openMenuOn(active: Note) {
+    const user = userEvent.setup()
+    renderHeader(active)
+    await user.click(screen.getByLabelText("Note actions"))
+    return user
+  }
+
+  it("goes up to the folder the note lived in", async () => {
+    // Deleting the note you are reading used to leave you reading it, with the
+    // breadcrumb quietly changed to Trash and nothing else different.
+    remove.mockResolvedValue({ ...note({ folder: "ideas" }), section: "trash", deletedAt: 1 })
+    const user = await openMenuOn(note({ folder: "ideas" }))
+
+    await user.click(screen.getByRole("menuitem", { name: "Delete → Trash" }))
+    const state = useNotesStore.getState()
+
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "folder", folder: "ideas" })
+  })
+
+  it("goes up to the section for a loose note", async () => {
+    remove.mockResolvedValue({ ...note(), section: "trash", deletedAt: 1 })
+    const user = await openMenuOn(note())
+
+    await user.click(screen.getByRole("menuitem", { name: "Delete → Trash" }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "notes" })
+  })
+
+  it("leaves a permanently deleted note too, since it is gone entirely", async () => {
+    const user = await openMenuOn(note({ section: "trash", deletedAt: 1 }))
+
+    await user.click(screen.getByRole("menuitem", { name: "Delete permanently" }))
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "trash" })
+  })
+
+  it("offers Export .pdf once, not twice", async () => {
+    // It was listed twice for a trashed note before this change.
+    await openMenuOn(note({ section: "trash", deletedAt: 1 }))
+    expect(screen.getAllByRole("menuitem", { name: "Export .pdf" })).toHaveLength(1)
+  })
+})

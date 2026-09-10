@@ -3,6 +3,7 @@ import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useBlogsStore } from "../../stores/blogsStore"
+import { noteHome } from "./breadcrumb"
 
 interface NoteMenuProps {
   note: Note
@@ -25,11 +26,25 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
   const exportNote = useNotesStore((state) => state.exportNote)
   const exportPdf = useNotesStore((state) => state.exportPdf)
   const requestTitleFocus = useNotesStore((state) => state.requestTitleFocus)
+  const showIndex = useNotesStore((state) => state.showIndex)
 
   const deletePost = useBlogsStore((state) => state.deletePost)
 
   const [choosingFolder, setChoosingFolder] = useState(false)
   const [choosingDelete, setChoosingDelete] = useState(false)
+
+  /**
+   * Deleting the note you are reading leaves you reading it, which is a strange
+   * place to be — the breadcrumb quietly changes to Trash and nothing else
+   * does. Going up to where it lived is the honest answer: that place still
+   * exists, and it is the one the trail was already pointing at.
+   *
+   * Where it lived, not where it went. A note on its way to Trash came from
+   * somewhere, and that is the listing worth being on.
+   */
+  function leave(): void {
+    showIndex(noteHome(note))
+  }
 
   const exportItem: MenuItem = {
     label: "Export .md",
@@ -47,13 +62,15 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
         { label: "Restore", onSelect: () => restore(note.id) },
         "separator",
         exportItem,
-      exportPdfItem,
         exportPdfItem,
         "separator",
         {
           label: "Delete permanently",
           destructive: true,
-          onSelect: () => destroy(note.id)
+          onSelect: () => {
+            void destroy(note.id)
+            leave()
+          }
         }
       ]
     }
@@ -83,7 +100,14 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
             keepOpen: true,
             onSelect: () => setChoosingDelete(true)
           }
-        : { label: "Delete → Trash", destructive: true, onSelect: () => trash(note.id) }
+        : {
+            label: "Delete → Trash",
+            destructive: true,
+            onSelect: () => {
+              void trash(note.id)
+              leave()
+            }
+          }
     )
 
     return items
@@ -96,14 +120,18 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
       {
         label: "Delete here only",
         onSelect: () => {
-          if (note.folder !== null) void deletePost(note.folder, filename, false)
+          if (note.folder === null) return
+          void deletePost(note.folder, filename, false)
+          leave()
         }
       },
       {
         label: "Delete here and on the blog",
         destructive: true,
         onSelect: () => {
-          if (note.folder !== null) void deletePost(note.folder, filename, true)
+          if (note.folder === null) return
+          void deletePost(note.folder, filename, true)
+          leave()
         }
       }
     ]
