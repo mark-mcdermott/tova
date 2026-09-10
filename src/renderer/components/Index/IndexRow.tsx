@@ -13,6 +13,12 @@ interface IndexRowProps {
   note: NoteSummary
   /** Present on search results: why this note is in the list. */
   match?: { where: "title" | "tag" | "body"; snippet: string | null }
+  selected?: boolean
+  /**
+   * Offered the click before the note is opened. True means it was a selecting
+   * click and the note should stay shut.
+   */
+  onPick?: (click: { shift: boolean; meta: boolean }) => boolean
 }
 
 /**
@@ -20,7 +26,7 @@ interface IndexRowProps {
  * it is the drag source for filing a note into a folder, it holds the same
  * context menu, and its trash sits under the pointer rather than on the row.
  */
-export function IndexRow({ note, match }: IndexRowProps) {
+export function IndexRow({ note, match, selected = false, onPick }: IndexRowProps) {
   const open = useNotesStore((state) => state.open)
   const trash = useNotesStore((state) => state.trash)
   const restore = useNotesStore((state) => state.restore)
@@ -56,7 +62,7 @@ export function IndexRow({ note, match }: IndexRowProps) {
 
   return (
     <li
-      className="index-item"
+      className={`index-item${selected ? " is-selected" : ""}`}
       onContextMenu={menu.open}
       draggable={!isTrashed}
       onDragStart={(event) => {
@@ -66,7 +72,21 @@ export function IndexRow({ note, match }: IndexRowProps) {
       }}
       onDragEnd={() => setDraggingNote(null)}
     >
-      <button type="button" className="index-row" onClick={() => void open(note.id)}>
+      <button
+        type="button"
+        className="index-row"
+        aria-pressed={onPick === undefined ? undefined : selected}
+        onClick={(event) => {
+          // Ctrl as well as Cmd: a right-click on macOS arrives as ctrl+click,
+          // but that is a contextmenu event and never reaches here.
+          const picked = onPick?.({ shift: event.shiftKey, meta: event.metaKey || event.ctrlKey })
+          if (picked === true) {
+            event.preventDefault()
+            return
+          }
+          void open(note.id)
+        }}
+      >
         <span className="index-row-text">
           <span className="index-row-title">{label}</span>
           {/* Only on a body hit: repeating the title back under the title, or
