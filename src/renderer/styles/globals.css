@@ -131,6 +131,17 @@
   /* A dialog asks a question and waits, so it does not get to be translucent
      the way a panel you read past can. */
   --confirm-bg: #f6f3f0;
+
+  /*
+   * Notices. An ink and a ground that hold together on either theme — the reds
+   * used to be written into each surface, three slightly different ones, and
+   * every one of them was a light-theme colour. On the dark sidebar the error
+   * measured 1.29:1, which is not "hard to read" so much as absent.
+   */
+  --danger-ink: #7d1a21;
+  --danger-bg: rgb(163 36 44 / 12%);
+  --success-ink: #14532d;
+  --success-bg: rgb(31 122 68 / 12%);
   /* Quiet on purpose: a note is prose with the occasional block in it, not a
      source file. These mark the few things worth telling apart. */
   --code-keyword: #6b4bbb;
@@ -295,6 +306,13 @@
   --post-bg: rgb(255 255 255 / 7%);
   --post-border: rgb(255 255 255 / 13%);
   --confirm-bg: #241f31;
+
+  /* Measured on the dark sidebar ground: ink 5.7:1 over its own tint, 8.4:1 on
+     the editor's, and 10.7:1 bare where a status has no ground at all. */
+  --danger-ink: #ffb4b0;
+  --danger-bg: rgb(255 120 116 / 14%);
+  --success-ink: #9fe0b8;
+  --success-bg: rgb(120 220 165 / 14%);
   --code-keyword: #c4b2ff;
   --code-string: #96d3ae;
   --code-comment: rgb(243 240 249 / 52%);

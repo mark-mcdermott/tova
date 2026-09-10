@@ -187,8 +187,8 @@
 .settings-error {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  background: rgb(163 36 44 / 12%);
-  color: #7d1a21;
+  background: var(--danger-bg);
+  color: var(--danger-ink);
 }
 
 /* Version numbers read as a table, not as prose. */
@@ -246,7 +246,7 @@
 
 .field-error {
   margin-top: var(--space-1);
-  color: #7d1a21;
+  color: var(--danger-ink);
   font-size: var(--text-sm);
 }
 
@@ -335,13 +335,13 @@
 }
 
 .conflict-line.is-added {
-  background: rgb(31 122 68 / 12%);
-  color: #14532d;
+  background: var(--success-bg);
+  color: var(--success-ink);
 }
 
 .conflict-line.is-removed {
-  background: rgb(163 36 44 / 12%);
-  color: #7d1a21;
+  background: var(--danger-bg);
+  color: var(--danger-ink);
 }
 
 .conflict-line.is-same {
