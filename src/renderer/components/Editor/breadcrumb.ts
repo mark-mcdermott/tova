@@ -1,15 +1,19 @@
 import { NoteSummary } from "../../../shared/types"
 import { SectionConfig, railLabel } from "../../../shared/sections"
+import { IndexTarget } from "../../../shared/indexTarget"
 
 export interface Crumb {
   label: string
-  /** Sidebar section key this crumb reveals, or null for the note itself. */
-  target: string | null
+  /** The listing this crumb opens, or null for the note itself — you are there. */
+  target: IndexTarget | null
 }
 
 /**
  * Section / folder / title — at most three levels. The final crumb is the note
- * itself and is not a link; the rest reveal their section in the sidebar.
+ * itself and is not a link; the rest open their listing.
+ *
+ * They used to reveal the row in the sidebar instead, which looked like a link,
+ * read like a link, and left you on the same page.
  *
  * Named by the rail, so a section or blog renamed in Settings is renamed here.
  */
@@ -18,11 +22,21 @@ export function breadcrumbFor(note: NoteSummary, sections: SectionConfig[]): Cru
   // sidebar shows blogs as peers of Notes, and the crumb follows that.
   const crumbs: Crumb[] =
     note.section === "posts" && note.folder !== null
-      ? [{ label: railLabel(sections, "blog", note.folder), target: `blog:${note.folder}` }]
-      : [{ label: railLabel(sections, "section", note.section), target: note.section }]
+      ? [
+          {
+            label: railLabel(sections, "blog", note.folder),
+            target: { kind: "blog", blog: note.folder }
+          }
+        ]
+      : [
+          {
+            label: railLabel(sections, "section", note.section),
+            target: { kind: "section", section: note.section }
+          }
+        ]
 
   if (note.section === "notes" && note.folder !== null) {
-    crumbs.push({ label: note.folder, target: `folder:${note.folder}` })
+    crumbs.push({ label: note.folder, target: { kind: "folder", folder: note.folder } })
   }
 
   crumbs.push({
