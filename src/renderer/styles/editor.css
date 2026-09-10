@@ -545,6 +545,56 @@
   font-size: var(--text-chrome);
 }
 
+/*
+ * A tag written into a sentence rather than asked for in this row. It goes when
+ * its last use in the prose goes, so it is drawn a shade quieter — the chip you
+ * cannot lose by editing is the one that reads as solid.
+ */
+.editor-tag.is-inline {
+  background: color-mix(in oklab, var(--tag-ink) 4%, transparent);
+  color: color-mix(in oklab, var(--tag-ink) 78%, transparent);
+}
+
+/* The room is held whether or not the × is showing, so a chip does not resize
+   under the pointer and shove the row along. */
+.editor-tag {
+  position: relative;
+  padding-right: 1.9em;
+}
+
+.editor-tag-remove {
+  position: absolute;
+  right: 0.45em;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.1em;
+  height: 1.1em;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.editor-tag:hover .editor-tag-remove,
+.editor-tag-remove:focus-visible {
+  opacity: 0.62;
+}
+
+.editor-tag .editor-tag-remove:hover,
+.editor-tag-remove:focus-visible {
+  opacity: 1;
+  background: color-mix(in oklab, var(--tag-ink) 16%, transparent);
+}
+
 .editor-tag-hash {
   padding-right: var(--space-2);
 }

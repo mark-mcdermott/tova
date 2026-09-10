@@ -8,7 +8,7 @@ import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
-import { addTagEdit, caretAfterTagEdit } from "../../../shared/tags"
+import { addTagEdit, caretAfterTagEdit, removeTagEdits } from "../../../shared/tags"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
@@ -238,6 +238,18 @@ export function Editor({ note }: EditorProps) {
             changes: edit,
             selection: { anchor: caretAfterTagEdit(doc, edit, view.state.selection.main.head) }
           })
+        }}
+        onRemoveTag={(tag) => {
+          const view = viewRef.current
+          if (view === null) return
+
+          // Every occurrence, not just the one the row is standing for. Leaving
+          // one behind puts the chip straight back, since the row is a reading
+          // of the text rather than a list of its own.
+          const edits = removeTagEdits(view.state.doc.toString(), tag)
+          if (edits.length === 0) return
+
+          view.dispatch({ changes: edits })
         }}
       />
 

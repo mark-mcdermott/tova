@@ -10,6 +10,7 @@ import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { EditorTags } from "./EditorTags"
+import { tagOrigin } from "../../../shared/tags"
 import { useTooltip } from "../../useTooltip"
 
 interface EditorHeaderProps {
@@ -20,6 +21,7 @@ interface EditorHeaderProps {
   /** The tag row's way in, owned by the editor so it can hand focus back. */
   tagAddRef: RefObject<HTMLButtonElement | null>
   onAddTag: (tag: string) => void
+  onRemoveTag: (tag: string) => void
 }
 
 export function EditorHeader({
@@ -28,9 +30,9 @@ export function EditorHeader({
   onTitleChange,
   onTitleCommit,
   tagAddRef,
-  onAddTag
+  onAddTag,
+  onRemoveTag
 }: EditorHeaderProps) {
-
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
   const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
 
@@ -133,7 +135,9 @@ export function EditorHeader({
 
       <EditorTags
         tags={note.tags}
+        originOf={(tag) => tagOrigin(note.body, tag)}
         onAddTag={onAddTag}
+        onRemoveTag={onRemoveTag}
         addRef={tagAddRef}
         onLeaveForwards={onTitleCommit}
         onLeaveBackwards={() => titleRef.current?.focus()}
