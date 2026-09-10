@@ -104,10 +104,10 @@ export const DEFAULT_PREFERENCES: Preferences = {
   vaults: [],
   activeVault: null,
   sections: DEFAULT_SECTIONS,
-  // Shuffle, so a fresh install opens on a photograph as it always has.
-  // Dark starts on the gradient: every bundled photograph is a bright one.
+  // A photograph each way. Light shuffles, as it always has; dark opens on the
+  // one bundled image dark enough to sit under white text.
   backgroundLight: "shuffle",
-  backgroundDark: null,
+  backgroundDark: "milky-way.jpg",
   titleFont: "vibur",
   proseWidth: "narrow"
 }

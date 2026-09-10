@@ -1,5 +1,11 @@
 import { describe, it, expect, afterEach } from "vitest"
-import { SHUFFLE, pickBackground, applyBackground, resolveBackground } from "./backgrounds"
+import {
+  SHUFFLE,
+  pickBackground,
+  applyBackground,
+  resolveBackground,
+  showsShuffle
+} from "./backgrounds"
 
 const urls = ["a.jpg", "b.jpg", "c.jpg"]
 
@@ -75,5 +81,24 @@ describe("resolveBackground", () => {
   it("falls back to nothing when the chosen file is gone", () => {
     // Not to a photograph the reader did not choose.
     expect(resolveBackground("deleted.jpg")).toBeNull()
+  })
+})
+
+describe("showsShuffle", () => {
+  it("is hidden with one picture, which there is nothing to shuffle between", () => {
+    expect(showsShuffle(1, null)).toBe(false)
+  })
+
+  it("appears once there are two", () => {
+    expect(showsShuffle(2, null)).toBe(true)
+  })
+
+  it("stays when it is already the choice, or nothing would look chosen", () => {
+    // A reader who shuffled and then removed pictures until one was left.
+    expect(showsShuffle(1, SHUFFLE)).toBe(true)
+  })
+
+  it("is hidden with one picture that is chosen by name", () => {
+    expect(showsShuffle(1, "lake-sunset.jpg")).toBe(false)
   })
 })
