@@ -170,8 +170,8 @@ export function useCodeMirror({
     if (!view) return
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: value },
-      // Past any tags line, which the tag row above already shows and the
-      // editor therefore hides: landing inside it would reveal it on open.
+      // Past any tags line: a note opens ready for prose, not with the caret
+      // parked in a row of tags.
       selection: { anchor: bodyStart(value) }
     })
   }, [])

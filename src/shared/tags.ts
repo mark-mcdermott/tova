@@ -47,13 +47,10 @@ export function isTagOnlyLine(line: string): boolean {
 }
 
 /**
- * How many opening lines the tag row above the editor already accounts for:
- * the tags line, plus the blank line under it. Takes the note's first lines —
- * three are enough to decide.
- *
- * Never every line there is. A note whose whole text is its tags keeps them on
- * screen, since hiding the lot would leave a blank editor and no way to see
- * why.
+ * How many opening lines a leading tags line occupies: the tags line, plus the
+ * blank line under it. Takes the note's first lines — three are enough to
+ * decide. Used to place the caret past them, not to hide them: the line is
+ * drawn like any other row of tags.
  */
 export function tagHeaderLines(lines: readonly string[]): number {
   if (lines.length < 2 || !isTagOnlyLine(lines[0])) return 0
@@ -111,10 +108,9 @@ export function addTagEdit(doc: string, input: string): TagEdit | null {
 /**
  * Where the caret belongs after the tag row writes a tag in.
  *
- * Never inside the line just written: the tag row already shows that line, so
- * the editor hides it — and a caret inside keeps it revealed, which is the tag
- * appearing in two places at once. A caret already out in the prose is left
- * where the writer put it, only shifted by what was inserted above it.
+ * Never inside the line just written: you asked for a tag, not for somewhere
+ * to type. A caret already out in the prose is left where the writer put it,
+ * only shifted by what was inserted above it.
  */
 export function caretAfterTagEdit(doc: string, edit: TagEdit, head: number): number {
   const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
@@ -123,4 +119,3 @@ export function caretAfterTagEdit(doc: string, edit: TagEdit, head: number): num
 
   return Math.max(moved, bodyStart(next))
 }
-
