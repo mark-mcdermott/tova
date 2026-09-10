@@ -9,6 +9,7 @@ import {
   tagCounts
 } from "../../../shared/indexTarget"
 import { IndexRow } from "./IndexRow"
+import { showsTrail } from "../Editor/breadcrumb"
 
 /**
  * The listing behind a section, a folder or a tag. The sidebar names places;
@@ -34,6 +35,8 @@ export function IndexPage() {
       : target.kind === "tag"
         ? { label: "Tags", target: { kind: "tags" } as IndexTarget }
         : null
+  const trail = parent === null ? [{ label: title }] : [{ label: parent.label }, { label: title }]
+
   // Search answers from main, which is the only side that has the bodies; the
   // other indexes are a filter over what the renderer already holds.
   const onSearch = target.kind === "search"
@@ -53,24 +56,26 @@ export function IndexPage() {
     <div className="editor-shell">
       <div className="editor-header">
         <nav className="editor-nav" aria-label="Index navigation">
-          <ol className="breadcrumb">
-            {/* A crumb only where there is somewhere above to go: repeating the
-                heading back at the reader tells them nothing. */}
-            {parent !== null && (
+          {/* Nothing at all where the trail would only repeat the heading under
+              it. A folder or a tag has somewhere above to go and keeps both. */}
+          {showsTrail(trail, title) && (
+            <ol className="breadcrumb">
+              {parent !== null && (
+                <li>
+                  <button
+                    type="button"
+                    className="breadcrumb-link"
+                    onClick={() => showIndex(parent.target)}
+                  >
+                    {parent.label}
+                  </button>
+                </li>
+              )}
               <li>
-                <button
-                  type="button"
-                  className="breadcrumb-link"
-                  onClick={() => showIndex(parent.target)}
-                >
-                  {parent.label}
-                </button>
+                <span className="breadcrumb-current">{title}</span>
               </li>
-            )}
-            <li>
-              <span className="breadcrumb-current">{title}</span>
-            </li>
-          </ol>
+            </ol>
+          )}
 
           {target.kind !== "tags" && (
             <div className="editor-nav-end">
