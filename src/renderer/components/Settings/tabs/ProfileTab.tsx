@@ -29,7 +29,7 @@ export function ProfileTab() {
 
       <Field
         id="profile-avatar"
-        label="Picture"
+        label="Avatar"
         hint="Copied into Tova, so moving the original does not lose it."
       >
         <div className="profile-avatar-row">
@@ -40,7 +40,7 @@ export function ProfileTab() {
             className="settings-button"
             onClick={() => void chooseAvatar()}
           >
-            Choose a picture
+            Choose a picture…
           </button>
           {avatarUrl !== null && (
             <button
@@ -48,7 +48,7 @@ export function ProfileTab() {
               className="settings-button"
               onClick={() => void update({ avatarFile: null })}
             >
-              Use the default
+              Remove
             </button>
           )}
         </div>
