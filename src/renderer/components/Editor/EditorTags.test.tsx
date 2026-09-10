@@ -13,6 +13,7 @@ function renderTags(props: Partial<Parameters<typeof EditorTags>[0]> = {}) {
       originOf={() => "row"}
       onAddTag={vi.fn()}
       onRemoveTag={vi.fn()}
+      onOpenTag={vi.fn()}
       {...props}
     />
   )
@@ -23,12 +24,10 @@ describe("EditorTags", () => {
     renderTags({ tags: ["thoughts", "writing"], onAddTag: vi.fn() })
     const row = screen.getByLabelText("Tags")
 
-    // Each chip carries its own remove control, so read the label rather than
-    // the whole chip's text.
-    const tags = [...row.querySelectorAll(".editor-tag")]
-    expect(
-      tags.map((tag) => tag.firstChild?.textContent + (tag.childNodes[1]?.textContent ?? ""))
-    ).toEqual(["#thoughts", "#writing"])
+    // The tag's own control carries the name; the chip around it also holds
+    // the ×, so reading the chip's text picks that up too.
+    const names = [...row.querySelectorAll(".editor-tag-open")].map((tag) => tag.textContent)
+    expect(names).toEqual(["#thoughts", "#writing"])
   })
 
   it("keeps the row when a note has no tags", () => {
@@ -164,5 +163,43 @@ describe("removing a tag from the row", () => {
     const tags = [...screen.getByLabelText("Tags").querySelectorAll(".editor-tag")]
     expect(tags[0].className).toContain("is-row")
     expect(tags[1].className).toContain("is-inline")
+  })
+})
+
+describe("opening a tag from the row", () => {
+  it("offers the tag itself as a control", () => {
+    renderTags({ tags: ["thoughts"] })
+    expect(screen.getByLabelText("Open thoughts")).toBeDefined()
+  })
+
+  it("opens the tag rather than removing it", async () => {
+    const onOpenTag = vi.fn()
+    const onRemoveTag = vi.fn()
+    renderTags({ tags: ["thoughts"], onOpenTag, onRemoveTag })
+
+    await userEvent.click(screen.getByLabelText("Open thoughts"))
+
+    expect(onOpenTag).toHaveBeenCalledWith("thoughts")
+    expect(onRemoveTag).not.toHaveBeenCalled()
+  })
+
+  it("removes rather than opens when the x is used", async () => {
+    const onOpenTag = vi.fn()
+    const onRemoveTag = vi.fn()
+    renderTags({ tags: ["thoughts"], onOpenTag, onRemoveTag })
+
+    await userEvent.click(screen.getByLabelText("Remove thoughts"))
+
+    expect(onRemoveTag).toHaveBeenCalledWith("thoughts")
+    expect(onOpenTag).not.toHaveBeenCalled()
+  })
+
+  it("does not open the new-tag field when a tag is clicked", async () => {
+    // The strip opens that field on a click landing on nothing. A tag is not
+    // nothing, and one click must not do both.
+    renderTags({ tags: ["thoughts"] })
+
+    await userEvent.click(screen.getByLabelText("Open thoughts"))
+    expect(screen.queryByLabelText("New tag")).toBeNull()
   })
 })

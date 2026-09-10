@@ -22,6 +22,7 @@ interface EditorHeaderProps {
   tagAddRef: RefObject<HTMLButtonElement | null>
   onAddTag: (tag: string) => void
   onRemoveTag: (tag: string) => void
+  onOpenTag: (tag: string) => void
 }
 
 export function EditorHeader({
@@ -31,7 +32,8 @@ export function EditorHeader({
   onTitleCommit,
   tagAddRef,
   onAddTag,
-  onRemoveTag
+  onRemoveTag,
+  onOpenTag
 }: EditorHeaderProps) {
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
   const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
@@ -138,6 +140,7 @@ export function EditorHeader({
         originOf={(tag) => tagOrigin(note.manualTags, tag)}
         onAddTag={onAddTag}
         onRemoveTag={onRemoveTag}
+        onOpenTag={onOpenTag}
         addRef={tagAddRef}
         onLeaveForwards={onTitleCommit}
         onLeaveBackwards={() => titleRef.current?.focus()}

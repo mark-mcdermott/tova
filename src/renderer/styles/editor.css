@@ -685,6 +685,29 @@
   background: color-mix(in oklab, var(--tag-ink) 16%, transparent);
 }
 
+/*
+ * The pill's own text, as a control. It carries no look of its own — the
+ * wrapper is the pill — so a tag reads exactly as it did before it became
+ * something you could click.
+ */
+.editor-tag-open {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.editor-tag-open:focus-visible {
+  outline: 2px solid var(--accent-on-glass);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
 .editor-tag-hash {
   padding-right: var(--space-2);
 }

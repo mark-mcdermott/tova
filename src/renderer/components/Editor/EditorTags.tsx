@@ -9,6 +9,8 @@ interface EditorTagsProps {
   onAddTag: (tag: string) => void
   /** Takes every occurrence of it back out again. */
   onRemoveTag: (tag: string) => void
+  /** Opens the tag's listing, as clicking a pill in the prose does. */
+  onOpenTag: (tag: string) => void
   /** The way in, so the title can hand focus straight to it on Tab. */
   addRef?: RefObject<HTMLButtonElement | null>
   /** Tab onwards, into the prose. */
@@ -36,6 +38,7 @@ export function EditorTags({
   originOf,
   onAddTag,
   onRemoveTag,
+  onOpenTag,
   addRef,
   onLeaveForwards,
   onLeaveBackwards
@@ -73,10 +76,22 @@ export function EditorTags({
 
   return (
     <div className="editor-tags" aria-label="Tags" onClick={openFromStrip}>
+      {/* The pill is the wrapper, not a control: a button holding a button is
+          not something a browser will render, and the × has to be its own. */}
       {tags.map((tag) => (
         <span key={tag} className={`editor-tag is-${originOf(tag)}`}>
-          <span className="editor-tag-hash">#</span>
-          {tag}
+          <button
+            type="button"
+            className="editor-tag-open"
+            aria-label={`Open ${tag}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpenTag(tag)
+            }}
+          >
+            <span className="editor-tag-hash">#</span>
+            {tag}
+          </button>
           <button
             type="button"
             className="editor-tag-remove"
