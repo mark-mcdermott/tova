@@ -28,9 +28,10 @@ const tagRawMark = Decoration.mark({ class: "cm-tag-raw" })
  * The × on a rendered tag.
  *
  * A sibling of the tag's own span rather than a child of it: a mark decoration
- * wraps text, and there is nowhere inside it to put a control. Being the next
- * element along is enough, since the pill reveals it with an adjacent-sibling
- * rule.
+ * wraps text, and there is nowhere inside it to put a control. It carries which
+ * pill it belongs to as a class rather than reading it off the DOM — CodeMirror
+ * puts a buffer element between a mark and the widget after it, so the two are
+ * not actually adjacent.
  *
  * It removes this one written occurrence and no other, so a tag used three
  * times loses one use and keeps its chip in the row above. That is the honest
@@ -40,7 +41,9 @@ class TagRemoveWidget extends WidgetType {
   constructor(
     private readonly tag: string,
     private readonly from: number,
-    private readonly to: number
+    private readonly to: number,
+    /** Which pill it belongs to, since it cannot ask the DOM. */
+    private readonly kind: "top" | "body"
   ) {
     super()
   }
@@ -48,13 +51,18 @@ class TagRemoveWidget extends WidgetType {
   // Position matters as well as name: two uses of one tag are different
   // controls, and reusing the DOM between them would remove the wrong one.
   eq(other: TagRemoveWidget): boolean {
-    return other.tag === this.tag && other.from === this.from && other.to === this.to
+    return (
+      other.tag === this.tag &&
+      other.from === this.from &&
+      other.to === this.to &&
+      other.kind === this.kind
+    )
   }
 
   toDOM(view: EditorView): HTMLElement {
     const button = document.createElement("button")
     button.type = "button"
-    button.className = "cm-tag-remove"
+    button.className = `cm-tag-remove is-${this.kind}`
     button.textContent = "×"
     button.setAttribute("aria-label", `Remove ${this.tag}`)
 
@@ -76,8 +84,8 @@ class TagRemoveWidget extends WidgetType {
   }
 }
 
-function tagRemove(tag: string, from: number, to: number): Decoration {
-  return Decoration.widget({ widget: new TagRemoveWidget(tag, from, to), side: 1 })
+function tagRemove(tag: string, from: number, to: number, kind: "top" | "body"): Decoration {
+  return Decoration.widget({ widget: new TagRemoveWidget(tag, from, to, kind), side: 1 })
 }
 
 const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
@@ -370,7 +378,7 @@ function collectTagDecorations(
         // stay put rather than flickering as the cursor moves through them.
         if (topZone) {
           decorations.push(tagTopMark.range(from, to))
-          decorations.push(tagRemove(match.tag, from, to).range(to))
+          decorations.push(tagRemove(match.tag, from, to, "top").range(to))
           continue
         }
 
@@ -381,7 +389,7 @@ function collectTagDecorations(
 
         decorations.push(hide.range(from, from + 1))
         decorations.push(tagBodyMark.range(from, to))
-        decorations.push(tagRemove(match.tag, from, to).range(to))
+        decorations.push(tagRemove(match.tag, from, to, "body").range(to))
       }
     }
   }

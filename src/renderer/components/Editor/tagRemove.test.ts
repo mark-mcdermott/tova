@@ -90,3 +90,26 @@ describe("removing a tag from the prose", () => {
     expect(controls(view)).toHaveLength(0)
   })
 })
+
+describe("the control's styling hooks", () => {
+  it("says which pill it belongs to, rather than leaving it to the DOM", () => {
+    // CodeMirror puts a cm-widgetBuffer between a mark and the widget after it,
+    // so the × is not the pill's next sibling and `+` alone never matched. The
+    // class is what carries the prose-versus-tags-line difference.
+    const view = mount("#top\n\nProse with #body in it.", 0)
+    const classes = controls(view).map((button) => button.className)
+
+    expect(classes).toEqual(["cm-tag-remove is-top", "cm-tag-remove is-body"])
+  })
+
+  it("is reachable from the pill by the rule that reveals it", () => {
+    // The reveal does still need the relationship, so this holds the selector
+    // to the shape CodeMirror actually builds.
+    const view = mount("Prose with #body in it.", 0)
+    const [button] = controls(view)
+
+    expect(
+      button.matches(".cm-tag + .cm-tag-remove, .cm-tag + .cm-widgetBuffer + .cm-tag-remove")
+    ).toBe(true)
+  })
+})

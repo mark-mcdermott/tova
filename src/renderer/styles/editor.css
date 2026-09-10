@@ -317,12 +317,14 @@
 }
 
 /*
- * The × on a rendered tag. It is the pill's next sibling rather than a child —
- * a mark decoration wraps text and has no inside to put a control in — so the
- * pill reveals it with an adjacent-sibling rule.
+ * The × on a rendered tag. It carries which pill it belongs to as a class,
+ * because it is not actually the pill's next sibling: CodeMirror puts a buffer
+ * element between a mark and the widget after it, so `+` never matches. That
+ * silently cost this control its colours, its width and its reveal.
  *
- * It borrows the pill's own colours, so the pair reads as one object rather
- * than a control that arrived from somewhere else.
+ * The reveal still needs the relationship, so both shapes are named — with the
+ * buffer and without — and a test holds the selector to the DOM CodeMirror
+ * actually builds.
  */
 .cm-tag-remove {
   /* Relative and lifted, so it draws over the words it sits on rather than
@@ -349,10 +351,10 @@
 /*
  * In prose it costs no width at all: the negative margin cancels its own, so
  * the sentence sets exactly as it would with no control in it and the × lies
- * over the words that follow. Reserving the space instead pushed the text
- * along, which is a strange thing for a sentence to do because a tag is in it.
+ * over the words that follow. Reserving the space pushed the text along, which
+ * is a strange thing for a sentence to do because a tag is in it.
  */
-.cm-tag-body + .cm-tag-remove {
+.cm-tag-remove.is-body {
   margin-right: -1.35em;
   background: var(--accent-tint-strong);
   color: #f7f6fc;
@@ -362,12 +364,13 @@
  * On a line of nothing but tags it keeps its space. There is no prose to push
  * around, and lying over the next thing would mean lying over the next tag.
  */
-.cm-tag-top + .cm-tag-remove {
+.cm-tag-remove.is-top {
   background: var(--accent-tint);
   color: var(--accent-bright);
 }
 
 .cm-tag:hover + .cm-tag-remove,
+.cm-tag:hover + .cm-widgetBuffer + .cm-tag-remove,
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
   opacity: 0.85;
@@ -376,12 +379,6 @@
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
   opacity: 1;
-}
-
-/* Raw text is the writer editing the tag themselves; a control on top of that
-   is one more thing in the way of the caret. */
-.cm-tag-raw + .cm-tag-remove {
-  display: none;
 }
 
 /* ── Blog authoring ───────────────────────────────────────────────────── */
