@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   DEFAULT_SECTIONS,
+  SectionConfig,
   addSection,
   canDelete,
   sectionRole,
@@ -8,6 +9,8 @@ import {
   normalizeSections,
   removeSection,
   renameSection,
+  railKey,
+  reconcileBlogs,
   sectionId,
   setSectionIcon,
   toggleSection,
@@ -16,22 +19,30 @@ import {
 
 const ids = (sections: { id: string }[]) => sections.map((section) => section.id)
 
+const section = (id: string): SectionConfig => ({
+  id,
+  kind: "section",
+  label: id,
+  icon: "folder",
+  enabled: true
+})
+
 describe("what may be changed", () => {
   it("keeps Daily and Trash, since neither has anywhere else to go", () => {
-    expect(canDelete("daily")).toBe(false)
-    expect(canDelete("trash")).toBe(false)
+    expect(canDelete(section("daily"))).toBe(false)
+    expect(canDelete(section("trash"))).toBe(false)
   })
 
   it("lets everything else be removed", () => {
     for (const id of ["notes", "ideas", "journal", "recipes"]) {
-      expect(canDelete(id)).toBe(true)
+      expect(canDelete(section(id))).toBe(true)
     }
   })
 
   it("says what the two kept sections are for, so a rename does not hide it", () => {
-    expect(sectionRole("daily")).not.toBeNull()
-    expect(sectionRole("trash")).not.toBeNull()
-    expect(sectionRole("notes")).toBeNull()
+    expect(sectionRole(section("daily"))).not.toBeNull()
+    expect(sectionRole(section("trash"))).not.toBeNull()
+    expect(sectionRole(section("notes"))).toBeNull()
   })
 
   it("renames Daily, because the label is not what the scheduler uses", () => {
@@ -222,7 +233,9 @@ describe("normalizeSections", () => {
   })
 
   it("keeps a section the app no longer ships, whose notes may still exist", () => {
-    const next = normalizeSections([{ id: "archive", label: "Archive", icon: "folder", enabled: true }])
+    const next = normalizeSections([
+      { id: "archive", label: "Archive", icon: "folder", enabled: true }
+    ])
     expect(ids(next)).toContain("archive")
   })
 
@@ -248,5 +261,106 @@ describe("normalizeSections", () => {
 
     expect(ideas?.label).toBe("Ideas")
     expect(ideas?.icon).toBe("ideas")
+  })
+})
+
+describe("blogs in the rail", () => {
+  const blogs = [{ name: "markmcdermott.io" }, { name: "notes" }]
+
+  it("keeps blog names and section ids in separate namespaces", () => {
+    // A blog may legitimately be called "notes". Keyed by id alone the two
+    // would be the same row, and editing one would edit the other.
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, [{ name: "notes" }])
+    const keys = rail.map(railKey)
+
+    expect(keys).toContain("blog:notes")
+    expect(keys).toContain("notes")
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it("shows a blog the moment it is configured, without being stored first", () => {
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, blogs)
+    expect(rail.filter((entry) => entry.kind === "blog").map((entry) => entry.id)).toEqual([
+      "markmcdermott.io",
+      "notes"
+    ])
+  })
+
+  it("drops the row when the blog is deleted, so no row outlives its blog", () => {
+    const arranged = reconcileBlogs(DEFAULT_SECTIONS, blogs)
+    const rail = reconcileBlogs(arranged, [{ name: "markmcdermott.io" }])
+
+    expect(rail.some((entry) => entry.kind === "blog" && entry.id === "notes")).toBe(false)
+  })
+
+  it("keeps where a blog was put, rather than sending it back to the top", () => {
+    const arranged = moveSection(
+      reconcileBlogs(DEFAULT_SECTIONS, [{ name: "markmcdermott.io" }]),
+      "blog:markmcdermott.io",
+      1
+    )
+    const again = reconcileBlogs(arranged, [{ name: "markmcdermott.io" }])
+
+    expect(ids(again)).toEqual(["notes", "markmcdermott.io", "daily", "ideas", "journal", "trash"])
+  })
+
+  it("moves a blog past sections in both directions", () => {
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, [{ name: "markmcdermott.io" }])
+    const down = moveSection(
+      moveSection(rail, "blog:markmcdermott.io", 1),
+      "blog:markmcdermott.io",
+      1
+    )
+
+    expect(ids(down)).toEqual(["notes", "daily", "markmcdermott.io", "ideas", "journal", "trash"])
+    expect(ids(moveSection(down, "blog:markmcdermott.io", -1))).toEqual(
+      ids(moveSection(rail, "blog:markmcdermott.io", 1))
+    )
+  })
+
+  it("renames and hides a blog without touching the section of the same name", () => {
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, [{ name: "notes" }])
+    const edited = toggleSection(renameSection(rail, "blog:notes", "Writing"), "blog:notes")
+
+    const blog = edited.find((entry) => entry.kind === "blog")
+    const section = edited.find((entry) => entry.kind === "section" && entry.id === "notes")
+
+    expect(blog?.label).toBe("Writing")
+    expect(blog?.enabled).toBe(false)
+    expect(section?.label).toBe("Notes")
+    expect(section?.enabled).toBe(true)
+  })
+
+  it("refuses to delete a blog from the rail, since its tokens are not the rail's to drop", () => {
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, [{ name: "markmcdermott.io" }])
+    const blog = rail.find((entry) => entry.kind === "blog")
+
+    expect(blog).toBeDefined()
+    expect(canDelete(blog as SectionConfig)).toBe(false)
+    expect(removeSection(rail, "blog:markmcdermott.io")).toEqual(rail)
+  })
+
+  it("survives a round trip through storage, blog rows and all", () => {
+    const rail = reconcileBlogs(DEFAULT_SECTIONS, [{ name: "markmcdermott.io" }])
+    const arranged = moveSection(
+      moveSection(rail, "blog:markmcdermott.io", 1),
+      "blog:markmcdermott.io",
+      1
+    )
+    const stored = normalizeSections(JSON.parse(JSON.stringify(arranged)))
+
+    expect(stored).toEqual(arranged)
+  })
+
+  it("reads a rail stored before blogs were entries in it", () => {
+    // Every stored row predates `kind`, so all of them are sections.
+    const old = DEFAULT_SECTIONS.map(({ id, label, icon, enabled }) => ({
+      id,
+      label,
+      icon,
+      enabled
+    }))
+
+    expect(normalizeSections(old)).toEqual(DEFAULT_SECTIONS)
   })
 })

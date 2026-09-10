@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { EMPTY_BLOG, blogLabel, normalizeBlog, validateBlog } from "./blogConfig"
+import { EMPTY_BLOG, normalizeBlog, validateBlog } from "./blogConfig"
 import { Blog, BlogSummary } from "./types"
 
 function blog(overrides: Partial<Blog> = {}): Blog {
@@ -72,15 +72,5 @@ describe("normalizeBlog", () => {
     expect(normalizeBlog(blog({ siteUrl: "https://example.com/" })).siteUrl).toBe(
       "https://example.com"
     )
-  })
-})
-
-describe("blogLabel", () => {
-  it("prefers the sidebar label", () => {
-    expect(blogLabel(blog({ sidebarLabel: "My Blog" }))).toBe("My Blog")
-  })
-
-  it("falls back to the name", () => {
-    expect(blogLabel(blog())).toBe("markmcdermott.io")
   })
 })

@@ -40,7 +40,6 @@ function asBlog(value: unknown): Blog {
   return {
     id: text(raw, "id"),
     name: text(raw, "name"),
-    sidebarLabel: text(raw, "sidebarLabel"),
     siteUrl: text(raw, "siteUrl"),
     livePostPath: text(raw, "livePostPath", EMPTY_BLOG.livePostPath),
     github: {

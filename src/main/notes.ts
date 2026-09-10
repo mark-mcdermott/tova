@@ -21,7 +21,7 @@ import {
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
 import { slugify, uniqueSlug } from "../shared/noteName"
 import { extractTags } from "../shared/tags"
-import { canDelete } from "../shared/sections"
+import { canDeleteSection } from "../shared/sections"
 import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
 import { saveVersion } from "./backup"
 
@@ -406,7 +406,7 @@ export async function renameFolder(from: string, to: string): Promise<string> {
  */
 export async function deleteSection(id: string): Promise<string[]> {
   if (!isSection(id)) throw new Error(`Invalid section: ${id}`)
-  if (!canDelete(id) || id === "posts") throw new Error(`${id} cannot be removed`)
+  if (!canDeleteSection(id) || id === "posts") throw new Error(`${id} cannot be removed`)
 
   const directory = resolveInVault(id)
   const entries = await readdir(directory, { withFileTypes: true }).catch(() => [])

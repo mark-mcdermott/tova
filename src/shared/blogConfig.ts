@@ -3,7 +3,6 @@ import { Blog, BlogSummary } from "./types"
 export const EMPTY_BLOG: Blog = {
   id: "",
   name: "",
-  sidebarLabel: "",
   siteUrl: "",
   livePostPath: "/",
   github: { repo: "", branch: "main", contentPath: "" },
@@ -51,7 +50,6 @@ export function normalizeBlog(blog: Blog): Blog {
   return {
     ...blog,
     name: blog.name.trim(),
-    sidebarLabel: blog.sidebarLabel.trim(),
     siteUrl: blog.siteUrl.trim().replace(/\/+$/, ""),
     // Kept as `/path/` so joining it to a slug never doubles or drops a slash.
     livePostPath: `/${blog.livePostPath.trim().replace(/^\/+/, "").replace(/\/*$/, "/")}`,
@@ -67,10 +65,6 @@ export function normalizeBlog(blog: Blog): Blog {
       projectId: blog.deploy.projectId.trim()
     }
   }
-}
-
-export function blogLabel(blog: Blog): string {
-  return blog.sidebarLabel === "" ? blog.name : blog.sidebarLabel
 }
 
 /** Where a published post can be read, or null when the site URL is unknown. */

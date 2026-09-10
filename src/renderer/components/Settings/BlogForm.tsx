@@ -84,16 +84,6 @@ export function BlogForm({
         />
       </Field>
 
-      <Field id="blog-label" label="Sidebar label" hint="Optional. Falls back to the blog name.">
-        <input
-          id="blog-label"
-          className="text-input"
-          value={blog.sidebarLabel}
-          placeholder="My Blog"
-          onChange={(event) => set({ sidebarLabel: event.target.value })}
-        />
-      </Field>
-
       <Field id="blog-site" label="Site URL" hint="Used to link a post once it is live.">
         <input
           id="blog-site"
