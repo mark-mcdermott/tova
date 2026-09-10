@@ -1,5 +1,5 @@
 import { EditorView } from "@codemirror/view"
-import { applyFormat, toolbarItems } from "./formats"
+import { applyFormat, toolbarButtons } from "./formats"
 import { useTooltip } from "../../useTooltip"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
@@ -22,7 +22,7 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
   return (
     <div className="toolbar">
       <div className="toolbar-actions">
-        {toolbarItems.map((item) => (
+        {toolbarButtons.map((item) => (
           <button
             key={item.key}
             type="button"
