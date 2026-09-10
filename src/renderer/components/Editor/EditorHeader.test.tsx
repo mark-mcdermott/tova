@@ -59,22 +59,29 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("EditorHeader navigation", () => {
-  it("disables back with nowhere to go", () => {
+  it("draws no back arrow with nowhere to go", () => {
+    // It used to sit greyed out, which is a control announcing it does nothing.
     renderHeader()
-    expect(screen.getByLabelText("Back")).toHaveProperty("disabled", true)
+    expect(screen.queryByLabelText("Back")).toBeNull()
   })
 
-  it("enables back once a second note has been opened", () => {
+  it("shows back once a second note has been opened", () => {
     useNotesStore.setState({
-      history: push(push(emptyHistory, "notes/a.md"), "notes/b.md")
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "note",
+        noteId: "notes/b.md"
+      })
     })
     renderHeader()
-    expect(screen.getByLabelText("Back")).toHaveProperty("disabled", false)
+    expect(screen.getByLabelText("Back")).toBeDefined()
   })
 
   it("hides forward until the user has gone back", () => {
     useNotesStore.setState({
-      history: push(push(emptyHistory, "notes/a.md"), "notes/b.md")
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "note",
+        noteId: "notes/b.md"
+      })
     })
     renderHeader()
     expect(screen.queryByLabelText("Forward")).toBeNull()
@@ -83,7 +90,10 @@ describe("EditorHeader navigation", () => {
   it("shows forward after going back", async () => {
     read.mockResolvedValue(note({ id: "notes/a.md" }))
     useNotesStore.setState({
-      history: push(push(emptyHistory, "notes/a.md"), "notes/b.md")
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "note",
+        noteId: "notes/b.md"
+      })
     })
     renderHeader()
 
@@ -94,7 +104,10 @@ describe("EditorHeader navigation", () => {
   it("loads the previous note when back is used", async () => {
     read.mockResolvedValue(note({ id: "notes/a.md" }))
     useNotesStore.setState({
-      history: push(push(emptyHistory, "notes/a.md"), "notes/b.md")
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "note",
+        noteId: "notes/b.md"
+      })
     })
     renderHeader()
 

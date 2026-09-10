@@ -1,5 +1,15 @@
+import { IndexTarget } from "../../shared/indexTarget"
+
+/**
+ * A place the reader has been. Notes were the only kind for a long while, so
+ * back meant "the note before this one" and an index page passed through
+ * without a trace — clicking Ideas, then a note in it, then back, skipped the
+ * listing entirely.
+ */
+export type Screen = { kind: "note"; noteId: string } | { kind: "index"; target: IndexTarget }
+
 export interface HistoryEntry {
-  noteId: string
+  screen: Screen
   /** Editor scroll offset when the entry was last left. */
   scrollTop: number
 }
@@ -11,6 +21,33 @@ export interface History {
 }
 
 export const emptyHistory: History = { entries: [], index: -1 }
+
+/**
+ * Identity, for deciding whether a navigation is a move at all.
+ *
+ * Deliberately not `indexKey`, which collapses every search to one key so the
+ * sidebar can mark where you are: two different searches are two places, and
+ * back has to return to the earlier one.
+ */
+export function screenKey(screen: Screen): string {
+  if (screen.kind === "note") return `note:${screen.noteId}`
+
+  const target = screen.target
+  switch (target.kind) {
+    case "section":
+      return `section:${target.section}`
+    case "folder":
+      return `folder:${target.folder}`
+    case "blog":
+      return `blog:${target.blog}`
+    case "tag":
+      return `tag:${target.tag}`
+    case "tags":
+      return "tags"
+    case "search":
+      return `search:${target.query}`
+  }
+}
 
 export function current(history: History): HistoryEntry | null {
   return history.entries[history.index] ?? null
@@ -26,14 +63,14 @@ export function canGoForward(history: History): boolean {
 
 /**
  * Adds an entry the way a browser does: anything ahead of the current position
- * is discarded, and re-opening the note already showing is a no-op rather than
- * a duplicate entry.
+ * is discarded, and re-opening the screen already showing is a no-op rather
+ * than a duplicate entry.
  */
-export function push(history: History, noteId: string): History {
+export function push(history: History, screen: Screen): History {
   const here = current(history)
-  if (here !== null && here.noteId === noteId) return history
+  if (here !== null && screenKey(here.screen) === screenKey(screen)) return history
 
-  const entries = [...history.entries.slice(0, history.index + 1), { noteId, scrollTop: 0 }]
+  const entries = [...history.entries.slice(0, history.index + 1), { screen, scrollTop: 0 }]
   return { entries, index: entries.length - 1 }
 }
 
@@ -55,16 +92,20 @@ export function rememberScroll(history: History, scrollTop: number): History {
   return { ...history, entries }
 }
 
+const isNote = (entry: HistoryEntry, noteId: string) =>
+  entry.screen.kind === "note" && entry.screen.noteId === noteId
+
 /**
  * Drops every entry for a note that no longer exists, keeping the position on
- * the nearest surviving entry so back and forward stay meaningful.
+ * the nearest surviving entry so back and forward stay meaningful. Index
+ * entries are untouched: a listing outlives the notes in it.
  */
 export function forget(history: History, noteId: string): History {
   const removedBefore = history.entries.filter(
-    (entry, position) => entry.noteId === noteId && position <= history.index
+    (entry, position) => isNote(entry, noteId) && position <= history.index
   ).length
 
-  const entries = history.entries.filter((entry) => entry.noteId !== noteId)
+  const entries = history.entries.filter((entry) => !isNote(entry, noteId))
   const index = Math.min(history.index - removedBefore, entries.length - 1)
 
   return { entries, index: Math.max(index, entries.length === 0 ? -1 : 0) }
@@ -77,7 +118,7 @@ export function rename(history: History, from: string, to: string): History {
   return {
     ...history,
     entries: history.entries.map((entry) =>
-      entry.noteId === from ? { ...entry, noteId: to } : entry
+      isNote(entry, from) ? { ...entry, screen: { kind: "note", noteId: to } } : entry
     )
   }
 }

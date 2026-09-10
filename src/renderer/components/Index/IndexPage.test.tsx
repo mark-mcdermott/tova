@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { IndexPage } from "./IndexPage"
 import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
-import { emptyHistory } from "../../stores/history"
+import { emptyHistory, push } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
 
 function note(partial: Partial<NoteSummary> & { title: string }): NoteSummary {
@@ -294,5 +294,59 @@ describe("deleting from a row asks first", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Move Gamma to Trash/ }))
     expect(screen.getByRole("alertdialog", { name: /Gamma/ })).toBeDefined()
+  })
+})
+
+describe("navigating back from an index", () => {
+  it("draws no arrows on the first screen", () => {
+    useNotesStore.setState({ indexTarget: { kind: "section", section: "ideas" } })
+    render(<IndexPage />)
+
+    expect(screen.queryByLabelText("Back")).toBeNull()
+    expect(screen.queryByLabelText("Forward")).toBeNull()
+  })
+
+  it("offers back on an index once there is somewhere to go", () => {
+    // The index pages had no arrows at all: nothing recorded them, so there
+    // was never a history to draw one from.
+    useNotesStore.setState({
+      indexTarget: { kind: "section", section: "ideas" },
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "index",
+        target: { kind: "section", section: "ideas" }
+      })
+    })
+    render(<IndexPage />)
+
+    expect(screen.getByLabelText("Back")).toBeDefined()
+  })
+
+  it("goes back to the note it came from rather than to a parent", async () => {
+    read.mockResolvedValue({
+      id: "notes/a.md",
+      title: "Alpha",
+      section: "notes",
+      folder: null,
+      tags: [],
+      favorite: false,
+      updatedAt: 0,
+      createdAt: 0,
+      deletedAt: null,
+      body: ""
+    })
+    useNotesStore.setState({
+      indexTarget: { kind: "section", section: "ideas" },
+      history: push(push(emptyHistory, { kind: "note", noteId: "notes/a.md" }), {
+        kind: "index",
+        target: { kind: "section", section: "ideas" }
+      })
+    })
+    render(<IndexPage />)
+
+    await userEvent.setup().click(screen.getByLabelText("Back"))
+
+    const state = useNotesStore.getState()
+    expect(state.view).toBe("editor")
+    expect(state.activeId).toBe("notes/a.md")
   })
 })

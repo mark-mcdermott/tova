@@ -10,6 +10,7 @@ import {
 } from "../../../shared/indexTarget"
 import { IndexRow } from "./IndexRow"
 import { showsTrail } from "../Editor/breadcrumb"
+import { HistoryNav } from "../Editor/HistoryNav"
 import { useRail } from "../../useRail"
 import { railLabel } from "../../../shared/sections"
 
@@ -62,6 +63,8 @@ export function IndexPage() {
     <div className="editor-shell">
       <div className="editor-header">
         <nav className="editor-nav" aria-label="Index navigation">
+          <HistoryNav />
+
           {/* Nothing at all where the trail would only repeat the heading under
               it. A folder or a tag has somewhere above to go and keeps both. */}
           {showsTrail(trail, title) && (
