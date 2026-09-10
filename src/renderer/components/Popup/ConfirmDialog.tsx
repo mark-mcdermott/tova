@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useSuspendWindowDrag } from "../../useWindowDrag"
 
 interface ConfirmDialogProps {
   title: string
@@ -29,6 +30,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  useSuspendWindowDrag()
 
   useEffect(() => {
     cancelRef.current?.focus()

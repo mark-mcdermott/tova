@@ -383,6 +383,28 @@ body {
   -webkit-app-region: no-drag;
 }
 
+/*
+ * A popup is never a drag region, whatever it happens to be drawn over. The
+ * editor header is a column holding the nav row, the title and the tags, so it
+ * reaches well down the pane — and a menu opened from it lands inside that
+ * band. Without this the window manager takes the pointer before the DOM sees
+ * it and the rows under the strip do not even light up on hover, except where
+ * the title input has already punched a no-drag hole.
+ */
+.popup-menu,
+.confirm-backdrop,
+.confirm-panel {
+  -webkit-app-region: no-drag;
+}
+
+/* And while one is open the strips stop dragging altogether, so a click beside
+   the menu reaches the DOM and dismisses it. See useWindowDrag.ts. */
+body.is-popup-open .sidebar-header,
+body.is-popup-open .editor-header,
+body.is-popup-open .sidebar-footer {
+  -webkit-app-region: no-drag;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

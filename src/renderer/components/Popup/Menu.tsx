@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { useSuspendWindowDrag } from "../../useWindowDrag"
 
 export interface MenuAction {
   label: string
@@ -31,6 +32,8 @@ const EDGE_GAP = 8
 export function Menu({ x, y, items, onClose }: MenuProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ left: x, top: y })
+
+  useSuspendWindowDrag()
 
   // Measure after paint so a menu opened near an edge flips back into view.
   useLayoutEffect(() => {
