@@ -14,11 +14,13 @@ vi.mock("electron", () => ({
 const {
   listNotes,
   setFavorite,
+  setManualTags,
   renameFolder,
   deleteFolder,
   readNote,
   createNote,
   writeNote,
+  vaultLocation,
   moveNote,
   trashNote,
   restoreNote,
@@ -450,5 +452,76 @@ describe("deleteFolder", () => {
 
   it("rejects a name that escapes the vault", async () => {
     await expect(deleteFolder("../escape")).rejects.toThrow()
+  })
+})
+
+describe("tags the row keeps in front matter", () => {
+  it("writes them to front matter and not into the prose", async () => {
+    // The whole point: a tag asked for in the row must not appear in the body,
+    // or it shows up twice on screen.
+    const note = await createNote({ section: "notes", title: "Filed" })
+    await writeNote(note.id, "Filed", "Coffee and quiet.")
+    await setManualTags(note.id, ["work", "writing"])
+
+    const file = await readFile(join(vaultLocation(), "notes/filed.md"), "utf-8")
+    expect(file).toContain("tags: [work, writing]")
+    expect(file).not.toContain("#work")
+
+    const read = await readNote(note.id)
+    expect(read.body).toBe("Coffee and quiet.")
+  })
+
+  it("reads them back as the note's tags, before the prose's", async () => {
+    const note = await createNote({ section: "notes", title: "Both" })
+    await writeNote(note.id, "Both", "A note about #thoughts.")
+    const saved = await setManualTags(note.id, ["work"])
+
+    expect(saved.tags).toEqual(["work", "thoughts"])
+    expect(saved.manualTags).toEqual(["work"])
+  })
+
+  it("counts a tag in both places once", async () => {
+    const note = await createNote({ section: "notes", title: "Twice" })
+    await writeNote(note.id, "Twice", "A note about #work.")
+    const saved = await setManualTags(note.id, ["work"])
+
+    expect(saved.tags).toEqual(["work"])
+    expect(saved.manualTags).toEqual(["work"])
+  })
+
+  it("leaves the prose alone when a row tag is removed", async () => {
+    const note = await createNote({ section: "notes", title: "Kept" })
+    await writeNote(note.id, "Kept", "Still about #work here.")
+    await setManualTags(note.id, ["work"])
+    const after = await setManualTags(note.id, [])
+
+    // Out of front matter, still in the sentence — so the note is still tagged,
+    // by the text rather than by the row.
+    expect(after.manualTags).toEqual([])
+    expect(after.tags).toEqual(["work"])
+    expect((await readNote(note.id)).body).toBe("Still about #work here.")
+  })
+
+  it("writes no tags line when there are none, so plain notes stay quiet", async () => {
+    const note = await createNote({ section: "notes", title: "Quiet" })
+    await setManualTags(note.id, [])
+
+    const file = await readFile(join(vaultLocation(), "notes/quiet.md"), "utf-8")
+    expect(file).not.toContain("tags:")
+  })
+
+  it("refuses a name the tag rules would not accept", async () => {
+    const note = await createNote({ section: "notes", title: "Guarded" })
+    const saved = await setManualTags(note.id, ["ok", "not a tag", "1st", "#hash"])
+
+    expect(saved.manualTags).toEqual(["ok", "hash"])
+  })
+
+  it("survives a round trip through the file", async () => {
+    const note = await createNote({ section: "notes", title: "Trip" })
+    await setManualTags(note.id, ["work"])
+
+    const reread = await readNote(note.id)
+    expect(reread.manualTags).toEqual(["work"])
   })
 })

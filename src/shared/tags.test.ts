@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  allTags,
   applyEdits,
   tagToggleEdits,
   removeOccurrenceEdits,
@@ -8,11 +9,10 @@ import {
   findTags,
   extractTags,
   isTagOnlyLine,
+  normalizeManualTags,
   normalizeTag,
-  addTagEdit,
   tagHeaderLines,
-  bodyStart,
-  caretAfterTagEdit
+  bodyStart
 } from "./tags"
 
 describe("findTags", () => {
@@ -89,39 +89,6 @@ describe("normalizeTag", () => {
   })
 })
 
-describe("addTagEdit", () => {
-  function applied(doc: string, tag: string): string | null {
-    const edit = addTagEdit(doc, tag)
-    return edit === null ? null : doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
-  }
-
-  it("joins a leading tags-only line", () => {
-    expect(applied("#thoughts\n\nCoffee.\n", "writing")).toBe("#thoughts #writing\n\nCoffee.\n")
-  })
-
-  it("opens a new line when the note starts with prose", () => {
-    expect(applied("Coffee.\n", "writing")).toBe("#writing\n\nCoffee.\n")
-  })
-
-  it("does not leave a blank line in an empty note", () => {
-    expect(applied("", "writing")).toBe("#writing\n")
-  })
-
-  it("says nothing to do for a tag the note already carries", () => {
-    expect(addTagEdit("#writing\n\nCoffee.\n", "writing")).toBeNull()
-    // Including one that only appears mid-sentence.
-    expect(addTagEdit("Thinking about #writing today.\n", "writing")).toBeNull()
-  })
-
-  it("matches an existing tag whatever its case", () => {
-    expect(addTagEdit("#Writing\n\nCoffee.\n", "writing")).toBeNull()
-  })
-
-  it("says nothing to do for a name that cannot be a tag", () => {
-    expect(addTagEdit("Coffee.\n", "two words")).toBeNull()
-  })
-})
-
 describe("tagHeaderLines", () => {
   it("counts the tags line and the blank line under it", () => {
     expect(tagHeaderLines(["#a #b", "", "Prose."])).toBe(2)
@@ -159,68 +126,6 @@ describe("bodyStart", () => {
 
   it("starts at the top when the tags are the whole note", () => {
     expect(bodyStart("#a")).toBe(0)
-  })
-})
-
-describe("caretAfterTagEdit", () => {
-  const caretIn = (doc: string, tag: string, head = 0) => {
-    const edit = addTagEdit(doc, tag)
-    if (edit === null) throw new Error("expected an edit")
-    const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
-    return {
-      at: caretAfterTagEdit(doc, edit, head),
-      rest: next.slice(caretAfterTagEdit(doc, edit, head))
-    }
-  }
-
-  it("puts the caret past the tags line on an empty note", () => {
-    // Left at 0 it sits inside the line the tag row already shows, and the
-    // editor keeps that line revealed — the tag then appears twice.
-    expect(caretIn("", "mynotes").rest).toBe("")
-    expect(caretIn("", "mynotes").at).toBe("#mynotes\n".length)
-  })
-
-  it("puts it at the first word of the prose", () => {
-    expect(caretIn("Coffee.\n", "mynotes").rest).toBe("Coffee.\n")
-  })
-
-  it("does the same when a tags line already exists", () => {
-    expect(caretIn("#thoughts\n\nCoffee.\n", "mynotes").rest).toBe("Coffee.\n")
-  })
-
-  it("leaves a caret that is already in the prose where it was", () => {
-    // Writer is mid-sentence and adds a tag from the row; the caret should not
-    // jump to the top of the note.
-    const doc = "Coffee. Empty streets.\n"
-    const head = 8
-    const edit = addTagEdit(doc, "mynotes")
-    if (edit === null) throw new Error("expected an edit")
-
-    const at = caretAfterTagEdit(doc, edit, head)
-    const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
-    expect(next.slice(at)).toBe("Empty streets.\n")
-  })
-})
-
-describe("where a tag came from", () => {
-  it("calls a tag on the opening line a row tag", () => {
-    expect(tagOrigin("#work\n\nProse.", "work")).toBe("row")
-  })
-
-  it("calls one written into a sentence an inline tag", () => {
-    expect(tagOrigin("I love #thoughts about coffee.", "thoughts")).toBe("inline")
-  })
-
-  it("keeps a row tag a row tag when the same word is typed inline later", () => {
-    expect(tagOrigin("#work\n\nA note about #work.", "work")).toBe("row")
-  })
-
-  it("matches without regard to case, as the tag row does", () => {
-    expect(tagOrigin("#Work\n\nProse.", "work")).toBe("row")
-  })
-
-  it("calls a tags line further down the note inline, since the row did not write it", () => {
-    expect(tagOrigin("Prose.\n\n#work\n", "work")).toBe("inline")
   })
 })
 
@@ -346,5 +251,66 @@ describe("what typing # does to a selection", () => {
   it("takes the whole line when untagging leaves a tags line empty", () => {
     const doc = "#work\n\nProse."
     expect(toggle(doc, 2, 2)).toBe("Prose.")
+  })
+})
+
+describe("which kind of tag it is", () => {
+  it("calls one the row put in front matter a row tag", () => {
+    expect(tagOrigin(["work"], "work")).toBe("row")
+  })
+
+  it("calls one that is only in the prose an inline tag", () => {
+    expect(tagOrigin([], "thoughts")).toBe("inline")
+  })
+
+  it("keeps a row tag a row tag when the same word is typed into a sentence", () => {
+    // Typing it into prose does not take it out of front matter, so it does
+    // not stop being the tag the reader asked for.
+    expect(tagOrigin(["work"], "work")).toBe("row")
+  })
+
+  it("matches without regard to case, as the row does", () => {
+    expect(tagOrigin(["Work"], "work")).toBe("row")
+  })
+})
+
+describe("every tag a note carries", () => {
+  it("puts the row's first, then the prose's", () => {
+    expect(allTags(["work"], "A note about #thoughts.")).toEqual(["work", "thoughts"])
+  })
+
+  it("counts a tag in both only once, as the row wrote it", () => {
+    expect(allTags(["Work"], "A note about #work.")).toEqual(["Work"])
+  })
+
+  it("is just the prose's when front matter has none", () => {
+    expect(allTags([], "#a and #b.")).toEqual(["a", "b"])
+  })
+})
+
+describe("reading front matter tags", () => {
+  it("takes a list", () => {
+    expect(normalizeManualTags(["work", "writing"])).toEqual(["work", "writing"])
+  })
+
+  it("takes a lone string, which is how YAML may have it", () => {
+    expect(normalizeManualTags("work")).toEqual(["work"])
+  })
+
+  it("drops anything that is not a tag name", () => {
+    expect(normalizeManualTags(["work", "not a tag", "#leading", "1st", ""])).toEqual([
+      "work",
+      "leading"
+    ])
+  })
+
+  it("drops duplicates, ignoring case", () => {
+    expect(normalizeManualTags(["Work", "work", "WORK"])).toEqual(["Work"])
+  })
+
+  it("is empty for anything that is not a list of names", () => {
+    for (const value of [null, undefined, 3, {}, [1, 2]]) {
+      expect(normalizeManualTags(value)).toEqual([])
+    }
   })
 })

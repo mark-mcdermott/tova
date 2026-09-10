@@ -8,7 +8,7 @@ import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
-import { addTagEdit, caretAfterTagEdit, removeTagEdits } from "../../../shared/tags"
+import { normalizeTag, removeTagEdits } from "../../../shared/tags"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
@@ -32,6 +32,7 @@ export function Editor({ note }: EditorProps) {
   const grammarRef = useRef<(text: string) => void>(() => undefined)
   const openSeq = useNotesStore((state) => state.openSeq)
   const showIndex = useNotesStore((state) => state.showIndex)
+  const setTags = useNotesStore((state) => state.setTags)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
   const showSettings = useNotesStore((state) => state.showSettings)
@@ -227,31 +228,38 @@ export function Editor({ note }: EditorProps) {
         onTitleChange={handleTitleChange}
         onTitleCommit={() => viewRef.current?.focus()}
         onAddTag={(tag) => {
-          const view = viewRef.current
-          if (view === null) return
+          const name = normalizeTag(tag)
+          if (name === null) return
 
-          // Computed off the live document, not the note as it was loaded —
-          // the writer may have typed the same tag a moment ago.
-          const doc = view.state.doc.toString()
-          const edit = addTagEdit(doc, tag)
-          if (edit === null) return
+          // Front matter, not the prose. A tag asked for in the row belongs to
+          // the note rather than to a sentence in it, and writing it into the
+          // body is what put the same tag on screen twice.
+          const already = note.tags.some((seen) => seen.toLowerCase() === name.toLowerCase())
+          if (already) return
 
-          view.dispatch({
-            changes: edit,
-            selection: { anchor: caretAfterTagEdit(doc, edit, view.state.selection.main.head) }
-          })
+          void setTags(note.id, [...note.manualTags, name])
         }}
         onRemoveTag={(tag) => {
+          const manual = note.manualTags.some((seen) => seen.toLowerCase() === tag.toLowerCase())
+
+          if (manual) {
+            // Only the front matter entry. If the prose also says it, the chip
+            // comes back lighter — which is the honest answer: the note is
+            // still tagged, by the text rather than by the row.
+            void setTags(
+              note.id,
+              note.manualTags.filter((seen) => seen.toLowerCase() !== tag.toLowerCase())
+            )
+            return
+          }
+
           const view = viewRef.current
           if (view === null) return
 
-          // Every occurrence, not just the one the row is standing for. Leaving
-          // one behind puts the chip straight back, since the row is a reading
-          // of the text rather than a list of its own.
+          // Hoisted, so it lives in the prose. Every occurrence: leaving one
+          // behind puts the chip straight back.
           const edits = removeTagEdits(view.state.doc.toString(), tag)
-          if (edits.length === 0) return
-
-          view.dispatch({ changes: edits })
+          if (edits.length > 0) view.dispatch({ changes: edits })
         }}
       />
 

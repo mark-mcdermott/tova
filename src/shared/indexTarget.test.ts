@@ -9,6 +9,7 @@ function note(partial: Partial<NoteSummary> & { title: string }): NoteSummary {
     section: "notes",
     folder: null,
     tags: [],
+    manualTags: [],
     favorite: false,
     updatedAt: 0,
     createdAt: 0,
