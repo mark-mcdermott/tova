@@ -45,6 +45,10 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
+  /* So the selection bar can sit at the bottom of the pane rather than the
+     bottom of the list, which scrolls. Nothing else here is absolute — the
+     publish toasts are fixed — so this re-anchors nothing. */
+  position: relative;
 }
 
 .title-input {
@@ -1443,4 +1447,53 @@
     opacity: 0;
     transform: translateY(4px);
   }
+}
+
+/*
+ * The bar for a selection of rows. Bottom right of the listing, out of the way
+ * of the rows it is about, and only there while it has something to say.
+ */
+.index-bulk {
+  position: absolute;
+  right: var(--space-8);
+  bottom: var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-md);
+  background: var(--confirm-bg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 24%);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+}
+
+.index-bulk-count {
+  color: var(--text-muted);
+}
+
+.index-bulk button {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.index-bulk button:hover {
+  background: var(--surface-quiet-strong);
+}
+
+.index-bulk .is-destructive {
+  color: var(--danger-ink);
+}
+
+/* Picked out of the list. The same fill the row takes on hover, kept on, so a
+   selected row and a hovered one read as the same kind of thing. */
+.index-item.is-selected .index-row {
+  background: rgb(255 255 255 / 22%);
 }

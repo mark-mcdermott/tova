@@ -441,9 +441,16 @@
   color: var(--text-primary);
 }
 
-/* The tag being shown takes the ink the open note does, for the same reason. */
+/*
+ * The tag being shown is marked the way the open folder is: a tint behind it,
+ * not only a change of ink. Ink alone was nearly invisible in light mode — the
+ * accent on glass is a mauve against a pale rail, and a tag row is small and
+ * already quiet, so the one row that answers "where am I" was the hardest to
+ * find on the list.
+ */
 .tag-row.is-active,
 .tag-row.is-active:hover {
+  background: var(--accent-tint);
   color: var(--accent-on-glass);
   font-weight: 600;
 }

@@ -398,3 +398,70 @@ describe("skipping the confirm with Shift", () => {
     expect(screen.getByRole("alertdialog")).toBeDefined()
   })
 })
+
+describe("picking several rows", () => {
+  const shiftClick = async (name: RegExp) => {
+    const user = userEvent.setup()
+    await user.keyboard("{Shift>}")
+    await user.click(screen.getByRole("button", { name }))
+    await user.keyboard("{/Shift}")
+  }
+
+  it("opens the note on a plain click, as it always did", async () => {
+    render(<IndexPage />)
+    await userEvent.click(screen.getByRole("button", { name: /^Beta/ }))
+
+    expect(read).toHaveBeenCalled()
+    expect(screen.queryByLabelText("Selected notes")).toBeNull()
+  })
+
+  it("shows nothing for a single picked row, which has its own trash", async () => {
+    render(<IndexPage />)
+    await shiftClick(/^Beta/)
+
+    expect(read).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText("Selected notes")).toBeNull()
+  })
+
+  it("offers the bar once a range is picked", async () => {
+    render(<IndexPage />)
+    await shiftClick(/^Alpha/)
+    await shiftClick(/^Gamma/)
+
+    expect(screen.getByLabelText("Selected notes")).toBeDefined()
+    expect(screen.getByText(/3 selected/)).toBeDefined()
+  })
+
+  it("asks before trashing them, even though trashing can be undone", async () => {
+    // One Shift-click can take out a dozen notes here, which is not the risk a
+    // single row's trash carries.
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+    await shiftClick(/^Alpha/)
+    await shiftClick(/^Gamma/)
+
+    await userEvent.click(screen.getByRole("button", { name: "Move to Trash" }))
+
+    expect(remove).not.toHaveBeenCalled()
+    expect(screen.getByRole("alertdialog")).toBeDefined()
+  })
+
+  it("lets go of the selection on Escape", async () => {
+    render(<IndexPage />)
+    await shiftClick(/^Alpha/)
+    await shiftClick(/^Gamma/)
+
+    await userEvent.keyboard("{Escape}")
+    expect(screen.queryByLabelText("Selected notes")).toBeNull()
+  })
+
+  it("lets go of the selection when a note is opened", async () => {
+    render(<IndexPage />)
+    await shiftClick(/^Alpha/)
+    await shiftClick(/^Gamma/)
+
+    await userEvent.click(screen.getByRole("button", { name: /^Beta/ }))
+    expect(screen.queryByLabelText("Selected notes")).toBeNull()
+  })
+})
