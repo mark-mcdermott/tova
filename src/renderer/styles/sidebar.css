@@ -448,10 +448,16 @@
  * already quiet, so the one row that answers "where am I" was the hardest to
  * find on the list.
  */
+/*
+ * White, like every other mark in the rail. The sidebar sets --text-primary to
+ * #ffffff whatever the theme, so an active folder is white on the tint; this
+ * row was the one thing overriding that, to a mauve, and in light mode it read
+ * as the quietest row on the list rather than the one you were on.
+ */
 .tag-row.is-active,
 .tag-row.is-active:hover {
   background: var(--accent-tint);
-  color: var(--accent-on-glass);
+  color: var(--text-primary);
   font-weight: 600;
 }
 

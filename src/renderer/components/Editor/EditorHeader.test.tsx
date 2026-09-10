@@ -39,6 +39,7 @@ function renderHeader(active: Note = note()) {
       onTitleCommit={() => undefined}
       onAddTag={() => undefined}
       onRemoveTag={() => undefined}
+      onOpenTag={() => undefined}
       tagAddRef={{ current: null }}
     />
   )

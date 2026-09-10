@@ -261,6 +261,7 @@ export function Editor({ note }: EditorProps) {
           const edits = removeTagEdits(view.state.doc.toString(), tag)
           if (edits.length > 0) view.dispatch({ changes: edits })
         }}
+        onOpenTag={(tag) => showIndex({ kind: "tag", tag })}
       />
 
       <div className="editor-body" ref={containerRef} />
