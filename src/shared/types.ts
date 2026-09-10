@@ -231,9 +231,9 @@ export interface PreferencesApi {
   /** Data URL for the stored avatar, or null when the bundled one applies. */
   avatarUrl: () => Promise<string | null>
   /** Backgrounds the reader added, served over the tova-bg scheme. */
-  listBackgrounds: () => Promise<string[]>
+  listBackgrounds: (theme: "light" | "dark") => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */
-  addBackground: () => Promise<string | null>
+  addBackground: (theme: "light" | "dark") => Promise<string | null>
   /** Title faces the reader added, served over the tova-font scheme. */
   listTitleFonts: () => Promise<string[]>
   /** Opens a picker, copies the chosen font in, and returns its stored name. */

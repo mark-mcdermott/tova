@@ -6,7 +6,8 @@ interface PreferencesState {
   /** Data URL of a chosen avatar, or null when the bundled one applies. */
   avatarUrl: string | null
   /** Backgrounds the reader has added. */
-  userBackgrounds: string[]
+  /** Pictures the reader added, kept per mode as the bundled ones are. */
+  userBackgrounds: { light: string[]; dark: string[] }
   loaded: boolean
 
   load: () => Promise<void>
@@ -19,24 +20,27 @@ interface PreferencesState {
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   preferences: DEFAULT_PREFERENCES,
   avatarUrl: null,
-  userBackgrounds: [],
+  userBackgrounds: { light: [], dark: [] },
   loaded: false,
 
   load: async () => {
-    const [preferences, avatarUrl, userBackgrounds] = await Promise.all([
+    const [preferences, avatarUrl, light, dark] = await Promise.all([
       window.tova.preferences.read(),
       window.tova.preferences.avatarUrl(),
-      window.tova.preferences.listBackgrounds()
+      window.tova.preferences.listBackgrounds("light"),
+      window.tova.preferences.listBackgrounds("dark")
     ])
+    const userBackgrounds = { light, dark }
     set({ preferences, avatarUrl, userBackgrounds, loaded: true })
   },
 
   addBackground: async (theme) => {
-    const name = await window.tova.preferences.addBackground()
+    const name = await window.tova.preferences.addBackground(theme)
     if (name === null) return
 
-    const userBackgrounds = await window.tova.preferences.listBackgrounds()
-    set({ userBackgrounds })
+    // Only the row it was added to changes; the other keeps what it had.
+    const names = await window.tova.preferences.listBackgrounds(theme)
+    set((state) => ({ userBackgrounds: { ...state.userBackgrounds, [theme]: names } }))
     // Chosen as well as added: nobody picks a file in order to not use it.
     await get().update(theme === "dark" ? { backgroundDark: name } : { backgroundLight: name })
   },

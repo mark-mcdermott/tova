@@ -98,7 +98,7 @@ export default function App() {
   useEffect(() => {
     if (!preferencesLoaded) return
     const chosen = theme === "dark" ? backgroundDark : backgroundLight
-    applyBackground(resolveBackground(chosen, theme, userBackgrounds))
+    applyBackground(resolveBackground(chosen, theme, userBackgrounds[theme]))
   }, [preferencesLoaded, backgroundLight, backgroundDark, theme, userBackgrounds])
 
   // Chromium navigates the window to any file dropped outside a handler, which

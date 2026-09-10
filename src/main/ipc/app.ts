@@ -51,8 +51,12 @@ export function registerAppHandlers(): void {
   ipcMain.handle("prefs:chooseAvatar", () => chooseAvatar())
   ipcMain.handle("prefs:avatarUrl", () => avatarDataUrl())
 
-  ipcMain.handle("background:list", () => listBackgrounds())
-  ipcMain.handle("background:add", () => addBackground())
+  ipcMain.handle("background:list", (_event, theme) =>
+    listBackgrounds(theme === "dark" ? "dark" : "light")
+  )
+  ipcMain.handle("background:add", (_event, theme) =>
+    addBackground(theme === "dark" ? "dark" : "light")
+  )
   ipcMain.handle("font:list", () => listTitleFonts())
   ipcMain.handle("font:add", () => addTitleFont())
   ipcMain.handle("font:remove", (_event, name: string) => removeTitleFont(name))

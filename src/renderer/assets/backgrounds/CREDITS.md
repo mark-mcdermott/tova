@@ -60,6 +60,9 @@ what says which, so there is no manifest to keep in step — `backgrounds.ts`
 globs `light/` and `dark/` separately, and dropping a file into the right one
 is all that is needed to offer it there.
 
-Photographs the reader adds themselves are offered to both modes. Only they
-know whether an image of their own suits one or the other, and some do suit
-both.
+Photographs the reader adds go the same way. The + they clicked was in one row
+or the other, which is what says which mode they meant it for, and the file is
+copied into `backgrounds/light/` or `backgrounds/dark/` under the app's data
+directory to match. Names are kept unique across both, because a stored
+preference is a bare filename and two pictures sharing one would be a single
+answer to two questions.

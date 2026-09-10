@@ -2,7 +2,7 @@ import { app, BrowserWindow, net, powerMonitor, protocol } from "electron"
 import { join } from "path"
 import { pathToFileURL } from "url"
 import { ensureVault, resolveInVault, setActiveVault } from "./vault"
-import { resolveBackground } from "./backgrounds"
+import { findBackground } from "./backgrounds"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
 import { registerImageHandlers } from "./ipc/images"
@@ -52,7 +52,10 @@ function serveBackgrounds(): void {
   protocol.handle(BACKGROUND_SCHEME, async (request) => {
     try {
       const { pathname } = new URL(request.url)
-      const file = resolveBackground(decodeURIComponent(pathname).replace(/^\/+/, ""))
+      // By name alone: a stored preference is a bare filename, so which of the
+      // two folders holds it is this side's problem rather than the URL's.
+      const file = await findBackground(decodeURIComponent(pathname).replace(/^\/+/, ""))
+      if (file === null) return new Response(null, { status: 404 })
       return await net.fetch(pathToFileURL(file).toString())
     } catch {
       return new Response(null, { status: 404 })
