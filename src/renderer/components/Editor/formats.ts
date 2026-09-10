@@ -12,11 +12,19 @@ export interface ToolbarItem {
   title: string
   shortcut: string
   format: Format
+  /**
+   * False for a format that keeps its shortcut and gives up its button. Plain
+   * is the only one: the row reads as a set of things to add, and a control for
+   * taking one back off sat oddly at the head of it. Cmd+Shift+0 stays, because
+   * it is the 0 of the 0/1/2 the headings use.
+   */
+  inToolbar?: boolean
 }
 
 /**
  * Single source of truth for the bottom toolbar and the editor keymap, so a
- * button and its advertised shortcut can never drift apart.
+ * button and its advertised shortcut can never drift apart. Every entry is
+ * bound; `inToolbar: false` is one that is not also drawn.
  */
 export const toolbarItems: ToolbarItem[] = [
   {
@@ -24,7 +32,8 @@ export const toolbarItems: ToolbarItem[] = [
     label: "T",
     title: "Plain — clears a heading or bullet (Cmd+Shift+0)",
     shortcut: "Mod-Shift-0",
-    format: { kind: "linePrefix", prefix: "" }
+    format: { kind: "linePrefix", prefix: "" },
+    inToolbar: false
   },
   {
     key: "h1",
@@ -198,6 +207,9 @@ export function applyFormat(view: EditorView, format: Format): void {
   }
   view.focus()
 }
+
+/** What the toolbar draws. The keymap below binds everything, drawn or not. */
+export const toolbarButtons: ToolbarItem[] = toolbarItems.filter((item) => item.inToolbar !== false)
 
 export const formatKeymap: KeyBinding[] = toolbarItems.map((item) => ({
   key: item.shortcut,

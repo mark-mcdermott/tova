@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { EditorView } from "@codemirror/view"
 import { EditorState } from "@codemirror/state"
-import { applyFormat } from "./formats"
+import { applyFormat, formatKeymap, toolbarButtons, toolbarItems } from "./formats"
 
 const list = { kind: "linePrefix" as const, prefix: "- " }
 
@@ -114,3 +114,24 @@ describe("the plain button", () => {
   })
 })
 
+describe("what the toolbar draws", () => {
+  it("leaves Plain out of the row", () => {
+    // The row reads as a set of things to add; a control for taking one back
+    // off sat oddly at the head of it.
+    expect(toolbarButtons.some((item) => item.key === "plain")).toBe(false)
+  })
+
+  it("draws everything else, in the order it is listed", () => {
+    expect(toolbarButtons.map((item) => item.key)).toEqual(
+      toolbarItems.filter((item) => item.key !== "plain").map((item) => item.key)
+    )
+  })
+
+  it("still binds Plain to its shortcut, which is the 0 of the headings' 0/1/2", () => {
+    expect(formatKeymap.some((binding) => binding.key === "Mod-Shift-0")).toBe(true)
+  })
+
+  it("binds every format, drawn or not", () => {
+    expect(formatKeymap).toHaveLength(toolbarItems.length)
+  })
+})
