@@ -91,6 +91,8 @@ interface NotesState {
   exportNote: (id: string) => Promise<void>
   exportPdf: (id: string) => Promise<void>
   toggleFavorite: (id: string) => Promise<void>
+  /** Replaces the front matter tags; the prose's are untouched. */
+  setTags: (id: string, tags: string[]) => Promise<void>
   requestTitleFocus: () => void
   setCreatingFolder: (value: boolean) => void
   setDraggingNote: (id: string | null) => void
@@ -369,6 +371,23 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     try {
       const summary = await window.tova.notes.setFavorite(id, !(note?.favorite ?? false))
       replaceNote(set, get, id, summary)
+    } catch (error) {
+      set({ error: describe(error) })
+    }
+  },
+
+  setTags: async (id, tags) => {
+    try {
+      const summary = await window.tova.notes.setTags(id, tags)
+      replaceNote(set, get, id, summary)
+
+      // The open note carries the body, which replaceNote's summary does not,
+      // so its own copy is patched rather than replaced.
+      set((state) =>
+        state.active?.id === id
+          ? { active: { ...state.active, tags: summary.tags, manualTags: summary.manualTags } }
+          : {}
+      )
     } catch (error) {
       set({ error: describe(error) })
     }

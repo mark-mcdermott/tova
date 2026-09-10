@@ -23,6 +23,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       restore: vi.fn(),
       permanentDelete: vi.fn(),
       setFavorite: vi.fn(),
+      setTags: vi.fn(),
       today: vi.fn(),
       listFolders: vi.fn(async () => []),
       createFolder: vi.fn(),

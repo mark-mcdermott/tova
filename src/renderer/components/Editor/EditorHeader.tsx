@@ -135,7 +135,7 @@ export function EditorHeader({
 
       <EditorTags
         tags={note.tags}
-        originOf={(tag) => tagOrigin(note.body, tag)}
+        originOf={(tag) => tagOrigin(note.manualTags, tag)}
         onAddTag={onAddTag}
         onRemoveTag={onRemoveTag}
         addRef={tagAddRef}

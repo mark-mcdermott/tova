@@ -34,7 +34,13 @@ export interface NoteSummary {
   section: Section
   /** Single folder under Notes; null for loose notes and for Daily. */
   folder: string | null
+  /** Every tag the note carries: front matter first, then the prose's. */
   tags: string[]
+  /**
+   * Only the ones the tag row put in front matter. The rest are in the prose
+   * and are read back out of it, so they are never stored twice.
+   */
+  manualTags: string[]
   /** Pinned to the top of its section by the user. */
   favorite: boolean
   updatedAt: number
@@ -282,6 +288,8 @@ export interface NoteApi {
   listFolders: () => Promise<string[]>
   createFolder: (name: string) => Promise<string>
   setFavorite: (id: string, favorite: boolean) => Promise<NoteSummary>
+  /** Replaces the front matter tags. Prose tags are untouched. */
+  setTags: (id: string, tags: string[]) => Promise<NoteSummary>
   renameFolder: (from: string, to: string) => Promise<string>
   deleteFolder: (name: string) => Promise<string[]>
   /** Resolves to the written path, or null if the user cancelled. */

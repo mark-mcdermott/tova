@@ -157,6 +157,7 @@ describe("sortNotes", () => {
     section: "notes",
     folder: null,
     tags: [],
+    manualTags: [],
     favorite: false,
     updatedAt,
     createdAt: updatedAt,

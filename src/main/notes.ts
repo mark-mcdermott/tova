@@ -20,7 +20,7 @@ import {
 } from "../shared/noteLocation"
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
 import { slugify, uniqueSlug } from "../shared/noteName"
-import { extractTags } from "../shared/tags"
+import { allTags, normalizeManualTags } from "../shared/tags"
 import { canDeleteSection } from "../shared/sections"
 import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
 import { saveVersion } from "./backup"
@@ -38,6 +38,8 @@ interface LoadedNote {
   body: string
   deletedAt: number | null
   favorite: boolean
+  /** The tags the row put in front matter. Prose tags are not in here. */
+  manualTags: string[]
   updatedAt: number
   createdAt: number
 }
@@ -75,6 +77,7 @@ async function load(location: NoteLocation): Promise<LoadedNote> {
     body,
     deletedAt: readTimestamp(data.deletedAt),
     favorite: data.favorite === "true",
+    manualTags: normalizeManualTags(data.tags),
     updatedAt: stats.mtimeMs,
     createdAt: stats.birthtimeMs
   }
@@ -89,6 +92,10 @@ async function persist(note: LoadedNote): Promise<void> {
   if (note.deletedAt !== null) data.deletedAt = new Date(note.deletedAt).toISOString()
   // Written only when set, so an ordinary note's front matter stays quiet.
   if (note.favorite) data.favorite = "true"
+  // Only the tags the reader asked for in the row. The ones written into the
+  // prose are the prose, and storing them here as well would be a copy that
+  // goes stale the moment the file is edited anywhere else.
+  if (note.manualTags.length > 0) data.tags = note.manualTags
 
   await writeFile(notePath(note.location), serializeFrontMatter(data, note.body), "utf-8")
 }
@@ -99,7 +106,8 @@ function toNote(note: LoadedNote): Note {
     title: note.title,
     section: note.location.section,
     folder: note.location.folder,
-    tags: extractTags(note.body),
+    tags: allTags(note.manualTags, note.body),
+    manualTags: note.manualTags,
     favorite: note.favorite,
     updatedAt: note.updatedAt,
     createdAt: note.createdAt,
@@ -206,6 +214,7 @@ export async function createNote(input: CreateNoteInput): Promise<Note> {
     body: input.body ?? "",
     deletedAt: null,
     favorite: false,
+    manualTags: [],
     updatedAt: Date.now(),
     createdAt: Date.now()
   })
@@ -451,6 +460,21 @@ export async function setFavorite(id: string, favorite: boolean): Promise<NoteSu
   if (note.favorite === favorite) return toSummary(note)
 
   note.favorite = favorite
+  await persist(note)
+  return toSummary(await load(note.location))
+}
+
+/**
+ * Replaces the tags the row keeps in front matter. Only those: a tag written
+ * into the prose stays in the prose, and is read back out of it.
+ */
+export async function setManualTags(id: string, tags: string[]): Promise<NoteSummary> {
+  const note = await load(requireLocation(id))
+  const next = normalizeManualTags(tags)
+
+  if (next.join("\u0000") === note.manualTags.join("\u0000")) return toSummary(note)
+
+  note.manualTags = next
   await persist(note)
   return toSummary(await load(note.location))
 }

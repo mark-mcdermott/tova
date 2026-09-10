@@ -14,6 +14,7 @@ import {
   renameFolder,
   deleteFolder,
   setFavorite,
+  setManualTags,
   createSection,
   deleteSection
 } from "../notes"
@@ -113,5 +114,11 @@ export function registerNoteHandlers(): void {
 
   ipcMain.handle("note:favorite", (_event, id, favorite) =>
     setFavorite(asString(id, "id"), favorite === true)
+  )
+
+  ipcMain.handle("note:tags", (_event, id, tags) =>
+    // Whatever arrives is normalised in setManualTags, so a hand-made call
+    // cannot put a name in front matter the tag rules would refuse.
+    setManualTags(asString(id, "id"), Array.isArray(tags) ? tags : [])
   )
 }

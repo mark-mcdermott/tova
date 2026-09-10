@@ -14,6 +14,7 @@ function note(overrides: Partial<Note> = {}): Note {
     section: "notes",
     folder: null,
     tags: [],
+    manualTags: [],
     favorite: false,
     updatedAt: 0,
     createdAt: 0,

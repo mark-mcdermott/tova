@@ -38,7 +38,8 @@ const notes: NoteApi = {
   search: (query) => ipcRenderer.invoke("note:search", query),
   createSection: (id) => ipcRenderer.invoke("section:create", id),
   deleteSection: (id) => ipcRenderer.invoke("section:delete", id),
-  setFavorite: (id, favorite) => ipcRenderer.invoke("note:favorite", id, favorite)
+  setFavorite: (id, favorite) => ipcRenderer.invoke("note:favorite", id, favorite),
+  setTags: (id, tags) => ipcRenderer.invoke("note:tags", id, tags)
 }
 
 const backups: BackupApi = {

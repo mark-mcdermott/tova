@@ -23,17 +23,44 @@ export function findTags(text: string): TagMatch[] {
   return matches
 }
 
+/**
+ * Every tag a note carries: the ones written into its front matter by the tag
+ * row, then the ones written into its prose. Front matter leads, because those
+ * were asked for rather than picked up, and a tag in both is the one that was
+ * asked for.
+ */
+export function allTags(manual: readonly string[], body: string): string[] {
+  return unique([...manual, ...findTags(body).map((match) => match.tag)])
+}
+
 /** Unique tag names in first-seen order, deduped case-insensitively. */
 export function extractTags(text: string): string[] {
+  return unique(findTags(text).map((match) => match.tag))
+}
+
+function unique(tags: readonly string[]): string[] {
   const seen = new Set<string>()
-  const tags: string[] = []
-  for (const { tag } of findTags(text)) {
+  const out: string[] = []
+  for (const tag of tags) {
     const key = tag.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
-    tags.push(tag)
+    out.push(tag)
   }
-  return tags
+  return out
+}
+
+/** A tag name as front matter should hold it, or null when it is not one. */
+export function normalizeManualTags(value: unknown): string[] {
+  const list = Array.isArray(value) ? value : typeof value === "string" ? [value] : []
+  return unique(
+    list
+      .filter((entry): entry is string => typeof entry === "string")
+      .flatMap((entry) => {
+        const tag = normalizeTag(entry)
+        return tag === null ? [] : [tag]
+      })
+  )
 }
 
 /**
@@ -80,63 +107,18 @@ export function normalizeTag(input: string): string | null {
 }
 
 /**
- * Where a tag typed into the tag strip should land in the prose. Tags are
- * parsed out of the body rather than stored, so adding one means writing it
- * there — onto the leading tags-only line if the note already has one, and
- * onto a new first line if it does not.
+ * Where a tag was written. A tag the row put in front matter belongs to the
+ * note; one written into the prose belongs to the sentence it sits in, and is
+ * read back out of it rather than stored.
  *
- * Returns null when there is nothing to do: an unusable name, or a tag the
- * note already carries anywhere in its text.
- */
-export function addTagEdit(doc: string, input: string): TagEdit | null {
-  const tag = normalizeTag(input)
-  if (tag === null) return null
-
-  const already = extractTags(doc).some((seen) => seen.toLowerCase() === tag.toLowerCase())
-  if (already) return null
-
-  const firstLine = doc.split("\n")[0] ?? ""
-  if (isTagOnlyLine(firstLine)) {
-    return { from: firstLine.length, to: firstLine.length, insert: ` #${tag}` }
-  }
-
-  // A blank note gets the line on its own; anything else keeps its first
-  // paragraph, pushed down by the blank line between.
-  return { from: 0, to: 0, insert: doc.trim() === "" ? `#${tag}\n` : `#${tag}\n\n` }
-}
-
-/**
- * Where the caret belongs after the tag row writes a tag in.
- *
- * Never inside the line just written: you asked for a tag, not for somewhere
- * to type. A caret already out in the prose is left where the writer put it,
- * only shifted by what was inserted above it.
- */
-export function caretAfterTagEdit(doc: string, edit: TagEdit, head: number): number {
-  const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
-  const shift = edit.insert.length - (edit.to - edit.from)
-  const moved = head >= edit.from ? head + shift : head
-
-  return Math.max(moved, bodyStart(next))
-}
-
-/**
- * Where a tag was written. The tag row always writes onto the leading tags-only
- * line, so position is the honest record of how a tag got here: one on that
- * line was asked for, one anywhere else came along with the prose.
- *
- * Nothing is stored for this. A tag typed into a sentence later does not turn a
- * row tag into an inline one, because the line it sits on has not changed.
+ * A tag in both is a row tag. Typing it into a sentence later does not take it
+ * out of front matter, so it does not stop being one.
  */
 export type TagOrigin = "row" | "inline"
 
-export function tagOrigin(doc: string, tag: string): TagOrigin {
+export function tagOrigin(manual: readonly string[], tag: string): TagOrigin {
   const key = tag.toLowerCase()
-  const lines = doc.split("\n")
-  if (tagHeaderLines(lines.slice(0, 3)) === 0) return "inline"
-
-  const onHeader = findTags(lines[0]).some((match) => match.tag.toLowerCase() === key)
-  return onHeader ? "row" : "inline"
+  return manual.some((entry) => entry.toLowerCase() === key) ? "row" : "inline"
 }
 
 interface Placed extends TagMatch {
