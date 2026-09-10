@@ -29,9 +29,9 @@ export function pickBackground(
  */
 export function applyBackground(url: string | null = pickBackground()): void {
   const root = document.documentElement
-  // Cleared rather than left behind: in dark mode with no dark photograph, the
-  // light one behind white text is unreadable, and the gradient underneath is
-  // built for exactly that case.
+  // Cleared rather than left behind: none means none, and the gradient beneath
+  // is what shows. A light photograph left up in dark mode would put white text
+  // on a bright sky, which no ink colour rescues.
   if (url === null) root.style.removeProperty("--bg-photo")
   else root.style.setProperty("--bg-photo", `url("${url}")`)
 }
@@ -60,6 +60,18 @@ export const SHUFFLE = "shuffle"
 /** Everything that could be chosen: what ships, then what was added. */
 export function allBackgroundUrls(added: string[] = []): string[] {
   return [...backgroundUrls, ...added.map(userBackgroundUrl)]
+}
+
+/**
+ * Whether the picker offers Shuffle.
+ *
+ * With one picture there is nothing to shuffle between. It is still offered
+ * where it is already the choice stored, or the picker would show nothing
+ * chosen at all — which happens to a reader who shuffled and then removed
+ * pictures until one was left.
+ */
+export function showsShuffle(count: number, chosen: string | null): boolean {
+  return count > 1 || chosen === SHUFFLE
 }
 
 /**

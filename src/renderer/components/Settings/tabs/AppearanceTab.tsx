@@ -7,7 +7,7 @@ import {
   BUNDLED_TITLE_FONTS,
   DEFAULT_PREFERENCES
 } from "../../../../shared/preferences"
-import { SHUFFLE, backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
+import { SHUFFLE, backgroundUrls, showsShuffle, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { applyTitleFont, loadSampleFace } from "../../../titleFont"
 import { Field } from "../Field"
@@ -49,7 +49,7 @@ function BackgroundChoices({
 
       {/* Nothing to shuffle between with one picture. Shown anyway when it is
           the choice already stored, or the picker would show nothing chosen. */}
-      {(count > 1 || chosen === SHUFFLE) && (
+      {showsShuffle(count, chosen) && (
         <button
           type="button"
           className={`background-choice${chosen === SHUFFLE ? " is-chosen" : ""}`}
@@ -301,7 +301,7 @@ export function AppearanceTab() {
         <Field
           id="background-dark"
           label="Background — dark"
-          hint="Every bundled photograph is a bright one, so dark starts on none."
+          hint="Only a dark photograph can sit under white text; the others are for light."
         >
           <BackgroundChoices
             chosen={backgroundDark}

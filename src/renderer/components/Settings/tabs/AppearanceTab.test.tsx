@@ -237,16 +237,14 @@ describe("AppearanceTab backgrounds", () => {
     }
   })
 
-  it("hides Shuffle when there is only one picture to shuffle between", () => {
-    // Dark, because light now starts on shuffle and would keep the button for
-    // that reason rather than for the count.
-    usePreferencesStore.setState({
-      userBackgrounds: [],
-      preferences: { ...DEFAULT_PREFERENCES, backgroundDark: null }
-    })
+  it("offers Shuffle to both modes, now that two pictures ship", () => {
+    // The rule that hides it for a single picture cannot be reached from here
+    // any more — showsShuffle is tested directly in backgrounds.test.ts.
+    usePreferencesStore.setState({ userBackgrounds: [] })
     render(<AppearanceTab />)
 
-    expect(screen.queryByLabelText("Shuffle for dark")).toBeNull()
+    expect(screen.getByLabelText("Shuffle for light")).toBeDefined()
+    expect(screen.getByLabelText("Shuffle for dark")).toBeDefined()
   })
 
   it("offers Shuffle once a second picture has been added", () => {

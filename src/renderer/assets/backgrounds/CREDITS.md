@@ -1,14 +1,27 @@
 # Background photographs
 
-All four are from [Unsplash](https://unsplash.com), whose licence permits free
-use commercially and non-commercially without attribution. Credited anyway.
+`milky-way.jpg` is from [Unsplash](https://unsplash.com), whose licence permits
+free use commercially and non-commercially without attribution. Credited anyway.
 
-| File               | Photographer     | Source                                  |
-| ------------------ | ---------------- | --------------------------------------- |
-| `amber-ridges.jpg` | Daniil Silantev  | https://unsplash.com/photos/l9XWp3S9yuk |
-| `dusk-sun.jpg`     | Daniel Mirlea    | https://unsplash.com/photos/HvRnuUFI3Jk |
-| `rose-peaks.jpg`   | Hugo L. Casanova | https://unsplash.com/photos/ualRCC1D3YA |
-| `violet-dusk.jpg`  | Darya Karaliova  | https://unsplash.com/photos/sLevNKufpBo |
+| File            | Source                                  |
+| --------------- | --------------------------------------- |
+| `milky-way.jpg` | https://unsplash.com/photos/LhDWW8PhPoE |
+
+This table used to list four other Unsplash images — `amber-ridges.jpg`,
+`dusk-sun.jpg`, `rose-peaks.jpg` and `violet-dusk.jpg`. None of them are in this
+folder and none have been for some time, so the credits named files that were
+not being used. They are gone from the table rather than left standing.
+
+## Why this one is the dark default
+
+Every other photograph here is a bright one, which is why dark mode opened on
+the gradient for so long: white text over a bright sky is unreadable whatever
+the ink is set to. This image is dark throughout. Sampled on a 32x20 grid, its
+**brightest** cell still gives white text 15.98:1, and its darkest 21:1 — so
+there is no part of it that the interface cannot sit on.
+
+It is bundled at its native 1024px rather than upscaled, for the same reason
+`lake-sunset.jpg` is: the extra pixels would carry no detail.
 
 `lake-sunset.jpg` is not from Unsplash — it is the backdrop from the design
 mockup in `branding/`, extracted by hand, and since re-graded to lift the right
