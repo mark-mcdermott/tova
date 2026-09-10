@@ -7,7 +7,9 @@ import { NoteSummary } from "../../../shared/types"
 import { emptyHistory } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
 import { usePreferencesStore } from "../../stores/preferencesStore"
+import { useBlogsStore } from "../../stores/blogsStore"
 import { DEFAULT_PREFERENCES } from "../../../shared/preferences"
+import { EMPTY_BLOG } from "../../../shared/blogConfig"
 
 const notes: NoteSummary[] = [
   {
@@ -81,6 +83,7 @@ beforeEach(() => {
   // Disclosure state lives in the store, so it has to be reset or an expanded
   // folder leaks into whichever test runs next.
   usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
+  useBlogsStore.setState({ blogs: [] })
   useNotesStore.setState({
     notes,
     folders: ["ideas", "drafts"],
@@ -121,8 +124,8 @@ describe("Sidebar", () => {
       preferences: {
         ...DEFAULT_PREFERENCES,
         sections: [
-          { id: "journal", label: "Journal", icon: "journal", enabled: true },
-          { id: "notes", label: "Notes", icon: "notes", enabled: true }
+          { id: "journal", kind: "section", label: "Journal", icon: "journal", enabled: true },
+          { id: "notes", kind: "section", label: "Notes", icon: "notes", enabled: true }
         ]
       }
     })
@@ -540,3 +543,70 @@ describe("Sidebar", () => {
   })
 })
 
+describe("blogs in the rail", () => {
+  const blog = {
+    ...EMPTY_BLOG,
+    id: "b1",
+    name: "markmcdermott.io",
+    hasGithubToken: true,
+    hasDeployToken: true
+  }
+
+  const railLabels = () =>
+    screen
+      .getAllByRole("button")
+      .map((button) => button.textContent ?? "")
+      .filter((text) => /^(Notes|Daily|Ideas|Journal|Trash|markmcdermott\.io|Writing)/.test(text))
+      .map((text) => text.replace(/\d+$/, ""))
+
+  it("shows a configured blog without it having been arranged first", () => {
+    useBlogsStore.setState({ blogs: [blog] })
+    render(<Sidebar />)
+
+    expect(railLabels()[0]).toBe("markmcdermott.io")
+  })
+
+  it("draws the blog where the rail puts it, not in a block above the sections", () => {
+    useBlogsStore.setState({ blogs: [blog] })
+    usePreferencesStore.setState({
+      preferences: {
+        ...DEFAULT_PREFERENCES,
+        sections: [
+          ...DEFAULT_PREFERENCES.sections.slice(0, 2),
+          { id: blog.name, kind: "blog", label: "Writing", icon: "posts", enabled: true },
+          ...DEFAULT_PREFERENCES.sections.slice(2)
+        ]
+      }
+    })
+
+    render(<Sidebar />)
+    expect(railLabels()).toEqual(["Notes", "Daily", "Writing", "Ideas", "Journal", "Trash"])
+  })
+
+  it("hides a blog whose row is switched off, and shows the sections around it", () => {
+    useBlogsStore.setState({ blogs: [blog] })
+    usePreferencesStore.setState({
+      preferences: {
+        ...DEFAULT_PREFERENCES,
+        sections: [
+          { id: blog.name, kind: "blog", label: "Writing", icon: "posts", enabled: false },
+          ...DEFAULT_PREFERENCES.sections
+        ]
+      }
+    })
+
+    render(<Sidebar />)
+    expect(railLabels()).toEqual(["Notes", "Daily", "Ideas", "Journal", "Trash"])
+  })
+
+  it("opens the blog's index from its row", async () => {
+    useBlogsStore.setState({ blogs: [blog] })
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^markmcdermott\.io/ }))
+
+    const state = useNotesStore.getState()
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "blog", blog: "markmcdermott.io" })
+  })
+})

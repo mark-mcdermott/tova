@@ -496,12 +496,33 @@ separate on purpose — renaming a section rewrites a string and touches no
 files, so no note changes its name and no id in the trash's front matter goes
 stale. Adding and removing do touch the vault and go through main.
 
-**Daily is fixed.** Its notes are one a day, named by date and created for the
-reader, so a renamed or missing Daily breaks the thing that makes them. Nothing
-may be moved across it either — otherwise a reorder could shove the one fixed
-row. **Trash cannot be removed or hidden**, because deleted notes need
-somewhere to go, but it renames and moves like anything else. **Posts is not
-listed at all**: the blogs that sync into it own it.
+**Only removal is withheld, and only from two rows.** Daily's notes are made
+for the reader one a day and Trash is where deleting one puts it, so neither has
+anywhere else to go. Everything else about them is the reader's: both rename,
+move and hide like any other row. That works because the id is the directory —
+Daily can be called anything and the scheduler still writes into `daily/`, and
+hiding it stops it appearing in the rail and stops nothing else.
+
+**Blogs are rows in the same list.** They were a hardcoded block above the
+sections; now a blog can sit anywhere in the rail, and renames, moves and hides
+like a section. What it cannot do is be deleted from here — that would take its
+stored tokens and its sync history with it, which belongs in the Blogs tab where
+the consequences are spelled out.
+
+A blog's row is *derived, not stored*. Blogs live in the app's data directory
+and preferences cannot see them, so `reconcileBlogs` brings the two together at
+render time: a new blog appears at the top without anything being written, and a
+deleted one takes its row with it, so no row can outlive the blog it names. Only
+arranging a blog writes it down.
+
+That also moved the blog's sidebar label. It was `sidebarLabel` in `blogs.json`;
+it is the rail entry's `label` now, so there is one field and one place to edit
+it rather than the same name in two Settings tabs. **Rail entries are keyed by
+`railKey`, not by id** — a blog may legitimately be called "notes", and keyed by
+id alone it would be the same row as the Notes section, with an edit to one
+silently editing the other.
+
+**Posts is not listed at all**: the blogs that sync into it own it.
 
 Removing a section moves its notes to Trash and then removes the directory, the
 same bargain deleting a folder makes. Main refuses to remove Daily, Trash or

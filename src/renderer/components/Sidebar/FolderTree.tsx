@@ -1,15 +1,13 @@
 import { DragEvent, Fragment, MouseEvent, useState } from "react"
 import { NoteSummary } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
-import { usePreferencesStore } from "../../stores/preferencesStore"
-import { visibleSections } from "../../../shared/sections"
+import { useRail } from "../../useRail"
+import { railKey, visibleSections } from "../../../shared/sections"
 import { Disclosure } from "./Disclosure"
 import { FolderNameInput } from "./FolderNameInput"
 import { Menu, MenuItem } from "../Popup/Menu"
 import { useContextMenu } from "../Popup/useContextMenu"
 import { useDropTarget } from "./useDropTarget"
-import { useBlogsStore } from "../../stores/blogsStore"
-import { blogLabel } from "../../../shared/blogConfig"
 
 interface FolderTreeProps {
   notes: NoteSummary[]
@@ -91,14 +89,14 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const inSection = (section: NoteSummary["section"]) =>
     notes.filter((note) => note.section === section)
 
-  const blogs = useBlogsStore((state) => state.blogs)
   const posts = inSection("posts")
   const notesSection = inSection("notes")
 
   // The rail is configuration now: what exists, what it is called, in what
-  // order. Notes and Trash still take drop targets of their own, and Notes
-  // still carries its folders.
-  const sections = visibleSections(usePreferencesStore((state) => state.preferences.sections))
+  // order. Blogs are entries in the same list, so one can sit anywhere rather
+  // than in a fixed block above the sections. Notes and Trash still take drop
+  // targets of their own, and Notes still carries its folders.
+  const sections = visibleSections(useRail())
 
   const dropFor = (id: string) =>
     id === "notes" ? notesRoot : id === "daily" ? dailyDrop : id === "trash" ? trashDrop : null
@@ -130,28 +128,30 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
 
   return (
     <>
-      {/* Blogs sit as peers of Notes, each holding the posts synced from it. */}
-      {blogs.map((blog) => {
-        const held = posts.filter((note) => note.folder === blog.name)
-        return (
-          <Disclosure
-            key={blog.id}
-            sectionKey={`blog:${blog.name}`}
-            label={blogLabel(blog)}
-            count={held.length}
-            icon="posts"
-            depth={1}
-            onActivate={() => showIndex({ kind: "blog", blog: blog.name })}
-          />
-        )
-      })}
-
       {sections.map((section) => {
+        const key = railKey(section)
+
+        // A blog holds the posts synced from it, and takes no drop target: its
+        // posts arrive from the repository, not from the reader dragging one in.
+        if (section.kind === "blog") {
+          return (
+            <Disclosure
+              key={key}
+              sectionKey={key}
+              label={section.label}
+              count={posts.filter((note) => note.folder === section.id).length}
+              icon={section.icon}
+              depth={1}
+              onActivate={() => showIndex({ kind: "blog", blog: section.id })}
+            />
+          )
+        }
+
         const held = inSection(section.id)
         const drop = dropFor(section.id)
 
         return (
-          <Fragment key={section.id}>
+          <Fragment key={key}>
             <Disclosure
               sectionKey={section.id}
               label={section.label}

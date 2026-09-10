@@ -107,8 +107,6 @@ export interface Blog {
   id: string
   /** Doubles as the `@handle` in `@handle post`, so it carries no whitespace. */
   name: string
-  /** Overrides the name in the sidebar. Falls back to the name when empty. */
-  sidebarLabel: string
   /** Base URL of the live site, used to link a published post. */
   siteUrl: string
   /** URL path posts appear under on the live site, e.g. `/posts/`. */

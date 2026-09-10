@@ -70,7 +70,7 @@ describe("blogs", () => {
   it("keeps the stored token across an edit that does not mention it", async () => {
     const saved = await saveBlog(blog())
     await setBlogSecret(saved.id, "github", "ghp_secret")
-    await saveBlog({ ...blog({ id: saved.id }), sidebarLabel: "My Blog" })
+    await saveBlog({ ...blog({ id: saved.id }), siteUrl: "https://example.com" })
 
     expect((await listBlogs())[0].hasGithubToken).toBe(true)
     expect(await blogSecret(saved.id, "github")).toBe("ghp_secret")
