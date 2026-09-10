@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
 import {
+  applyEdits,
+  removeOccurrenceEdits,
+  removeTagEdits,
+  tagOrigin,
   findTags,
   extractTags,
   isTagOnlyLine,
@@ -70,7 +74,8 @@ describe("isTagOnlyLine", () => {
 
 describe("normalizeTag", () => {
   it("takes a bare word", () => expect(normalizeTag("writing")).toBe("writing"))
-  it("takes one already written with a hash", () => expect(normalizeTag("#writing")).toBe("writing"))
+  it("takes one already written with a hash", () =>
+    expect(normalizeTag("#writing")).toBe("writing"))
   it("trims what was typed", () => expect(normalizeTag("  writing  ")).toBe("writing"))
   it("keeps hyphens and digits after the first letter", () =>
     expect(normalizeTag("half-formed2")).toBe("half-formed2"))
@@ -161,7 +166,10 @@ describe("caretAfterTagEdit", () => {
     const edit = addTagEdit(doc, tag)
     if (edit === null) throw new Error("expected an edit")
     const next = doc.slice(0, edit.from) + edit.insert + doc.slice(edit.to)
-    return { at: caretAfterTagEdit(doc, edit, head), rest: next.slice(caretAfterTagEdit(doc, edit, head)) }
+    return {
+      at: caretAfterTagEdit(doc, edit, head),
+      rest: next.slice(caretAfterTagEdit(doc, edit, head))
+    }
   }
 
   it("puts the caret past the tags line on an empty note", () => {
@@ -193,3 +201,97 @@ describe("caretAfterTagEdit", () => {
   })
 })
 
+describe("where a tag came from", () => {
+  it("calls a tag on the opening line a row tag", () => {
+    expect(tagOrigin("#work\n\nProse.", "work")).toBe("row")
+  })
+
+  it("calls one written into a sentence an inline tag", () => {
+    expect(tagOrigin("I love #thoughts about coffee.", "thoughts")).toBe("inline")
+  })
+
+  it("keeps a row tag a row tag when the same word is typed inline later", () => {
+    expect(tagOrigin("#work\n\nA note about #work.", "work")).toBe("row")
+  })
+
+  it("matches without regard to case, as the tag row does", () => {
+    expect(tagOrigin("#Work\n\nProse.", "work")).toBe("row")
+  })
+
+  it("calls a tags line further down the note inline, since the row did not write it", () => {
+    expect(tagOrigin("Prose.\n\n#work\n", "work")).toBe("inline")
+  })
+})
+
+describe("removing a tag from a note", () => {
+  const remove = (doc: string, tag: string) => applyEdits(doc, removeTagEdits(doc, tag))
+
+  it("takes the word off a line of nothing but tags", () => {
+    expect(remove("#a #b #c\n\nProse.", "b")).toBe("#a #c\n\nProse.")
+  })
+
+  it("keeps the remaining tags one space apart", () => {
+    expect(remove("#a #b\n\nProse.", "a")).toBe("#b\n\nProse.")
+  })
+
+  it("strips only the hash from a tag inside a sentence", () => {
+    // The sentence is the writer's. Cutting the word out of it is not this
+    // control's business — de-tagging it is.
+    expect(remove("I love #thoughts about coffee.", "thoughts")).toBe(
+      "I love thoughts about coffee."
+    )
+  })
+
+  it("removes the line and the blank under it when nothing is left on it", () => {
+    expect(remove("#work\n\nProse.", "work")).toBe("Prose.")
+  })
+
+  it("leaves a note that is nothing but its tag empty", () => {
+    expect(remove("#work", "work")).toBe("")
+  })
+
+  it("clears a tags line further down without leaving a gap behind", () => {
+    expect(remove("Prose.\n\n#work\n\nMore.", "work")).toBe("Prose.\n\nMore.")
+  })
+
+  it("takes every occurrence, since one left behind puts the chip straight back", () => {
+    const doc = "#work\n\nA #work note about #work."
+    expect(remove(doc, "work")).toBe("A work note about work.")
+  })
+
+  it("removes a row tag and its inline uses together", () => {
+    expect(remove("#work\n\nSee #work.", "work")).toBe("See work.")
+  })
+
+  it("ignores case, so no stray occurrence survives", () => {
+    expect(remove("#Work\n\nSee #work and #WORK.", "work")).toBe("See work and WORK.")
+  })
+
+  it("leaves other tags alone", () => {
+    expect(remove("#a #b\n\nProse with #c.", "b")).toBe("#a\n\nProse with #c.")
+  })
+
+  it("does nothing for a tag the note does not carry", () => {
+    expect(removeTagEdits("#a\n\nProse.", "zzz")).toEqual([])
+  })
+})
+
+describe("removing one written occurrence", () => {
+  const removeAt = (doc: string, needle: string) => {
+    const from = doc.indexOf(needle)
+    return applyEdits(doc, removeOccurrenceEdits(doc, from, from + needle.length))
+  }
+
+  it("leaves the other uses of the same tag in place", () => {
+    // Which is why the chip stays: the note still carries the tag.
+    expect(removeAt("A #work note about #work.", "#work")).toBe("A work note about #work.")
+  })
+
+  it("takes the line when it was the only tag on it", () => {
+    expect(removeAt("#work\n\nProse.", "#work")).toBe("Prose.")
+  })
+
+  it("leaves the line when other tags share it", () => {
+    expect(removeAt("#a #b\n\nProse.", "#a")).toBe("#b\n\nProse.")
+  })
+})

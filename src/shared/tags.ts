@@ -119,3 +119,143 @@ export function caretAfterTagEdit(doc: string, edit: TagEdit, head: number): num
 
   return Math.max(moved, bodyStart(next))
 }
+
+/**
+ * Where a tag was written. The tag row always writes onto the leading tags-only
+ * line, so position is the honest record of how a tag got here: one on that
+ * line was asked for, one anywhere else came along with the prose.
+ *
+ * Nothing is stored for this. A tag typed into a sentence later does not turn a
+ * row tag into an inline one, because the line it sits on has not changed.
+ */
+export type TagOrigin = "row" | "inline"
+
+export function tagOrigin(doc: string, tag: string): TagOrigin {
+  const key = tag.toLowerCase()
+  const lines = doc.split("\n")
+  if (tagHeaderLines(lines.slice(0, 3)) === 0) return "inline"
+
+  const onHeader = findTags(lines[0]).some((match) => match.tag.toLowerCase() === key)
+  return onHeader ? "row" : "inline"
+}
+
+interface Placed extends TagMatch {
+  line: string
+  lineFrom: number
+  lineTo: number
+  /** Offset just past the newline ending this line, or the end of the doc. */
+  next: number
+}
+
+function place(doc: string, tag: string): Placed[] {
+  const key = tag.toLowerCase()
+  const lines = doc.split("\n")
+
+  const placed: Placed[] = []
+  let lineFrom = 0
+
+  for (const line of lines) {
+    const lineTo = lineFrom + line.length
+    for (const match of findTags(line)) {
+      if (match.tag.toLowerCase() !== key) continue
+      placed.push({
+        tag: match.tag,
+        from: lineFrom + match.from,
+        to: lineFrom + match.to,
+        line,
+        lineFrom,
+        lineTo,
+        next: Math.min(lineTo + 1, doc.length)
+      })
+    }
+    lineFrom = lineTo + 1
+  }
+
+  return placed
+}
+
+/**
+ * Removing one written tag, without touching the sentence around it.
+ *
+ * On a line of nothing but tags the word goes, since what is left is still a
+ * line of tags. In prose only the `#` goes: "I love #thoughts about coffee"
+ * becomes "I love thoughts about coffee", which is the reader's sentence with
+ * one character less. Cutting the word out would edit their writing, and that
+ * was the reason this control did not exist for so long.
+ */
+function removeOne(occurrence: Placed): TagEdit {
+  if (!isTagOnlyLine(occurrence.line)) {
+    return { from: occurrence.from, to: occurrence.from + 1, insert: "" }
+  }
+
+  // Take one adjoining space with it, so the remaining tags stay one space
+  // apart rather than drifting.
+  const before = occurrence.from > occurrence.lineFrom ? occurrence.from - 1 : occurrence.from
+  const after =
+    before === occurrence.from && occurrence.to < occurrence.lineTo
+      ? occurrence.to + 1
+      : occurrence.to
+
+  return { from: before, to: after, insert: "" }
+}
+
+/**
+ * Every edit that takes a tag out of a note, in document order.
+ *
+ * A tags-only line left with nothing on it goes too, along with the blank line
+ * under it — otherwise removing the last tag from a note leaves it opening on
+ * two blank lines.
+ */
+export function removeTagEdits(doc: string, tag: string): TagEdit[] {
+  const occurrences = place(doc, tag)
+  if (occurrences.length === 0) return []
+
+  const edits: TagEdit[] = []
+  const byLine = new Map<number, Placed[]>()
+  for (const occurrence of occurrences) {
+    byLine.set(occurrence.lineFrom, [...(byLine.get(occurrence.lineFrom) ?? []), occurrence])
+  }
+
+  for (const [lineFrom, group] of byLine) {
+    const [first] = group
+    const emptied = isTagOnlyLine(first.line) && findTags(first.line).length === group.length
+
+    if (!emptied) {
+      for (const occurrence of group) edits.push(removeOne(occurrence))
+      continue
+    }
+
+    // The line and its newline. A blank line under it goes as well, so the gap
+    // the tags line was holding open does not survive it.
+    const after = doc.slice(first.next)
+    const blankUnder = /^\r?\n/.test(after) ? after.indexOf("\n") + 1 : 0
+    edits.push({ from: lineFrom, to: first.next + blankUnder, insert: "" })
+  }
+
+  return edits.sort((a, b) => a.from - b.from)
+}
+
+/** The same, for one written occurrence rather than every one of them. */
+export function removeOccurrenceEdits(doc: string, from: number, to: number): TagEdit[] {
+  const tag = doc.slice(from, to).replace(/^#/, "")
+  const occurrence = place(doc, tag).find((entry) => entry.from === from && entry.to === to)
+  if (occurrence === undefined) return []
+
+  if (isTagOnlyLine(occurrence.line) && findTags(occurrence.line).length === 1) {
+    const after = doc.slice(occurrence.next)
+    const blankUnder = /^\r?\n/.test(after) ? after.indexOf("\n") + 1 : 0
+    return [{ from: occurrence.lineFrom, to: occurrence.next + blankUnder, insert: "" }]
+  }
+
+  return [removeOne(occurrence)]
+}
+
+/** Applies edits to a document. The renderer uses CodeMirror; this is for tests
+ *  and for anything that only wants the resulting text. */
+export function applyEdits(doc: string, edits: TagEdit[]): string {
+  let out = doc
+  for (const edit of [...edits].sort((a, b) => b.from - a.from)) {
+    out = out.slice(0, edit.from) + edit.insert + out.slice(edit.to)
+  }
+  return out
+}

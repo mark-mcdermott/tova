@@ -1,9 +1,14 @@
 import { KeyboardEvent, MouseEvent, RefObject, useEffect, useRef, useState } from "react"
+import { TagOrigin } from "../../../shared/tags"
 
 interface EditorTagsProps {
   tags: string[]
+  /** Where each tag was written — see `tagOrigin`. */
+  originOf: (tag: string) => TagOrigin
   /** Writes a tag into the prose. The row itself stores nothing. */
   onAddTag: (tag: string) => void
+  /** Takes every occurrence of it back out again. */
+  onRemoveTag: (tag: string) => void
   /** The way in, so the title can hand focus straight to it on Tab. */
   addRef?: RefObject<HTMLButtonElement | null>
   /** Tab onwards, into the prose. */
@@ -18,14 +23,19 @@ interface EditorTagsProps {
  * between title and prose is 116px tall and the row is 26 of them, so an
  * unmarked target here is a target nobody hits.
  *
- * Adding writes `#tag` into the body, because that is where tags live. They
- * are parsed out of the prose rather than stored, so removing one means
- * editing the sentence it sits in, which is the writer's job and not a
- * chip's.
+ * Adding writes `#tag` into the body, because that is where tags live, and
+ * removing takes every occurrence back out — the row reads the text rather
+ * than holding a list, so a tag left anywhere in the note puts the chip back.
+ *
+ * A tag inside a sentence loses its `#` and keeps its word, so removing one
+ * never edits what the writer wrote. That was the objection to having this
+ * control at all, and it is the whole of the answer to it.
  */
 export function EditorTags({
   tags,
+  originOf,
   onAddTag,
+  onRemoveTag,
   addRef,
   onLeaveForwards,
   onLeaveBackwards
@@ -64,9 +74,20 @@ export function EditorTags({
   return (
     <div className="editor-tags" aria-label="Tags" onClick={openFromStrip}>
       {tags.map((tag) => (
-        <span key={tag} className="editor-tag">
+        <span key={tag} className={`editor-tag is-${originOf(tag)}`}>
           <span className="editor-tag-hash">#</span>
           {tag}
+          <button
+            type="button"
+            className="editor-tag-remove"
+            aria-label={`Remove ${tag}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              onRemoveTag(tag)
+            }}
+          >
+            ×
+          </button>
         </span>
       ))}
 
