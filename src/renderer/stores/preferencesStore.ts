@@ -47,6 +47,15 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     const saved = await window.tova.preferences.write({ ...get().preferences, ...patch })
     set({ preferences: saved })
 
+    // The picture is read separately from the preference naming it, so changing
+    // which file it is has to pull the new one. Without this, removing an
+    // avatar wrote the change to disk and left the old portrait on screen until
+    // some unrelated reload happened to refresh it — which read as the button
+    // being slow, or broken, rather than as nothing having happened.
+    if (patch.avatarFile !== undefined) {
+      set({ avatarUrl: await window.tova.preferences.avatarUrl() })
+    }
+
     if (patch.spellcheck !== undefined) {
       await window.tova.spellcheck.setEnabled(saved.spellcheck)
     }

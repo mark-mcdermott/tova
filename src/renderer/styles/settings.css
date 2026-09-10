@@ -429,9 +429,12 @@
   flex-wrap: wrap;
 }
 
+/* Nearer the 2rem it will actually be drawn at in the sidebar. At 3.5rem a
+   photograph was fine, but initials became a large disc of flat colour — a lot
+   of weight for one letter, and not what the rail will show. */
 .profile-avatar {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   object-fit: cover;
 }
