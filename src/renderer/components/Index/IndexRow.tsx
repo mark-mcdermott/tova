@@ -115,9 +115,15 @@ export function IndexRow({ note, match }: IndexRowProps) {
         ) : (
           <button
             type="button"
-            {...tip("Move to Trash")}
+            {...tip("Move to Trash — hold Shift to skip asking")}
             aria-label={`Move ${label} to Trash`}
-            onClick={() => setAsking("trash")}
+            onClick={(event) => {
+              // Trash is recoverable, so a held Shift may skip the asking. The
+              // permanent delete above is not, and keeps its confirm whatever
+              // is held down — a stray Shift should never cost a note outright.
+              if (event.shiftKey) void trash(note.id)
+              else setAsking("trash")
+            }}
           >
             <Icon name="trash" className="row-action-icon" />
           </button>

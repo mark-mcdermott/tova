@@ -350,3 +350,51 @@ describe("navigating back from an index", () => {
     expect(state.activeId).toBe("notes/a.md")
   })
 })
+
+describe("skipping the confirm with Shift", () => {
+  it("trashes straight away on a Shift-click", async () => {
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+
+    // A session, so the held Shift is still held when the click lands.
+    const user = userEvent.setup()
+    await user.keyboard("{Shift>}")
+    await user.click(screen.getByRole("button", { name: /Move Beta to Trash/ }))
+    await user.keyboard("{/Shift}")
+
+    expect(remove).toHaveBeenCalled()
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+  })
+
+  it("still asks on a plain click", async () => {
+    const remove = vi.fn(async () => notes[0])
+    window.tova = stubBridge({ notes: { read, remove } })
+    render(<IndexPage />)
+
+    await userEvent.click(screen.getByRole("button", { name: /Move Beta to Trash/ }))
+
+    expect(remove).not.toHaveBeenCalled()
+    expect(screen.getByRole("alertdialog")).toBeDefined()
+  })
+
+  it("asks before a permanent delete however Shift is held", async () => {
+    // Trash can be undone by restoring. This cannot be undone at all, so the
+    // confirm is the whole safeguard and a stray Shift must not lift it.
+    const permanentDelete = vi.fn(async () => undefined)
+    window.tova = stubBridge({ notes: { read, permanentDelete } })
+    useNotesStore.setState({
+      notes: [{ ...notes[0], id: "trash/beta.md", section: "trash", deletedAt: 1 }],
+      indexTarget: { kind: "section", section: "trash" }
+    })
+    render(<IndexPage />)
+
+    const user = userEvent.setup()
+    await user.keyboard("{Shift>}")
+    await user.click(screen.getByRole("button", { name: /Permanently delete Beta/ }))
+    await user.keyboard("{/Shift}")
+
+    expect(permanentDelete).not.toHaveBeenCalled()
+    expect(screen.getByRole("alertdialog")).toBeDefined()
+  })
+})
