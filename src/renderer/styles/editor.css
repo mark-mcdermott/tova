@@ -330,7 +330,10 @@
   place-items: center;
   width: 1.15em;
   height: 1.15em;
-  margin-left: -0.3em;
+  /* Clear of the pill, not tucked into it: the pill carries 0.6em of its own
+     right padding and a full radius, so a negative margin puts the x over the
+     curve rather than beside it. */
+  margin-left: 0.2em;
   padding: 0;
   border: none;
   border-radius: 50%;
