@@ -1,10 +1,10 @@
 import { RefObject, useEffect, useReducer, useRef } from "react"
 import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
-import { canGoBack, canGoForward } from "../../stores/history"
 import { breadcrumbFor } from "./breadcrumb"
 import { useRail } from "../../useRail"
 import { IndexTarget, indexKey } from "../../../shared/indexTarget"
+import { HistoryNav } from "./HistoryNav"
 import { NoteMenu } from "./NoteMenu"
 import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
@@ -30,13 +30,7 @@ export function EditorHeader({
   tagAddRef,
   onAddTag
 }: EditorHeaderProps) {
-  const back = useNotesStore((state) => state.back)
-  const forward = useNotesStore((state) => state.forward)
 
-  // Selecting booleans keeps this out of the re-render path for scroll updates,
-  // which touch history on every frame.
-  const hasBack = useNotesStore((state) => canGoBack(state.history))
-  const hasForward = useNotesStore((state) => canGoForward(state.history))
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
   const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
 
@@ -66,29 +60,7 @@ export function EditorHeader({
   return (
     <div className="editor-header">
       <nav className="editor-nav" aria-label="Note navigation">
-        <button
-          type="button"
-          className="icon-button"
-          {...tip("Back")}
-          aria-label="Back"
-          disabled={!hasBack}
-          onClick={() => back()}
-        >
-          <Icon name="back" className="nav-icon" />
-        </button>
-
-        {/* Forward only earns its space once there is somewhere to go. */}
-        {hasForward && (
-          <button
-            type="button"
-            className="icon-button"
-            {...tip("Forward")}
-            aria-label="Forward"
-            onClick={() => forward()}
-          >
-            <Icon name="back" className="nav-icon nav-icon-forward" />
-          </button>
-        )}
+        <HistoryNav />
 
         <ol className="breadcrumb">
           {crumbs.map((crumb, index) => (

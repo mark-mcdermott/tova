@@ -148,7 +148,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
-        history: pushHistory(state.history, note.id),
+        history: pushHistory(state.history, { kind: "note", noteId: note.id }),
         notes: sortNotes([...state.notes.filter((entry) => entry.id !== note.id), toSummary(note)]),
         error: null
       }))
@@ -178,7 +178,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   showIndex: (target) => {
-    set({ view: "index", indexTarget: target })
+    set((state) => ({
+      view: "index",
+      indexTarget: target,
+      history: pushHistory(state.history, { kind: "index", target })
+    }))
   },
 
   setIndexSort: (sort) => {
@@ -244,7 +248,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
-        history: pushHistory(state.history, note.id),
+        history: pushHistory(state.history, { kind: "note", noteId: note.id }),
         error: null
       }))
     } catch (error) {
@@ -279,7 +283,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
-        history: pushHistory(state.history, note.id),
+        history: pushHistory(state.history, { kind: "note", noteId: note.id }),
         notes: sortNotes([...state.notes, toSummary(note)]),
         error: null
       }))
@@ -419,8 +423,17 @@ async function travel(
 
   if (entry === null || next === state.history) return
 
+  const screen = entry.screen
+
+  // A listing needs nothing read: it is a filter over what is already held, so
+  // it lands immediately and cannot fail the way a missing file can.
+  if (screen.kind === "index") {
+    set({ view: "index", indexTarget: screen.target, history: next, error: null })
+    return
+  }
+
   try {
-    const note = await window.tova.notes.read(entry.noteId)
+    const note = await window.tova.notes.read(screen.noteId)
     set({
       view: "editor",
       settingsTab: "profile",
@@ -432,7 +445,7 @@ async function travel(
     })
   } catch (error) {
     // The note is gone from disk; drop it rather than stranding the cursor.
-    set({ history: forgetHistory(state.history, entry.noteId), error: describe(error) })
+    set({ history: forgetHistory(state.history, screen.noteId), error: describe(error) })
   }
 }
 
