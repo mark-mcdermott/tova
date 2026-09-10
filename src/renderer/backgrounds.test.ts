@@ -58,29 +58,38 @@ describe("applyBackground", () => {
 
 describe("resolveBackground", () => {
   it("paints nothing for none, in either theme", () => {
-    // It used to mean the gradient in dark and a shuffle in light, which is
-    // why the two pickers could not look the same.
-    expect(resolveBackground(null)).toBeNull()
+    expect(resolveBackground(null, "light")).toBeNull()
+    expect(resolveBackground(null, "dark")).toBeNull()
   })
 
-  it("picks one for shuffle", () => {
-    expect(resolveBackground(SHUFFLE)).not.toBeNull()
+  it("shuffles only through the photographs bundled for that mode", () => {
+    // A bright sky cannot carry white text and a night sky cannot carry black,
+    // so a shuffle must never reach across.
+    for (let i = 0; i < 40; i++) {
+      expect(resolveBackground(SHUFFLE, "dark")).toContain("milky-way")
+      expect(resolveBackground(SHUFFLE, "light")).toContain("lake-sunset")
+    }
   })
 
-  it("shuffles through what was added as well as what ships", () => {
-    const urls = new Set<string | null>()
-    for (let i = 0; i < 40; i++) urls.add(resolveBackground(SHUFFLE, ["mine.jpg"]))
+  it("shuffles through the reader's own pictures as well, in both modes", () => {
+    const seen = new Set<string | null>()
+    for (let i = 0; i < 60; i++) seen.add(resolveBackground(SHUFFLE, "dark", ["mine.jpg"]))
 
-    expect([...urls].some((url) => url?.includes("mine.jpg"))).toBe(true)
+    expect([...seen].some((url) => url?.includes("mine.jpg"))).toBe(true)
   })
 
   it("uses a chosen picture", () => {
-    expect(resolveBackground("mine.jpg", ["mine.jpg"])).toContain("mine.jpg")
+    expect(resolveBackground("mine.jpg", "dark", ["mine.jpg"])).toContain("mine.jpg")
+  })
+
+  it("finds a bundled picture whichever mode's folder it sits in", () => {
+    // The stored name is a bare filename, so it has to resolve either way.
+    expect(resolveBackground("milky-way.jpg", "dark")).toContain("milky-way")
+    expect(resolveBackground("lake-sunset.jpg", "light")).toContain("lake-sunset")
   })
 
   it("falls back to nothing when the chosen file is gone", () => {
-    // Not to a photograph the reader did not choose.
-    expect(resolveBackground("deleted.jpg")).toBeNull()
+    expect(resolveBackground("deleted.jpg", "light")).toBeNull()
   })
 })
 

@@ -1,16 +1,38 @@
 /**
- * Bundled background photographs. Globbed rather than listed, so dropping a new
- * image into the folder is all it takes to add it to the rotation.
+ * Bundled background photographs, in a folder each.
+ *
+ * A photograph suits one mode or the other, not both: a bright sky cannot carry
+ * white text and a night sky cannot carry black. The folder an image sits in is
+ * what says which — no manifest to keep in step, and dropping a file into the
+ * right one is still all it takes.
  */
-const modules = import.meta.glob<string>("./assets/backgrounds/*.jpg", {
+const lightModules = import.meta.glob<string>("./assets/backgrounds/light/*.jpg", {
   eager: true,
   query: "?url",
   import: "default"
 })
 
-export const backgroundUrls: string[] = Object.keys(modules)
-  .sort()
-  .map((key) => modules[key])
+const darkModules = import.meta.glob<string>("./assets/backgrounds/dark/*.jpg", {
+  eager: true,
+  query: "?url",
+  import: "default"
+})
+
+const urlsOf = (modules: Record<string, string>): string[] =>
+  Object.keys(modules)
+    .sort()
+    .map((key) => modules[key])
+
+export const lightBackgroundUrls: string[] = urlsOf(lightModules)
+export const darkBackgroundUrls: string[] = urlsOf(darkModules)
+
+/** Every bundled photograph, for resolving a stored name whatever mode it was for. */
+export const backgroundUrls: string[] = [...lightBackgroundUrls, ...darkBackgroundUrls]
+
+/** The ones offered for a mode. */
+export function bundledFor(theme: "light" | "dark"): string[] {
+  return theme === "dark" ? darkBackgroundUrls : lightBackgroundUrls
+}
 
 export function pickBackground(
   urls: string[] = backgroundUrls,
@@ -57,9 +79,13 @@ export function backgroundByName(name: string, added: string[] = []): string | n
  */
 export const SHUFFLE = "shuffle"
 
-/** Everything that could be chosen: what ships, then what was added. */
-export function allBackgroundUrls(added: string[] = []): string[] {
-  return [...backgroundUrls, ...added.map(userBackgroundUrl)]
+/**
+ * Everything a mode could shuffle between: the photographs bundled for it, then
+ * the ones the reader added — those are offered to both, since only the reader
+ * knows whether an image of their own suits one mode or the other.
+ */
+export function allBackgroundUrls(theme: "light" | "dark", added: string[] = []): string[] {
+  return [...bundledFor(theme), ...added.map(userBackgroundUrl)]
 }
 
 /**
@@ -82,8 +108,14 @@ export function showsShuffle(count: number, chosen: string | null): boolean {
  * A name that no longer resolves falls back to the gradient rather than to a
  * photograph the reader did not choose.
  */
-export function resolveBackground(chosen: string | null, added: string[] = []): string | null {
-  if (chosen === SHUFFLE) return pickBackground(allBackgroundUrls(added))
+export function resolveBackground(
+  chosen: string | null,
+  theme: "light" | "dark",
+  added: string[] = []
+): string | null {
+  // The mode is back, for a different reason than it left: null means the same
+  // thing in both now, but a shuffle draws from that mode's own photographs.
+  if (chosen === SHUFFLE) return pickBackground(allBackgroundUrls(theme, added))
   if (chosen === null) return null
   return backgroundByName(chosen, added)
 }

@@ -23,7 +23,7 @@ there is no part of it that the interface cannot sit on.
 It is bundled at its native 1024px rather than upscaled, for the same reason
 `lake-sunset.jpg` is: the extra pixels would carry no detail.
 
-`lake-sunset.jpg` is not from Unsplash — it is the backdrop from the design
+`light/lake-sunset.jpg` is not from Unsplash — it is the backdrop from the design
 mockup in `branding/`, extracted by hand, and since re-graded to lift the right
 headland. It is the only bundled image with the luminance split the mockup's
 layout depends on: its sidebar region is markedly darker than its editor
@@ -52,5 +52,14 @@ magick <original> -resize 2560x -strip -interlace Plane \
 4:4:4 rather than 4:2:0 — these are mostly smooth sky gradients, which is the
 worst case for chroma subsampling and shows as banding.
 
-Adding a photograph here is all that is needed to put it in the rotation;
-`backgrounds.ts` globs this folder.
+## Which folder
+
+A photograph suits one mode or the other, not both: a bright sky cannot carry
+white text and a night sky cannot carry black. The folder an image sits in is
+what says which, so there is no manifest to keep in step — `backgrounds.ts`
+globs `light/` and `dark/` separately, and dropping a file into the right one
+is all that is needed to offer it there.
+
+Photographs the reader adds themselves are offered to both modes. Only they
+know whether an image of their own suits one or the other, and some do suit
+both.
