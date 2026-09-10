@@ -7,7 +7,7 @@ import {
   BUNDLED_TITLE_FONTS,
   DEFAULT_PREFERENCES
 } from "../../../../shared/preferences"
-import { backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
+import { SHUFFLE, backgroundUrls, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { applyTitleFont, loadSampleFace } from "../../../titleFont"
 import { Field } from "../Field"
@@ -30,17 +30,36 @@ function BackgroundChoices({
 }) {
   const added = usePreferencesStore((state) => state.userBackgrounds)
   const addBackground = usePreferencesStore((state) => state.addBackground)
+  const count = backgroundUrls.length + added.length
 
   return (
     <div className="background-choices">
+      {/* None, then Shuffle, then the pictures. The same order and the same
+          controls whichever theme this is for: null used to mean the gradient
+          in dark and a shuffle in light, so the two pickers could not match. */}
       <button
         type="button"
         className={`background-choice${chosen === null ? " is-chosen" : ""}`}
         aria-pressed={chosen === null}
+        aria-label={`No background for ${theme}`}
         onClick={() => onChoose(null)}
       >
-        <span className="background-shuffle">{theme === "dark" ? "None" : "Shuffle"}</span>
+        <span className="background-shuffle">None</span>
       </button>
+
+      {/* Nothing to shuffle between with one picture. Shown anyway when it is
+          the choice already stored, or the picker would show nothing chosen. */}
+      {(count > 1 || chosen === SHUFFLE) && (
+        <button
+          type="button"
+          className={`background-choice${chosen === SHUFFLE ? " is-chosen" : ""}`}
+          aria-pressed={chosen === SHUFFLE}
+          aria-label={`Shuffle for ${theme}`}
+          onClick={() => onChoose(SHUFFLE)}
+        >
+          <span className="background-shuffle">Shuffle</span>
+        </button>
+      )}
 
       {backgroundUrls.map((url) => (
         <button
@@ -282,7 +301,7 @@ export function AppearanceTab() {
         <Field
           id="background-dark"
           label="Background — dark"
-          hint="Every bundled photograph is a bright one, so dark starts on the gradient."
+          hint="Every bundled photograph is a bright one, so dark starts on none."
         >
           <BackgroundChoices
             chosen={backgroundDark}

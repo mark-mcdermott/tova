@@ -88,7 +88,9 @@ export const DEFAULT_PREFERENCES: Preferences = {
   vaults: [],
   activeVault: null,
   sections: DEFAULT_SECTIONS,
-  backgroundLight: null,
+  // Shuffle, so a fresh install opens on a photograph as it always has.
+  // Dark starts on the gradient: every bundled photograph is a bright one.
+  backgroundLight: "shuffle",
   backgroundDark: null,
   titleFont: "vibur",
   proseWidth: "narrow"
@@ -156,7 +158,9 @@ export function normalizePreferences(value: unknown): Preferences {
     // "alagambe" arrives here from an older preferences file and is not one of
     // ours any more, so it lands on the default like any other stale name.
     titleFont:
-      typeof raw.titleFont === "string" && raw.titleFont.trim() !== "" && raw.titleFont !== "alagambe"
+      typeof raw.titleFont === "string" &&
+      raw.titleFont.trim() !== "" &&
+      raw.titleFont !== "alagambe"
         ? raw.titleFont
         : DEFAULT_PREFERENCES.titleFont,
     proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth

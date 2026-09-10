@@ -52,15 +52,26 @@ export function backgroundByName(name: string, added: string[] = []): string | n
 }
 
 /**
- * A chosen background wins. With no choice, light shuffles through what is
- * bundled; dark shows the gradient instead, because every bundled photograph is
- * a bright one and none of them can carry white text.
+ * Stored where a filename would be. It cannot collide with one: every
+ * background is a file with an extension, and this has none.
  */
-export function resolveBackground(
-  chosen: string | null,
-  theme: "light" | "dark",
-  added: string[] = []
-): string | null {
-  if (chosen === null) return theme === "dark" ? null : pickBackground()
-  return backgroundByName(chosen, added) ?? (theme === "dark" ? null : pickBackground())
+export const SHUFFLE = "shuffle"
+
+/** Everything that could be chosen: what ships, then what was added. */
+export function allBackgroundUrls(added: string[] = []): string[] {
+  return [...backgroundUrls, ...added.map(userBackgroundUrl)]
+}
+
+/**
+ * What to paint. Null is the gradient, in either theme — it used to mean the
+ * gradient in dark and a shuffle in light, which is why the two pickers could
+ * not look the same. Shuffle says shuffle now, and says it in both.
+ *
+ * A name that no longer resolves falls back to the gradient rather than to a
+ * photograph the reader did not choose.
+ */
+export function resolveBackground(chosen: string | null, added: string[] = []): string | null {
+  if (chosen === SHUFFLE) return pickBackground(allBackgroundUrls(added))
+  if (chosen === null) return null
+  return backgroundByName(chosen, added)
 }
