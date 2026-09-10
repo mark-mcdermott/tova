@@ -28,9 +28,10 @@ const tagRawMark = Decoration.mark({ class: "cm-tag-raw" })
  * The × on a rendered tag.
  *
  * A sibling of the tag's own span rather than a child of it: a mark decoration
- * wraps text, and there is nowhere inside it to put a control. Being the next
- * element along is enough, since the pill reveals it with an adjacent-sibling
- * rule.
+ * wraps text, and there is nowhere inside it to put a control. It carries which
+ * pill it belongs to as a class rather than reading it off the DOM — CodeMirror
+ * puts a buffer element between a mark and the widget after it, so the two are
+ * not actually adjacent.
  *
  * It removes this one written occurrence and no other, so a tag used three
  * times loses one use and keeps its chip in the row above. That is the honest
@@ -40,7 +41,9 @@ class TagRemoveWidget extends WidgetType {
   constructor(
     private readonly tag: string,
     private readonly from: number,
-    private readonly to: number
+    private readonly to: number,
+    /** Which pill it belongs to, since it cannot ask the DOM. */
+    private readonly kind: "top" | "body"
   ) {
     super()
   }
@@ -48,13 +51,18 @@ class TagRemoveWidget extends WidgetType {
   // Position matters as well as name: two uses of one tag are different
   // controls, and reusing the DOM between them would remove the wrong one.
   eq(other: TagRemoveWidget): boolean {
-    return other.tag === this.tag && other.from === this.from && other.to === this.to
+    return (
+      other.tag === this.tag &&
+      other.from === this.from &&
+      other.to === this.to &&
+      other.kind === this.kind
+    )
   }
 
   toDOM(view: EditorView): HTMLElement {
     const button = document.createElement("button")
     button.type = "button"
-    button.className = "cm-tag-remove"
+    button.className = `cm-tag-remove is-${this.kind}`
     button.textContent = "×"
     button.setAttribute("aria-label", `Remove ${this.tag}`)
 
@@ -76,8 +84,8 @@ class TagRemoveWidget extends WidgetType {
   }
 }
 
-function tagRemove(tag: string, from: number, to: number): Decoration {
-  return Decoration.widget({ widget: new TagRemoveWidget(tag, from, to), side: 1 })
+function tagRemove(tag: string, from: number, to: number, kind: "top" | "body"): Decoration {
+  return Decoration.widget({ widget: new TagRemoveWidget(tag, from, to, kind), side: 1 })
 }
 
 const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
@@ -139,6 +147,11 @@ class ImageWidget extends WidgetType {
 
 export interface MarkdownDecorationOptions {
   /**
+   * Opening a tag's listing from the pill in the prose. Absent, a click on a
+   * tag does what a click on any other word does.
+   */
+  onOpenTag?: (tag: string) => void
+  /**
    * Turns an image URL into something the renderer may load, or null to leave
    * the markdown as text. Only the vault is resolvable: remote images stay raw
    * rather than quietly reaching for the network.
@@ -158,6 +171,41 @@ function inExcludedContext(tree: Tree, pos: number): boolean {
     if (EXCLUDES_TAGS.test(node.name)) return true
   }
   return false
+}
+
+/**
+ * A click on a rendered tag opens its listing.
+ *
+ * On mousedown, since that is when the editor takes the selection — waiting for
+ * the click would drop the caret into the tag first, which renders it back to
+ * raw text under the pointer.
+ *
+ * Only a rendered pill. A tag the caret is already inside is raw text the
+ * writer is editing, and clicking around in it has to keep working.
+ */
+function tagClicks(options: MarkdownDecorationOptions) {
+  return EditorView.domEventHandlers({
+    mousedown(event, view) {
+      const open = options.onOpenTag
+      if (open === undefined || event.button !== 0) return false
+
+      const pill = (event.target as HTMLElement | null)?.closest(".cm-tag")
+      if (pill === null || pill === undefined) return false
+
+      // The pill's own position, not the pointer's: posAtCoords needs layout,
+      // and this way the handler is the same in a test as on screen.
+      const pos = view.posAtDOM(pill)
+      const line = view.state.doc.lineAt(pos)
+      const match = findTags(line.text).find(
+        (entry) => line.from + entry.from <= pos && pos <= line.from + entry.to
+      )
+      if (match === undefined) return false
+
+      event.preventDefault()
+      open(match.tag)
+      return true
+    }
+  })
 }
 
 function buildDecorations(view: EditorView, options: MarkdownDecorationOptions): DecorationSet {
@@ -370,7 +418,7 @@ function collectTagDecorations(
         // stay put rather than flickering as the cursor moves through them.
         if (topZone) {
           decorations.push(tagTopMark.range(from, to))
-          decorations.push(tagRemove(match.tag, from, to).range(to))
+          decorations.push(tagRemove(match.tag, from, to, "top").range(to))
           continue
         }
 
@@ -381,13 +429,17 @@ function collectTagDecorations(
 
         decorations.push(hide.range(from, from + 1))
         decorations.push(tagBodyMark.range(from, to))
-        decorations.push(tagRemove(match.tag, from, to).range(to))
+        decorations.push(tagRemove(match.tag, from, to, "body").range(to))
       }
     }
   }
 }
 
 export function markdownDecorations(options: MarkdownDecorationOptions = {}) {
+  return [decorationPlugin(options), tagClicks(options)]
+}
+
+function decorationPlugin(options: MarkdownDecorationOptions) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet

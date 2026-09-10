@@ -90,3 +90,82 @@ describe("removing a tag from the prose", () => {
     expect(controls(view)).toHaveLength(0)
   })
 })
+
+describe("the control's styling hooks", () => {
+  it("says which pill it belongs to, rather than leaving it to the DOM", () => {
+    // CodeMirror puts a cm-widgetBuffer between a mark and the widget after it,
+    // so the × is not the pill's next sibling and `+` alone never matched. The
+    // class is what carries the prose-versus-tags-line difference.
+    const view = mount("#top\n\nProse with #body in it.", 0)
+    const classes = controls(view).map((button) => button.className)
+
+    expect(classes).toEqual(["cm-tag-remove is-top", "cm-tag-remove is-body"])
+  })
+
+  it("is reachable from the pill by the rule that reveals it", () => {
+    // The reveal does still need the relationship, so this holds the selector
+    // to the shape CodeMirror actually builds.
+    const view = mount("Prose with #body in it.", 0)
+    const [button] = controls(view)
+
+    expect(
+      button.matches(".cm-tag + .cm-tag-remove, .cm-tag + .cm-widgetBuffer + .cm-tag-remove")
+    ).toBe(true)
+  })
+})
+
+describe("opening a tag from the prose", () => {
+  function mountWith(doc: string, anchor: number, onOpenTag: (tag: string) => void) {
+    view = new EditorView({
+      state: EditorState.create({
+        doc,
+        selection: { anchor },
+        extensions: [markdown({ base: markdownLanguage }), markdownDecorations({ onOpenTag })]
+      }),
+      parent: document.body
+    })
+    return view
+  }
+
+  const clickOn = (element: Element) =>
+    element.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 })
+    )
+
+  it("opens the tag's listing when its pill is clicked", () => {
+    const opened: string[] = []
+    const view = mountWith("Coffee and #streets today.", 0, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelector(".cm-tag-body") as Element)
+    expect(opened).toEqual(["streets"])
+  })
+
+  it("opens the right one when a line carries several", () => {
+    const opened: string[] = []
+    const doc = "#one #two\n\nProse."
+    const view = mountWith(doc, doc.length, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelectorAll(".cm-tag-top")[1])
+    expect(opened).toEqual(["two"])
+  })
+
+  it("leaves a tag the caret is inside alone", () => {
+    // There it is raw text the writer is editing, and clicking around in it
+    // has to keep working.
+    const doc = "Coffee and #streets today."
+    const opened: string[] = []
+    const view = mountWith(doc, doc.indexOf("#streets") + 3, (tag) => opened.push(tag))
+
+    const raw = view.dom.querySelector(".cm-tag-raw")
+    if (raw !== null) clickOn(raw)
+    expect(opened).toEqual([])
+  })
+
+  it("ignores a click on ordinary prose", () => {
+    const opened: string[] = []
+    const view = mountWith("Coffee and streets today.", 0, (tag) => opened.push(tag))
+
+    clickOn(view.dom.querySelector(".cm-line") as Element)
+    expect(opened).toEqual([])
+  })
+})
