@@ -116,10 +116,10 @@ describe("Sidebar", () => {
 
     const state = useNotesStore.getState()
     expect(state.view).toBe("index")
-    expect(state.indexTarget).toEqual({ kind: "section", section: "notes" })
+    expect(state.indexTarget).toEqual({ kind: "section", section: "daily" })
   })
 
-  it("follows the rail when the top section is not Notes", async () => {
+  it("follows the rail when the top section is not the default one", async () => {
     usePreferencesStore.setState({
       preferences: {
         ...DEFAULT_PREFERENCES,
@@ -141,7 +141,7 @@ describe("Sidebar", () => {
     render(<Sidebar />)
     await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
 
-    const row = screen.getByRole("button", { name: /^Notes/ })
+    const row = screen.getByRole("button", { name: /^Daily/ })
     expect(row.className).toContain("is-active")
   })
 
@@ -580,7 +580,7 @@ describe("blogs in the rail", () => {
     })
 
     render(<Sidebar />)
-    expect(railLabels()).toEqual(["Notes", "Daily", "Writing", "Ideas", "Journal", "Trash"])
+    expect(railLabels()).toEqual(["Daily", "Notes", "Writing", "Ideas", "Journal", "Trash"])
   })
 
   it("hides a blog whose row is switched off, and shows the sections around it", () => {
@@ -596,7 +596,7 @@ describe("blogs in the rail", () => {
     })
 
     render(<Sidebar />)
-    expect(railLabels()).toEqual(["Notes", "Daily", "Ideas", "Journal", "Trash"])
+    expect(railLabels()).toEqual(["Daily", "Notes", "Ideas", "Journal", "Trash"])
   })
 
   it("opens the blog's index from its row", async () => {

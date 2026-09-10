@@ -63,14 +63,16 @@ describe("what may be changed", () => {
   })
 
   it("moves Daily like any other section", () => {
-    const moved = moveSection(DEFAULT_SECTIONS, "daily", -1)
-    expect(ids(moved)).toEqual(["daily", "notes", "ideas", "journal", "trash"])
+    // Down, since Daily leads the default rail — up would be a no-op and prove
+    // nothing about whether it may move.
+    const moved = moveSection(DEFAULT_SECTIONS, "daily", 1)
+    expect(ids(moved)).toEqual(["notes", "daily", "ideas", "journal", "trash"])
   })
 
   it("lets a section move across Daily rather than being blocked by it", () => {
     // Daily used to be a wall: nothing could pass it in either direction.
-    const moved = moveSection(DEFAULT_SECTIONS, "ideas", -1)
-    expect(ids(moved)).toEqual(["notes", "ideas", "daily", "journal", "trash"])
+    const moved = moveSection(DEFAULT_SECTIONS, "notes", -1)
+    expect(ids(moved)).toEqual(["notes", "daily", "ideas", "journal", "trash"])
   })
 })
 
@@ -177,18 +179,18 @@ describe("removeSection", () => {
 describe("moveSection", () => {
   it("moves a section up", () => {
     const next = moveSection(DEFAULT_SECTIONS, "journal", -1)
-    expect(ids(next)).toEqual(["notes", "daily", "journal", "ideas", "trash"])
+    expect(ids(next)).toEqual(["daily", "notes", "journal", "ideas", "trash"])
   })
 
   it("moves a section down", () => {
     const next = moveSection(DEFAULT_SECTIONS, "ideas", 1)
-    expect(ids(next)).toEqual(["notes", "daily", "journal", "ideas", "trash"])
+    expect(ids(next)).toEqual(["daily", "notes", "journal", "ideas", "trash"])
   })
 
   it("moves Daily", () => {
-    expect(ids(moveSection(DEFAULT_SECTIONS, "daily", -1))).toEqual([
-      "daily",
+    expect(ids(moveSection(DEFAULT_SECTIONS, "daily", 1))).toEqual([
       "notes",
+      "daily",
       "ideas",
       "journal",
       "trash"
@@ -197,9 +199,9 @@ describe("moveSection", () => {
 
   it("lets a section pass Daily rather than stopping at it", () => {
     // Daily used to be a wall in both directions.
-    expect(ids(moveSection(DEFAULT_SECTIONS, "notes", 1))).toEqual([
-      "daily",
+    expect(ids(moveSection(DEFAULT_SECTIONS, "notes", -1))).toEqual([
       "notes",
+      "daily",
       "ideas",
       "journal",
       "trash"
@@ -207,7 +209,7 @@ describe("moveSection", () => {
   })
 
   it("stops at the ends rather than wrapping", () => {
-    expect(moveSection(DEFAULT_SECTIONS, "notes", -1)).toEqual(DEFAULT_SECTIONS)
+    expect(moveSection(DEFAULT_SECTIONS, "daily", -1)).toEqual(DEFAULT_SECTIONS)
     expect(moveSection(DEFAULT_SECTIONS, "trash", 1)).toEqual(DEFAULT_SECTIONS)
   })
 })
@@ -302,7 +304,7 @@ describe("blogs in the rail", () => {
     )
     const again = reconcileBlogs(arranged, [{ name: "markmcdermott.io" }])
 
-    expect(ids(again)).toEqual(["notes", "markmcdermott.io", "daily", "ideas", "journal", "trash"])
+    expect(ids(again)).toEqual(["daily", "markmcdermott.io", "notes", "ideas", "journal", "trash"])
   })
 
   it("moves a blog past sections in both directions", () => {
@@ -313,7 +315,7 @@ describe("blogs in the rail", () => {
       1
     )
 
-    expect(ids(down)).toEqual(["notes", "daily", "markmcdermott.io", "ideas", "journal", "trash"])
+    expect(ids(down)).toEqual(["daily", "notes", "markmcdermott.io", "ideas", "journal", "trash"])
     expect(ids(moveSection(down, "blog:markmcdermott.io", -1))).toEqual(
       ids(moveSection(rail, "blog:markmcdermott.io", 1))
     )

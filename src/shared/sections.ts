@@ -64,8 +64,10 @@ export function railKey(entry: SectionConfig): string {
 export const UNDELETABLE = ["daily", "trash"] as const
 
 export const DEFAULT_SECTIONS: SectionConfig[] = [
-  { id: "notes", kind: "section", label: "Notes", icon: "notes", enabled: true },
+  // Daily leads, because Tova opens on today's note: the rail's first row is
+  // the one you were already looking at.
   { id: "daily", kind: "section", label: "Daily", icon: "daily", enabled: true },
+  { id: "notes", kind: "section", label: "Notes", icon: "notes", enabled: true },
   { id: "ideas", kind: "section", label: "Ideas", icon: "ideas", enabled: true },
   { id: "journal", kind: "section", label: "Journal", icon: "journal", enabled: true },
   { id: "trash", kind: "section", label: "Trash", icon: "trash", enabled: true }
