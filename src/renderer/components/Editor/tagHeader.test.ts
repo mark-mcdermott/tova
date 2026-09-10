@@ -33,34 +33,31 @@ afterEach(() => {
 describe("the tags line at the top of a note", () => {
   const doc = "#thoughts\n\nCoffee, foggy streets.\n"
 
-  it("is hidden, since the tag row above already shows it", () => {
+  it("stays on screen, drawn like any other row of tags", () => {
+    // It used to be hidden, on the grounds that the tag row above already
+    // showed it. That made the first line of a note vanish as the cursor left
+    // it, which is a surprising thing for an editor to do to your text.
     const view = mount(doc, doc.indexOf("Coffee"))
-    expect(visibleLines(view)).toEqual(["Coffee, foggy streets.", ""])
+    expect(visibleLines(view)).toEqual(["#thoughts", "", "Coffee, foggy streets.", ""])
   })
 
-  it("comes back when the cursor is on it, so a tag can be taken off", () => {
-    const view = mount(doc, 2)
-    expect(visibleLines(view)[0]).toBe("#thoughts")
+  it("does not move when the cursor enters or leaves it", () => {
+    const away = visibleLines(mount(doc, doc.indexOf("Coffee")))
+    view?.destroy()
+    const inside = visibleLines(mount(doc, 2))
+
+    expect(inside).toEqual(away)
   })
 
-  it("stays hidden when the cursor sits at the very start of the prose", () => {
-    // The prose's first character is outside the span, or writing the first
-    // word of a note would flash the tags back.
-    const view = mount(doc, doc.indexOf("Coffee"))
-    expect(visibleLines(view)[0]).toBe("Coffee, foggy streets.")
-  })
-
-  it("leaves a tags line further down the note alone", () => {
+  it("leaves a tags line further down the note alone, as before", () => {
     const later = "Coffee.\n\n#thoughts\n\nMore.\n"
     const view = mount(later, 0)
     expect(visibleLines(view)).toContain("#thoughts")
   })
 
-  it("leaves a note that opens with prose alone", () => {
+  it("still strips the hash from a tag written into a sentence", () => {
     const prose = "Coffee. #later\n\nMore.\n"
     const view = mount(prose, prose.length)
-    // The hash goes, as it does for any tag written into a sentence, but the
-    // line itself stays: only a tags-only opening line is the row's business.
     expect(visibleLines(view)[0]).toBe("Coffee. later")
   })
 
