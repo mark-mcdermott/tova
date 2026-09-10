@@ -28,10 +28,10 @@ const hits = () => document.querySelectorAll(".cm-search-hit").length
 
 describe("finding in a note", () => {
   it("says nothing until there is a query", () => {
-    // Not a text match: "coffee" contains "of", and the note's own words are
-    // in the document beside the bar.
+    // The slot is always there, holding its width so the bar cannot grow under
+    // the reader's hands. It just has nothing to say yet.
     mount("coffee and more coffee")
-    expect(document.querySelector(".note-search-count")).toBeNull()
+    expect(document.querySelector(".note-search-count")?.textContent).toBe("")
   })
 
   it("counts the matches and marks them", async () => {

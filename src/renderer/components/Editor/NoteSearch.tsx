@@ -92,13 +92,12 @@ export function NoteSearch({ viewRef, onClose, openSeq }: NoteSearchProps) {
         onKeyDown={onKeyDown}
       />
 
-      {/* Silent until there is something to say: a count beside an empty field
-          would be answering a question that has not been asked. */}
-      {query !== "" && (
-        <span className={`note-search-count${found ? " is-empty" : ""}`}>
-          {total === 0 ? "None" : `${current + 1} of ${total}`}
-        </span>
-      )}
+      {/* Always here, silent until there is something to say. Appearing with
+          the first keystroke would widen the bar under the reader's hands, and
+          the count's own width would move it again as the numbers grow. */}
+      <span className={`note-search-count${found ? " is-empty" : ""}`}>
+        {query === "" ? "" : total === 0 ? "None" : `${current + 1} of ${total}`}
+      </span>
 
       <button
         type="button"

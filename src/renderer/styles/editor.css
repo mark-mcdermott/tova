@@ -1575,6 +1575,9 @@
      margin here would inset the bar twice and leave it short of the controls
      it sits under. Its right edge lands on theirs. */
   margin: var(--space-4) 0 var(--space-2) 0;
+  /* Fixed, so nothing moves as the reader types. The field takes what is left
+     after the count's reserved slot. */
+  width: min(26rem, 100%);
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--frame-border);
   border-radius: var(--radius-md);
@@ -1595,7 +1598,8 @@
 }
 
 .note-search-field {
-  width: 12rem;
+  flex: 1;
+  min-width: 0;
   padding: 0;
   border: none;
   background: transparent;
@@ -1613,8 +1617,12 @@
 }
 
 .note-search-count {
+  /* Room for the widest count a note is likely to hold, held whether or not
+     there is one — tabular figures keep it still as the numbers change. */
+  min-width: 5.5rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  text-align: right;
   white-space: nowrap;
 }
 
