@@ -42,7 +42,8 @@ describe("SectionManager", () => {
     expect((screen.getByLabelText("Name of Daily") as HTMLInputElement).disabled).toBe(false)
     expect((screen.getByLabelText("Icon for Daily") as HTMLSelectElement).disabled).toBe(false)
     expect((screen.getByLabelText("Show Daily") as HTMLInputElement).disabled).toBe(false)
-    expect((screen.getByLabelText("Move Daily up") as HTMLButtonElement).disabled).toBe(false)
+    // Down, not up: Daily leads the default rail, so up is correctly disabled.
+    expect((screen.getByLabelText("Move Daily down") as HTMLButtonElement).disabled).toBe(false)
     // The one thing it cannot do: its notes are made for you, one a day.
     expect((screen.getByLabelText("Remove Daily") as HTMLButtonElement).disabled).toBe(true)
   })
@@ -68,7 +69,7 @@ describe("SectionManager", () => {
 
     await waitFor(() => expect(write).toHaveBeenCalled())
     // The id is the directory. If a rename moved files, this would change.
-    expect(saved()).toEqual(["notes", "daily", "ideas", "journal", "trash"])
+    expect(saved()).toEqual(["daily", "notes", "ideas", "journal", "trash"])
     expect(createSection).not.toHaveBeenCalled()
     expect(deleteSection).not.toHaveBeenCalled()
   })
@@ -77,15 +78,15 @@ describe("SectionManager", () => {
     render(<SectionManager />)
     await userEvent.click(screen.getByLabelText("Move Journal up"))
 
-    await waitFor(() => expect(saved()).toEqual(["notes", "daily", "journal", "ideas", "trash"]))
+    await waitFor(() => expect(saved()).toEqual(["daily", "notes", "journal", "ideas", "trash"]))
   })
 
   it("moves a section past Daily rather than stopping at it", async () => {
     render(<SectionManager />)
-    await userEvent.click(screen.getByLabelText("Move Ideas up"))
+    await userEvent.click(screen.getByLabelText("Move Notes up"))
 
-    // Daily used to be a wall; Ideas now passes it.
-    await waitFor(() => expect(saved()).toEqual(["notes", "ideas", "daily", "journal", "trash"]))
+    // Daily used to be a wall; Notes now passes it.
+    await waitFor(() => expect(saved()).toEqual(["notes", "daily", "ideas", "journal", "trash"]))
   })
 
   it("hides a section without removing it", async () => {
@@ -103,7 +104,7 @@ describe("SectionManager", () => {
     await userEvent.click(screen.getByRole("button", { name: "Add" }))
 
     await waitFor(() => expect(createSection).toHaveBeenCalledWith("reading-list"))
-    expect(saved()).toEqual(["notes", "daily", "ideas", "journal", "reading-list", "trash"])
+    expect(saved()).toEqual(["daily", "notes", "ideas", "journal", "reading-list", "trash"])
   })
 
   it("says why a name was refused rather than doing nothing", async () => {
