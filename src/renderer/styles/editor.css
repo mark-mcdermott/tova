@@ -1142,7 +1142,15 @@
   cursor: pointer;
 }
 
-.index-row:hover {
+/*
+ * The row, the star and the trash all light the same way. They are one row, and
+ * a control that highlights differently reads as a separate surface sitting on
+ * top of it — which is what the star and the trash looked like when only their
+ * ink changed.
+ */
+.index-row:hover,
+.index-star:hover,
+.index-actions button:hover {
   background: rgb(255 255 255 / 22%);
 }
 
