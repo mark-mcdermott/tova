@@ -59,6 +59,13 @@ export function NoteSearch({ viewRef, onClose, openSeq }: NoteSearchProps) {
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // The same key that opened it. Focus is in here while the bar is up, so
+    // the editor's binding never sees this one.
+    if ((event.metaKey || event.ctrlKey) && event.key === "f") {
+      event.preventDefault()
+      onClose()
+      return
+    }
     if (event.key === "Escape") {
       event.preventDefault()
       onClose()

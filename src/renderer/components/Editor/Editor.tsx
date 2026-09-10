@@ -36,6 +36,9 @@ export function Editor({ note }: EditorProps) {
   const showIndex = useNotesStore((state) => state.showIndex)
   const [finding, setFinding] = useState(false)
   const [findSeq, setFindSeq] = useState(0)
+
+  /** Assigned after the hook, for the same reason grammarRef is. */
+  const findRef = useRef<() => void>(() => undefined)
   const setTags = useNotesStore((state) => state.setTags)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
@@ -114,11 +117,30 @@ export function Editor({ note }: EditorProps) {
     onPublish: (blog, headerLine) => void publishPost(blog, headerLine),
     onLeaveBackwards: () => tagAddRef.current?.focus(),
     onCheckGrammar: grammarOn ? (text) => void grammarRef.current(text) : undefined,
-    onFind: () => {
-      setFinding(true)
-      setFindSeq((seq) => seq + 1)
-    }
+    onFind: () => findRef.current()
   })
+
+  /**
+   * Both ways out go through here. Closing from the note rather than from the
+   * bar would otherwise leave the highlights painted — the note still answering
+   * a question the reader has closed.
+   */
+  const closeFind = useCallback(() => {
+    setFinding(false)
+    const view = viewRef.current
+    if (view !== null) showMatches(view, [], -1)
+    view?.focus()
+  }, [viewRef])
+
+  /** A toggle, so the key that opened it closes it wherever the caret is. */
+  findRef.current = () => {
+    if (finding) {
+      closeFind()
+      return
+    }
+    setFinding(true)
+    setFindSeq((seq) => seq + 1)
+  }
 
   /**
    * Assigned after the hook, because the view it dispatches into is what the
@@ -271,20 +293,7 @@ export function Editor({ note }: EditorProps) {
         }}
         onOpenTag={(tag) => showIndex({ kind: "tag", tag })}
         find={
-          finding ? (
-            <NoteSearch
-              viewRef={viewRef}
-              openSeq={findSeq}
-              onClose={() => {
-                setFinding(false)
-                // The highlights go with the bar; leaving them up would be the
-                // note still answering a question the reader has closed.
-                const view = viewRef.current
-                if (view !== null) showMatches(view, [], -1)
-                view?.focus()
-              }}
-            />
-          ) : null
+          finding ? <NoteSearch viewRef={viewRef} openSeq={findSeq} onClose={closeFind} /> : null
         }
       />
 
