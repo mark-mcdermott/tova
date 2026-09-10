@@ -1571,7 +1571,10 @@
   align-items: center;
   gap: var(--space-2);
   align-self: flex-end;
-  margin: 0 var(--space-8) var(--space-2) 0;
+  /* No right margin: the header already insets its content by --space-8, so a
+     margin here would inset the bar twice and leave it short of the controls
+     it sits under. Its right edge lands on theirs. */
+  margin: var(--space-4) 0 var(--space-2) 0;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--frame-border);
   border-radius: var(--radius-md);
