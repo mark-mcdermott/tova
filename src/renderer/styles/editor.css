@@ -353,10 +353,15 @@
  * the sentence sets exactly as it would with no control in it and the × lies
  * over the words that follow. Reserving the space pushed the text along, which
  * is a strange thing for a sentence to do because a tag is in it.
+ *
+ * Opaque, unlike the pill. The pill's fill is 72% of the accent over whatever
+ * is behind it, which is fine when that is the page — but this lies over words,
+ * and they read straight through it. Same mix, taken against the ground rather
+ * than against nothing.
  */
 .cm-tag-remove.is-body {
   margin-right: -1.35em;
-  background: var(--accent-tint-strong);
+  background: color-mix(in oklab, var(--accent) 72%, var(--bg-base));
   color: #f7f6fc;
 }
 
@@ -365,17 +370,13 @@
  * around, and lying over the next thing would mean lying over the next tag.
  */
 .cm-tag-remove.is-top {
-  background: var(--accent-tint);
+  background: color-mix(in oklab, var(--accent) 26%, var(--bg-base));
   color: var(--accent-bright);
 }
 
+/* Fully there once shown, or the words underneath come through the fade. */
 .cm-tag:hover + .cm-tag-remove,
 .cm-tag:hover + .cm-widgetBuffer + .cm-tag-remove,
-.cm-tag-remove:hover,
-.cm-tag-remove:focus-visible {
-  opacity: 0.85;
-}
-
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
   opacity: 1;
