@@ -16,6 +16,9 @@ interface IconProps {
     | "star"
     | "more"
     | "search"
+    | "sun"
+    | "moon"
+    | "monitor"
   className?: string
 }
 
@@ -24,6 +27,21 @@ interface IconProps {
  * size does not justify a dependency, and these inherit currentColor.
  */
 const PATHS: Record<IconProps["name"], ReactElement> = {
+  sun: (
+    <>
+      <circle cx="8" cy="8" r="3.1" />
+      <path d="M8 1.6v1.6M8 12.8v1.6M2.5 2.5l1.1 1.1M12.4 12.4l1.1 1.1M1.6 8h1.6M12.8 8h1.6M2.5 13.5l1.1-1.1M12.4 3.6l1.1-1.1" />
+    </>
+  ),
+  moon: <path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8Z" />,
+  // A screen, which is the glyph light and dark pickers use for "whatever the
+  // machine is set to".
+  monitor: (
+    <>
+      <rect x="2" y="3" width="12" height="8" rx="1.3" />
+      <path d="M6 13.5h4M8 11v2.5" />
+    </>
+  ),
   notes: (
     <>
       <rect x="3.5" y="2.5" width="9" height="11" rx="1.5" />

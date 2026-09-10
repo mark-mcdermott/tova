@@ -38,6 +38,22 @@ export const THEMES: { value: ThemeChoice; label: string }[] = [
   { value: "system", label: "System" }
 ]
 
+/**
+ * The next choice a single button steps to, in the order the settings list
+ * shows them. The icon on that button is the mode you are on, so stepping is
+ * the only thing left for it to mean.
+ */
+export function nextTheme(theme: ThemeChoice): ThemeChoice {
+  const order = THEMES.map((option) => option.value)
+  return order[(order.indexOf(theme) + 1) % order.length]
+}
+
+/** The glyph for a choice: what you are on, not what you would get next. */
+export function themeIcon(theme: ThemeChoice): "sun" | "moon" | "monitor" {
+  if (theme === "light") return "sun"
+  return theme === "dark" ? "moon" : "monitor"
+}
+
 /** What the app is actually painting, once "system" has been resolved. */
 export type Theme = "light" | "dark"
 
@@ -156,7 +172,9 @@ export function normalizePreferences(value: unknown): Preferences {
     // "alagambe" arrives here from an older preferences file and is not one of
     // ours any more, so it lands on the default like any other stale name.
     titleFont:
-      typeof raw.titleFont === "string" && raw.titleFont.trim() !== "" && raw.titleFont !== "alagambe"
+      typeof raw.titleFont === "string" &&
+      raw.titleFont.trim() !== "" &&
+      raw.titleFont !== "alagambe"
         ? raw.titleFont
         : DEFAULT_PREFERENCES.titleFont,
     proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth

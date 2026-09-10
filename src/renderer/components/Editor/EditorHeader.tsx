@@ -3,6 +3,8 @@ import { Note } from "../../../shared/types"
 import { useNotesStore } from "../../stores/notesStore"
 import { breadcrumbFor } from "./breadcrumb"
 import { useRail } from "../../useRail"
+import { usePreferencesStore } from "../../stores/preferencesStore"
+import { THEMES, nextTheme, themeIcon } from "../../../shared/preferences"
 import { IndexTarget, indexKey } from "../../../shared/indexTarget"
 import { HistoryNav } from "./HistoryNav"
 import { NoteMenu } from "./NoteMenu"
@@ -25,6 +27,11 @@ interface EditorHeaderProps {
   onOpenTag: (tag: string) => void
 }
 
+/** The settings list's own word for a choice, so the two never drift. */
+function themeLabel(theme: string): string {
+  return THEMES.find((option) => option.value === theme)?.label ?? theme
+}
+
 export function EditorHeader({
   note,
   title,
@@ -36,9 +43,10 @@ export function EditorHeader({
   onOpenTag
 }: EditorHeaderProps) {
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
-  const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
 
   const showIndex = useNotesStore((state) => state.showIndex)
+  const theme = usePreferencesStore((state) => state.preferences.theme)
+  const update = usePreferencesStore((state) => state.update)
 
   const menu = useContextMenu()
   const rail = useRail()
@@ -89,15 +97,16 @@ export function EditorHeader({
         <div className="editor-nav-end">
           <span className="editor-edited">{formatEditedAgo(note.updatedAt)}</span>
 
+          {/* The icon is the mode you are on, so the only thing left for the
+              button to mean is "step to the next one". */}
           <button
             type="button"
-            className={`icon-button editor-star${note.favorite ? " is-on" : ""}`}
-            {...tip(note.favorite ? "Remove from favourites" : "Add to favourites")}
-            aria-label={note.favorite ? "Remove from favourites" : "Add to favourites"}
-            aria-pressed={note.favorite}
-            onClick={() => toggleFavorite(note.id)}
+            className="icon-button"
+            {...tip(`Appearance: ${themeLabel(theme)} — click for ${themeLabel(nextTheme(theme))}`)}
+            aria-label={`Appearance: ${themeLabel(theme)}. Change to ${themeLabel(nextTheme(theme))}`}
+            onClick={() => void update({ theme: nextTheme(theme) })}
           >
-            <Icon name="star" className="nav-icon" />
+            <Icon name={themeIcon(theme)} className="nav-icon" />
           </button>
 
           <button

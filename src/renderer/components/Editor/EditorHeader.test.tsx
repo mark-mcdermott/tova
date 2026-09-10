@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event"
 import { EditorHeader } from "./EditorHeader"
 import { useNotesStore } from "../../stores/notesStore"
 import { stubBridge } from "../../testing/bridge"
+import { usePreferencesStore } from "../../stores/preferencesStore"
+import { DEFAULT_PREFERENCES, Preferences } from "../../../shared/preferences"
 import { emptyHistory, push } from "../../stores/history"
 import { Note } from "../../../shared/types"
 
@@ -285,39 +287,92 @@ describe("EditorHeader edited time", () => {
   })
 })
 
-describe("EditorHeader favourite", () => {
-  it("offers to add when the note is not a favourite", () => {
-    renderHeader(note({ favorite: false }))
-    expect(screen.getByLabelText("Add to favourites")).toBeDefined()
+describe("favouriting from the note menu", () => {
+  // It used to be a star beside the ... button. The theme control took that
+  // spot, so it joined Rename — the other item about the note rather than its
+  // text — instead of being lost.
+  async function openMenu(active: Note) {
+    const user = userEvent.setup()
+    renderHeader(active)
+    await user.click(screen.getByLabelText("Note actions"))
+    return user
+  }
+
+  it("offers to add when the note is not a favourite", async () => {
+    await openMenu(note({ favorite: false }))
+    expect(screen.getByRole("menuitem", { name: "Add to favourites" })).toBeDefined()
   })
 
-  it("offers to remove when it is", () => {
-    renderHeader(note({ favorite: true }))
-    expect(screen.getByLabelText("Remove from favourites")).toBeDefined()
-  })
-
-  it("reports its state to assistive technology", () => {
-    renderHeader(note({ favorite: true }))
-    expect(screen.getByLabelText("Remove from favourites").getAttribute("aria-pressed")).toBe(
-      "true"
-    )
+  it("offers to remove when it is", async () => {
+    await openMenu(note({ favorite: true }))
+    expect(screen.getByRole("menuitem", { name: "Remove from favourites" })).toBeDefined()
   })
 
   it("toggles through the bridge", async () => {
     setFavorite.mockResolvedValue({ ...note({ favorite: true }) })
-    renderHeader(note({ favorite: false }))
+    const user = await openMenu(note({ favorite: false }))
 
-    await userEvent.setup().click(screen.getByLabelText("Add to favourites"))
+    await user.click(screen.getByRole("menuitem", { name: "Add to favourites" }))
     expect(setFavorite).toHaveBeenCalledWith("notes/river.md", true)
   })
 
   it("unpins a note that is already pinned", async () => {
     setFavorite.mockResolvedValue({ ...note({ favorite: false }) })
     useNotesStore.setState({ notes: [note({ favorite: true })] })
-    renderHeader(note({ favorite: true }))
+    const user = await openMenu(note({ favorite: true }))
 
-    await userEvent.setup().click(screen.getByLabelText("Remove from favourites"))
+    await user.click(screen.getByRole("menuitem", { name: "Remove from favourites" }))
     expect(setFavorite).toHaveBeenCalledWith("notes/river.md", false)
+  })
+
+  it("is not offered on a trashed note, whose menu is about getting it back", async () => {
+    await openMenu(note({ section: "trash", deletedAt: 1 }))
+    expect(screen.queryByRole("menuitem", { name: /favourites/ })).toBeNull()
+  })
+})
+
+describe("the appearance button", () => {
+  const iconOf = () =>
+    screen
+      .getByLabelText(/^Appearance:/)
+      .querySelector("svg")
+      ?.getAttribute("class")
+
+  it("shows the mode you are on, not the one you would get", async () => {
+    usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES, theme: "dark" } })
+    renderHeader()
+
+    expect(screen.getByLabelText(/^Appearance: Dark/)).toBeDefined()
+    expect(iconOf()).toBeDefined()
+  })
+
+  it("steps light to dark to system and round again", async () => {
+    const write = vi.fn(async (value: Preferences) => value)
+    window.tova = stubBridge({
+      notes: { read, exportMarkdown, move, remove, setFavorite },
+      preferences: { write }
+    })
+
+    for (const [from, to] of [
+      ["light", "dark"],
+      ["dark", "system"],
+      ["system", "light"]
+    ] as const) {
+      cleanup()
+      write.mockClear()
+      usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES, theme: from } })
+      renderHeader()
+
+      await userEvent.setup().click(screen.getByLabelText(/^Appearance:/))
+      expect(write).toHaveBeenCalledWith(expect.objectContaining({ theme: to }))
+    }
+  })
+
+  it("says what a click will do, since the icon only says where you are", () => {
+    usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES, theme: "system" } })
+    renderHeader()
+
+    expect(screen.getByLabelText("Appearance: System. Change to Light")).toBeDefined()
   })
 })
 
