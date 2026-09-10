@@ -422,14 +422,17 @@ describe("deleting from the note menu leaves the note", () => {
 })
 
 describe("finding in the note", () => {
-  it("draws the bar under the nav row, not over the title", () => {
-    // A bar laid over the header would cover a long title, and the one thing a
-    // find bar must never do is hide the words being searched.
+  it("hangs the bar off the header rather than sitting it in the flow", () => {
+    // In flow it pushed the note down, so the words the reader reached for
+    // search while looking at moved under their hands. It is positioned
+    // against the header, which is why the header is the one that is relative.
     renderHeader(note(), <div data-testid="find-bar" />)
 
     const header = document.querySelector(".editor-header")
     const nav = header?.querySelector(".editor-nav")
+
     expect(nav?.nextElementSibling?.getAttribute("data-testid")).toBe("find-bar")
+    expect(header?.className).toContain("editor-header")
   })
 
   it("draws nothing there when the bar is closed", () => {
