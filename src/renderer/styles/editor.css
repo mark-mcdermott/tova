@@ -321,24 +321,22 @@
  * a mark decoration wraps text and has no inside to put a control in — so the
  * pill reveals it with an adjacent-sibling rule.
  *
- * It holds its space at all times. A control that appears on hover and takes up
- * room as it does re-wraps the sentence under the pointer, which moves the very
- * thing being aimed at.
+ * It borrows the pill's own colours, so the pair reads as one object rather
+ * than a control that arrived from somewhere else.
  */
 .cm-tag-remove {
+  /* Relative and lifted, so it draws over the words it sits on rather than
+     under them. */
+  position: relative;
+  z-index: 1;
   display: inline-grid;
   place-items: center;
   width: 1.15em;
   height: 1.15em;
-  /* Clear of the pill, not tucked into it: the pill carries 0.6em of its own
-     right padding and a full radius, so a negative margin puts the x over the
-     curve rather than beside it. */
   margin-left: 0.2em;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: transparent;
-  color: var(--accent-bright);
   font-family: inherit;
   font-size: 0.88em;
   line-height: 1;
@@ -348,16 +346,36 @@
   transition: opacity 120ms ease;
 }
 
+/*
+ * In prose it costs no width at all: the negative margin cancels its own, so
+ * the sentence sets exactly as it would with no control in it and the × lies
+ * over the words that follow. Reserving the space instead pushed the text
+ * along, which is a strange thing for a sentence to do because a tag is in it.
+ */
+.cm-tag-body + .cm-tag-remove {
+  margin-right: -1.35em;
+  background: var(--accent-tint-strong);
+  color: #f7f6fc;
+}
+
+/*
+ * On a line of nothing but tags it keeps its space. There is no prose to push
+ * around, and lying over the next thing would mean lying over the next tag.
+ */
+.cm-tag-top + .cm-tag-remove {
+  background: var(--accent-tint);
+  color: var(--accent-bright);
+}
+
 .cm-tag:hover + .cm-tag-remove,
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
-  opacity: 0.62;
+  opacity: 0.85;
 }
 
 .cm-tag-remove:hover,
 .cm-tag-remove:focus-visible {
   opacity: 1;
-  background: var(--accent-tint);
 }
 
 /* Raw text is the writer editing the tag themselves; a control on top of that
