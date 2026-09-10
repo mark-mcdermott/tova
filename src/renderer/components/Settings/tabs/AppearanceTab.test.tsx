@@ -150,12 +150,12 @@ describe("AppearanceTab", () => {
     expect(write).not.toHaveBeenCalled()
   })
 
-  it("lists an added background beside the bundled ones", () => {
-    usePreferencesStore.setState({ userBackgrounds: ["dusk.jpg"] })
+  it("lists an added background beside the bundled ones, in its own mode", () => {
+    usePreferencesStore.setState({ userBackgrounds: { light: [], dark: ["dusk.jpg"] } })
     render(<AppearanceTab />)
 
     expect(screen.getByLabelText("dusk.jpg for dark")).toBeDefined()
-    expect(screen.getByLabelText("dusk.jpg for light")).toBeDefined()
+    expect(screen.queryByLabelText("dusk.jpg for light")).toBeNull()
   })
 })
 
@@ -240,7 +240,7 @@ describe("AppearanceTab backgrounds", () => {
   it("offers each mode only the photographs bundled for it", () => {
     // One picture each, so neither picker can shuffle and neither shows the
     // other's — a bright sky cannot carry white text, and the reverse.
-    usePreferencesStore.setState({ userBackgrounds: [] })
+    usePreferencesStore.setState({ userBackgrounds: { light: [], dark: [] } })
     render(<AppearanceTab />)
 
     expect(screen.getByLabelText("lake-sunset.jpg for light")).toBeDefined()
@@ -252,7 +252,7 @@ describe("AppearanceTab backgrounds", () => {
 
   it("hides Shuffle again, since each mode is back to one picture", () => {
     usePreferencesStore.setState({
-      userBackgrounds: [],
+      userBackgrounds: { light: [], dark: [] },
       preferences: { ...DEFAULT_PREFERENCES, backgroundLight: null, backgroundDark: null }
     })
     render(<AppearanceTab />)
@@ -261,17 +261,32 @@ describe("AppearanceTab backgrounds", () => {
     expect(screen.queryByLabelText("Shuffle for dark")).toBeNull()
   })
 
-  it("offers the reader's own pictures to both modes", () => {
-    // Only the reader knows whether an image of theirs suits one or the other.
-    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+  it("offers an added picture only to the mode whose + added it", () => {
+    // The + that was clicked is what says which mode the reader meant it for.
+    usePreferencesStore.setState({ userBackgrounds: { light: ["mine.jpg"], dark: [] } })
     render(<AppearanceTab />)
 
     expect(screen.getByLabelText("mine.jpg for light")).toBeDefined()
-    expect(screen.getByLabelText("mine.jpg for dark")).toBeDefined()
+    expect(screen.queryByLabelText("mine.jpg for dark")).toBeNull()
+  })
+
+  it("offers Shuffle only to the mode that gained a second picture", () => {
+    usePreferencesStore.setState({
+      userBackgrounds: { light: ["mine.jpg"], dark: [] },
+      preferences: { ...DEFAULT_PREFERENCES, backgroundLight: null, backgroundDark: null }
+    })
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("Shuffle for light")).toBeDefined()
+    expect(screen.queryByLabelText("Shuffle for dark")).toBeNull()
   })
 
   it("offers Shuffle once a second picture has been added", () => {
-    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+    // To each mode separately: a picture added to one is not in the other's
+    // pool, so it cannot give the other something to shuffle between.
+    usePreferencesStore.setState({
+      userBackgrounds: { light: ["mine.jpg"], dark: ["yours.jpg"] }
+    })
     render(<AppearanceTab />)
 
     expect(screen.getByLabelText("Shuffle for light")).toBeDefined()
@@ -281,7 +296,7 @@ describe("AppearanceTab backgrounds", () => {
   it("keeps Shuffle on screen when it is the choice already stored", () => {
     // Or the picker would show nothing chosen at all.
     usePreferencesStore.setState({
-      userBackgrounds: [],
+      userBackgrounds: { light: [], dark: [] },
       preferences: { ...DEFAULT_PREFERENCES, backgroundLight: "shuffle" }
     })
     render(<AppearanceTab />)
@@ -291,7 +306,7 @@ describe("AppearanceTab backgrounds", () => {
   })
 
   it("stores none as null and shuffle by name", async () => {
-    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+    usePreferencesStore.setState({ userBackgrounds: { light: [], dark: ["yours.jpg"] } })
     render(<AppearanceTab />)
 
     const user = userEvent.setup()

@@ -28,9 +28,10 @@ function BackgroundChoices({
   onChoose: (name: string | null) => void
   theme: "light" | "dark"
 }) {
-  const added = usePreferencesStore((state) => state.userBackgrounds)
+  const added = usePreferencesStore((state) => state.userBackgrounds[theme])
   const addBackground = usePreferencesStore((state) => state.addBackground)
-  // Only this mode's own photographs; the reader's are offered to both.
+  // This mode's own, bundled and added alike. The + that added a picture was
+  // the one in this row, which is what says the reader meant it for this mode.
   const bundled = bundledFor(theme)
   const count = bundled.length + added.length
 
