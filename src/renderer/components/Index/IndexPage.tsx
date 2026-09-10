@@ -13,6 +13,7 @@ import {
 import { IndexRow } from "./IndexRow"
 import { showsTrail } from "../Editor/breadcrumb"
 import { HistoryNav } from "../Editor/HistoryNav"
+import { AppearanceButton } from "../Editor/AppearanceButton"
 import { ConfirmDialog } from "../Popup/ConfirmDialog"
 import { NOTHING_SELECTED, afterClick, prune } from "../../../shared/rangeSelect"
 import { useRail } from "../../useRail"
@@ -129,8 +130,11 @@ export function IndexPage() {
             </ol>
           )}
 
-          {target.kind !== "tags" && (
-            <div className="editor-nav-end">
+          {/* The end of the row exists for the appearance button whether or not
+              there is a sort: the tag list orders itself by use, and the theme
+              is not about this page. */}
+          <div className="editor-nav-end">
+            {target.kind !== "tags" && (
               <label className="index-sort">
                 <span className="index-sort-label">Sort by</span>
                 <select
@@ -150,8 +154,10 @@ export function IndexPage() {
                   ))}
                 </select>
               </label>
-            </div>
-          )}
+            )}
+
+            <AppearanceButton />
+          </div>
         </nav>
 
         <h1 className="index-heading">{title}</h1>
