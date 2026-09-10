@@ -33,11 +33,11 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-5) var(--space-6);
-  border: 1px solid rgb(255 255 255 / 60%);
+  border: 1px solid var(--surface-edge);
   border-radius: var(--radius-lg);
   /* Enough white behind the dark text to hold contrast wherever the photograph
      happens to be light or dark underneath. */
-  background: rgb(255 255 255 / 46%);
+  background: var(--surface-panel);
 }
 
 .settings-section-title {
@@ -75,9 +75,9 @@
 
 .settings-button {
   padding: var(--space-2) var(--space-4);
-  border: 1px solid rgb(23 20 31 / 16%);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-pill);
-  background: rgb(255 255 255 / 62%);
+  background: var(--surface-control);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -91,8 +91,8 @@
 }
 
 .settings-button:hover {
-  background: rgb(255 255 255 / 88%);
-  border-color: rgb(23 20 31 / 28%);
+  background: var(--surface-strong);
+  border-color: var(--field-border-strong);
 }
 
 .settings-button:disabled {
@@ -135,7 +135,7 @@
   gap: var(--space-3);
   flex-wrap: wrap;
   padding: var(--space-3) 0;
-  border-top: 1px solid rgb(23 20 31 / 10%);
+  border-top: 1px solid var(--settings-rule);
 }
 
 /* Held on one line: the confirmation beside it wraps to its own row rather
@@ -227,7 +227,7 @@
   gap: var(--space-4);
   align-items: start;
   padding: var(--space-3) 0;
-  border-top: 1px solid rgb(23 20 31 / 10%);
+  border-top: 1px solid var(--settings-rule);
 }
 
 .field-label label {
@@ -253,9 +253,9 @@
 .text-input {
   width: 100%;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid rgb(23 20 31 / 18%);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 72%);
+  background: var(--surface-field);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -325,9 +325,9 @@
   max-height: 18rem;
   overflow: auto;
   padding: var(--space-3);
-  border: 1px solid rgb(23 20 31 / 12%);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 55%);
+  background: var(--surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   line-height: 1.5;
@@ -373,13 +373,13 @@
 }
 
 .settings-tab:hover {
-  background: rgb(255 255 255 / 40%);
+  background: var(--surface-tab-hover);
   color: var(--text-primary);
 }
 
 .settings-tab.is-current {
-  background: rgb(255 255 255 / 72%);
-  border-color: rgb(23 20 31 / 12%);
+  background: var(--surface-field);
+  border-color: var(--field-border);
   color: var(--text-primary);
 }
 
@@ -451,7 +451,7 @@
   place-items: center;
   border: 2px solid transparent;
   border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 55%);
+  background: var(--surface-sunken);
   color: var(--text-muted);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -489,7 +489,7 @@
   padding: var(--space-2) var(--space-4) var(--space-3);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 55%);
+  background: var(--surface-sunken);
   cursor: pointer;
 }
 
@@ -576,7 +576,7 @@
   gap: var(--space-3);
   padding: var(--space-2);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 35%);
+  background: var(--surface-row);
 }
 
 .section-order {
@@ -621,7 +621,7 @@
   padding: 0.2em 0.4em;
   border: 1px solid var(--frame-border);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 20%);
+  background: var(--surface-quiet);
   color: var(--text-secondary);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -659,7 +659,7 @@
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--frame-border);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 25%);
+  background: var(--surface-quiet-strong);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -691,7 +691,7 @@
   padding: var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 35%);
+  background: var(--surface-row);
 }
 
 .vault-row.is-active {
