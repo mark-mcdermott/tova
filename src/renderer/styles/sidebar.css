@@ -409,7 +409,7 @@
 }
 
 .note-row-actions button.is-destructive:hover {
-  color: #a3242c;
+  color: var(--danger-ink);
 }
 
 /* ── Tags ─────────────────────────────────────────────────────────────── */
@@ -498,8 +498,8 @@
   margin: var(--space-2);
   padding: var(--space-2);
   border-radius: var(--radius-sm);
-  background: rgb(163 36 44 / 10%);
-  color: #8c1f26;
+  background: var(--danger-bg);
+  color: var(--danger-ink);
   font-size: var(--text-sm);
 }
 

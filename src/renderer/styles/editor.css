@@ -639,8 +639,8 @@
   margin: 0 var(--space-6) var(--space-2);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
-  background: rgb(163 36 44 / 16%);
-  color: #7d1a21;
+  background: var(--danger-bg);
+  color: var(--danger-ink);
   font-size: var(--text-sm);
 }
 
@@ -693,7 +693,7 @@
 }
 
 .toolbar-status-error {
-  color: #a3242c;
+  color: var(--danger-ink);
 }
 
 .toolbar-actions {
