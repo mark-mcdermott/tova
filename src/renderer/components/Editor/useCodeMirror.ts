@@ -17,7 +17,7 @@ import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
 import { blogSelector, SelectorAnchor } from "./blogSelector"
 import { formatKeymap } from "./formats"
-import { bodyStart } from "../../../shared/tags"
+import { bodyStart, tagToggleEdits } from "../../../shared/tags"
 
 interface UseCodeMirrorOptions {
   initialValue?: string
@@ -26,6 +26,8 @@ interface UseCodeMirrorOptions {
   noteId?: string | null
   /** Turns an image URL in the document into a source the renderer may load. */
   resolveImage?: (url: string) => string | null
+  /** Called when a rendered tag in the prose is clicked. */
+  onOpenTag?: (tag: string) => void
   onError?: (message: string | null) => void
   /** Called when the rocket at the end of an `@blog post` line is clicked. */
   onPublish?: (blog: string, headerLine: number) => void
@@ -47,6 +49,7 @@ export function useCodeMirror({
   onChange,
   noteId = null,
   resolveImage,
+  onOpenTag,
   onError,
   onPublish,
   onSelectBlog,
@@ -71,6 +74,8 @@ export function useCodeMirror({
 
   const resolveImageRef = useRef(resolveImage)
   resolveImageRef.current = resolveImage
+  const onOpenTagRef = useRef(onOpenTag)
+  onOpenTagRef.current = onOpenTag
 
   const onErrorRef = useRef(onError)
   onErrorRef.current = onError
@@ -109,7 +114,8 @@ export function useCodeMirror({
           codeHighlight(),
           grammarChecking((text) => onCheckGrammarRef.current?.(text)),
           markdownDecorations({
-            resolveImage: (url) => resolveImageRef.current?.(url) ?? null
+            resolveImage: (url) => resolveImageRef.current?.(url) ?? null,
+            onOpenTag: (tag) => onOpenTagRef.current?.(tag)
           }),
           blogDecorations((blog, headerLine) => onPublishRef.current?.(blog, headerLine)),
           blogSelector((anchor) => onSelectBlogRef.current?.(anchor)),
@@ -125,6 +131,20 @@ export function useCodeMirror({
               run: (view) => {
                 if (view.state.doc.length > 0) return false
                 onLeaveBackwardsRef.current?.()
+                return true
+              }
+            },
+            {
+              // Over a tag it untags, over a word it tags. Anywhere else it
+              // falls through and types the character, which is how a tag is
+              // written in the first place.
+              key: "#",
+              run: (view) => {
+                const { from, to } = view.state.selection.main
+                const edits = tagToggleEdits(view.state.doc.toString(), from, to)
+                if (edits === null) return false
+
+                view.dispatch({ changes: edits })
                 return true
               }
             },

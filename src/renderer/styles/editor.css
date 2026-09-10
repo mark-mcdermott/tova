@@ -374,6 +374,26 @@
   color: var(--accent-bright);
 }
 
+/*
+ * The margin between the pill and the × is a strip belonging to neither, so
+ * crossing it flickered the pointer back to a caret and forward again. This
+ * reaches back over it — nothing to see, only somewhere to be.
+ */
+.cm-tag-remove::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 0;
+  width: 0.45em;
+  height: 100%;
+}
+
+/* The pill is the way to its own listing, so it says so. */
+.cm-tag-body,
+.cm-tag-top {
+  cursor: pointer;
+}
+
 /* Fully there once shown, or the words underneath come through the fade. */
 .cm-tag:hover + .cm-tag-remove,
 .cm-tag:hover + .cm-widgetBuffer + .cm-tag-remove,

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   applyEdits,
+  tagToggleEdits,
   removeOccurrenceEdits,
   removeTagEdits,
   tagOrigin,
@@ -293,5 +294,57 @@ describe("removing one written occurrence", () => {
 
   it("leaves the line when other tags share it", () => {
     expect(removeAt("#a #b\n\nProse.", "#a")).toBe("#b\n\nProse.")
+  })
+})
+
+describe("what typing # does to a selection", () => {
+  const toggle = (doc: string, from: number, to: number) => {
+    const edits = tagToggleEdits(doc, from, to)
+    return edits === null ? null : applyEdits(doc, edits)
+  }
+  const at = (doc: string, needle: string) => doc.indexOf(needle)
+
+  it("makes a tag of a selected word", () => {
+    const doc = "Coffee and streets."
+    expect(toggle(doc, at(doc, "streets"), at(doc, "streets") + 7)).toBe("Coffee and #streets.")
+  })
+
+  it("takes the tag off a selected tag", () => {
+    const doc = "Coffee and #streets."
+    const from = at(doc, "#streets")
+    expect(toggle(doc, from, from + 8)).toBe("Coffee and streets.")
+  })
+
+  it("takes the tag off when the caret is inside one", () => {
+    const doc = "Coffee and #streets."
+    const inside = at(doc, "#streets") + 3
+    expect(toggle(doc, inside, inside)).toBe("Coffee and streets.")
+  })
+
+  it("lets # type itself when the caret is only resting against a tag", () => {
+    // Which is how a tag gets written in the first place.
+    const doc = "Coffee and #streets."
+    expect(toggle(doc, at(doc, "#streets"), at(doc, "#streets"))).toBeNull()
+    expect(toggle(doc, at(doc, "#streets") + 8, at(doc, "#streets") + 8)).toBeNull()
+  })
+
+  it("lets # type itself in open prose", () => {
+    expect(toggle("Coffee and streets.", 6, 6)).toBeNull()
+  })
+
+  it("refuses a selection that is not a tag name", () => {
+    const doc = "Coffee and streets."
+    expect(toggle(doc, 0, 10)).toBeNull()
+    expect(toggle(doc, at(doc, "streets"), at(doc, "streets") + 8)).toBeNull()
+  })
+
+  it("refuses a selection starting with a digit, as the tag rule does", () => {
+    const doc = "Room 101 upstairs."
+    expect(toggle(doc, at(doc, "101"), at(doc, "101") + 3)).toBeNull()
+  })
+
+  it("takes the whole line when untagging leaves a tags line empty", () => {
+    const doc = "#work\n\nProse."
+    expect(toggle(doc, 2, 2)).toBe("Prose.")
   })
 })
