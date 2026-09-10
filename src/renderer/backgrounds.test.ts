@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
-import { pickBackground, applyBackground, resolveBackground } from "./backgrounds"
+import { SHUFFLE, pickBackground, applyBackground, resolveBackground } from "./backgrounds"
 
 const urls = ["a.jpg", "b.jpg", "c.jpg"]
 
@@ -51,18 +51,29 @@ describe("applyBackground", () => {
 })
 
 describe("resolveBackground", () => {
-  it("shuffles for light when nothing is chosen", () => {
-    expect(resolveBackground(null, "light")).not.toBeNull()
+  it("paints nothing for none, in either theme", () => {
+    // It used to mean the gradient in dark and a shuffle in light, which is
+    // why the two pickers could not look the same.
+    expect(resolveBackground(null)).toBeNull()
   })
 
-  it("shows no photograph for dark when nothing is chosen", () => {
-    // Every bundled image is a bright one; the gradient underneath is built
-    // for this and can carry white text.
-    expect(resolveBackground(null, "dark")).toBeNull()
+  it("picks one for shuffle", () => {
+    expect(resolveBackground(SHUFFLE)).not.toBeNull()
   })
 
-  it("falls back the same way when the chosen file is gone", () => {
-    expect(resolveBackground("deleted.jpg", "dark")).toBeNull()
-    expect(resolveBackground("deleted.jpg", "light")).not.toBeNull()
+  it("shuffles through what was added as well as what ships", () => {
+    const urls = new Set<string | null>()
+    for (let i = 0; i < 40; i++) urls.add(resolveBackground(SHUFFLE, ["mine.jpg"]))
+
+    expect([...urls].some((url) => url?.includes("mine.jpg"))).toBe(true)
+  })
+
+  it("uses a chosen picture", () => {
+    expect(resolveBackground("mine.jpg", ["mine.jpg"])).toContain("mine.jpg")
+  })
+
+  it("falls back to nothing when the chosen file is gone", () => {
+    // Not to a photograph the reader did not choose.
+    expect(resolveBackground("deleted.jpg")).toBeNull()
   })
 })

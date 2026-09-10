@@ -90,7 +90,9 @@ describe("AppearanceTab", () => {
     render(<AppearanceTab />)
     await userEvent.click(screen.getByRole("button", { name: "Dark" }))
 
-    await waitFor(() => expect(write).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" })))
+    await waitFor(() =>
+      expect(write).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" }))
+    )
   })
 
   it("keeps a background per mode", async () => {
@@ -100,16 +102,20 @@ describe("AppearanceTab", () => {
     await userEvent.click(dark)
     await waitFor(() =>
       expect(write).toHaveBeenCalledWith(
-        expect.objectContaining({ backgroundDark: "lake-sunset.jpg", backgroundLight: null })
+        expect.objectContaining({
+          backgroundDark: "lake-sunset.jpg",
+          backgroundLight: DEFAULT_PREFERENCES.backgroundLight
+        })
       )
     )
     expect(light.getAttribute("aria-label")).toContain("light")
   })
 
-  it("offers dark no photograph rather than a shuffle of bright ones", () => {
+  it("offers None to both modes, which used to be dark's alone", () => {
+    // getByText would have thrown on two of either, which is how the asymmetry
+    // was pinned: one picker said None, the other said Shuffle.
     render(<AppearanceTab />)
-    expect(screen.getByText("None")).toBeDefined()
-    expect(screen.getByText("Shuffle")).toBeDefined()
+    expect(screen.getAllByText("None")).toHaveLength(2)
   })
 
   it("offers a way to add a background to each mode", () => {
@@ -219,3 +225,59 @@ describe("AppearanceTab added title faces", () => {
   })
 })
 
+describe("AppearanceTab backgrounds", () => {
+  it("offers the same controls for light and dark", () => {
+    // They diverged because one stored value meant two things: the gradient in
+    // dark, a shuffle in light.
+    render(<AppearanceTab />)
+
+    for (const theme of ["light", "dark"]) {
+      expect(screen.getByLabelText(`No background for ${theme}`)).toBeDefined()
+      expect(screen.getByLabelText(`Add a background for ${theme}`)).toBeDefined()
+    }
+  })
+
+  it("hides Shuffle when there is only one picture to shuffle between", () => {
+    // Dark, because light now starts on shuffle and would keep the button for
+    // that reason rather than for the count.
+    usePreferencesStore.setState({
+      userBackgrounds: [],
+      preferences: { ...DEFAULT_PREFERENCES, backgroundDark: null }
+    })
+    render(<AppearanceTab />)
+
+    expect(screen.queryByLabelText("Shuffle for dark")).toBeNull()
+  })
+
+  it("offers Shuffle once a second picture has been added", () => {
+    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("Shuffle for light")).toBeDefined()
+    expect(screen.getByLabelText("Shuffle for dark")).toBeDefined()
+  })
+
+  it("keeps Shuffle on screen when it is the choice already stored", () => {
+    // Or the picker would show nothing chosen at all.
+    usePreferencesStore.setState({
+      userBackgrounds: [],
+      preferences: { ...DEFAULT_PREFERENCES, backgroundLight: "shuffle" }
+    })
+    render(<AppearanceTab />)
+
+    const shuffle = screen.getByLabelText("Shuffle for light")
+    expect(shuffle.getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("stores none as null and shuffle by name", async () => {
+    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+    render(<AppearanceTab />)
+
+    const user = userEvent.setup()
+    await user.click(screen.getByLabelText("No background for dark"))
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ backgroundDark: null }))
+
+    await user.click(screen.getByLabelText("Shuffle for dark"))
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ backgroundDark: "shuffle" }))
+  })
+})

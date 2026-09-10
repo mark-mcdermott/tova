@@ -104,7 +104,9 @@ export const DEFAULT_PREFERENCES: Preferences = {
   vaults: [],
   activeVault: null,
   sections: DEFAULT_SECTIONS,
-  backgroundLight: null,
+  // Shuffle, so a fresh install opens on a photograph as it always has.
+  // Dark starts on the gradient: every bundled photograph is a bright one.
+  backgroundLight: "shuffle",
   backgroundDark: null,
   titleFont: "vibur",
   proseWidth: "narrow"
