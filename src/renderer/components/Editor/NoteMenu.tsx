@@ -21,6 +21,7 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
   const folders = useNotesStore((state) => state.folders)
   const trash = useNotesStore((state) => state.trash)
   const restore = useNotesStore((state) => state.restore)
+  const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
   const destroy = useNotesStore((state) => state.destroy)
   const moveNote = useNotesStore((state) => state.moveNote)
   const exportNote = useNotesStore((state) => state.exportNote)
@@ -75,7 +76,13 @@ export function NoteMenu({ note, x, y, onClose }: NoteMenuProps) {
       ]
     }
 
-    const items: MenuItem[] = [{ label: "Rename", onSelect: requestTitleFocus }]
+    const items: MenuItem[] = [
+      { label: "Rename", onSelect: requestTitleFocus },
+      {
+        label: note.favorite ? "Remove from favourites" : "Add to favourites",
+        onSelect: () => void toggleFavorite(note.id)
+      }
+    ]
 
     // A daily note's filename is its date, and a post's belongs to the blog it
     // came from — moving either would break what the filename is for.
