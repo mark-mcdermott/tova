@@ -316,6 +316,53 @@
   color: var(--accent-bright);
 }
 
+/*
+ * The × on a rendered tag. It is the pill's next sibling rather than a child —
+ * a mark decoration wraps text and has no inside to put a control in — so the
+ * pill reveals it with an adjacent-sibling rule.
+ *
+ * It holds its space at all times. A control that appears on hover and takes up
+ * room as it does re-wraps the sentence under the pointer, which moves the very
+ * thing being aimed at.
+ */
+.cm-tag-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: -0.3em;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--accent-bright);
+  font-family: inherit;
+  font-size: 0.88em;
+  line-height: 1;
+  vertical-align: baseline;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.cm-tag:hover + .cm-tag-remove,
+.cm-tag-remove:hover,
+.cm-tag-remove:focus-visible {
+  opacity: 0.62;
+}
+
+.cm-tag-remove:hover,
+.cm-tag-remove:focus-visible {
+  opacity: 1;
+  background: var(--accent-tint);
+}
+
+/* Raw text is the writer editing the tag themselves; a control on top of that
+   is one more thing in the way of the caret. */
+.cm-tag-raw + .cm-tag-remove {
+  display: none;
+}
+
 /* ── Blog authoring ───────────────────────────────────────────────────── */
 
 /*
