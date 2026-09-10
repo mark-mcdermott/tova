@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import type { ReactNode } from "react"
 import { render, screen, cleanup, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { EditorHeader } from "./EditorHeader"
@@ -32,7 +33,7 @@ const move = vi.fn()
 const remove = vi.fn()
 const setFavorite = vi.fn()
 
-function renderHeader(active: Note = note()) {
+function renderHeader(active: Note = note(), find?: ReactNode) {
   return render(
     <EditorHeader
       note={active}
@@ -42,6 +43,7 @@ function renderHeader(active: Note = note()) {
       onAddTag={() => undefined}
       onRemoveTag={() => undefined}
       onOpenTag={() => undefined}
+      find={find}
       tagAddRef={{ current: null }}
     />
   )
@@ -416,5 +418,25 @@ describe("deleting from the note menu leaves the note", () => {
     // It was listed twice for a trashed note before this change.
     await openMenuOn(note({ section: "trash", deletedAt: 1 }))
     expect(screen.getAllByRole("menuitem", { name: "Export .pdf" })).toHaveLength(1)
+  })
+})
+
+describe("finding in the note", () => {
+  it("hangs the bar off the header rather than sitting it in the flow", () => {
+    // In flow it pushed the note down, so the words the reader reached for
+    // search while looking at moved under their hands. It is positioned
+    // against the header, which is why the header is the one that is relative.
+    renderHeader(note(), <div data-testid="find-bar" />)
+
+    const header = document.querySelector(".editor-header")
+    const nav = header?.querySelector(".editor-nav")
+
+    expect(nav?.nextElementSibling?.getAttribute("data-testid")).toBe("find-bar")
+    expect(header?.className).toContain("editor-header")
+  })
+
+  it("draws nothing there when the bar is closed", () => {
+    renderHeader()
+    expect(screen.queryByTestId("find-bar")).toBeNull()
   })
 })

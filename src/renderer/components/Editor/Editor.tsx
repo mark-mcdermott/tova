@@ -6,6 +6,7 @@ import { useNotesStore } from "../../stores/notesStore"
 import { registerPendingSave } from "../../stores/pendingSave"
 import { current as currentEntry } from "../../stores/history"
 import { EditorHeader } from "./EditorHeader"
+import { NoteSearch } from "./NoteSearch"
 import { Note } from "../../../shared/types"
 import { assetUrl, resolveAssetPath } from "../../../shared/assets"
 import { normalizeTag, removeTagEdits } from "../../../shared/tags"
@@ -16,6 +17,7 @@ import { PublishToasts } from "./PublishToast"
 import { SpellingMenu } from "./SpellingMenu"
 import { checkGrammar } from "../../grammarLinter"
 import { setGrammarNotes } from "./grammar"
+import { showMatches } from "./searchHighlight"
 import { usePublishStore } from "../../stores/publishStore"
 import { usePreferencesStore } from "../../stores/preferencesStore"
 import { parsePosts, publishedFieldEdit } from "../../../shared/blogPost"
@@ -32,6 +34,11 @@ export function Editor({ note }: EditorProps) {
   const grammarRef = useRef<(text: string) => void>(() => undefined)
   const openSeq = useNotesStore((state) => state.openSeq)
   const showIndex = useNotesStore((state) => state.showIndex)
+  const [finding, setFinding] = useState(false)
+  const [findSeq, setFindSeq] = useState(0)
+
+  /** Assigned after the hook, for the same reason grammarRef is. */
+  const findRef = useRef<() => void>(() => undefined)
   const setTags = useNotesStore((state) => state.setTags)
   const save = useNotesStore((state) => state.save)
   const rememberScroll = useNotesStore((state) => state.rememberScroll)
@@ -109,8 +116,31 @@ export function Editor({ note }: EditorProps) {
     tabSize,
     onPublish: (blog, headerLine) => void publishPost(blog, headerLine),
     onLeaveBackwards: () => tagAddRef.current?.focus(),
-    onCheckGrammar: grammarOn ? (text) => void grammarRef.current(text) : undefined
+    onCheckGrammar: grammarOn ? (text) => void grammarRef.current(text) : undefined,
+    onFind: () => findRef.current()
   })
+
+  /**
+   * Both ways out go through here. Closing from the note rather than from the
+   * bar would otherwise leave the highlights painted — the note still answering
+   * a question the reader has closed.
+   */
+  const closeFind = useCallback(() => {
+    setFinding(false)
+    const view = viewRef.current
+    if (view !== null) showMatches(view, [], -1)
+    view?.focus()
+  }, [viewRef])
+
+  /** A toggle, so the key that opened it closes it wherever the caret is. */
+  findRef.current = () => {
+    if (finding) {
+      closeFind()
+      return
+    }
+    setFinding(true)
+    setFindSeq((seq) => seq + 1)
+  }
 
   /**
    * Assigned after the hook, because the view it dispatches into is what the
@@ -262,6 +292,9 @@ export function Editor({ note }: EditorProps) {
           if (edits.length > 0) view.dispatch({ changes: edits })
         }}
         onOpenTag={(tag) => showIndex({ kind: "tag", tag })}
+        find={
+          finding ? <NoteSearch viewRef={viewRef} openSeq={findSeq} onClose={closeFind} /> : null
+        }
       />
 
       <div className="editor-body" ref={containerRef} />

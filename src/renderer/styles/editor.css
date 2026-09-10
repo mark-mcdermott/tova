@@ -1027,6 +1027,10 @@
 /* ── Editor header navigation ─────────────────────────────────────────── */
 
 .editor-header {
+  --nav-row-height: 1.75rem;
+
+  /* So the find bar can hang below the nav row without moving the note. */
+  position: relative;
   display: flex;
   flex-direction: column;
   /* No shared gap: the space above the title, below it, and below the tags are
@@ -1045,7 +1049,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  min-height: 1.75rem;
+  min-height: var(--nav-row-height);
   /* Lets the crumbs shrink at all; without it the row keeps its content width
      and the overflow lands on whatever is beside it. */
   min-width: 0;
@@ -1201,7 +1205,6 @@
 
 .sidebar-reveal {
   /* Bottom left, where the collapse control it replaces was. */
-  align-self: flex-end;
   width: 1.5rem;
   display: grid;
   place-items: center;
@@ -1555,4 +1558,100 @@
    selected row and a hovered one read as the same kind of thing. */
 .index-item.is-selected .index-row {
   background: rgb(255 255 255 / 22%);
+}
+
+/*
+ * Finding inside the note you are reading, as against the rail's search across
+ * every one. It hangs below the nav row, hugging the right edge under the
+ * controls it belongs with.
+ *
+ * Laid over the note rather than set in the flow of it. In flow, opening the
+ * bar pushed the whole note down — the words the reader reached for search
+ * while looking at moved under their hands, and moved back on closing. Every
+ * editor floats this for that reason; covering part of a long title is
+ * temporary and can be dismissed, while displacing the text being read cannot
+ * be undone by looking away.
+ */
+.note-search {
+  position: absolute;
+  /* Below the nav row, and inset to the same edge its controls sit on: an
+     absolute child is placed against the padding box, so the header's own
+     right padding has to be repeated here. */
+  top: calc(var(--space-8) + var(--nav-row-height) + var(--space-2));
+  right: var(--space-8);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(26rem, calc(100% - var(--space-8) - var(--space-12)));
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-raised);
+  backdrop-filter: blur(20px) saturate(160%);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+  /* The header paints white across itself for the nav row; the bar hangs in
+     that band and takes the same ink. */
+  color: var(--text-primary);
+}
+
+.note-search-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--text-muted);
+  flex: none;
+}
+
+.note-search-field {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.note-search-field::placeholder {
+  color: var(--text-faint);
+}
+
+.note-search-field:focus {
+  outline: none;
+}
+
+.note-search-count {
+  /* Room for the widest count a note is likely to hold, held whether or not
+     there is one — tabular figures keep it still as the numbers change. */
+  min-width: 5.5rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* A query that finds nothing says so in the same place the count would be,
+   rather than leaving the reader to notice an absence. */
+.note-search-count.is-empty {
+  color: var(--text-faint);
+}
+
+.note-search .icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Every match, and the one being stood on. The current one has to win on a
+   ground that is already tinted, so it takes the accent rather than more of
+   the same wash. */
+.cm-search-hit {
+  background: rgb(255 214 102 / 34%);
+  border-radius: 2px;
+}
+
+.cm-search-hit-current {
+  background: var(--accent-tint-strong);
+  color: #f7f6fc;
 }

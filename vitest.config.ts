@@ -10,6 +10,8 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    // jsdom does not implement the geometry CodeMirror measures with.
+    setupFiles: ["./src/renderer/testing/setup.ts"],
     globals: true,
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     restoreMocks: true
