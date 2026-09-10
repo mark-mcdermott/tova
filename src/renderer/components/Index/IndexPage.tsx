@@ -86,7 +86,7 @@ export function IndexPage() {
           {target.kind !== "tags" && (
             <div className="editor-nav-end">
               <label className="index-sort">
-                <span className="index-sort-label">Sort</span>
+                <span className="index-sort-label">Sort by</span>
                 <select
                   className="index-sort-select"
                   aria-label="Sort by"
