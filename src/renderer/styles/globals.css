@@ -138,6 +138,26 @@
    * every one of them was a light-theme colour. On the dark sidebar the error
    * measured 1.29:1, which is not "hard to read" so much as absent.
    */
+  /*
+   * Settings' surfaces, as a depth ladder. Light mode raises a surface by
+   * adding white; dark does the same, far more gently, because the ground it
+   * sits on is already dark. The light values are exactly what each rule
+   * carried before these tokens existed, so light mode is unchanged.
+   */
+  --surface-quiet: rgb(255 255 255 / 20%);
+  --surface-quiet-strong: rgb(255 255 255 / 25%);
+  --surface-row: rgb(255 255 255 / 35%);
+  --surface-tab-hover: rgb(255 255 255 / 40%);
+  --surface-panel: rgb(255 255 255 / 46%);
+  --surface-sunken: rgb(255 255 255 / 55%);
+  --surface-control: rgb(255 255 255 / 62%);
+  --surface-field: rgb(255 255 255 / 72%);
+  --surface-strong: rgb(255 255 255 / 88%);
+  --field-border: rgb(23 20 31 / 18%);
+  --field-border-strong: rgb(23 20 31 / 28%);
+  --surface-edge: rgb(255 255 255 / 60%);
+  --settings-rule: rgb(23 20 31 / 10%);
+
   --danger-ink: #7d1a21;
   --danger-bg: rgb(163 36 44 / 12%);
   --success-ink: #14532d;
@@ -309,6 +329,22 @@
 
   /* Measured on the dark sidebar ground: ink 5.7:1 over its own tint, 8.4:1 on
      the editor's, and 10.7:1 bare where a status has no ground at all. */
+  /* The same ladder, an order of magnitude quieter. A field was 72% white over
+     a dark ground — near-white, carrying near-white text at 1.66:1. */
+  --surface-quiet: rgb(255 255 255 / 4%);
+  --surface-quiet-strong: rgb(255 255 255 / 5%);
+  --surface-row: rgb(255 255 255 / 6%);
+  --surface-tab-hover: rgb(255 255 255 / 7%);
+  --surface-panel: rgb(255 255 255 / 8%);
+  --surface-sunken: rgb(255 255 255 / 9%);
+  --surface-control: rgb(255 255 255 / 11%);
+  --surface-field: rgb(255 255 255 / 13%);
+  --surface-strong: rgb(255 255 255 / 18%);
+  --field-border: rgb(255 255 255 / 16%);
+  --field-border-strong: rgb(255 255 255 / 26%);
+  --surface-edge: rgb(255 255 255 / 10%);
+  --settings-rule: rgb(255 255 255 / 10%);
+
   --danger-ink: #ffb4b0;
   --danger-bg: rgb(255 120 116 / 14%);
   --success-ink: #9fe0b8;
