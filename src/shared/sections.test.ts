@@ -10,6 +10,7 @@ import {
   removeSection,
   renameSection,
   railKey,
+  railLabel,
   reconcileBlogs,
   sectionId,
   setSectionIcon,
@@ -362,5 +363,46 @@ describe("blogs in the rail", () => {
     }))
 
     expect(normalizeSections(old)).toEqual(DEFAULT_SECTIONS)
+  })
+})
+
+describe("what a rail row is called", () => {
+  const renamed: SectionConfig[] = [
+    { id: "ideas", kind: "section", label: "Thoughts", icon: "ideas", enabled: true },
+    { id: "markmcdermott.io", kind: "blog", label: "Writing", icon: "posts", enabled: true }
+  ]
+
+  it("gives a renamed section the reader's name for it", () => {
+    expect(railLabel(renamed, "section", "ideas")).toBe("Thoughts")
+  })
+
+  it("gives a renamed blog the reader's name for it", () => {
+    expect(railLabel(renamed, "blog", "markmcdermott.io")).toBe("Writing")
+  })
+
+  it("keeps the two namespaces apart", () => {
+    const both: SectionConfig[] = [
+      { id: "notes", kind: "section", label: "Notes", icon: "notes", enabled: true },
+      { id: "notes", kind: "blog", label: "My Blog", icon: "posts", enabled: true }
+    ]
+
+    expect(railLabel(both, "section", "notes")).toBe("Notes")
+    expect(railLabel(both, "blog", "notes")).toBe("My Blog")
+  })
+
+  it("names Posts, which the rail never holds", () => {
+    // A post with no blog folder still has to say where it lives.
+    expect(railLabel(DEFAULT_SECTIONS, "section", "posts")).toBe("Posts")
+  })
+
+  it("falls back to the id rather than drawing nothing", () => {
+    expect(railLabel(DEFAULT_SECTIONS, "blog", "gone.example")).toBe("gone.example")
+  })
+
+  it("still names a row the reader has hidden", () => {
+    // Hiding takes a row out of the rail, not out of the vault — its notes are
+    // still reachable by search, and their breadcrumb still has to read.
+    const hidden = toggleSection(DEFAULT_SECTIONS, "ideas")
+    expect(railLabel(hidden, "section", "ideas")).toBe("Ideas")
   })
 })

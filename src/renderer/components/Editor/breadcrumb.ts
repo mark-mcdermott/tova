@@ -1,4 +1,5 @@
 import { NoteSummary } from "../../../shared/types"
+import { SectionConfig, railLabel } from "../../../shared/sections"
 
 export interface Crumb {
   label: string
@@ -6,26 +7,19 @@ export interface Crumb {
   target: string | null
 }
 
-const SECTION_LABELS: Record<NoteSummary["section"], string> = {
-  notes: "Notes",
-  daily: "Daily",
-  ideas: "Ideas",
-  journal: "Journal",
-  posts: "Posts",
-  trash: "Trash"
-}
-
 /**
  * Section / folder / title — at most three levels. The final crumb is the note
  * itself and is not a link; the rest reveal their section in the sidebar.
+ *
+ * Named by the rail, so a section or blog renamed in Settings is renamed here.
  */
-export function breadcrumbFor(note: NoteSummary): Crumb[] {
+export function breadcrumbFor(note: NoteSummary, sections: SectionConfig[]): Crumb[] {
   // A synced post belongs to its blog, not to a generic Posts section — the
   // sidebar shows blogs as peers of Notes, and the crumb follows that.
   const crumbs: Crumb[] =
     note.section === "posts" && note.folder !== null
-      ? [{ label: note.folder, target: `blog:${note.folder}` }]
-      : [{ label: SECTION_LABELS[note.section], target: note.section }]
+      ? [{ label: railLabel(sections, "blog", note.folder), target: `blog:${note.folder}` }]
+      : [{ label: railLabel(sections, "section", note.section), target: note.section }]
 
   if (note.section === "notes" && note.folder !== null) {
     crumbs.push({ label: note.folder, target: `folder:${note.folder}` })

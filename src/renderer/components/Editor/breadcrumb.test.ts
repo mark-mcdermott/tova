@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { breadcrumbFor, showsTrail } from "./breadcrumb"
+import { DEFAULT_SECTIONS } from "../../../shared/sections"
 import { NoteSummary } from "../../../shared/types"
 
 function note(overrides: Partial<NoteSummary>): NoteSummary {
@@ -19,42 +20,45 @@ function note(overrides: Partial<NoteSummary>): NoteSummary {
 
 describe("breadcrumbFor", () => {
   it("shows section then title for a loose note", () => {
-    expect(breadcrumbFor(note({})).map((crumb) => crumb.label)).toEqual(["Notes", "Project River"])
+    expect(breadcrumbFor(note({}), DEFAULT_SECTIONS).map((crumb) => crumb.label)).toEqual([
+      "Notes",
+      "Project River"
+    ])
   })
 
   it("inserts the folder between them", () => {
-    const crumbs = breadcrumbFor(note({ folder: "ideas" }))
+    const crumbs = breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS)
     expect(crumbs.map((crumb) => crumb.label)).toEqual(["Notes", "ideas", "Project River"])
   })
 
   it("never exceeds three levels", () => {
-    expect(breadcrumbFor(note({ folder: "ideas" }))).toHaveLength(3)
+    expect(breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS)).toHaveLength(3)
   })
 
   it("labels a daily note's section", () => {
-    const crumbs = breadcrumbFor(note({ section: "daily", title: "9/3/26" }))
+    const crumbs = breadcrumbFor(note({ section: "daily", title: "9/3/26" }), DEFAULT_SECTIONS)
     expect(crumbs.map((crumb) => crumb.label)).toEqual(["Daily", "9/3/26"])
   })
 
   it("labels a trashed note's section", () => {
-    expect(breadcrumbFor(note({ section: "trash" }))[0].label).toBe("Trash")
+    expect(breadcrumbFor(note({ section: "trash" }), DEFAULT_SECTIONS)[0].label).toBe("Trash")
   })
 
   it("ignores a folder recorded against daily", () => {
-    const crumbs = breadcrumbFor(note({ section: "daily", folder: "ideas" }))
+    const crumbs = breadcrumbFor(note({ section: "daily", folder: "ideas" }), DEFAULT_SECTIONS)
     expect(crumbs.map((crumb) => crumb.label)).toEqual(["Daily", "Project River"])
   })
 
   it("falls back to Untitled for a blank title", () => {
-    expect(breadcrumbFor(note({ title: "   " })).at(-1)?.label).toBe("Untitled")
+    expect(breadcrumbFor(note({ title: "   " }), DEFAULT_SECTIONS).at(-1)?.label).toBe("Untitled")
   })
 
   it("leaves the note itself unlinked", () => {
-    expect(breadcrumbFor(note({ folder: "ideas" })).at(-1)?.target).toBeNull()
+    expect(breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS).at(-1)?.target).toBeNull()
   })
 
   it("targets the sidebar keys the tree uses", () => {
-    const crumbs = breadcrumbFor(note({ folder: "ideas" }))
+    const crumbs = breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS)
     expect(crumbs.map((crumb) => crumb.target)).toEqual(["notes", "folder:ideas", null])
   })
 })
@@ -94,8 +98,57 @@ describe("whether a trail is worth drawing", () => {
     }
 
     for (const note of [base, { ...base, folder: "ideas" }, { ...base, title: "" }]) {
-      const crumbs = breadcrumbFor(note)
+      const crumbs = breadcrumbFor(note, DEFAULT_SECTIONS)
       expect(showsTrail(crumbs, crumbs[crumbs.length - 1].label)).toBe(true)
     }
+  })
+})
+
+describe("crumbs follow the rail", () => {
+  const renamed = [
+    {
+      id: "ideas",
+      kind: "section" as const,
+      label: "Thoughts",
+      icon: "ideas" as const,
+      enabled: true
+    },
+    {
+      id: "markmcdermott.io",
+      kind: "blog" as const,
+      label: "Writing",
+      icon: "posts" as const,
+      enabled: true
+    }
+  ]
+
+  const base = {
+    id: "ideas/spark.md",
+    title: "Spark",
+    section: "ideas" as const,
+    folder: null,
+    tags: [],
+    favorite: false,
+    updatedAt: 1,
+    createdAt: 1,
+    deletedAt: null
+  }
+
+  it("names a renamed section by its new name", () => {
+    expect(breadcrumbFor(base, renamed)[0].label).toBe("Thoughts")
+  })
+
+  it("names a renamed blog by its new name rather than its handle", () => {
+    const post = { ...base, section: "posts" as const, folder: "markmcdermott.io" }
+    const [first] = breadcrumbFor(post, renamed)
+
+    expect(first.label).toBe("Writing")
+    // The target is still the blog's own key: renaming a row moves no files.
+    expect(first.target).toBe("blog:markmcdermott.io")
+  })
+
+  it("still names a post that belongs to no blog", () => {
+    const orphan = { ...base, section: "posts" as const, folder: null }
+    expect(breadcrumbFor(orphan, renamed)[0].label).toBe("Posts")
   })
 })

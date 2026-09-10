@@ -97,6 +97,26 @@ export function sectionRole(entry: SectionConfig): string | null {
   return null
 }
 
+/**
+ * Sections the rail never holds, and so have no label of the reader's. Posts
+ * belongs to the blogs that sync into it rather than being a row of its own.
+ */
+const UNLISTED_LABELS: Record<string, string> = { posts: "Posts" }
+
+/**
+ * What a rail entry is called. The one place a section id or a blog name turns
+ * into words, so a renamed row reaches the index heading and the breadcrumb as
+ * well as the rail — they each used to carry a hardcoded label of their own.
+ */
+export function railLabel(
+  sections: SectionConfig[],
+  kind: SectionConfig["kind"],
+  id: string
+): string {
+  const entry = sections.find((section) => section.kind === kind && section.id === id)
+  return entry?.label ?? UNLISTED_LABELS[id] ?? id
+}
+
 /** A directory name: lowercase, no spaces, nothing that could climb a path. */
 export function sectionId(label: string): string | null {
   const id = label
