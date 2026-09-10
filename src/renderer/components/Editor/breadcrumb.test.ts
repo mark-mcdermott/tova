@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { breadcrumbFor, showsTrail } from "./breadcrumb"
 import { DEFAULT_SECTIONS } from "../../../shared/sections"
+import { IndexTarget, indexKey } from "../../../shared/indexTarget"
 import { NoteSummary } from "../../../shared/types"
 
 function note(overrides: Partial<NoteSummary>): NoteSummary {
@@ -57,9 +58,24 @@ describe("breadcrumbFor", () => {
     expect(breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS).at(-1)?.target).toBeNull()
   })
 
-  it("targets the sidebar keys the tree uses", () => {
+  it("targets the listing each crumb opens", () => {
     const crumbs = breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS)
-    expect(crumbs.map((crumb) => crumb.target)).toEqual(["notes", "folder:ideas", null])
+    expect(crumbs.map((crumb) => crumb.target)).toEqual([
+      { kind: "section", section: "notes" },
+      { kind: "folder", folder: "ideas" },
+      null
+    ])
+  })
+
+  it("still points at the sidebar keys the rail marks, once resolved", () => {
+    // The crumb carries an IndexTarget now rather than a sidebar key, so the
+    // two have to keep agreeing or the rail stops marking where you are.
+    const crumbs = breadcrumbFor(note({ folder: "ideas" }), DEFAULT_SECTIONS)
+    const keys = crumbs
+      .filter((crumb) => crumb.target !== null)
+      .map((crumb) => indexKey(crumb.target as IndexTarget))
+
+    expect(keys).toEqual(["notes", "folder:ideas"])
   })
 })
 
@@ -144,7 +160,7 @@ describe("crumbs follow the rail", () => {
 
     expect(first.label).toBe("Writing")
     // The target is still the blog's own key: renaming a row moves no files.
-    expect(first.target).toBe("blog:markmcdermott.io")
+    expect(first.target).toEqual({ kind: "blog", blog: "markmcdermott.io" })
   })
 
   it("still names a post that belongs to no blog", () => {

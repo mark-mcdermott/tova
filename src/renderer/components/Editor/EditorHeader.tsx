@@ -4,6 +4,7 @@ import { useNotesStore } from "../../stores/notesStore"
 import { canGoBack, canGoForward } from "../../stores/history"
 import { breadcrumbFor } from "./breadcrumb"
 import { useRail } from "../../useRail"
+import { IndexTarget, indexKey } from "../../../shared/indexTarget"
 import { NoteMenu } from "./NoteMenu"
 import { Icon } from "../Sidebar/icons"
 import { formatEditedAgo } from "../../../shared/date"
@@ -31,9 +32,6 @@ export function EditorHeader({
 }: EditorHeaderProps) {
   const back = useNotesStore((state) => state.back)
   const forward = useNotesStore((state) => state.forward)
-  const expandSection = useNotesStore((state) => state.expandSection)
-  const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
-  const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
 
   // Selecting booleans keeps this out of the re-render path for scroll updates,
   // which touch history on every frame.
@@ -41,6 +39,8 @@ export function EditorHeader({
   const hasForward = useNotesStore((state) => canGoForward(state.history))
   const focusTitleSeq = useNotesStore((state) => state.focusTitleSeq)
   const toggleFavorite = useNotesStore((state) => state.toggleFavorite)
+
+  const showIndex = useNotesStore((state) => state.showIndex)
 
   const menu = useContextMenu()
   const rail = useRail()
@@ -62,12 +62,6 @@ export function EditorHeader({
     titleRef.current?.focus()
     titleRef.current?.select()
   }, [focusTitleSeq])
-
-  function revealInSidebar(target: string) {
-    if (sidebarCollapsed) toggleSidebar()
-    if (target.startsWith("folder:")) expandSection("notes")
-    expandSection(target)
-  }
 
   return (
     <div className="editor-header">
@@ -98,14 +92,16 @@ export function EditorHeader({
 
         <ol className="breadcrumb">
           {crumbs.map((crumb, index) => (
-            <li key={`${crumb.target ?? "note"}-${index}`}>
+            <li key={`${crumb.target === null ? "note" : indexKey(crumb.target)}-${index}`}>
               {crumb.target === null ? (
                 <span className="breadcrumb-current">{crumb.label}</span>
               ) : (
+                // Opens the listing. The sidebar marks where you are from the
+                // index itself, so nothing has to reveal the row separately.
                 <button
                   type="button"
                   className="breadcrumb-link"
-                  onClick={() => revealInSidebar(crumb.target as string)}
+                  onClick={() => showIndex(crumb.target as IndexTarget)}
                 >
                   {crumb.label}
                 </button>

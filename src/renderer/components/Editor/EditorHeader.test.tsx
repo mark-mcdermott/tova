@@ -120,30 +120,46 @@ describe("EditorHeader breadcrumb", () => {
     expect(screen.queryByRole("button", { name: "Project River" })).toBeNull()
   })
 
-  it("reveals a collapsed section when its crumb is clicked", async () => {
-    useNotesStore.setState({ expanded: { folders: true } })
+  it("opens the section's listing when its crumb is clicked", async () => {
+    // It used to expand the row in the sidebar and leave you on the note: a
+    // control that looked like a link, read like a link, and went nowhere.
     renderHeader()
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Notes" }))
-    expect(useNotesStore.getState().expanded.notes).toBe(true)
+    const state = useNotesStore.getState()
+
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "section", section: "notes" })
   })
 
-  it("reveals the parent section alongside a folder crumb", async () => {
-    useNotesStore.setState({ expanded: { folders: true } })
+  it("opens the folder's listing from a folder crumb", async () => {
     renderHeader(note({ folder: "ideas" }))
 
     await userEvent.setup().click(screen.getByRole("button", { name: "ideas" }))
-    const { expanded } = useNotesStore.getState()
-    expect(expanded["folder:ideas"]).toBe(true)
-    expect(expanded.notes).toBe(true)
+    const state = useNotesStore.getState()
+
+    expect(state.view).toBe("index")
+    expect(state.indexTarget).toEqual({ kind: "folder", folder: "ideas" })
   })
 
-  it("reopens a collapsed sidebar when a crumb is clicked", async () => {
+  it("opens a blog's listing rather than the generic Posts section", async () => {
+    renderHeader(note({ section: "posts", folder: "markmcdermott.io" }))
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "markmcdermott.io" }))
+    expect(useNotesStore.getState().indexTarget).toEqual({
+      kind: "blog",
+      blog: "markmcdermott.io"
+    })
+  })
+
+  it("leaves a collapsed sidebar collapsed", async () => {
+    // Reopening it was a side effect of revealing the row. Navigating is the
+    // whole job now, and App keeps its own control for reopening the rail.
     useNotesStore.setState({ sidebarCollapsed: true })
     renderHeader()
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Notes" }))
-    expect(useNotesStore.getState().sidebarCollapsed).toBe(false)
+    expect(useNotesStore.getState().sidebarCollapsed).toBe(true)
   })
 })
 
