@@ -7,7 +7,7 @@ import {
   BUNDLED_TITLE_FONTS,
   DEFAULT_PREFERENCES
 } from "../../../../shared/preferences"
-import { SHUFFLE, backgroundUrls, showsShuffle, userBackgroundUrl } from "../../../backgrounds"
+import { SHUFFLE, bundledFor, showsShuffle, userBackgroundUrl } from "../../../backgrounds"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { applyTitleFont, loadSampleFace } from "../../../titleFont"
 import { Field } from "../Field"
@@ -30,7 +30,9 @@ function BackgroundChoices({
 }) {
   const added = usePreferencesStore((state) => state.userBackgrounds)
   const addBackground = usePreferencesStore((state) => state.addBackground)
-  const count = backgroundUrls.length + added.length
+  // Only this mode's own photographs; the reader's are offered to both.
+  const bundled = bundledFor(theme)
+  const count = bundled.length + added.length
 
   return (
     <div className="background-choices">
@@ -61,7 +63,7 @@ function BackgroundChoices({
         </button>
       )}
 
-      {backgroundUrls.map((url) => (
+      {bundled.map((url) => (
         <button
           key={url}
           type="button"

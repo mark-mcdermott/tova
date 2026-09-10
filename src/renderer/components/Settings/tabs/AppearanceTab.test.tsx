@@ -96,19 +96,19 @@ describe("AppearanceTab", () => {
   })
 
   it("keeps a background per mode", async () => {
+    // It used to click the second lake-sunset button, there being one in each
+    // picker. Each mode offers only its own photographs now.
     render(<AppearanceTab />)
-    const [light, dark] = screen.getAllByRole("button", { name: /lake-sunset/ })
 
-    await userEvent.click(dark)
+    await userEvent.click(screen.getByLabelText("milky-way.jpg for dark"))
     await waitFor(() =>
       expect(write).toHaveBeenCalledWith(
         expect.objectContaining({
-          backgroundDark: "lake-sunset.jpg",
+          backgroundDark: "milky-way.jpg",
           backgroundLight: DEFAULT_PREFERENCES.backgroundLight
         })
       )
     )
-    expect(light.getAttribute("aria-label")).toContain("light")
   })
 
   it("offers None to both modes, which used to be dark's alone", () => {
@@ -237,14 +237,37 @@ describe("AppearanceTab backgrounds", () => {
     }
   })
 
-  it("offers Shuffle to both modes, now that two pictures ship", () => {
-    // The rule that hides it for a single picture cannot be reached from here
-    // any more — showsShuffle is tested directly in backgrounds.test.ts.
+  it("offers each mode only the photographs bundled for it", () => {
+    // One picture each, so neither picker can shuffle and neither shows the
+    // other's — a bright sky cannot carry white text, and the reverse.
     usePreferencesStore.setState({ userBackgrounds: [] })
     render(<AppearanceTab />)
 
-    expect(screen.getByLabelText("Shuffle for light")).toBeDefined()
-    expect(screen.getByLabelText("Shuffle for dark")).toBeDefined()
+    expect(screen.getByLabelText("lake-sunset.jpg for light")).toBeDefined()
+    expect(screen.queryByLabelText("milky-way.jpg for light")).toBeNull()
+
+    expect(screen.getByLabelText("milky-way.jpg for dark")).toBeDefined()
+    expect(screen.queryByLabelText("lake-sunset.jpg for dark")).toBeNull()
+  })
+
+  it("hides Shuffle again, since each mode is back to one picture", () => {
+    usePreferencesStore.setState({
+      userBackgrounds: [],
+      preferences: { ...DEFAULT_PREFERENCES, backgroundLight: null, backgroundDark: null }
+    })
+    render(<AppearanceTab />)
+
+    expect(screen.queryByLabelText("Shuffle for light")).toBeNull()
+    expect(screen.queryByLabelText("Shuffle for dark")).toBeNull()
+  })
+
+  it("offers the reader's own pictures to both modes", () => {
+    // Only the reader knows whether an image of theirs suits one or the other.
+    usePreferencesStore.setState({ userBackgrounds: ["mine.jpg"] })
+    render(<AppearanceTab />)
+
+    expect(screen.getByLabelText("mine.jpg for light")).toBeDefined()
+    expect(screen.getByLabelText("mine.jpg for dark")).toBeDefined()
   })
 
   it("offers Shuffle once a second picture has been added", () => {
