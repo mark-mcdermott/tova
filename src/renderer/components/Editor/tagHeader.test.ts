@@ -18,11 +18,18 @@ function mount(doc: string, anchor: number) {
   return view
 }
 
-/** Text of the lines the editor is actually showing. */
+/**
+ * Text of the lines the editor is actually showing. Controls drawn into a line
+ * — the × on a tag — are not part of its text and are read past.
+ */
 function visibleLines(view: EditorView): string[] {
   return [...view.dom.querySelectorAll(".cm-line")]
     .filter((line) => !line.classList.contains("cm-line-hidden"))
-    .map((line) => line.textContent ?? "")
+    .map((line) => {
+      const copy = line.cloneNode(true) as HTMLElement
+      copy.querySelectorAll(".cm-tag-remove").forEach((control) => control.remove())
+      return copy.textContent ?? ""
+    })
 }
 
 afterEach(() => {

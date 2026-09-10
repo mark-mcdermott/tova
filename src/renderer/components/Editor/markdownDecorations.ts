@@ -9,7 +9,7 @@ import {
 import { Range } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
 import type { SyntaxNode, Tree } from "@lezer/common"
-import { findTags, isTagOnlyLine } from "../../../shared/tags"
+import { findTags, isTagOnlyLine, removeOccurrenceEdits } from "../../../shared/tags"
 
 const hide = Decoration.replace({})
 const syntaxMarker = Decoration.mark({ class: "cm-syntax-marker" })
@@ -23,6 +23,62 @@ const linkMark = Decoration.mark({ class: "cm-link" })
 const tagTopMark = Decoration.mark({ class: "cm-tag cm-tag-top" })
 const tagBodyMark = Decoration.mark({ class: "cm-tag cm-tag-body" })
 const tagRawMark = Decoration.mark({ class: "cm-tag-raw" })
+
+/**
+ * The × on a rendered tag.
+ *
+ * A sibling of the tag's own span rather than a child of it: a mark decoration
+ * wraps text, and there is nowhere inside it to put a control. Being the next
+ * element along is enough, since the pill reveals it with an adjacent-sibling
+ * rule.
+ *
+ * It removes this one written occurrence and no other, so a tag used three
+ * times loses one use and keeps its chip in the row above. That is the honest
+ * reading: the note still carries the tag.
+ */
+class TagRemoveWidget extends WidgetType {
+  constructor(
+    private readonly tag: string,
+    private readonly from: number,
+    private readonly to: number
+  ) {
+    super()
+  }
+
+  // Position matters as well as name: two uses of one tag are different
+  // controls, and reusing the DOM between them would remove the wrong one.
+  eq(other: TagRemoveWidget): boolean {
+    return other.tag === this.tag && other.from === this.from && other.to === this.to
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const button = document.createElement("button")
+    button.type = "button"
+    button.className = "cm-tag-remove"
+    button.textContent = "×"
+    button.setAttribute("aria-label", `Remove ${this.tag}`)
+
+    // mousedown rather than click: the editor takes the selection on mousedown,
+    // and letting it through would move the caret into the tag being removed.
+    button.addEventListener("mousedown", (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      const edits = removeOccurrenceEdits(view.state.doc.toString(), this.from, this.to)
+      if (edits.length > 0) view.dispatch({ changes: edits })
+    })
+
+    return button
+  }
+
+  ignoreEvent(): boolean {
+    return true
+  }
+}
+
+function tagRemove(tag: string, from: number, to: number): Decoration {
+  return Decoration.widget({ widget: new TagRemoveWidget(tag, from, to), side: 1 })
+}
 
 const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
   Decoration.mark({ class: `cm-heading cm-h${level}` })
@@ -314,6 +370,7 @@ function collectTagDecorations(
         // stay put rather than flickering as the cursor moves through them.
         if (topZone) {
           decorations.push(tagTopMark.range(from, to))
+          decorations.push(tagRemove(match.tag, from, to).range(to))
           continue
         }
 
@@ -324,6 +381,7 @@ function collectTagDecorations(
 
         decorations.push(hide.range(from, from + 1))
         decorations.push(tagBodyMark.range(from, to))
+        decorations.push(tagRemove(match.tag, from, to).range(to))
       }
     }
   }
