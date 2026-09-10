@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { breadcrumbFor, showsTrail } from "./breadcrumb"
+import { breadcrumbFor, noteHome, showsTrail } from "./breadcrumb"
 import { DEFAULT_SECTIONS } from "../../../shared/sections"
 import { IndexTarget, indexKey } from "../../../shared/indexTarget"
 import { NoteSummary } from "../../../shared/types"
@@ -166,5 +166,47 @@ describe("crumbs follow the rail", () => {
   it("still names a post that belongs to no blog", () => {
     const orphan = { ...base, section: "posts" as const, folder: null }
     expect(breadcrumbFor(orphan, renamed)[0].label).toBe("Posts")
+  })
+})
+
+describe("where a note lives", () => {
+  const base = {
+    id: "notes/river.md",
+    title: "River",
+    section: "notes" as const,
+    folder: null,
+    tags: [],
+    favorite: false,
+    updatedAt: 1,
+    createdAt: 1,
+    deletedAt: null
+  }
+
+  it("is the folder for a filed note", () => {
+    expect(noteHome({ ...base, folder: "ideas" })).toEqual({ kind: "folder", folder: "ideas" })
+  })
+
+  it("is the section for a loose one", () => {
+    expect(noteHome(base)).toEqual({ kind: "section", section: "notes" })
+  })
+
+  it("is the blog for a synced post, not a generic Posts", () => {
+    expect(noteHome({ ...base, section: "posts", folder: "markmcdermott.io" })).toEqual({
+      kind: "blog",
+      blog: "markmcdermott.io"
+    })
+  })
+
+  it("is where the trail already pointed, so the two cannot drift", () => {
+    // The last linked crumb is one step up from the note; so is this.
+    for (const note of [
+      base,
+      { ...base, folder: "ideas" },
+      { ...base, section: "posts" as const, folder: "markmcdermott.io" },
+      { ...base, section: "daily" as const }
+    ]) {
+      const crumbs = breadcrumbFor(note, DEFAULT_SECTIONS)
+      expect(crumbs[crumbs.length - 2].target).toEqual(noteHome(note))
+    }
   })
 })
