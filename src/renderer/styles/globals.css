@@ -376,10 +376,16 @@ body {
   -webkit-app-region: drag;
 }
 
-.sidebar-header button,
-.editor-header button,
-.editor-header input,
-.sidebar-footer button {
+/*
+ * Every control in a strip has to opt back out, and the list used to name the
+ * elements one at a time — button and input, but not select, so the sort
+ * dropdown sat inside the drag region and never opened: the window manager took
+ * the click before the DOM saw it. Naming the whole class of interactive
+ * elements instead of adding `select` keeps the next one from being a bug too.
+ */
+.sidebar-header :is(button, input, select, textarea, a),
+.editor-header :is(button, input, select, textarea, a),
+.sidebar-footer :is(button, input, select, textarea, a) {
   -webkit-app-region: no-drag;
 }
 
