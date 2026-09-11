@@ -1,0 +1,12 @@
+# Build output. Prettier walks the whole tree, and cargo leaves tens of
+# thousands of JSON files under target/ that are nobody's to format.
+out/
+release/
+src-tauri/target/
+src-tauri/gen/
+
+# Generated from the TypeScript and compared byte for byte against it. Letting
+# a formatter reshape one of these would be a fixture changing to meet a tool.
+conformance/
+
+pnpm-lock.yaml
