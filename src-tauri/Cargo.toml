@@ -35,6 +35,7 @@ tauri-plugin-opener = "2"
 url = "2"
 http = "1"
 uuid = { version = "1", features = ["v4"] }
+sha2 = "0.11"
 
 # Only the keychain needs it, and only Electron's safeStorage format on macOS
 # has a keychain to read. Gated here rather than in the code alone so a Linux
