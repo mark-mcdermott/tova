@@ -19,7 +19,10 @@ beforeEach(() => {
     preferences: { write },
     notes: { createSection, deleteSection, list }
   })
-  usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
+  usePreferencesStore.setState({
+    preferences: { ...DEFAULT_PREFERENCES },
+    avatarSources: { system: null, custom: null }
+  })
   useNotesStore.setState({ notes: [] })
 })
 

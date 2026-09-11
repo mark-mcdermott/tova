@@ -1,10 +1,11 @@
 import { app, dialog } from "electron"
 import { execFile } from "child_process"
-import { copyFile, readFile, writeFile } from "fs/promises"
+import { copyFile, readFile } from "fs/promises"
 import { extname, join } from "path"
 import { userInfo } from "os"
 import { promisify } from "util"
 import { readPreferences, writePreferences } from "./preferences"
+import type { AvatarChoice, AvatarSources } from "../shared/preferences"
 
 /*
  * The avatar is copied into the app's data directory rather than referenced
@@ -42,16 +43,13 @@ export async function chooseAvatar(): Promise<string | null> {
   const filename = `avatar${extension}`
   await copyFile(source, avatarPath(filename))
 
+  // Chosen as well as copied: nobody picks a picture in order to not use it.
   const preferences = await readPreferences()
-  await writePreferences({ ...preferences, avatarFile: filename })
+  await writePreferences({ ...preferences, avatar: "custom", avatarFile: filename })
   return filename
 }
 
-/**
- * Returned as a data URL: the file lives outside the vault, so the asset
- * protocol does not reach it, and this is one small image read once.
- */
-export async function avatarDataUrl(): Promise<string | null> {
+async function customDataUrl(): Promise<string | null> {
   const { avatarFile } = await readPreferences()
   if (avatarFile === null) return null
 
@@ -60,9 +58,22 @@ export async function avatarDataUrl(): Promise<string | null> {
     const mime = MIME[extname(avatarFile).toLowerCase()] ?? "image/png"
     return `data:${mime};base64,${bytes.toString("base64")}`
   } catch {
-    // The file was removed underneath us; the bundled portrait stands in.
+    // The file was removed underneath us; the initials stand in.
     return null
   }
+}
+
+/**
+ * Both fetched pictures, whichever is in use.
+ *
+ * Both, because the picker draws every option as the face it would give you,
+ * and one call rather than two because they are read together at load. Data
+ * URLs: neither file is under the vault, so the asset protocol does not reach
+ * them, and both are small images read once.
+ */
+export async function avatarSources(): Promise<AvatarSources> {
+  const [system, custom] = await Promise.all([systemDataUrl(), customDataUrl()])
+  return { system, custom }
 }
 
 const run = promisify(execFile)
@@ -77,7 +88,12 @@ async function macAccountPhoto(): Promise<Buffer | null> {
 
   try {
     // execFile, not a shell: the username is interpolated into an argument.
-    const { stdout } = await run("dscl", [".", "-read", `/Users/${userInfo().username}`, "JPEGPhoto"])
+    const { stdout } = await run("dscl", [
+      ".",
+      "-read",
+      `/Users/${userInfo().username}`,
+      "JPEGPhoto"
+    ])
     const hex = stdout.replace(/^JPEGPhoto:/, "").replace(/\s+/g, "")
     if (hex.length < 8 || hex.length % 2 !== 0) return null
 
@@ -90,16 +106,16 @@ async function macAccountPhoto(): Promise<Buffer | null> {
   }
 }
 
-/**
- * Copies the account picture in as the starting avatar. Like the display name,
- * this is a seed: once written it is an ordinary value the writer can replace
- * or clear.
- */
-export async function seedAvatar(): Promise<string | null> {
+async function systemDataUrl(): Promise<string | null> {
   const photo = await macAccountPhoto()
-  if (photo === null) return null
+  return photo === null ? null : `data:image/jpeg;base64,${photo.toString("base64")}`
+}
 
-  const filename = "avatar.jpg"
-  await writeFile(avatarPath(filename), photo)
-  return filename
+/**
+ * What a fresh install starts on. The account picture if the Mac has one, the
+ * initials otherwise — read where it lives rather than copied in, so changing
+ * it in System Settings changes it here too.
+ */
+export async function startingAvatar(): Promise<AvatarChoice> {
+  return (await macAccountPhoto()) === null ? "initials" : "system"
 }

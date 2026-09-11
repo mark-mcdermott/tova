@@ -26,7 +26,10 @@ beforeEach(() => {
   })
 
   window.tova = stubBridge({ notes: { read } })
-  usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
+  usePreferencesStore.setState({
+    preferences: { ...DEFAULT_PREFERENCES },
+    avatarSources: { system: null, custom: null }
+  })
   useNotesStore.setState({
     view: "settings",
     settingsTab: "profile",

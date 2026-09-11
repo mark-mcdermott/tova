@@ -26,13 +26,13 @@ export async function readPreferences(): Promise<Preferences> {
   try {
     return normalizePreferences(JSON.parse(await readFile(pathToPreferences(), "utf-8")))
   } catch {
-    // Nothing stored yet. Seed the name and picture from the account rather
+    // Nothing stored yet. Seed the name and the avatar from the account rather
     // than starting blank, and write them so they are editable like any other.
-    const { seedAvatar } = await import("./avatar")
+    const { startingAvatar } = await import("./avatar")
     return writePreferences({
       ...normalizePreferences(null),
       displayName: accountName(),
-      avatarFile: await seedAvatar()
+      avatar: await startingAvatar()
     })
   }
 }

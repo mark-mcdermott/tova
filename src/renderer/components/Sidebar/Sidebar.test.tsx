@@ -86,7 +86,10 @@ beforeEach(() => {
   window.tova = stubBridge({ notes: bridge })
   // Disclosure state lives in the store, so it has to be reset or an expanded
   // folder leaks into whichever test runs next.
-  usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
+  usePreferencesStore.setState({
+    preferences: { ...DEFAULT_PREFERENCES },
+    avatarSources: { system: null, custom: null }
+  })
   useBlogsStore.setState({ blogs: [] })
   useNotesStore.setState({
     notes,
@@ -222,7 +225,7 @@ describe("Sidebar", () => {
   it("shows the configured name at the foot of the sidebar", () => {
     usePreferencesStore.setState({
       preferences: { ...DEFAULT_PREFERENCES, displayName: "Mark" },
-      avatarUrl: null
+      avatarSources: { system: null, custom: null }
     })
     const { container } = render(<Sidebar />)
 

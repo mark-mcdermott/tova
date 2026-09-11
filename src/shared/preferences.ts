@@ -57,10 +57,42 @@ export function themeIcon(theme: ThemeChoice): "sun" | "moon" | "monitor" {
 /** What the app is actually painting, once "system" has been resolved. */
 export type Theme = "light" | "dark"
 
+/**
+ * Which face the sidebar wears. Kept apart from `avatarFile`, so choosing the
+ * initials for a while does not throw away the picture that was there.
+ */
+export type AvatarChoice = "initials" | "tova" | "system" | "custom"
+
+export const AVATARS: { value: AvatarChoice; label: string; hint: string }[] = [
+  { value: "initials", label: "Initials", hint: "Your name, in a circle" },
+  { value: "tova", label: "Tova", hint: "The robot from the icon" },
+  { value: "system", label: "Account", hint: "From your Mac account" },
+  { value: "custom", label: "Picture", hint: "One you choose" }
+]
+
+/**
+ * The two faces that have to be fetched rather than drawn: the Mac account
+ * picture, which lives in the directory service, and the one the reader chose,
+ * which lives in the app's data directory. Neither is reachable from the
+ * renderer, so both are read in main and handed over as data URLs.
+ */
+export interface AvatarSources {
+  system: string | null
+  custom: string | null
+}
+
+export const NO_AVATARS: AvatarSources = { system: null, custom: null }
+
+function isAvatarChoice(value: unknown): value is AvatarChoice {
+  return AVATARS.some((avatar) => avatar.value === value)
+}
+
 export interface Preferences {
   /** Shown beside the avatar in the sidebar footer. */
   displayName: string
-  /** Avatar file kept in the app's data directory, or null for the bundled one. */
+  /** Which of the four the sidebar draws. */
+  avatar: AvatarChoice
+  /** The chosen picture, kept in the app's data directory. Null if never set. */
   avatarFile: string | null
   /** Editor body size in px. */
   fontSize: number
@@ -92,6 +124,7 @@ export interface Preferences {
 
 export const DEFAULT_PREFERENCES: Preferences = {
   displayName: "",
+  avatar: "initials",
   avatarFile: null,
   fontSize: 18,
   tabSize: 2,
@@ -139,6 +172,13 @@ export function normalizePreferences(value: unknown): Preferences {
 
   return {
     displayName: text(raw.displayName, DEFAULT_PREFERENCES.displayName).slice(0, 60),
+    // Before the four choices existed a picture was the only thing a file could
+    // mean, so a file left over from then is the one being used.
+    avatar: isAvatarChoice(raw.avatar)
+      ? raw.avatar
+      : typeof raw.avatarFile === "string"
+        ? "custom"
+        : "initials",
     avatarFile: typeof raw.avatarFile === "string" ? raw.avatarFile : null,
     fontSize: clamp(Number(raw.fontSize ?? DEFAULT_PREFERENCES.fontSize), LIMITS.fontSize),
     tabSize: clamp(Number(raw.tabSize ?? DEFAULT_PREFERENCES.tabSize), LIMITS.tabSize),

@@ -7,6 +7,7 @@ import { useContextMenu } from "../Popup/useContextMenu"
 import { composeTarget } from "../../../shared/composeTarget"
 import { visibleSections } from "../../../shared/sections"
 import { Icon } from "./icons"
+import { resolveAvatar } from "../../avatar"
 import { Wordmark } from "./Wordmark"
 import { Avatar } from "./Avatar"
 import { usePreferencesStore } from "../../stores/preferencesStore"
@@ -21,7 +22,8 @@ export function Sidebar() {
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
   const showSettings = useNotesStore((state) => state.showSettings)
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
-  const chosenAvatar = usePreferencesStore((state) => state.avatarUrl)
+  const avatar = usePreferencesStore((state) => state.preferences.avatar)
+  const avatarSources = usePreferencesStore((state) => state.avatarSources)
   const view = useNotesStore((state) => state.view)
   const indexTarget = useNotesStore((state) => state.indexTarget)
   const active = useNotesStore((state) => state.active)
@@ -129,7 +131,11 @@ export function Sidebar() {
           aria-label="Profile"
           onClick={() => showSettings("profile")}
         >
-          <Avatar className="sidebar-avatar" src={chosenAvatar} name={displayName} />
+          <Avatar
+            className="sidebar-avatar"
+            src={resolveAvatar(avatar, avatarSources)}
+            name={displayName}
+          />
           {displayName !== "" && <span className="sidebar-user">{displayName}</span>}
         </button>
 

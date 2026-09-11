@@ -1,10 +1,15 @@
 import { create } from "zustand"
-import { DEFAULT_PREFERENCES, Preferences } from "../../shared/preferences"
+import {
+  AvatarSources,
+  DEFAULT_PREFERENCES,
+  NO_AVATARS,
+  Preferences
+} from "../../shared/preferences"
 
 interface PreferencesState {
   preferences: Preferences
-  /** Data URL of a chosen avatar, or null when the bundled one applies. */
-  avatarUrl: string | null
+  /** The two fetched faces; which of them is drawn is a preference. */
+  avatarSources: AvatarSources
   /** Backgrounds the reader has added. */
   /** Pictures the reader added, kept per mode as the bundled ones are. */
   userBackgrounds: { light: string[]; dark: string[] }
@@ -19,19 +24,19 @@ interface PreferencesState {
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   preferences: DEFAULT_PREFERENCES,
-  avatarUrl: null,
+  avatarSources: NO_AVATARS,
   userBackgrounds: { light: [], dark: [] },
   loaded: false,
 
   load: async () => {
-    const [preferences, avatarUrl, light, dark] = await Promise.all([
+    const [preferences, avatarSources, light, dark] = await Promise.all([
       window.tova.preferences.read(),
-      window.tova.preferences.avatarUrl(),
+      window.tova.preferences.avatarSources(),
       window.tova.preferences.listBackgrounds("light"),
       window.tova.preferences.listBackgrounds("dark")
     ])
     const userBackgrounds = { light, dark }
-    set({ preferences, avatarUrl, userBackgrounds, loaded: true })
+    set({ preferences, avatarSources, userBackgrounds, loaded: true })
   },
 
   addBackground: async (theme) => {
@@ -51,13 +56,13 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     const saved = await window.tova.preferences.write({ ...get().preferences, ...patch })
     set({ preferences: saved })
 
-    // The picture is read separately from the preference naming it, so changing
-    // which file it is has to pull the new one. Without this, removing an
-    // avatar wrote the change to disk and left the old portrait on screen until
-    // some unrelated reload happened to refresh it — which read as the button
-    // being slow, or broken, rather than as nothing having happened.
+    // The pictures are read separately from the preference naming one, so
+    // changing which file it is has to pull them again. Without this, removing
+    // an avatar wrote the change to disk and left the old portrait on screen
+    // until some unrelated reload happened to refresh it — which read as the
+    // button being slow, or broken, rather than as nothing having happened.
     if (patch.avatarFile !== undefined) {
-      set({ avatarUrl: await window.tova.preferences.avatarUrl() })
+      set({ avatarSources: await window.tova.preferences.avatarSources() })
     }
 
     if (patch.spellcheck !== undefined) {

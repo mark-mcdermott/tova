@@ -228,8 +228,8 @@ export interface PreferencesApi {
   ) => Promise<import("./preferences").Preferences>
   /** Opens a picker and copies the chosen image in. Null if cancelled. */
   chooseAvatar: () => Promise<string | null>
-  /** Data URL for the stored avatar, or null when the bundled one applies. */
-  avatarUrl: () => Promise<string | null>
+  /** The account picture and the chosen one, as data URLs where they exist. */
+  avatarSources: () => Promise<import("./preferences").AvatarSources>
   /** Backgrounds the reader added, served over the tova-bg scheme. */
   listBackgrounds: (theme: "light" | "dark") => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */

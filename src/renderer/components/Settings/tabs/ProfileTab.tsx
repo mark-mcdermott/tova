@@ -1,12 +1,30 @@
+import { AVATARS, AvatarChoice } from "../../../../shared/preferences"
+import { offersAvatar, resolveAvatar } from "../../../avatar"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
 import { Avatar } from "../../Sidebar/Avatar"
 
 export function ProfileTab() {
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
-  const avatarUrl = usePreferencesStore((state) => state.avatarUrl)
+  const avatar = usePreferencesStore((state) => state.preferences.avatar)
+  const avatarSources = usePreferencesStore((state) => state.avatarSources)
   const update = usePreferencesStore((state) => state.update)
   const chooseAvatar = usePreferencesStore((state) => state.chooseAvatar)
+
+  const offered = AVATARS.filter((option) => offersAvatar(option.value, avatarSources))
+
+  /**
+   * Clearing the picture takes the choice off it too. Leaving it set would show
+   * the initials while the picker said Picture, and the next Choose would look
+   * like it had done nothing.
+   */
+  async function removePicture() {
+    const patch = {
+      avatarFile: null,
+      ...(avatar === "custom" ? { avatar: "initials" as const } : {})
+    }
+    await update(patch)
+  }
 
   return (
     <section className="settings-section">
@@ -30,25 +48,37 @@ export function ProfileTab() {
       <Field
         id="profile-avatar"
         label="Avatar"
-        hint="Copied into Tova, so moving the original does not lose it."
+        hint="Each one shown as the face it would give you."
       >
-        <div className="profile-avatar-row">
-          <Avatar className="profile-avatar" src={avatarUrl} name={displayName} />
-          <button
-            type="button"
-            id="profile-avatar"
-            className="settings-button"
-            onClick={() => void chooseAvatar()}
-          >
-            Choose a picture…
-          </button>
-          {avatarUrl !== null && (
+        {/* Every option draws itself. A picker that named the choices and left
+            the reader to imagine them would be asking them to choose blind. */}
+        <div className="avatar-choices">
+          {offered.map((option) => (
             <button
+              key={option.value}
               type="button"
-              className="settings-button"
-              onClick={() => void update({ avatarFile: null })}
+              className={`avatar-choice${avatar === option.value ? " is-chosen" : ""}`}
+              aria-pressed={avatar === option.value}
+              onClick={() => void update({ avatar: option.value as AvatarChoice })}
             >
-              Remove
+              <Avatar
+                className="avatar-choice-face"
+                src={resolveAvatar(option.value, avatarSources)}
+                name={displayName}
+              />
+              <span className="choice-name">{option.label}</span>
+              <span className="avatar-choice-hint">{option.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="profile-avatar-row">
+          <button type="button" className="settings-button" onClick={() => void chooseAvatar()}>
+            {avatarSources.custom === null ? "Choose a picture…" : "Choose another…"}
+          </button>
+          {avatarSources.custom !== null && (
+            <button type="button" className="settings-button" onClick={() => void removePicture()}>
+              Remove the picture
             </button>
           )}
         </div>
