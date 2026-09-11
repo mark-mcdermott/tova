@@ -67,7 +67,9 @@ export function ProfileTab() {
                 name={displayName}
               />
               <span className="choice-name">{option.label}</span>
-              <span className="avatar-choice-hint">{option.hint}</span>
+              {option.hint !== undefined && (
+                <span className="avatar-choice-hint">{option.hint}</span>
+              )}
             </button>
           ))}
         </div>

@@ -63,9 +63,9 @@ export type Theme = "light" | "dark"
  */
 export type AvatarChoice = "initials" | "tova" | "system" | "custom"
 
-export const AVATARS: { value: AvatarChoice; label: string; hint: string }[] = [
-  { value: "initials", label: "Initials", hint: "Your name, in a circle" },
-  { value: "tova", label: "Tova", hint: "Tova's own robot" },
+export const AVATARS: { value: AvatarChoice; label: string; hint?: string }[] = [
+  { value: "initials", label: "Initials" },
+  { value: "tova", label: "The Tova robot" },
   { value: "system", label: "Account", hint: "From your Mac account" },
   { value: "custom", label: "Picture", hint: "One you choose" }
 ]

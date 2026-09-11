@@ -44,7 +44,7 @@ describe("the avatar picker", () => {
   it("offers the initials and the robot on a machine with nothing else", () => {
     render(<ProfileTab />)
 
-    expect(offered()).toEqual(["Initials", "Tova"])
+    expect(offered()).toEqual(["Initials", "The Tova robot"])
   })
 
   it("marks the one in use", () => {
@@ -67,7 +67,7 @@ describe("the avatar picker", () => {
 
   it("saves the choice", async () => {
     render(<ProfileTab />)
-    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+    await userEvent.click(screen.getByRole("button", { name: "The Tova robot" }))
 
     await waitFor(() => expect(write).toHaveBeenCalled())
     expect(write.mock.calls[0][0].avatar).toBe("tova")

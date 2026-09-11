@@ -644,6 +644,25 @@
   line-height: 1;
 }
 
+/* A name gives the disc its colour; with no name there is nothing to derive
+   one from, so it takes the accent. */
+.avatar-initials.is-unnamed {
+  background: var(--accent);
+}
+
+/*
+ * Tova's t, standing in for the initial there is none of. Masked rather than
+ * drawn, so it takes the same ink as a letter would, and sized to sit at about
+ * the height of one.
+ */
+.avatar-wordmark {
+  width: 1.21em;
+  height: 1.1em;
+  background: currentColor;
+  -webkit-mask: url("../assets/avatars/tova-t.png") center / contain no-repeat;
+  mask: url("../assets/avatars/tova-t.png") center / contain no-repeat;
+}
+
 /* ── Search ───────────────────────────────────────────────────────────── */
 
 .sidebar-search {

@@ -7,7 +7,10 @@ interface AvatarProps {
 
 /** Two letters at most: more stops reading as a mark and starts reading as text. */
 function initialsOf(name: string): string {
-  const words = name.trim().split(/[\s._-]+/).filter((word) => word !== "")
+  const words = name
+    .trim()
+    .split(/[\s._-]+/)
+    .filter((word) => word !== "")
   if (words.length === 0) return ""
   if (words.length === 1) return words[0].slice(0, 1).toUpperCase()
   return (words[0][0] + words[words.length - 1][0]).toUpperCase()
@@ -32,13 +35,25 @@ export function Avatar({ src, name, className }: AvatarProps) {
   if (src !== null) return <img className={className} src={src} alt="" />
 
   const initials = initialsOf(name)
-  const hue = hueOf(name)
+
+  /*
+   * No name to take a letter from, so Tova signs it with its own t. The disc
+   * takes the accent rather than a hue: every other one is a colour derived
+   * from the name, and an empty name hashes to a red that means nothing.
+   */
+  if (initials === "") {
+    return (
+      <span className={`${className} avatar-initials is-unnamed`} aria-hidden="true">
+        <span className="avatar-wordmark" />
+      </span>
+    )
+  }
 
   return (
     <span
       className={`${className} avatar-initials`}
       aria-hidden="true"
-      style={{ background: `hsl(${hue} 42% 52%)` }}
+      style={{ background: `hsl(${hueOf(name)} 42% 52%)` }}
     >
       {initials}
     </span>
