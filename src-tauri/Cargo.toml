@@ -1,0 +1,27 @@
+[package]
+name = "tova"
+version = "1.0.0"
+edition = "2021"
+description = "Tova — a calm local-first writing app"
+authors = ["Mark McDermott"]
+# The Electron main process is still the one that ships. This builds beside it
+# and is ported into, module by module, behind the same IPC surface.
+publish = false
+
+[lib]
+name = "tova_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+# A binary measured against a 241MB Electron bundle is worth a minute of LTO.
+lto = true
+codegen-units = 1
+strip = true
