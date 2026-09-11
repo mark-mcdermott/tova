@@ -1,15 +1,12 @@
 /*!
 Notes: reading them, writing them, and naming the files they live in — a port
-of `src/main/notes.ts`.
+and moving them — a port of `src/main/notes.ts`.
 
-This half is the note itself. Moving one — to another section, to Trash, back
-out of it — is the slice after this, and is a different kind of risk: it
-renames files, and it is worth reviewing on its own rather than underneath
-this.
+Nothing here destroys a note. Deleting one moves it to Trash and records where
+it came from; deleting a folder or a section moves everything inside to Trash
+first; and only `permanent_delete` unlinks anything — from Trash, and nowhere
+else.
 */
-
-// The other half's callers arrive with it.
-#![allow(dead_code)]
 
 use chrono::{DateTime, Local, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
@@ -17,7 +14,8 @@ use serde::{Deserialize, Serialize};
 use crate::backup::save_version;
 use crate::front_matter::{self, Data, Value};
 use crate::note_location::{
-    is_section, is_valid_folder_name, parse_note_id, restore_location, to_note_id, NoteLocation,
+    is_section, is_valid_folder_name, parse_note_id, restore_location, to_note_id, trash_location,
+    NoteLocation,
 };
 use crate::note_name::{compare_titles, slugify, unique_slug};
 use crate::tags::{all_tags, normalize_manual_tags};
@@ -441,6 +439,275 @@ pub fn set_manual_tags(id: &str, tags: Vec<String>) -> Result<NoteSummary, Strin
     Ok(to_summary(&load(&note.location)?))
 }
 
+/// Where a note goes when it is moved, by the same rules `create` uses.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveNoteInput {
+    pub section: String,
+    #[serde(default)]
+    pub folder: Option<String>,
+}
+
+/// Sections whose directories may not be removed. Daily is where today's note
+/// lands and Trash is where deletions go; neither is the reader's to delete.
+const UNDELETABLE: [&str; 2] = ["daily", "trash"];
+
+fn can_delete_section(id: &str) -> bool {
+    !UNDELETABLE.contains(&id)
+}
+
+/// Moves a note's file, then rewrites the front matter that says where it
+/// belongs. In that order, so an interruption leaves the file somewhere real
+/// rather than a record pointing at a file that never moved.
+fn relocate(
+    note: &Loaded,
+    next: &NoteLocation,
+    home: Home,
+    deleted_at: Option<f64>,
+) -> Result<NoteSummary, String> {
+    std::fs::rename(note_path(&note.location)?, note_path(next)?).map_err(|e| e.to_string())?;
+
+    let mut moved = load(next)?;
+    moved.home = home;
+    moved.deleted_at = deleted_at;
+    persist(&moved)?;
+
+    Ok(to_summary(&load(next)?))
+}
+
+pub fn move_note(id: &str, input: MoveNoteInput) -> Result<NoteSummary, String> {
+    let note = load(&require_location(id)?)?;
+    let section = if input.section == "trash" {
+        "notes".to_string()
+    } else {
+        input.section
+    };
+    let folder = normalize_folder(&section, input.folder.as_deref());
+
+    let directory = directory_of(&section, folder.as_deref())?;
+    std::fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
+
+    // Named after the file it already is, not its title: a move is not a
+    // rename, and a note whose title drifted from its filename keeps the drift.
+    let filename = free_filename(
+        &directory,
+        stem(&note.location.filename),
+        Some(&note.location.filename),
+    );
+    let next = NoteLocation {
+        section: section.clone(),
+        folder: folder.clone(),
+        filename,
+    };
+
+    relocate(&note, &next, Home { section, folder }, note.deleted_at)
+}
+
+/// Soft delete. The origin is recorded in front matter so restore can undo it.
+pub fn trash_note(id: &str) -> Result<NoteSummary, String> {
+    let note = load(&require_location(id)?)?;
+    if note.location.section == "trash" {
+        return Ok(to_summary(&note));
+    }
+
+    let trash_dir = resolve_in_vault("trash")?;
+    std::fs::create_dir_all(&trash_dir).map_err(|e| e.to_string())?;
+
+    let next = trash_location(&free_filename(
+        &trash_dir,
+        stem(&note.location.filename),
+        None,
+    ));
+    let home = Home {
+        section: note.location.section.clone(),
+        folder: note.location.folder.clone(),
+    };
+
+    relocate(&note, &next, home, Some(now_ms()))
+}
+
+pub fn restore_note(id: &str) -> Result<NoteSummary, String> {
+    let note = load(&require_location(id)?)?;
+    if note.location.section != "trash" {
+        return Ok(to_summary(&note));
+    }
+
+    let mut recorded = Data::default();
+    recorded.set("section", note.home.section.clone());
+    recorded.set("folder", note.home.folder.clone().unwrap_or_default());
+    let home = restore_location(&recorded, &note.location.filename);
+
+    // A note can outlive the section it came from. Restoring it into a
+    // directory no longer configured would put it somewhere the sidebar cannot
+    // show, so it comes back to Notes instead — visible beats faithful here.
+    let home_exists = resolve_in_vault(&home.section).is_ok_and(|path| path.is_dir());
+    let target = if home_exists {
+        home
+    } else {
+        NoteLocation {
+            section: "notes".to_string(),
+            folder: None,
+            ..home
+        }
+    };
+
+    let directory = directory_of(&target.section, target.folder.as_deref())?;
+    std::fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
+
+    let next = NoteLocation {
+        filename: free_filename(&directory, stem(&target.filename), None),
+        ..target
+    };
+    let home = Home {
+        section: next.section.clone(),
+        folder: next.folder.clone(),
+    };
+
+    relocate(&note, &next, home, None)
+}
+
+/// Unlinks a note outright, with no Trash step. Every caller has to justify
+/// skipping the recoverable path, and there is exactly one.
+fn delete_note_file(id: &str) -> Result<(), String> {
+    std::fs::remove_file(note_path(&require_location(id)?)?).map_err(|e| e.to_string())
+}
+
+pub fn permanent_delete(id: &str) -> Result<(), String> {
+    let location = require_location(id)?;
+    // Permanent deletion is only ever reachable from Trash.
+    if location.section != "trash" {
+        return Err("Only trashed notes can be permanently deleted".into());
+    }
+    delete_note_file(id)
+}
+
+pub fn list_folders() -> Result<Vec<String>, String> {
+    let notes_dir = resolve_in_vault("notes")?;
+    let mut folders: Vec<String> = names_in(&notes_dir)
+        .into_iter()
+        .filter(|name| notes_dir.join(name).is_dir() && is_valid_folder_name(name))
+        .collect();
+
+    folders.sort_by(|a, b| compare_titles(a, b));
+    Ok(folders)
+}
+
+pub fn create_folder(name: &str) -> Result<String, String> {
+    if !is_valid_folder_name(name) {
+        return Err(format!("Invalid folder name: {name}"));
+    }
+    let folder = crate::js::trim(name).to_string();
+    std::fs::create_dir_all(resolve_in_vault(&format!("notes/{folder}"))?)
+        .map_err(|e| e.to_string())?;
+    Ok(folder)
+}
+
+/// Renames a folder and brings the `folder` value in each contained note's
+/// front matter along with it, so a later restore from Trash still lands
+/// correctly.
+pub fn rename_folder(from: &str, to: &str) -> Result<String, String> {
+    if !is_valid_folder_name(from) || !is_valid_folder_name(to) {
+        return Err(format!("Invalid folder name: {from} \u{2192} {to}"));
+    }
+
+    let source = crate::js::trim(from).to_string();
+    let target = crate::js::trim(to).to_string();
+    if source == target {
+        return Ok(target);
+    }
+
+    let target_path = resolve_in_vault(&format!("notes/{target}"))?;
+    if target_path.exists() {
+        return Err(format!("A folder named {target} already exists"));
+    }
+
+    std::fs::rename(resolve_in_vault(&format!("notes/{source}"))?, &target_path)
+        .map_err(|e| e.to_string())?;
+
+    for filename in names_in(&target_path) {
+        if !filename.ends_with(".md") {
+            continue;
+        }
+        let location = NoteLocation {
+            section: "notes".to_string(),
+            folder: Some(target.clone()),
+            filename,
+        };
+        let Ok(mut note) = load(&location) else {
+            continue;
+        };
+        note.home = Home {
+            section: "notes".to_string(),
+            folder: Some(target.clone()),
+        };
+        persist(&note)?;
+    }
+
+    Ok(target)
+}
+
+/// Moves everything a directory holds to Trash and says what was moved. Notes
+/// are never destroyed by deleting the thing that contained them.
+fn empty_into_trash(
+    directory: &std::path::Path,
+    into: impl Fn(String) -> NoteLocation,
+) -> Vec<String> {
+    names_in(directory)
+        .into_iter()
+        .filter(|name| name.ends_with(".md") && directory.join(name).is_file())
+        .filter_map(|name| trash_note(&to_note_id(&into(name))).ok())
+        .map(|summary| summary.id)
+        .collect()
+}
+
+pub fn delete_folder(name: &str) -> Result<Vec<String>, String> {
+    if !is_valid_folder_name(name) {
+        return Err(format!("Invalid folder name: {name}"));
+    }
+
+    let folder = crate::js::trim(name).to_string();
+    let directory = resolve_in_vault(&format!("notes/{folder}"))?;
+    let trashed = empty_into_trash(&directory, |filename| NoteLocation {
+        section: "notes".to_string(),
+        folder: Some(folder.clone()),
+        filename,
+    });
+
+    let _ = std::fs::remove_dir_all(&directory);
+    Ok(trashed)
+}
+
+/// Makes the directory a newly configured section will keep its notes in.
+pub fn create_section(id: &str) -> Result<(), String> {
+    if !is_section(id) {
+        return Err(format!("Invalid section: {id}"));
+    }
+    std::fs::create_dir_all(resolve_in_vault(id)?).map_err(|e| e.to_string())
+}
+
+/// Removes a section's directory, moving whatever it held to Trash first — the
+/// same bargain deleting a folder makes. Daily and Trash are refused here as
+/// well as in the UI: the backend does not trust the renderer to have checked.
+pub fn delete_section(id: &str) -> Result<Vec<String>, String> {
+    if !is_section(id) {
+        return Err(format!("Invalid section: {id}"));
+    }
+    if !can_delete_section(id) || id == "posts" {
+        return Err(format!("{id} cannot be removed"));
+    }
+
+    let directory = resolve_in_vault(id)?;
+    let section = id.to_string();
+    let trashed = empty_into_trash(&directory, |filename| NoteLocation {
+        section: section.clone(),
+        folder: None,
+        filename,
+    });
+
+    let _ = std::fs::remove_dir_all(&directory);
+    Ok(trashed)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -710,6 +977,275 @@ mod tests {
         }
 
         assert_eq!(crate::backup::list_versions(&note.summary.id).len(), 1);
+    }
+
+    #[test]
+    fn deleting_a_note_moves_it_to_the_trash_and_remembers_where_it_was() {
+        let _s = Scratch::new("trash");
+        let note = create(CreateNoteInput {
+            section: "notes".to_string(),
+            folder: Some("work".to_string()),
+            title: Some("Slow Morning".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let trashed = trash_note(&note.summary.id).unwrap();
+
+        assert_eq!(trashed.section, "trash");
+        assert_eq!(trashed.folder, None);
+        assert!(trashed.deleted_at.is_some());
+        // The file is gone from where it was, not copied.
+        assert!(read(&note.summary.id).is_err());
+        assert_eq!(read(&trashed.id).unwrap().summary.section, "trash");
+    }
+
+    #[test]
+    fn restoring_puts_it_back_where_it_came_from() {
+        let _s = Scratch::new("restore");
+        let note = create(CreateNoteInput {
+            section: "notes".to_string(),
+            folder: Some("work".to_string()),
+            title: Some("Slow Morning".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+        let trashed = trash_note(&note.summary.id).unwrap();
+
+        let restored = restore_note(&trashed.id).unwrap();
+
+        assert_eq!(restored.id, "notes/work/slow-morning.md");
+        assert_eq!(restored.folder.as_deref(), Some("work"));
+        assert_eq!(restored.deleted_at, None);
+    }
+
+    #[test]
+    fn a_note_restored_into_a_section_that_is_gone_comes_back_to_notes() {
+        // Visible beats faithful: a directory the sidebar no longer shows is
+        // no place to put something the reader just asked to see again.
+        let s = Scratch::new("restoregone");
+        std::fs::create_dir_all(s.vault.join("archive")).unwrap();
+        let note = create(CreateNoteInput {
+            section: "archive".to_string(),
+            title: Some("Old Thing".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+        let trashed = trash_note(&note.summary.id).unwrap();
+        std::fs::remove_dir_all(s.vault.join("archive")).unwrap();
+
+        let restored = restore_note(&trashed.id).unwrap();
+
+        assert_eq!(restored.section, "notes");
+        assert_eq!(restored.folder, None);
+    }
+
+    #[test]
+    fn deleting_a_note_twice_leaves_it_where_it_is() {
+        let _s = Scratch::new("twice");
+        let note = made("notes", "Slow Morning", "");
+        let trashed = trash_note(&note.summary.id).unwrap();
+
+        let again = trash_note(&trashed.id).unwrap();
+
+        assert_eq!(again.id, trashed.id);
+        assert_eq!(again.deleted_at, trashed.deleted_at);
+    }
+
+    #[test]
+    fn restoring_something_that_was_never_deleted_does_nothing() {
+        let _s = Scratch::new("restorelive");
+        let note = made("notes", "Slow Morning", "");
+
+        assert_eq!(restore_note(&note.summary.id).unwrap().id, note.summary.id);
+    }
+
+    #[test]
+    fn two_notes_of_the_same_name_can_both_be_in_the_trash() {
+        let _s = Scratch::new("trashclash");
+        let first = made("notes", "Slow Morning", "First.");
+        trash_note(&first.summary.id).unwrap();
+        let second = made("notes", "Slow Morning", "Second.");
+
+        let trashed = trash_note(&second.summary.id).unwrap();
+
+        assert_eq!(trashed.id, "trash/slow-morning-2.md");
+        assert_eq!(read("trash/slow-morning.md").unwrap().body, "First.");
+        assert_eq!(read(&trashed.id).unwrap().body, "Second.");
+    }
+
+    #[test]
+    fn moving_keeps_the_filename_rather_than_renaming_to_the_title() {
+        // A move is not a rename: a note whose title drifted from its filename
+        // keeps the drift, and the id the renderer just used stays meaningful.
+        let _s = Scratch::new("move");
+        let note = made("notes", "Slow Morning", "Coffee.");
+
+        let moved = move_note(
+            &note.summary.id,
+            MoveNoteInput {
+                section: "daily".to_string(),
+                folder: None,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(moved.id, "daily/slow-morning.md");
+        assert_eq!(moved.title, "Slow Morning");
+        assert_eq!(read(&moved.id).unwrap().body, "Coffee.");
+    }
+
+    #[test]
+    fn moving_into_a_section_that_has_no_folders_drops_the_folder() {
+        let _s = Scratch::new("movefolder");
+        let note = made("notes", "Slow Morning", "");
+
+        let moved = move_note(
+            &note.summary.id,
+            MoveNoteInput {
+                section: "daily".to_string(),
+                folder: Some("work".to_string()),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(moved.id, "daily/slow-morning.md");
+        assert_eq!(moved.folder, None);
+    }
+
+    #[test]
+    fn permanent_deletion_is_only_ever_reachable_from_the_trash() {
+        let _s = Scratch::new("permanent");
+        let note = made("notes", "Slow Morning", "");
+
+        assert!(permanent_delete(&note.summary.id).is_err());
+        // Still there.
+        assert!(read(&note.summary.id).is_ok());
+
+        let trashed = trash_note(&note.summary.id).unwrap();
+        permanent_delete(&trashed.id).unwrap();
+        assert!(read(&trashed.id).is_err());
+    }
+
+    #[test]
+    fn folders_are_listed_in_a_deterministic_order() {
+        let s = Scratch::new("folders");
+        for name in ["Work", "archive", "\u{c9}tudes", "etudes"] {
+            std::fs::create_dir_all(s.vault.join("notes").join(name)).unwrap();
+        }
+        std::fs::write(s.vault.join("notes/loose.md"), "not a folder").unwrap();
+
+        assert_eq!(
+            list_folders().unwrap(),
+            ["archive", "etudes", "\u{c9}tudes", "Work"]
+        );
+    }
+
+    #[test]
+    fn renaming_a_folder_brings_its_notes_records_along() {
+        // So a note deleted afterwards still restores into the right place.
+        let _s = Scratch::new("renamefolder");
+        create_folder("work").unwrap();
+        let note = create(CreateNoteInput {
+            section: "notes".to_string(),
+            folder: Some("work".to_string()),
+            title: Some("Slow Morning".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        rename_folder("work", "projects").unwrap();
+
+        let moved = read("notes/projects/slow-morning.md").unwrap();
+        assert_eq!(moved.summary.folder.as_deref(), Some("projects"));
+        assert!(read(&note.summary.id).is_err());
+
+        // And the record is what restore reads, so check it survives the trip.
+        let trashed = trash_note(&moved.summary.id).unwrap();
+        assert_eq!(
+            restore_note(&trashed.id).unwrap().folder.as_deref(),
+            Some("projects")
+        );
+    }
+
+    #[test]
+    fn renaming_a_folder_onto_one_that_exists_is_refused() {
+        let _s = Scratch::new("clash");
+        create_folder("work").unwrap();
+        create_folder("projects").unwrap();
+
+        assert!(rename_folder("work", "projects").is_err());
+        // And neither folder moved.
+        assert_eq!(list_folders().unwrap(), ["projects", "work"]);
+    }
+
+    #[test]
+    fn deleting_a_folder_keeps_its_notes_by_moving_them_to_the_trash() {
+        let _s = Scratch::new("deletefolder");
+        create_folder("work").unwrap();
+        create(CreateNoteInput {
+            section: "notes".to_string(),
+            folder: Some("work".to_string()),
+            title: Some("Slow Morning".to_string()),
+            body: Some("Coffee.".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let trashed = delete_folder("work").unwrap();
+
+        assert_eq!(trashed, ["trash/slow-morning.md"]);
+        assert_eq!(read("trash/slow-morning.md").unwrap().body, "Coffee.");
+        assert!(list_folders().unwrap().is_empty());
+    }
+
+    #[test]
+    fn deleting_a_section_keeps_its_notes_the_same_way() {
+        let s = Scratch::new("deletesection");
+        create_section("archive").unwrap();
+        std::fs::write(s.vault.join("archive/old.md"), "Still wanted.").unwrap();
+
+        let trashed = delete_section("archive").unwrap();
+
+        assert_eq!(trashed, ["trash/old.md"]);
+        assert_eq!(read("trash/old.md").unwrap().body, "Still wanted.");
+        assert!(!s.vault.join("archive").exists());
+    }
+
+    #[test]
+    fn the_sections_that_hold_the_app_together_cannot_be_removed() {
+        /*
+         * Checked here as well as in the UI. The renderer is not trusted to
+         * have checked: daily is where today's note lands, trash is where
+         * deletions go, and posts belongs to the blogs that sync into it.
+         */
+        let s = Scratch::new("undeletable");
+
+        for section in ["daily", "trash", "posts"] {
+            assert!(delete_section(section).is_err(), "{section} was removable");
+            assert!(s.vault.join(section).is_dir());
+        }
+    }
+
+    #[test]
+    fn a_section_id_that_is_not_one_is_refused_before_it_reaches_a_path() {
+        let _s = Scratch::new("badsection");
+
+        for id in ["../escape", "Notes", "", "a/b", "-leading"] {
+            assert!(create_section(id).is_err(), "created {id:?}");
+            assert!(delete_section(id).is_err(), "deleted {id:?}");
+        }
+    }
+
+    #[test]
+    fn a_folder_name_that_is_not_one_is_refused_before_it_reaches_a_path() {
+        let _s = Scratch::new("badfolder");
+
+        for name in ["..", ".", "", "  ", "a/b", "a\\b"] {
+            assert!(create_folder(name).is_err(), "created {name:?}");
+            assert!(delete_folder(name).is_err(), "deleted {name:?}");
+            assert!(rename_folder("work", name).is_err(), "renamed to {name:?}");
+        }
     }
 
     #[test]

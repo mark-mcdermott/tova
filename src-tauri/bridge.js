@@ -73,6 +73,16 @@
   tova.notes.setTags = (id, tags) => invoke("note_tags", { id, tags })
   tova.backups.listVersions = (id) => invoke("note_versions", { id })
   tova.backups.readVersion = (id, version) => invoke("note_version_read", { id, version })
+  tova.notes.move = (id, input) => invoke("note_move", { id, input })
+  tova.notes.remove = (id) => invoke("note_remove", { id })
+  tova.notes.restore = (id) => invoke("note_restore", { id })
+  tova.notes.permanentDelete = (id) => invoke("note_permanent_delete", { id })
+  tova.notes.listFolders = () => invoke("folder_list")
+  tova.notes.createFolder = (name) => invoke("folder_create", { name })
+  tova.notes.renameFolder = (from, to) => invoke("folder_rename", { from, to })
+  tova.notes.deleteFolder = (name) => invoke("folder_delete", { name })
+  tova.notes.createSection = (id) => invoke("section_create", { id })
+  tova.notes.deleteSection = (id) => invoke("section_delete", { id })
 
   window.tova = tova
 })()

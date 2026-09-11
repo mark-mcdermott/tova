@@ -175,6 +175,56 @@ fn note_version_read(id: String, version: String) -> Result<String, String> {
     backup::read_version(&id, &version)
 }
 
+#[tauri::command]
+fn note_move(id: String, input: notes::MoveNoteInput) -> Result<notes::NoteSummary, String> {
+    notes::move_note(&id, input)
+}
+
+#[tauri::command]
+fn note_remove(id: String) -> Result<notes::NoteSummary, String> {
+    notes::trash_note(&id)
+}
+
+#[tauri::command]
+fn note_restore(id: String) -> Result<notes::NoteSummary, String> {
+    notes::restore_note(&id)
+}
+
+#[tauri::command]
+fn note_permanent_delete(id: String) -> Result<(), String> {
+    notes::permanent_delete(&id)
+}
+
+#[tauri::command]
+fn folder_list() -> Result<Vec<String>, String> {
+    notes::list_folders()
+}
+
+#[tauri::command]
+fn folder_create(name: String) -> Result<String, String> {
+    notes::create_folder(&name)
+}
+
+#[tauri::command]
+fn folder_rename(from: String, to: String) -> Result<String, String> {
+    notes::rename_folder(&from, &to)
+}
+
+#[tauri::command]
+fn folder_delete(name: String) -> Result<Vec<String>, String> {
+    notes::delete_folder(&name)
+}
+
+#[tauri::command]
+fn section_create(id: String) -> Result<(), String> {
+    notes::create_section(&id)
+}
+
+#[tauri::command]
+fn section_delete(id: String) -> Result<Vec<String>, String> {
+    notes::delete_section(&id)
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -219,7 +269,17 @@ pub fn run() {
             note_favorite,
             note_tags,
             note_versions,
-            note_version_read
+            note_version_read,
+            note_move,
+            note_remove,
+            note_restore,
+            note_permanent_delete,
+            folder_list,
+            folder_create,
+            folder_rename,
+            folder_delete,
+            section_create,
+            section_delete
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());
