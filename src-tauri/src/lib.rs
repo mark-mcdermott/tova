@@ -8,6 +8,7 @@ slice can land without the renderer knowing which one it is talking to.
 */
 
 mod backup;
+mod blog_post;
 mod blogs;
 mod bridge;
 /// The text layer's conformance tests, in one place — see the module for why.
@@ -24,6 +25,8 @@ mod media;
 mod note_location;
 mod note_name;
 mod notes;
+#[cfg(test)]
+mod posts_conformance;
 mod preferences;
 mod publish_state;
 mod safe_storage;
@@ -34,6 +37,7 @@ mod search_conformance;
 mod sections;
 mod session;
 mod settings;
+mod sync_plan;
 mod tags;
 mod vault;
 mod vault_file;

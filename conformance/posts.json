@@ -1,0 +1,1085 @@
+{
+  "_readme": [
+    "The @blog post format, and what a sync decides to do with it.",
+    "",
+    "publishedFieldEdit hands offsets to the editor, which is the renderer's",
+    "and counts UTF-16 code units. A case with an emoji in the title is in",
+    "here for that reason: a byte offset would land the edit in the wrong",
+    "place or split a character.",
+    "",
+    "The header and field patterns use \\S and \\w, which without the u flag",
+    "are ASCII - so the accented cases say what actually happens rather than",
+    "what a Unicode-aware regex would.",
+    "",
+    "planSync sorts filenames, and Array.prototype.sort with no comparator",
+    "orders by UTF-16 code unit - which puts A.md before a.md.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "posts": [
+    {
+      "doc": "",
+      "posts": [],
+      "derived": [],
+      "edits": []
+    },
+    {
+      "doc": "Just prose.\n",
+      "posts": [],
+      "derived": [],
+      "edits": []
+    },
+    {
+      "doc": "@blog post\n@title Slow Morning\n\nCoffee.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Slow Morning",
+              "line": 1
+            }
+          ],
+          "body": "Coffee.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "Slow Morning",
+          "TITLE": "Slow Morning",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "slow-morning",
+          "filename": "26-09-11-slow-morning.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Slow Morning\"\ndate: \"2026-09-11\"\n---\n\nCoffee.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 30,
+            "to": 30,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title Slow Morning\n@published 26-09-11-new.md\n\nCoffee.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title \"Quoted: Title\"\n@date 26-09-03\n@tags one, two , ,three\n@slug my-slug\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Quoted: Title",
+              "line": 1
+            },
+            {
+              "name": "date",
+              "value": "26-09-03",
+              "line": 2
+            },
+            {
+              "name": "tags",
+              "value": "one, two , ,three",
+              "line": 3
+            },
+            {
+              "name": "slug",
+              "value": "my-slug",
+              "line": 4
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 8
+        }
+      ],
+      "derived": [
+        {
+          "title": "Quoted: Title",
+          "TITLE": "Quoted: Title",
+          "date": "2026-09-03",
+          "tags": [
+            "one",
+            "two",
+            "three"
+          ],
+          "slug": "my-slug",
+          "filename": "26-09-03-my-slug.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Quoted: Title\"\ndate: \"2026-09-03\"\ntags: [\"one\", \"two\", \"three\"]\nslug: my-slug\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 86,
+            "to": 86,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title \"Quoted: Title\"\n@date 26-09-03\n@tags one, two , ,three\n@slug my-slug\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title A\n\nOne.\n---\n@blog post\n@title B\n\nTwo.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "A",
+              "line": 1
+            }
+          ],
+          "body": "One.",
+          "headerLine": 0,
+          "endLine": 5
+        },
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "B",
+              "line": 6
+            }
+          ],
+          "body": "Two.",
+          "headerLine": 5,
+          "endLine": 10
+        }
+      ],
+      "derived": [
+        {
+          "title": "A",
+          "TITLE": "A",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "a",
+          "filename": "26-09-11-a.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"A\"\ndate: \"2026-09-11\"\n---\n\nOne.\n"
+        },
+        {
+          "title": "B",
+          "TITLE": "B",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "b",
+          "filename": "26-09-11-b.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"B\"\ndate: \"2026-09-11\"\n---\n\nTwo.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 19,
+            "to": 19,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n@published 26-09-11-new.md\n\nOne.\n---\n@blog post\n@title B\n\nTwo.\n"
+        },
+        {
+          "edit": {
+            "from": 49,
+            "to": 49,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n\nOne.\n---\n@blog post\n@title B\n@published 26-09-11-new.md\n\nTwo.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title A\n\nOne.\n@blog post\n@title B\n\nTwo.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "A",
+              "line": 1
+            }
+          ],
+          "body": "One.",
+          "headerLine": 0,
+          "endLine": 4
+        },
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "B",
+              "line": 5
+            }
+          ],
+          "body": "Two.",
+          "headerLine": 4,
+          "endLine": 9
+        }
+      ],
+      "derived": [
+        {
+          "title": "A",
+          "TITLE": "A",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "a",
+          "filename": "26-09-11-a.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"A\"\ndate: \"2026-09-11\"\n---\n\nOne.\n"
+        },
+        {
+          "title": "B",
+          "TITLE": "B",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "b",
+          "filename": "26-09-11-b.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"B\"\ndate: \"2026-09-11\"\n---\n\nTwo.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 19,
+            "to": 19,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n@published 26-09-11-new.md\n\nOne.\n@blog post\n@title B\n\nTwo.\n"
+        },
+        {
+          "edit": {
+            "from": 45,
+            "to": 45,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n\nOne.\n@blog post\n@title B\n@published 26-09-11-new.md\n\nTwo.\n"
+        }
+      ]
+    },
+    {
+      "doc": "Intro prose.\n\n@blog post\n@title A\n\nBody.\n\nTrailing prose after separator.\n---\nAfter.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "A",
+              "line": 3
+            }
+          ],
+          "body": "Body.\n\nTrailing prose after separator.",
+          "headerLine": 2,
+          "endLine": 9
+        }
+      ],
+      "derived": [
+        {
+          "title": "A",
+          "TITLE": "A",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "a",
+          "filename": "26-09-11-a.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"A\"\ndate: \"2026-09-11\"\n---\n\nBody.\n\nTrailing prose after separator.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 33,
+            "to": 33,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "Intro prose.\n\n@blog post\n@title A\n@published 26-09-11-new.md\n\nBody.\n\nTrailing prose after separator.\n---\nAfter.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title A\n@published 26-09-03-a.md\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "A",
+              "line": 1
+            },
+            {
+              "name": "published",
+              "value": "26-09-03-a.md",
+              "line": 2
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 6
+        }
+      ],
+      "derived": [
+        {
+          "title": "A",
+          "TITLE": "A",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "a",
+          "filename": "26-09-11-a.md",
+          "publishedAs": "26-09-03-a.md",
+          "yaml": "---\ntitle: \"A\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 20,
+            "to": 44,
+            "insert": "@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n\nNo fields at all.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [],
+          "body": "No fields at all.",
+          "headerLine": 0,
+          "endLine": 4
+        }
+      ],
+      "derived": [
+        {
+          "title": null,
+          "TITLE": null,
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "untitled",
+          "filename": "26-09-11-untitled.md",
+          "publishedAs": null,
+          "yaml": "---\ndate: \"2026-09-11\"\n---\n\nNo fields at all.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 10,
+            "to": 10,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@published 26-09-11-new.md\n\nNo fields at all.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@1bad notafield\n@title A\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [],
+          "body": "@1bad notafield\n@title A\n\nBody.",
+          "headerLine": 0,
+          "endLine": 6
+        }
+      ],
+      "derived": [
+        {
+          "title": null,
+          "TITLE": null,
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "untitled",
+          "filename": "26-09-11-untitled.md",
+          "publishedAs": null,
+          "yaml": "---\ndate: \"2026-09-11\"\n---\n\n@1bad notafield\n@title A\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 10,
+            "to": 10,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@published 26-09-11-new.md\n@1bad notafield\n@title A\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title\n\nEmpty value.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "",
+              "line": 1
+            }
+          ],
+          "body": "Empty value.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "",
+          "TITLE": "",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "untitled",
+          "filename": "26-09-11-untitled.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"\"\ndate: \"2026-09-11\"\n---\n\nEmpty value.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 17,
+            "to": 17,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title\n@published 26-09-11-new.md\n\nEmpty value.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog\tpost\n@title Tabbed\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Tabbed",
+              "line": 1
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "Tabbed",
+          "TITLE": "Tabbed",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "tabbed",
+          "filename": "26-09-11-tabbed.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Tabbed\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 24,
+            "to": 24,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog\tpost\n@title Tabbed\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post   \n@title Trailing spaces in header\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Trailing spaces in header",
+              "line": 1
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "Trailing spaces in header",
+          "TITLE": "Trailing spaces in header",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "trailing-spaces-in-header",
+          "filename": "26-09-11-trailing-spaces-in-header.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Trailing spaces in header\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 46,
+            "to": 46,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post   \n@title Trailing spaces in header\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title Émile ☕\n@unknown Something else\n\nAccented café 😀 body.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Émile ☕",
+              "line": 1
+            },
+            {
+              "name": "unknown",
+              "value": "Something else",
+              "line": 2
+            }
+          ],
+          "body": "Accented café 😀 body.",
+          "headerLine": 0,
+          "endLine": 6
+        }
+      ],
+      "derived": [
+        {
+          "title": "Émile ☕",
+          "TITLE": "Émile ☕",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "emile",
+          "filename": "26-09-11-emile.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Émile ☕\"\ndate: \"2026-09-11\"\nunknown: \"Something else\"\n---\n\nAccented café 😀 body.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 49,
+            "to": 49,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title Émile ☕\n@unknown Something else\n@published 26-09-11-new.md\n\nAccented café 😀 body.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title He said \"no\"\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "He said \"no\"",
+              "line": 1
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "He said \"no\"",
+          "TITLE": "He said \"no\"",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "he-said-no",
+          "filename": "26-09-11-he-said-no.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: 'He said \"no\"'\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 30,
+            "to": 30,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title He said \"no\"\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@a.b-c_d post\n@title Dotted blog\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "a.b-c_d",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Dotted blog",
+              "line": 1
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "Dotted blog",
+          "TITLE": "Dotted blog",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "dotted-blog",
+          "filename": "26-09-11-dotted-blog.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Dotted blog\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 32,
+            "to": 32,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@a.b-c_d post\n@title Dotted blog\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\r\n@title Windows\r\n\r\nBody.\r\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "Windows",
+              "line": 1
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 0,
+          "endLine": 5
+        }
+      ],
+      "derived": [
+        {
+          "title": "Windows",
+          "TITLE": "Windows",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "windows",
+          "filename": "26-09-11-windows.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"Windows\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 25,
+            "to": 25,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\r\n@title Window\n@published 26-09-11-new.mds\r\n\r\nBody.\r\n"
+        }
+      ]
+    },
+    {
+      "doc": "----\n@blog post\n@title After a separator\n\nBody.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "After a separator",
+              "line": 2
+            }
+          ],
+          "body": "Body.",
+          "headerLine": 1,
+          "endLine": 6
+        }
+      ],
+      "derived": [
+        {
+          "title": "After a separator",
+          "TITLE": "After a separator",
+          "date": "2026-09-11",
+          "tags": [],
+          "slug": "after-a-separator",
+          "filename": "26-09-11-after-a-separator.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"After a separator\"\ndate: \"2026-09-11\"\n---\n\nBody.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 40,
+            "to": 40,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "----\n@blog post\n@title After a separator\n@published 26-09-11-new.md\n\nBody.\n"
+        }
+      ]
+    },
+    {
+      "doc": "@blog post\n@title A\n@date 2026-13-45\n\nBad date.\n",
+      "posts": [
+        {
+          "blog": "blog",
+          "fields": [
+            {
+              "name": "title",
+              "value": "A",
+              "line": 1
+            },
+            {
+              "name": "date",
+              "value": "2026-13-45",
+              "line": 2
+            }
+          ],
+          "body": "Bad date.",
+          "headerLine": 0,
+          "endLine": 6
+        }
+      ],
+      "derived": [
+        {
+          "title": "A",
+          "TITLE": "A",
+          "date": "2026-13-45",
+          "tags": [],
+          "slug": "a",
+          "filename": "26-13-45-a.md",
+          "publishedAs": null,
+          "yaml": "---\ntitle: \"A\"\ndate: \"2026-13-45\"\n---\n\nBad date.\n"
+        }
+      ],
+      "edits": [
+        {
+          "edit": {
+            "from": 36,
+            "to": 36,
+            "insert": "\n@published 26-09-11-new.md"
+          },
+          "applied": "@blog post\n@title A\n@date 2026-13-45\n@published 26-09-11-new.md\n\nBad date.\n"
+        }
+      ]
+    }
+  ],
+  "yaml": [
+    {
+      "raw": "",
+      "blog": "blog",
+      "at": "@blog post\n\n\n"
+    },
+    {
+      "raw": "---\ntitle: A\n---\n\nBody.\n",
+      "blog": "blog",
+      "at": "@blog post\n@title A\n\nBody.\n"
+    },
+    {
+      "raw": "---\nslug: s\ndate: \"2026-09-03\"\ntitle: A\nextra: X\ntags: [a, b]\n---\n\nBody.\n",
+      "blog": "me.io",
+      "at": "@me.io post\n@title A\n@date 2026-09-03\n@tags a, b\n@slug s\n@extra X\n\nBody.\n"
+    },
+    {
+      "raw": "---\ntitle: \"\"\nsubtitle: Sub\n---\n\nBody.\n",
+      "blog": "blog",
+      "at": "@blog post\n@subtitle Sub\n\nBody.\n"
+    },
+    {
+      "raw": "No front matter at all.\n",
+      "blog": "blog",
+      "at": "@blog post\n\nNo front matter at all.\n"
+    }
+  ],
+  "dates": [
+    {
+      "value": "26-09-03",
+      "normalized": "2026-09-03"
+    },
+    {
+      "value": "2026-09-03",
+      "normalized": "2026-09-03"
+    },
+    {
+      "value": " 26-09-03 ",
+      "normalized": "2026-09-03"
+    },
+    {
+      "value": "2026-9-3",
+      "normalized": null
+    },
+    {
+      "value": "26-9-3",
+      "normalized": null
+    },
+    {
+      "value": "",
+      "normalized": null
+    },
+    {
+      "value": "nonsense",
+      "normalized": null
+    },
+    {
+      "value": "126-09-03",
+      "normalized": null
+    }
+  ],
+  "plans": [
+    {
+      "remote": [],
+      "local": [],
+      "known": {},
+      "plan": []
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r1"
+        }
+      ],
+      "local": [],
+      "known": {},
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "import"
+        }
+      ]
+    },
+    {
+      "remote": [],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l1"
+        }
+      ],
+      "known": {},
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "publishLocal"
+        }
+      ]
+    },
+    {
+      "remote": [],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l1"
+        }
+      ],
+      "known": {
+        "a.md": {
+          "remoteSha": "r1",
+          "localHash": "l1"
+        }
+      },
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "removedRemotely"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r1"
+        }
+      ],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l1"
+        }
+      ],
+      "known": {},
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "conflict"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r1"
+        }
+      ],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l1"
+        }
+      ],
+      "known": {
+        "a.md": {
+          "remoteSha": "r1",
+          "localHash": "l1"
+        }
+      },
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "unchanged"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r2"
+        }
+      ],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l1"
+        }
+      ],
+      "known": {
+        "a.md": {
+          "remoteSha": "r1",
+          "localHash": "l1"
+        }
+      },
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "update"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r1"
+        }
+      ],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l2"
+        }
+      ],
+      "known": {
+        "a.md": {
+          "remoteSha": "r1",
+          "localHash": "l1"
+        }
+      },
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "publishLocal"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "a.md",
+          "sha": "r2"
+        }
+      ],
+      "local": [
+        {
+          "filename": "a.md",
+          "hash": "l2"
+        }
+      ],
+      "known": {
+        "a.md": {
+          "remoteSha": "r1",
+          "localHash": "l1"
+        }
+      },
+      "plan": [
+        {
+          "filename": "a.md",
+          "action": "conflict"
+        }
+      ]
+    },
+    {
+      "remote": [
+        {
+          "filename": "b.md",
+          "sha": "r"
+        },
+        {
+          "filename": "A.md",
+          "sha": "r"
+        },
+        {
+          "filename": "a.md",
+          "sha": "r"
+        }
+      ],
+      "local": [
+        {
+          "filename": "c.md",
+          "hash": "l"
+        }
+      ],
+      "known": {},
+      "plan": [
+        {
+          "filename": "A.md",
+          "action": "import"
+        },
+        {
+          "filename": "a.md",
+          "action": "import"
+        },
+        {
+          "filename": "b.md",
+          "action": "import"
+        },
+        {
+          "filename": "c.md",
+          "action": "publishLocal"
+        }
+      ]
+    }
+  ]
+}
