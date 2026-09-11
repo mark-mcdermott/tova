@@ -8,12 +8,20 @@ slice can land without the renderer knowing which one it is talking to.
 */
 
 mod bridge;
+/// The text layer's conformance tests, in one place — see the module for why.
+#[cfg(test)]
+mod conformance;
 mod crypto;
+mod front_matter;
+mod js;
+mod note_location;
+mod note_name;
 mod preferences;
 mod safe_storage;
 mod screen;
 mod sections;
 mod session;
+mod tags;
 mod vault;
 mod vault_file;
 mod vault_keys;
