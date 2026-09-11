@@ -1,0 +1,255 @@
+{
+  "_readme": [
+    "The envelope both backends have to agree on, byte for byte.",
+    "",
+    "Unlike the other fixtures here, this one is not a list of inputs and",
+    "the answers one backend happens to give. Sealing picks a fresh nonce",
+    "every time, so there is no output to pin. What is pinned instead is a",
+    "set of sealed files — some written by Node, some by Rust — that BOTH",
+    "backends must open and get the same bytes back from. That is the only",
+    "check that catches a divergence in the direction that matters: a vault",
+    "sealed under one backend and opened under the other.",
+    "",
+    "`refused` is the other half. An authenticated cipher is only worth",
+    "having if altered files fail, so these must throw on both sides.",
+    "",
+    "`scrypt` pins the parameters rather than the implementation. The",
+    "TypeScript passes none and takes Node's defaults (N=16384, r=8, p=1);",
+    "if Rust used any others, every recovery key would be silently wrong",
+    "and no test of Rust against itself would notice.",
+    "",
+    "Regenerating: see the note in src/main/crypto.conformance.test.ts.",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "envelopes": [
+    {
+      "from": "node",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "",
+      "envelope": "TOVA-ENCRYPTED-V1\nQ52b3OgtDq6lDaD2\nNh7A/CRvUWtkom8KMpsBUQ==\n"
+    },
+    {
+      "from": "node",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "Q29mZmVlLiBFbXB0eSBzdHJlZXRzLgo=",
+      "envelope": "TOVA-ENCRYPTED-V1\nGQEkKac37w0TvpC+\nEH+axECyiSFZ+z+bAR+UaYkr+MeqcWXuio1JUixfED6QKvV2Vlwq\n"
+    },
+    {
+      "from": "node",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "LS0tCnRpdGxlOiBTbG93IE1vcm5pbmcKdGFnczogW3F1aWV0XQotLS0KClRoZSBrZXR0bGUsIHRoZW4gbm90aGluZy4K",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kjA4iB/cMKKlI\n4C8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1MQ==\n"
+    },
+    {
+      "from": "node",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "w55pbmd2ZWxsaXIg4oCUIG5hw692ZSBjYWbDqSwg5rGJ5a2XLCDwn5ybCg==",
+      "envelope": "TOVA-ENCRYPTED-V1\nl+Z3j+8NKGxhl8/O\n05x60NYAa3kRxMCNuGdW6bxtSqSxWwu+oVqDIZ3wTYNpThGbxXuJ5XO5YWh5DUFZGTDW/zMHD2UC254=\n"
+    },
+    {
+      "from": "node",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "iVBORw0KGgoA//4B",
+      "envelope": "TOVA-ENCRYPTED-V1\nEaYb1hKdk3/qMsFm\n0o4J+Bp5mgLO7xsG7WtfjIeurOqWZdkDN3T2hQ==\n"
+    },
+    {
+      "from": "rust",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "",
+      "envelope": "TOVA-ENCRYPTED-V1\nCwHvfPJd5KGnhjIO\nsZi+EjZ5+fmEIWwffspA4A==\n"
+    },
+    {
+      "from": "rust",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "Q29mZmVlLiBFbXB0eSBzdHJlZXRzLgo=",
+      "envelope": "TOVA-ENCRYPTED-V1\nqcEZ6I3ry53Q0mu9\nUHaPVkpg7IehVD47sMrZ9JoBT8WPD0od5tvyjO+mHZg2eYKNWapF\n"
+    },
+    {
+      "from": "rust",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "LS0tCnRpdGxlOiBTbG93IE1vcm5pbmcKdGFnczogW3F1aWV0XQotLS0KClRoZSBrZXR0bGUsIHRoZW4gbm90aGluZy4K",
+      "envelope": "TOVA-ENCRYPTED-V1\nwvZF+SYblY+ralil\nGBN75aosBbixuiAWXywTI8tVc7rT0utZdeYzoPy+N3fq3+ZyjIld4N3V0Ai/07K1uzfAPmVAMS0G8g8+f9kIbQdiVCI3j+wXe4clcg0CzbC1+PVN4Q==\n"
+    },
+    {
+      "from": "rust",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "w55pbmd2ZWxsaXIg4oCUIG5hw692ZSBjYWbDqSwg5rGJ5a2XLCDwn5ybCg==",
+      "envelope": "TOVA-ENCRYPTED-V1\ncQTaPzSABI4RiAZH\nNPqNt0E/XBXDVkctE0uyRGkMhk3R/fLq2thb9IRo2mSGEXsEmOscDU35hoJDSq065vKmC/zz2KsyI2Y=\n"
+    },
+    {
+      "from": "rust",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "plain": "iVBORw0KGgoA//4B",
+      "envelope": "TOVA-ENCRYPTED-V1\n1qKS+rb3nFa6hWVL\nLvdlW7Elqatd4jZOAJS4VoxoLqJllUhN6PAEcg==\n"
+    }
+  ],
+  "refused": [
+    {
+      "why": "a byte of the ciphertext was changed",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kjA4iB/cMKKlI\nHy8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1MQ==\n"
+    },
+    {
+      "why": "the last byte, which is inside the authentication tag",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kjA4iB/cMKKlI\n4C8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1zg==\n"
+    },
+    {
+      "why": "the nonce was changed",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kcw4iB/cMKKlI\n4C8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1MQ==\n"
+    },
+    {
+      "why": "a different key",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kjA4iB/cMKKlI\n4C8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1MQ==\n"
+    },
+    {
+      "why": "not an envelope at all",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "# Just a note\n"
+    },
+    {
+      "why": "the magic line is from some other format",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V2\nYY6kjA4iB/cMKKlI\n4C8AM9uDiu05SZEQUZZc9rCPJr/KvNBvpkKtzmO02DigTy2DrGmJeQ+zPioVaPF3TqQMvWEWT+uAoARtA/VFGaWLr2PN/NA1Rsyk/XpRAqwCoCs1MQ==\n"
+    },
+    {
+      "why": "nothing follows the magic",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V1\n"
+    },
+    {
+      "why": "a payload too short to hold a tag",
+      "key": "Dl3Yr7qK0pS8vN2xJfWzB6hQ4mTcE1gUaO9iL5nRdXs=",
+      "envelope": "TOVA-ENCRYPTED-V1\nYY6kjA4iB/cMKKlI\nAAAA\n"
+    }
+  ],
+  "scrypt": [
+    {
+      "recoveryKey": "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ",
+      "salt": "ZXZlcnkgc2FsdCBpcyAxNg==",
+      "derived": "QyDSinl5IoD+aseprhxb7+b8ctTapJ+NlAZOYIDPs6g="
+    },
+    {
+      "recoveryKey": "2345-6789-2345-6789-2345-6789",
+      "salt": "ZXZlcnkgc2FsdCBpcyAxNg==",
+      "derived": "5hnuHVd3cMBqoInQ3IN4kCfn+O0X/wTkz448AsrF29I="
+    },
+    {
+      "recoveryKey": "abcd efgh JKLM-NPQR-stuv-wxyz",
+      "salt": "ZXZlcnkgc2FsdCBpcyAxNg==",
+      "derived": "QyDSinl5IoD+aseprhxb7+b8ctTapJ+NlAZOYIDPs6g="
+    },
+    {
+      "recoveryKey": "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ",
+      "salt": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "derived": "IPbuRFWcpSo/Pb1vBpoENxaWjNYjvPFisP4vbvH73LM="
+    },
+    {
+      "recoveryKey": "2345-6789-2345-6789-2345-6789",
+      "salt": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "derived": "zgF2uXbZfrb2F9FLZe5+nr6kYR56SV0PAnIsukJdkt4="
+    },
+    {
+      "recoveryKey": "abcd efgh JKLM-NPQR-stuv-wxyz",
+      "salt": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "derived": "IPbuRFWcpSo/Pb1vBpoENxaWjNYjvPFisP4vbvH73LM="
+    },
+    {
+      "recoveryKey": "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ",
+      "salt": "//////////////////////8=",
+      "derived": "5QGnemUiS+h2nInmpOGNZWASBFSAMkm5kAIePacXP98="
+    },
+    {
+      "recoveryKey": "2345-6789-2345-6789-2345-6789",
+      "salt": "//////////////////////8=",
+      "derived": "6FJDFBKQ8StaZFuvF4U/dFJkSXakN3yF3yIyA7Lm8+M="
+    },
+    {
+      "recoveryKey": "abcd efgh JKLM-NPQR-stuv-wxyz",
+      "salt": "//////////////////////8=",
+      "derived": "5QGnemUiS+h2nInmpOGNZWASBFSAMkm5kAIePacXP98="
+    }
+  ],
+  "looksEncrypted": [
+    {
+      "text": "TOVA-ENCRYPTED-V1\nAAAA\nBBBB\n",
+      "is": true
+    },
+    {
+      "text": "TOVA-ENCRYPTED-V1",
+      "is": true
+    },
+    {
+      "text": "TOVA-ENCRYPTED-V11",
+      "is": true
+    },
+    {
+      "text": "# Just a note\n",
+      "is": false
+    },
+    {
+      "text": "",
+      "is": false
+    },
+    {
+      "text": " TOVA-ENCRYPTED-V1",
+      "is": false
+    },
+    {
+      "text": "tova-encrypted-v1",
+      "is": false
+    },
+    {
+      "text": "TOVA-ENCRYPTED",
+      "is": false
+    }
+  ],
+  "normalizeRecoveryKey": [
+    {
+      "written": "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ",
+      "means": "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    },
+    {
+      "written": "abcd-efgh-jklm-npqr-stuv-wxyz",
+      "means": "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    },
+    {
+      "written": "  ABCD EFGH\tJKLM\nNPQR-STUV-WXYZ  ",
+      "means": "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    },
+    {
+      "written": "",
+      "means": ""
+    },
+    {
+      "written": "----",
+      "means": ""
+    },
+    {
+      "written": "2345-6789",
+      "means": "23456789"
+    },
+    {
+      "written": "﻿ABCD-EFGH",
+      "means": "ABCDEFGH"
+    },
+    {
+      "written": "ABCD EFGH",
+      "means": "ABCDEFGH"
+    },
+    {
+      "written": "ABCD　EFGH",
+      "means": "ABCDEFGH"
+    },
+    {
+      "written": "ABCDEFGH",
+      "means": "ABCDEFGH"
+    },
+    {
+      "written": "ABCD​EFGH",
+      "means": "ABCD​EFGH"
+    }
+  ]
+}

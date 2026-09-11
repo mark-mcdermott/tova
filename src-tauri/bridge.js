@@ -60,6 +60,10 @@
   tova.preferences.useVault = (path) => invoke("vault_use", { path })
   tova.preferences.addVault = () => invoke("vault_add")
   tova.preferences.forgetVault = (path) => invoke("vault_forget", { path })
+  tova.preferences.encryptVault = (path) => invoke("vault_encrypt", { path })
+  tova.preferences.decryptVault = (path) => invoke("vault_decrypt", { path })
+  tova.preferences.unlockVault = (path, recoveryKey) =>
+    invoke("vault_unlock", { path, recoveryKey })
 
   window.tova = tova
 })()
