@@ -9,7 +9,9 @@ makes it safe to keep there — a stolen folder carries no key it could give up.
 The format is Chromium's, because Electron's is, and both backends read the
 same `vault-keys.json` while the port is in flight:
 
-    "v10" ++ AES-128-CBC( PBKDF2-HMAC-SHA1(password, "saltysalt", 1003, 16) )
+```text
+"v10" ++ AES-128-CBC( PBKDF2-HMAC-SHA1(password, "saltysalt", 1003, 16) )
+```
 
 with an IV of sixteen spaces and PKCS#7 padding. The password is a random one
 Chromium generated the first time it needed one, and keeps in the login
