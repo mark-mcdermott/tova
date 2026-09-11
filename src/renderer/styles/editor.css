@@ -265,9 +265,14 @@
  * words above it rather than with the mark. The editor sets prose in a
  * monospaced face, which makes 2ch exactly the dash and the space after it at
  * any font size. The doubled class outweighs the .cm-line rule above.
+ *
+ * The half beyond that is the list's own indent, and it is an optical one: the
+ * dot measures dead centre of the first character's cell without it, but a
+ * 6px dot in an 11px cell reads as hanging off the left of the column while
+ * the letter above it fills the cell edge to edge.
  */
 .cm-line.cm-list-line {
-  padding-left: 2ch;
+  padding-left: 2.5ch;
   text-indent: -2ch;
 }
 
