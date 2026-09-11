@@ -1,0 +1,126 @@
+{
+  "_readme": [
+    "Electron's safeStorage format on macOS, which is Chromium's OSCrypt:",
+    "",
+    "    \"v10\" ++ AES-128-CBC( PBKDF2-HMAC-SHA1(password, \"saltysalt\", 1003, 16) )",
+    "",
+    "with an IV of sixteen spaces and PKCS#7 padding. Unlike the vault's own",
+    "envelope there is no nonce, so a given password and string always wrap to",
+    "the same bytes — which is why this fixture can pin them.",
+    "",
+    "What it proves: that src-tauri/src/safe_storage.rs is a correct",
+    "implementation of that scheme. The blobs were produced by a Node script",
+    "written from the numbers above and sharing no code with the Rust, so the",
+    "two agreeing is evidence and not a tautology.",
+    "",
+    "What it does NOT prove: that Electron's safeStorage actually implements",
+    "this scheme, or that it reads the keychain item this backend reads. No",
+    "fixture can — it takes Electron and a login keychain. That check exists,",
+    "as tools/safe-storage-vectors.js and the ignored test beside it in",
+    "src-tauri/src/safe_storage.rs; run them together when a machine with both",
+    "is at hand.",
+    "",
+    "If they disagree, a vault sealed under one backend asks for its recovery",
+    "key under the other. That fails safe — nothing is lost, the reader is",
+    "asked for what they wrote down — but nothing about it announces itself.",
+    "",
+    "The passwords here are test values. The real one is sixteen random bytes",
+    "Chromium generated and keeps in the login keychain, and it is never",
+    "written down anywhere — not here, and not in vault-keys.json.",
+    "",
+    "Run: cargo test (Rust). The TypeScript has no port of this to hold; the",
+    "Electron side calls safeStorage rather than implementing it."
+  ],
+  "wrapped": [
+    {
+      "from": "node",
+      "password": "c2hvcnQtbGl2ZWQtdGVzdA==",
+      "plain": "",
+      "blob": "djEwf3wxvSTMyU1uf2Xc9PeZfw=="
+    },
+    {
+      "from": "node",
+      "password": "c2hvcnQtbGl2ZWQtdGVzdA==",
+      "plain": "Coffee. Empty streets.",
+      "blob": "djEw6cRo59pGnhASbj/f9hlDGsDm9FD2DDrhbmkmH0a4HKA="
+    },
+    {
+      "from": "node",
+      "password": "c2hvcnQtbGl2ZWQtdGVzdA==",
+      "plain": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=",
+      "blob": "djEwNTCjwFoso8asSIB0gJhtzHX2N+XIitrsaNRgfCb2Sz1K5B6wl8fTLz74LeVQyBl5"
+    },
+    {
+      "from": "node",
+      "password": "c2hvcnQtbGl2ZWQtdGVzdA==",
+      "plain": "Þingvellir — naïve café, 汉字",
+      "blob": "djEwMlkx3jTV78B9jU5zWJp68dwopn7kmJ23Sc9l7ZQjwmV25qjBY4QdBCZ95Wb5Vgz9"
+    },
+    {
+      "from": "node",
+      "password": "c2hvcnQtbGl2ZWQtdGVzdA==",
+      "plain": "0123456789abcdef",
+      "blob": "djEwoq6SBvyTHNiVGDQ8L45C4vs+d9hgwuoWrvon39AipZE="
+    },
+    {
+      "from": "node",
+      "password": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "plain": "",
+      "blob": "djEwyqQ5gNIuyHFjxUfNKswOQw=="
+    },
+    {
+      "from": "node",
+      "password": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "plain": "Coffee. Empty streets.",
+      "blob": "djEwP0R8EwYeCbAT3XA3KmhkrmvDF1KzSFL9fJzpXcDOok0="
+    },
+    {
+      "from": "node",
+      "password": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "plain": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=",
+      "blob": "djEwPnl+TaA59n2DwDxHkPVNxwVTI1nY/c2GmQ+PwjoDzaWifdT5Y9Ru8jwouiKyGlxi"
+    },
+    {
+      "from": "node",
+      "password": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "plain": "Þingvellir — naïve café, 汉字",
+      "blob": "djEwjMC//hIEhLL2/d32KvKrw0xmvI+hmLXYZjdRlhKcZ+slhSJ8gKnofT2Y44AWqdIq"
+    },
+    {
+      "from": "node",
+      "password": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "plain": "0123456789abcdef",
+      "blob": "djEwejxyv/mXTcHrbAIp1/3TOSKqcr1md7tqdZLtzsQUSJA="
+    },
+    {
+      "from": "node",
+      "password": "x",
+      "plain": "",
+      "blob": "djEwF8oC8GWR5RBfw2KkkQVn0A=="
+    },
+    {
+      "from": "node",
+      "password": "x",
+      "plain": "Coffee. Empty streets.",
+      "blob": "djEweldBQi3hFSUgRnPjQ3ENsJE0SU+jONSkp1URwf/CWPA="
+    },
+    {
+      "from": "node",
+      "password": "x",
+      "plain": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=",
+      "blob": "djEwjM6WGgDRsLx23ukrx6kE2yOQCRc9hhsAUzlbMrS55fVKdhGgujL/zC7dTK/FtOmJ"
+    },
+    {
+      "from": "node",
+      "password": "x",
+      "plain": "Þingvellir — naïve café, 汉字",
+      "blob": "djEwkSU61MUUcsN+WUcCMopeJHSRd015uRsP2FHjsLvJLUsC+Vw1CBrDP3O/QC8AUonT"
+    },
+    {
+      "from": "node",
+      "password": "x",
+      "plain": "0123456789abcdef",
+      "blob": "djEwRk7D+CB7OJfVHhlnQjsA2RxgtZSqjW901jbWx8P8Z0Q="
+    }
+  ]
+}
