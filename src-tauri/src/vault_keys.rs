@@ -214,26 +214,41 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    /// A data directory and a vault, both thrown away afterwards.
+    /// A password of the shape Chromium keeps in the login keychain. The real
+    /// one is never read here — see safe_storage.rs on why tests use their own.
+    const KEYCHAIN: &[u8] = b"c2hvcnQtbGl2ZWQtdGVzdA==";
+
+    /*
+     * The keychain stand-in is global, so these hold the same lock the vaults
+     * and vault_file tests hold, and put it back to nothing on the way out.
+     */
     struct Scratch {
         data: PathBuf,
         vault: PathBuf,
+        _held: std::sync::MutexGuard<'static, ()>,
     }
 
     impl Scratch {
         fn new(name: &str) -> Self {
+            let held = crate::vault::one_at_a_time();
+            safe_storage::stand_in(None);
             let base = std::env::temp_dir().join(format!("tova-keys-{name}"));
             let _ = std::fs::remove_dir_all(&base);
             let (data, vault) = (base.join("data"), base.join("vault"));
             std::fs::create_dir_all(&data).unwrap();
             std::fs::create_dir_all(&vault).unwrap();
-            Self { data, vault }
+            Self {
+                data,
+                vault,
+                _held: held,
+            }
         }
     }
 
     impl Drop for Scratch {
         fn drop(&mut self) {
             held().remove(&self.vault);
+            safe_storage::stand_in(None);
             let _ = std::fs::remove_dir_all(self.data.parent().unwrap());
         }
     }
@@ -367,26 +382,67 @@ mod tests {
     #[test]
     fn without_a_keychain_a_key_is_held_for_the_run_and_no_longer() {
         /*
-         * The gap safe_storage.rs describes, asserted rather than assumed. On
-         * Electron this returns true, because the key was remembered; here it
-         * cannot be, and the reader is asked for the recovery key again. When
-         * the keychain lands this test is the one that has to change, which is
-         * the point of writing it down.
+         * What Electron does on a machine with no secret service, and what
+         * this backend did everywhere until the keychain was ported. Kept
+         * because it is still the behaviour on Linux, and because it is the
+         * difference the test below is measuring against.
          */
         let s = Scratch::new("forgets");
+        safe_storage::stand_in(None);
         let (_key, recovery) = create_vault_key(&s.data, &s.vault).unwrap();
         assert!(unlock_vault(&s.data, &s.vault));
 
         lock_vault(&s.vault);
 
-        assert!(!safe_storage::is_available());
         assert!(!unlock_vault(&s.data, &s.vault));
         assert!(unlock_with_recovery_key(&s.data, &s.vault, &recovery));
     }
 
     #[test]
+    fn with_a_keychain_the_reader_is_asked_once_rather_than_once_per_launch() {
+        let s = Scratch::new("remembers");
+        safe_storage::stand_in(Some(KEYCHAIN));
+        let (key, _recovery) = create_vault_key(&s.data, &s.vault).unwrap();
+
+        // Quitting is what `lock_vault` stands for here: the run's keys go,
+        // and the store beside the app is all that is left.
+        lock_vault(&s.vault);
+
+        assert!(unlock_vault(&s.data, &s.vault));
+        assert_eq!(key_for(&s.vault), Some(key));
+    }
+
+    #[test]
+    fn a_keychain_that_changed_underneath_us_sends_the_reader_to_their_paper() {
+        // A restored machine, a new login keychain. The store is still there
+        // and no longer means anything, and saying so is the whole of it —
+        // the recovery key is the way back.
+        let s = Scratch::new("changed");
+        safe_storage::stand_in(Some(KEYCHAIN));
+        let (_key, recovery) = create_vault_key(&s.data, &s.vault).unwrap();
+        lock_vault(&s.vault);
+
+        safe_storage::stand_in(Some(b"a-keychain-this-machine-no-longer-has"));
+
+        assert!(!unlock_vault(&s.data, &s.vault));
+        assert!(unlock_with_recovery_key(&s.data, &s.vault, &recovery));
+    }
+
+    #[test]
+    fn taking_the_key_away_takes_it_out_of_the_store_too() {
+        let s = Scratch::new("forgotten");
+        safe_storage::stand_in(Some(KEYCHAIN));
+        create_vault_key(&s.data, &s.vault).unwrap();
+
+        remove_vault_key(&s.data, &s.vault);
+
+        assert!(read_key_store(&s.data).is_empty());
+    }
+
+    #[test]
     fn nothing_it_writes_beside_the_app_holds_a_key_in_the_clear() {
         let s = Scratch::new("store");
+        safe_storage::stand_in(Some(KEYCHAIN));
         let (key, recovery) = create_vault_key(&s.data, &s.vault).unwrap();
 
         let store = std::fs::read_to_string(key_store_path(&s.data)).unwrap_or_default();
