@@ -1003,5 +1003,291 @@
         "filename": "deep name.md"
       }
     }
-  ]
+  ],
+  "sortKey": [
+    {
+      "title": "apple",
+      "key": "apple"
+    },
+    {
+      "title": "Apple",
+      "key": "apple"
+    },
+    {
+      "title": "banana",
+      "key": "banana"
+    },
+    {
+      "title": "Banana",
+      "key": "banana"
+    },
+    {
+      "title": "Émile",
+      "key": "emile"
+    },
+    {
+      "title": "Emile",
+      "key": "emile"
+    },
+    {
+      "title": "emile",
+      "key": "emile"
+    },
+    {
+      "title": "zebra",
+      "key": "zebra"
+    },
+    {
+      "title": "Zebra",
+      "key": "zebra"
+    },
+    {
+      "title": "2 things",
+      "key": "2 things"
+    },
+    {
+      "title": "10 things",
+      "key": "10 things"
+    },
+    {
+      "title": "_draft",
+      "key": "_draft"
+    },
+    {
+      "title": "a",
+      "key": "a"
+    },
+    {
+      "title": "B",
+      "key": "b"
+    },
+    {
+      "title": "ábaco",
+      "key": "abaco"
+    },
+    {
+      "title": "abaco",
+      "key": "abaco"
+    },
+    {
+      "title": "",
+      "key": ""
+    },
+    {
+      "title": "  ",
+      "key": "  "
+    },
+    {
+      "title": "café",
+      "key": "cafe"
+    },
+    {
+      "title": "cafe",
+      "key": "cafe"
+    },
+    {
+      "title": "ẞ",
+      "key": "ß"
+    },
+    {
+      "title": "😀 emoji",
+      "key": "😀 emoji"
+    },
+    {
+      "title": "� replacement",
+      "key": "� replacement"
+    },
+    {
+      "title": "𐀀 astral",
+      "key": "𐀀 astral"
+    },
+    {
+      "title": "naïve",
+      "key": "naive"
+    },
+    {
+      "title": "naive",
+      "key": "naive"
+    },
+    {
+      "title": "über",
+      "key": "uber"
+    },
+    {
+      "title": "uber",
+      "key": "uber"
+    }
+  ],
+  "compareTitles": {
+    "titles": [
+      "apple",
+      "Apple",
+      "banana",
+      "Banana",
+      "Émile",
+      "Emile",
+      "emile",
+      "zebra",
+      "Zebra",
+      "2 things",
+      "10 things",
+      "_draft",
+      "a",
+      "B",
+      "ábaco",
+      "abaco",
+      "",
+      "  ",
+      "café",
+      "cafe",
+      "ẞ",
+      "😀 emoji",
+      "� replacement",
+      "𐀀 astral",
+      "naïve",
+      "naive",
+      "über",
+      "uber"
+    ],
+    "sorted": [
+      "",
+      "  ",
+      "10 things",
+      "2 things",
+      "_draft",
+      "a",
+      "abaco",
+      "ábaco",
+      "Apple",
+      "apple",
+      "B",
+      "Banana",
+      "banana",
+      "cafe",
+      "café",
+      "Emile",
+      "emile",
+      "Émile",
+      "naive",
+      "naïve",
+      "uber",
+      "über",
+      "Zebra",
+      "zebra",
+      "ẞ",
+      "𐀀 astral",
+      "😀 emoji",
+      "� replacement"
+    ]
+  },
+  "sortNotes": {
+    "notes": [
+      {
+        "id": "a",
+        "title": "zebra",
+        "favorite": false,
+        "updatedAt": 100,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "b",
+        "title": "apple",
+        "favorite": false,
+        "updatedAt": 100,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "c",
+        "title": "Apple",
+        "favorite": false,
+        "updatedAt": 100,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "d",
+        "title": "later",
+        "favorite": false,
+        "updatedAt": 200,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "e",
+        "title": "pinned",
+        "favorite": true,
+        "updatedAt": 1,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "f",
+        "title": "also pinned",
+        "favorite": true,
+        "updatedAt": 1,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "g",
+        "title": "Émile",
+        "favorite": false,
+        "updatedAt": 100,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      },
+      {
+        "id": "h",
+        "title": "Emile",
+        "favorite": false,
+        "updatedAt": 100,
+        "section": "notes",
+        "folder": null,
+        "tags": [],
+        "manualTags": [],
+        "createdAt": 0,
+        "deletedAt": null
+      }
+    ],
+    "order": [
+      "f",
+      "e",
+      "d",
+      "c",
+      "b",
+      "h",
+      "g",
+      "a"
+    ]
+  }
 }

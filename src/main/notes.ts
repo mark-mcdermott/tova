@@ -20,7 +20,7 @@ import {
 } from "../shared/noteLocation"
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
 import { readVaultText, writeVaultText } from "./vaultFile"
-import { slugify, uniqueSlug } from "../shared/noteName"
+import { compareTitles, slugify, uniqueSlug } from "../shared/noteName"
 import { allTags, normalizeManualTags } from "../shared/tags"
 import { canDeleteSection } from "../shared/sections"
 import { vaultRoot, resolveInVault, requireLocation, notePath, directoryOf } from "./vault"
@@ -363,7 +363,7 @@ export async function listFolders(): Promise<string[]> {
   return entries
     .filter((entry) => entry.isDirectory() && isValidFolderName(entry.name))
     .map((entry) => entry.name)
-    .sort((a, b) => a.localeCompare(b))
+    .sort(compareTitles)
 }
 
 export async function createFolder(name: string): Promise<string> {

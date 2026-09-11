@@ -64,6 +64,15 @@
   tova.preferences.decryptVault = (path) => invoke("vault_decrypt", { path })
   tova.preferences.unlockVault = (path, recoveryKey) =>
     invoke("vault_unlock", { path, recoveryKey })
+  tova.notes.list = () => invoke("note_list")
+  tova.notes.read = (id) => invoke("note_read", { id })
+  tova.notes.create = (input) => invoke("note_create", { input })
+  tova.notes.write = (id, title, body) => invoke("note_write", { id, title, body })
+  tova.notes.rename = (id, title) => invoke("note_rename", { id, title })
+  tova.notes.setFavorite = (id, favorite) => invoke("note_favorite", { id, favorite })
+  tova.notes.setTags = (id, tags) => invoke("note_tags", { id, tags })
+  tova.backups.listVersions = (id) => invoke("note_versions", { id })
+  tova.backups.readVersion = (id, version) => invoke("note_version_read", { id, version })
 
   window.tova = tova
 })()

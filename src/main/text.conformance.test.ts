@@ -1,16 +1,18 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
-import { slugify, uniqueSlug } from "../shared/noteName"
+import { compareTitles, slugify, sortKey, uniqueSlug } from "../shared/noteName"
 import { allTags, normalizeManualTags, normalizeTag } from "../shared/tags"
 import {
   isValidFolderName,
   NoteLocation,
   parseNoteId,
   restoreLocation,
+  sortNotes,
   toNoteId,
   trashLocation
 } from "../shared/noteLocation"
+import { NoteSummary } from "../shared/types"
 
 /*
  * The other half of src-tauri/src/conformance.rs. This one keeps the fixture
@@ -32,6 +34,9 @@ interface Fixture {
   isValidFolderName: { name: string; valid: boolean }[]
   restoreLocation: { data: Data; filename: string; location: NoteLocation }[]
   trashLocation: { filename: string; location: NoteLocation }[]
+  sortKey: { title: string; key: string }[]
+  compareTitles: { titles: string[]; sorted: string[] }
+  sortNotes: { notes: NoteSummary[]; order: string[] }
 }
 
 const doc: Fixture = JSON.parse(readFileSync("conformance/text.json", "utf-8"))
@@ -115,5 +120,22 @@ describe("the text conformance fixture", () => {
     for (const one of doc.trashLocation) {
       expect(trashLocation(one.filename)).toEqual(one.location)
     }
+  })
+
+  it("says what a title folds to for ordering", () => {
+    for (const one of doc.sortKey) {
+      expect(sortKey(one.title), JSON.stringify(one.title)).toBe(one.key)
+    }
+  })
+
+  it("says what order titles come in", () => {
+    expect([...doc.compareTitles.titles].sort(compareTitles)).toEqual(doc.compareTitles.sorted)
+  })
+
+  it("says what order a list of notes comes in", () => {
+    // The last few titles are an emoji, an astral character and U+FFFD. This
+    // side orders them by UTF-16 code unit because that is what `<` does here;
+    // the Rust has to reach for it deliberately.
+    expect(sortNotes(doc.sortNotes.notes).map((note) => note.id)).toEqual(doc.sortNotes.order)
   })
 })
