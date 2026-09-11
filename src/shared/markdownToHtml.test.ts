@@ -21,9 +21,7 @@ describe("markdownToHtml", () => {
   })
 
   it("keeps a code block whole, and unformatted inside", () => {
-    expect(markdownToHtml("```\n**not bold**\n```")).toBe(
-      "<pre><code>**not bold**</code></pre>"
-    )
+    expect(markdownToHtml("```\n**not bold**\n```")).toBe("<pre><code>**not bold**</code></pre>")
   })
 
   it("exports an unclosed fence rather than swallowing the rest", () => {

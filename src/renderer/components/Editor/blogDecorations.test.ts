@@ -128,4 +128,3 @@ describe("the post block reads as one object", () => {
     expect(view.dom.querySelectorAll(".cm-post-last")).toHaveLength(2)
   })
 })
-

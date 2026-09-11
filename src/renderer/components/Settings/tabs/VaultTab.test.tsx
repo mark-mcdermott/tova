@@ -241,4 +241,3 @@ describe("VaultTab snapshot paging", () => {
     expect(screen.queryByRole("button", { name: "Older" })).toBeNull()
   })
 })
-

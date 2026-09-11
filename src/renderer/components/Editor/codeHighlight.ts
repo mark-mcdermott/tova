@@ -13,9 +13,16 @@ import { Extension } from "@codemirror/state"
 const style = HighlightStyle.define([
   { tag: [tags.keyword, tags.moduleKeyword, tags.controlKeyword], color: "var(--code-keyword)" },
   { tag: [tags.string, tags.special(tags.string), tags.regexp], color: "var(--code-string)" },
-  { tag: [tags.comment, tags.lineComment, tags.blockComment], color: "var(--code-comment)", fontStyle: "italic" },
+  {
+    tag: [tags.comment, tags.lineComment, tags.blockComment],
+    color: "var(--code-comment)",
+    fontStyle: "italic"
+  },
   { tag: [tags.number, tags.bool, tags.null], color: "var(--code-number)" },
-  { tag: [tags.function(tags.variableName), tags.definition(tags.variableName)], color: "var(--code-name)" },
+  {
+    tag: [tags.function(tags.variableName), tags.definition(tags.variableName)],
+    color: "var(--code-name)"
+  },
   { tag: [tags.typeName, tags.className, tags.namespace], color: "var(--code-type)" },
   { tag: [tags.operator, tags.punctuation, tags.bracket], color: "var(--code-operator)" },
   { tag: [tags.propertyName, tags.attributeName], color: "var(--code-property)" }

@@ -70,9 +70,7 @@ export function Disclosure({
         type="button"
         className={`disclosure-header disclosure-header-${variant}${
           isDropActive ? " is-drop-active" : ""
-        }${empty && onActivate === undefined ? " is-empty" : ""}${
-          isActive ? " is-active" : ""
-        }`}
+        }${empty && onActivate === undefined ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
         data-depth={depth}
         {...dropHandlers}
         aria-expanded={onActivate !== undefined || empty ? undefined : open}
