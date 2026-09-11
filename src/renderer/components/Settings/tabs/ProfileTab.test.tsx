@@ -24,7 +24,7 @@ function store(avatar: AvatarChoice, sources: AvatarSources) {
 
 /** The swatch, which is the colour input itself. */
 function swatch(): HTMLInputElement {
-  return screen.getByLabelText("Background") as HTMLInputElement
+  return screen.getByLabelText("Avatar Background Color") as HTMLInputElement
 }
 
 beforeEach(() => {

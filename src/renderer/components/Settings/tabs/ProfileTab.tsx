@@ -139,8 +139,8 @@ export function ProfileTab() {
 
       <Field
         id="avatar-colour"
-        label="Background"
-        hint="Behind the initials, and behind the robot."
+        label="Avatar Background Color"
+        hint="Applies only to Initials and Tova Robot"
       >
         <input
           type="color"
