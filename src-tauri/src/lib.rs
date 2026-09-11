@@ -9,7 +9,9 @@ slice can land without the renderer knowing which one it is talking to.
 
 mod bridge;
 mod preferences;
+mod screen;
 mod sections;
+mod session;
 
 use serde::Serialize;
 use serde_json::Value;
@@ -70,13 +72,25 @@ fn account_name() -> String {
     preferences::account_name()
 }
 
+#[tauri::command]
+fn session_read() -> Option<screen::Screen> {
+    session::read(&data_dir())
+}
+
+#[tauri::command]
+fn session_write(value: Value) {
+    session::write(&data_dir(), &value)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             app_info,
             preferences_read,
             preferences_write,
-            account_name
+            account_name,
+            session_read,
+            session_write
         ])
         .setup(|app| {
             // Built here rather than declared in tauri.conf.json for one

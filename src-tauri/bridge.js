@@ -54,6 +54,8 @@
   tova.preferences.read = () => invoke("preferences_read")
   tova.preferences.write = (value) => invoke("preferences_write", { value })
   tova.preferences.accountName = () => invoke("account_name")
+  tova.session.read = () => invoke("session_read")
+  tova.session.write = (value) => invoke("session_write", { value })
 
   window.tova = tova
 })()
