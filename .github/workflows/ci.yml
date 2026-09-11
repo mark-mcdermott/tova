@@ -44,3 +44,36 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+  # The backend being ported into. Its own job: it shares no toolchain with the
+  # one above, and a red run should name which side of the port broke.
+  rust:
+    name: cargo fmt · clippy · test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # Tauri needs system webkit to build on Linux. Only the library is
+      # compiled here — the app is built and shipped on macOS.
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Format
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+      - name: Lint
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --manifest-path src-tauri/Cargo.toml
