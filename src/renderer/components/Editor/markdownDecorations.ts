@@ -6,7 +6,7 @@ import {
   ViewUpdate,
   WidgetType
 } from "@codemirror/view"
-import { Range } from "@codemirror/state"
+import { EditorState, Range } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
 import type { SyntaxNode, Tree } from "@lezer/common"
 import { findTags, isTagOnlyLine, removeOccurrenceEdits } from "../../../shared/tags"
@@ -91,6 +91,16 @@ function tagRemove(tag: string, from: number, to: number, kind: "top" | "body"):
 const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
   Decoration.mark({ class: `cm-heading cm-h${level}` })
 )
+
+/*
+ * A bullet list, drawn as one.
+ *
+ * The dash is painted over rather than replaced: a replaced marker takes its
+ * width with it, and the line would jump every time the cursor arrived and the
+ * dash came back. This way the only thing that changes is the ink.
+ */
+const bulletMark = Decoration.mark({ class: "cm-list-bullet" })
+const listLine = Decoration.line({ class: "cm-list-line" })
 
 const codeBlockLine = Decoration.line({ class: "cm-code-block" })
 const codeBlockFirstLine = Decoration.line({ class: "cm-code-block-first" })
@@ -309,6 +319,11 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
           return
         }
 
+        if (name === "ListItem") {
+          decorateBullet(state, node, decorations, cursorTouches)
+          return
+        }
+
         if (name === "HorizontalRule") {
           // Doubles as the end marker of a blog post. The syntax tree decides
           // what counts as a rule, so a setext heading underline is left alone.
@@ -330,6 +345,32 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
   collectTagDecorations(view, tree, decorations, cursorTouches)
 
   return Decoration.set(decorations, true)
+}
+
+/** The markers a bullet list may be written with; `1.` is not one of them. */
+const BULLET_MARK = /^[-*+]$/
+
+/**
+ * Draws a list item's dash as the filled circle it stands for.
+ *
+ * Numbered items keep their numbers, which are content rather than syntax, and
+ * a task item keeps the box it writes for itself.
+ */
+function decorateBullet(
+  state: EditorState,
+  item: SyntaxNode,
+  decorations: Range<Decoration>[],
+  cursorTouches: (from: number, to: number) => boolean
+): void {
+  const mark = item.getChild("ListMark")
+  if (mark === null || item.getChild("Task") !== null) return
+  if (!BULLET_MARK.test(state.sliceDoc(mark.from, mark.to))) return
+
+  const line = state.doc.lineAt(mark.from)
+  decorations.push(listLine.range(line.from))
+  decorations.push(
+    (cursorTouches(line.from, line.to) ? syntaxMarker : bulletMark).range(mark.from, mark.to)
+  )
 }
 
 /**

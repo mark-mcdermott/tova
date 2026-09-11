@@ -258,6 +258,40 @@
   vertical-align: super;
 }
 
+/* ── Bullet lists ─────────────────────────────────────────────────────── */
+
+/*
+ * The text hangs clear of the bullet, so a line that wraps lines up with the
+ * words above it rather than with the mark. The editor sets prose in a
+ * monospaced face, which makes 2ch exactly the dash and the space after it at
+ * any font size. The doubled class outweighs the .cm-line rule above.
+ */
+.cm-line.cm-list-line {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
+/* The dash, wearing the circle it stands for. It keeps its place in the line
+   and gives up only its ink, so nothing moves when the cursor brings it back. */
+.cm-list-bullet {
+  position: relative;
+  color: transparent;
+}
+
+.cm-list-bullet::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.34em;
+  height: 0.34em;
+  border-radius: 50%;
+  /* currentColor is transparent here, so the dot names its own ink — a shade
+     back from the prose, being a mark rather than a word. */
+  background: var(--text-secondary);
+}
+
 /* ── Code blocks ──────────────────────────────────────────────────────── */
 
 /* Fence lines collapse entirely once the cursor leaves the block. The doubled
