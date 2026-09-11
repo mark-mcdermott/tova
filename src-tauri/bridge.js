@@ -102,6 +102,11 @@
   tova.preferences.nuke = () => invoke("settings_nuke")
   tova.app.reveal = (target) => invoke("app_reveal", { target })
   tova.app.openExternal = (url) => invoke("app_open_external", { url })
+  // Bytes cross as an array: Tauri's invoke serialises arguments as JSON, so a
+  // Uint8Array has to be spelled out rather than passed as the view it is.
+  tova.images.save = (name, bytes) =>
+    invoke("image_save", { name, bytes: Array.from(new Uint8Array(bytes)) })
+  tova.notes.exportMarkdown = (id) => invoke("note_export", { id })
 
   window.tova = tova
 })()
