@@ -19,6 +19,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tauri-plugin-dialog = "2.7.3"
 
 [profile.release]
 # A binary measured against a 241MB Electron bundle is worth a minute of LTO.
