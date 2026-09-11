@@ -17,6 +17,7 @@ mod conformance;
 mod crypto;
 mod daily;
 mod date;
+mod deploys;
 mod front_matter;
 mod github;
 mod images;
@@ -29,6 +30,7 @@ mod notes;
 mod posts_conformance;
 mod preferences;
 mod publish_state;
+mod publisher;
 mod safe_storage;
 mod screen;
 mod search;
@@ -413,6 +415,38 @@ fn blog_delete_post(id: String, filename: String, also_remote: bool) -> Result<(
     )
 }
 
+/*
+ * One publish, on a thread of its own, reporting as it goes.
+ *
+ * The Electron handler sends each update to the window that asked; here it is
+ * emitted to the app, which has one window. The name is the same, so the
+ * renderer's listener does not know the difference.
+ */
+#[tauri::command]
+async fn publish_start(
+    app: tauri::AppHandle,
+    request: publisher::PublishRequest,
+) -> Result<publisher::PublishUpdate, String> {
+    use tauri::Emitter;
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let world = publisher::World {
+            contents: &github::Api::default(),
+            deploys: &deploys::Api::default(),
+            data_dir: &data_dir(),
+            today: date::today(),
+            now: &now_ms,
+            sleep: &|ms: f64| std::thread::sleep(std::time::Duration::from_millis(ms as u64)),
+        };
+
+        publisher::publish(&world, &request, &mut |update| {
+            let _ = app.emit("publish:update", update);
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// One file from the reader, or nothing if they thought better of it.
 fn pick_file(
     app: &tauri::AppHandle,
@@ -791,7 +825,8 @@ pub fn run() {
             blog_sync,
             blog_conflict,
             blog_resolve,
-            blog_delete_post
+            blog_delete_post,
+            publish_start
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

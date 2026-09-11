@@ -359,7 +359,6 @@ pub fn remove_blog(data_dir: &Path, id: &str, trash_posts: bool) -> Result<(), S
 }
 
 /// Where a published post can be read, or nothing when the site URL is unknown.
-#[allow(dead_code)]
 pub fn post_url(blog: &Blog, slug: &str) -> Option<String> {
     (!blog.site_url.is_empty()).then(|| format!("{}{}{slug}", blog.site_url, blog.live_post_path))
 }

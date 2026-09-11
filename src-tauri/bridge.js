@@ -119,6 +119,19 @@
   tova.blogs.resolve = (id, filename, keep) => invoke("blog_resolve", { id, filename, keep })
   tova.blogs.deletePost = (id, filename, alsoRemote) =>
     invoke("blog_delete_post", { id, filename, alsoRemote })
+  tova.publish.start = (request) => invoke("publish_start", { request })
+  // An event rather than a channel, the way the Electron side sends to the
+  // window that asked. Tauri's listen is async and the renderer expects an
+  // unsubscribe straight away, so the returned function waits for the
+  // subscription before undoing it.
+  tova.publish.onUpdate = (listener) => {
+    const stopping = window.__TAURI__.event.listen("publish:update", (event) =>
+      listener(event.payload)
+    )
+    return () => {
+      void stopping.then((stop) => stop())
+    }
+  }
 
   window.tova = tova
 })()
