@@ -47,7 +47,6 @@ pub fn ensure_daily_note(date: &NaiveDate) -> Result<Note, String> {
 
 /// Removes past daily notes that were never written in. Today's note is never
 /// touched, and neither is anything the reader actually typed into.
-#[allow(dead_code)]
 pub fn cleanup_blank_daily_notes(now: &NaiveDate) -> Result<Vec<String>, String> {
     let directory = resolve_in_vault("daily")?;
     let Ok(entries) = std::fs::read_dir(&directory) else {
