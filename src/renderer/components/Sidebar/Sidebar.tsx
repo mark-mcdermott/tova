@@ -97,7 +97,11 @@ export function Sidebar() {
         />
       </div>
 
-      <div className="sidebar-scroll" onContextMenu={menu.open}>
+      {/* The rail's places stay put; only the tags move. The list of tags is
+          the one part of this that has no ceiling, and having it carry the
+          folders away with it meant scrolling to a tag lost sight of where you
+          could go instead. */}
+      <div className="sidebar-places" onContextMenu={menu.open}>
         {error !== null && <p className="sidebar-error">{error}</p>}
         {loading ? (
           <p className="sidebar-empty">Loading…</p>
@@ -105,10 +109,15 @@ export function Sidebar() {
           <>
             <FolderTree notes={notes} folders={folders} />
             <hr className="sidebar-rule" />
-            <TagList notes={notes} />
           </>
         )}
       </div>
+
+      {!loading && (
+        <div className="sidebar-scroll" onContextMenu={menu.open}>
+          <TagList notes={notes} />
+        </div>
+      )}
 
       <footer className="sidebar-footer">
         {/* Distinct from the cog beside it: this one opens the Profile tab, so

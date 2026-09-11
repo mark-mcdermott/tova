@@ -614,3 +614,32 @@ describe("blogs in the rail", () => {
     expect(state.indexTarget).toEqual({ kind: "blog", blog: "markmcdermott.io" })
   })
 })
+
+describe("what moves when the rail is scrolled", () => {
+  it("keeps the sections out of the part that scrolls", () => {
+    // Scrolling to a tag used to carry the folders away with it, so finding a
+    // tag lost sight of where else you could go.
+    render(<Sidebar />)
+
+    const scroller = document.querySelector(".sidebar-scroll")
+    const places = document.querySelector(".sidebar-places")
+
+    expect(places?.querySelector(".disclosure")).not.toBeNull()
+    expect(scroller?.textContent).not.toContain("Notes")
+  })
+
+  it("puts the tags in it", () => {
+    render(<Sidebar />)
+    expect(document.querySelector(".sidebar-scroll")?.textContent).toContain("TAGS")
+  })
+
+  it("leaves the header, the search and the footer outside it entirely", () => {
+    render(<Sidebar />)
+    const scroller = document.querySelector(".sidebar-scroll")
+
+    for (const fixed of [".sidebar-header", ".sidebar-search", ".sidebar-footer"]) {
+      expect(document.querySelector(fixed)).not.toBeNull()
+      expect(scroller?.querySelector(fixed)).toBeNull()
+    }
+  })
+})
