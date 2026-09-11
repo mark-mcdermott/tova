@@ -58,14 +58,14 @@ export const toolbarItems: ToolbarItem[] = [
   },
   {
     key: "italic",
-    label: "I",
+    label: "i",
     title: "Italic (Cmd+I)",
     shortcut: "Mod-i",
     format: { kind: "wrap", before: "*", after: "*" }
   },
   {
     key: "strike",
-    label: "/",
+    label: "~~",
     title: "Strikethrough (Cmd+Shift+X)",
     shortcut: "Mod-Shift-x",
     format: { kind: "wrap", before: "~~", after: "~~" }
