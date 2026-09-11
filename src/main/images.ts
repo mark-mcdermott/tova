@@ -1,4 +1,5 @@
-import { mkdir, readdir, writeFile } from "fs/promises"
+import { mkdir, readdir } from "fs/promises"
+import { writeVaultBytes } from "./vaultFile"
 import { basename, extname, join } from "path"
 import { ASSETS_DIRECTORY, IMAGE_EXTENSIONS } from "../shared/assets"
 import { slugify, uniqueSlug } from "../shared/noteName"
@@ -34,6 +35,6 @@ export async function saveImage(name: string, bytes: Uint8Array): Promise<string
   const stem = uniqueSlug(slugify(basename(name, suffix)), taken)
   const filename = `${stem}${extension}`
 
-  await writeFile(join(directory, filename), bytes)
+  await writeVaultBytes(join(directory, filename), bytes)
   return `${ASSETS_DIRECTORY}/${filename}`
 }

@@ -1,7 +1,9 @@
 import { app, BrowserWindow, net, powerMonitor, protocol } from "electron"
-import { join } from "path"
+import { extname, join } from "path"
 import { pathToFileURL } from "url"
-import { ensureVault, resolveInVault, setActiveVault } from "./vault"
+import { ensureVault, resolveInVault, setActiveVault, vaultRoot } from "./vault"
+import { readVaultBytes } from "./vaultFile"
+import { unlockVault } from "./vaultKeys"
 import { findBackground } from "./backgrounds"
 import { registerNoteHandlers } from "./ipc/notes"
 import { registerBackupHandlers } from "./ipc/backup"
@@ -22,6 +24,20 @@ import { cleanupBlankDailyNotes, ensureDailyNote, startDailyNoteSchedule } from 
  * choke point that guards note writes.
  */
 const ASSET_SCHEME = "tova-asset"
+
+/** Enough of a table for what a note can hold; anything else is served raw. */
+const MIME: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml"
+}
+
+function mimeOf(file: string): string {
+  return MIME[extname(file).toLowerCase()] ?? "application/octet-stream"
+}
 /** Backgrounds the reader added; they live in userData, not in the vault. */
 const BACKGROUND_SCHEME = "tova-bg"
 
@@ -35,7 +51,12 @@ function serveVaultAssets(): void {
     try {
       const { pathname } = new URL(request.url)
       const file = resolveInVault(decodeURIComponent(pathname).replace(/^\/+/, ""))
-      return await net.fetch(pathToFileURL(file).toString())
+      // Read rather than fetched: in an encrypted vault the bytes on disk are
+      // a sealed envelope, and the picture is what comes out of it.
+      const bytes = await readVaultBytes(file)
+      return new Response(new Uint8Array(bytes), {
+        headers: { "content-type": mimeOf(file) }
+      })
     } catch {
       // A missing or out-of-vault asset is a broken image, never an app error.
       return new Response(null, { status: 404 })
@@ -136,6 +157,9 @@ app.whenReady().then(async () => {
   // Before anything touches the vault: which one is open is a preference.
   const { activeVault } = await readPreferences()
   setActiveVault(activeVault)
+  // Before ensureVault, which writes: a sealed vault has to be open first or
+  // the directories it makes go in beside files it can no longer read.
+  await unlockVault(vaultRoot())
   await ensureVault()
 
   // The launch backup runs before cleanup, so anything the sweep removes is

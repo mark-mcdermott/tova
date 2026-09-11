@@ -12,7 +12,8 @@ leaving the window.
 - **Still powerful.** Write several posts in a single note, each with its own
   `@` block, and publish them from where you wrote them. Configure as many blogs
   as you like and pick the target as you write.
-- **Can be 100% offline and private**, if you want.
+- **Can be 100% offline and private**, if you want — including vaults encrypted
+  at rest, one folder at a time.
 - **TODO:** you can write under different tags in one file, and if you ever need
   to delete everything for one tag — you leave your job, say — you can do that
   with one click without losing your other notes.
@@ -28,6 +29,24 @@ folders you can see. Open them in any editor. Grep them. Put them in Dropbox.
 
 Nothing is uploaded, there is no account, and the app works with the network
 off. The only time Tova reaches the internet is when you ask it to publish.
+
+### Unless you ask for a vault that isn't
+
+A vault can be encrypted, and then it is not plain markdown any more — that is
+the trade, and it is per vault, so you can keep the default one open and put
+the sensitive writing somewhere sealed.
+
+Every file in a sealed vault is encrypted with AES-256-GCM: notes, pictures and
+older versions alike. **Filenames are not**, so a folder full of sealed notes
+still shows its titles. The point is a vault you can leave in iCloud or Dropbox
+without the service being able to read it, not a vault that hides that it
+exists.
+
+The key is kept in your Mac's keychain, so Tova opens the vault on this machine
+without asking. Any other machine needs the **recovery key**, shown once when
+you encrypt and never again — Tova keeps no readable copy of it. Lose that and
+the keychain together and the notes are gone; nobody can get them back, which
+is the whole point and also the risk.
 
 ## What it does
 

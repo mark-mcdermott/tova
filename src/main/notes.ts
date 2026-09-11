@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile, mkdir, rename, unlink, stat, rm } from "fs/promises"
+import { readdir, mkdir, rename, unlink, stat, rm } from "fs/promises"
 import { join } from "path"
 import {
   FOLDERED_SECTIONS,
@@ -19,6 +19,7 @@ import {
   sortNotes
 } from "../shared/noteLocation"
 import { parseFrontMatter, serializeFrontMatter, FrontMatterValue } from "../shared/frontMatter"
+import { readVaultText, writeVaultText } from "./vaultFile"
 import { slugify, uniqueSlug } from "../shared/noteName"
 import { allTags, normalizeManualTags } from "../shared/tags"
 import { canDeleteSection } from "../shared/sections"
@@ -56,7 +57,7 @@ function readTimestamp(value: FrontMatterValue | undefined): number | null {
 
 async function load(location: NoteLocation): Promise<LoadedNote> {
   const absolute = notePath(location)
-  const [raw, stats] = await Promise.all([readFile(absolute, "utf-8"), stat(absolute)])
+  const [raw, stats] = await Promise.all([readVaultText(absolute), stat(absolute)])
   const { data, body } = parseFrontMatter(raw)
 
   const home =
@@ -97,7 +98,7 @@ async function persist(note: LoadedNote): Promise<void> {
   // goes stale the moment the file is edited anywhere else.
   if (note.manualTags.length > 0) data.tags = note.manualTags
 
-  await writeFile(notePath(note.location), serializeFrontMatter(data, note.body), "utf-8")
+  await writeVaultText(notePath(note.location), serializeFrontMatter(data, note.body))
 }
 
 function toNote(note: LoadedNote): Note {
@@ -232,7 +233,7 @@ export async function writeNote(id: string, title: string, body: string): Promis
 
   // Snapshot what is on disk before overwriting it; saveVersion throttles so
   // continuous typing does not burn through the ten version slots.
-  const previous = await readFile(notePath(note.location), "utf-8").catch(() => null)
+  const previous = await readVaultText(notePath(note.location)).catch(() => null)
   if (previous !== null) await saveVersion(id, previous)
 
   note.title = title.trim()

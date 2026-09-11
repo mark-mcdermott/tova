@@ -1,7 +1,8 @@
 import { app } from "electron"
-import { cp, mkdir, readdir, rm, readFile, writeFile, stat } from "fs/promises"
+import { cp, mkdir, readdir, rm, stat } from "fs/promises"
 import { join } from "path"
 import { vaultRoot } from "./vault"
+import { readVaultText, writeVaultText } from "./vaultFile"
 import {
   backupFolderName,
   parseBackupFolderName,
@@ -132,7 +133,7 @@ export async function saveVersion(
     if (takenAt !== null && now.getTime() - takenAt.getTime() < VERSION_INTERVAL_MS) return
   }
 
-  await writeFile(join(directory, versionFileName(now)), content, "utf-8")
+  await writeVaultText(join(directory, versionFileName(now)), content)
 
   const remaining = await readdir(directory).catch(() => [] as string[])
   for (const expired of selectExpiredVersions(remaining, DEFAULT_VERSION_LIMIT)) {
@@ -149,5 +150,5 @@ export async function readVersion(noteId: string, version: string): Promise<stri
   if (parseBackupFolderName(version.replace(/\.md$/, "")) === null) {
     throw new Error(`Unknown version: ${version}`)
   }
-  return readFile(join(versionDir(noteId), version), "utf-8")
+  return readVaultText(join(versionDir(noteId), version))
 }

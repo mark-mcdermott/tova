@@ -19,6 +19,10 @@ export interface VaultChoice {
   path: string
   name: string
   active: boolean
+  /** Whether this vault's files are sealed. */
+  encrypted: boolean
+  /** Encrypted, and this machine cannot open it without the recovery key. */
+  locked: boolean
 }
 
 export interface SearchHit {
@@ -255,6 +259,12 @@ export interface PreferencesApi {
   useVault: (path: string) => Promise<VaultChoice[]>
   /** Stops listing a vault. The directory and its notes are left alone. */
   forgetVault: (path: string) => Promise<VaultChoice[]>
+  /** Seals a vault and returns the recovery key, shown once and never again. */
+  encryptVault: (path: string) => Promise<string>
+  /** Unseals it, which needs the key it is being asked to stop using. */
+  decryptVault: (path: string) => Promise<VaultChoice[]>
+  /** Opens a sealed vault with what was written down. False if it was wrong. */
+  unlockVault: (path: string, recoveryKey: string) => Promise<boolean>
 }
 
 export interface EventsApi {

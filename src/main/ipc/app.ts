@@ -9,7 +9,15 @@ import { nukeEverything, nukeTargets, resetPreferences } from "../reset"
 import { addBackground, listBackgrounds } from "../backgrounds"
 import { readSession, writeSession } from "../session"
 import { addTitleFont, listTitleFonts, removeTitleFont, titleFontDataUrl } from "../titleFonts"
-import { addVault, forgetVault, listVaults, useVault } from "../vaults"
+import {
+  addVault,
+  decryptVault,
+  encryptVault,
+  forgetVault,
+  listVaults,
+  unlockVault,
+  useVault
+} from "../vaults"
 import {
   addToDictionary,
   listDictionary,
@@ -73,6 +81,11 @@ export function registerAppHandlers(): void {
   ipcMain.handle("vault:add", () => addVault())
   ipcMain.handle("vault:use", (_event, path) => useVault(asString(path, "path")))
   ipcMain.handle("vault:forget", (_event, path) => forgetVault(asString(path, "path")))
+  ipcMain.handle("vault:encrypt", (_event, path) => encryptVault(asString(path, "path")))
+  ipcMain.handle("vault:decrypt", (_event, path) => decryptVault(asString(path, "path")))
+  ipcMain.handle("vault:unlock", (_event, path, key) =>
+    unlockVault(asString(path, "path"), asString(key, "recoveryKey"))
+  )
 
   ipcMain.handle("spellcheck:setEnabled", (_event, enabled) => {
     if (typeof enabled !== "boolean") throw new Error("enabled must be a boolean")
