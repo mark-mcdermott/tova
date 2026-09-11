@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { paginate } from "../../../../shared/paging"
 import { AppInfo, VaultChoice, BackupSummary } from "../../../../shared/types"
+import { ConfirmDialog } from "../../Popup/ConfirmDialog"
 import { useNotesStore } from "../../../stores/notesStore"
 import { useBlogsStore } from "../../../stores/blogsStore"
 
@@ -40,6 +41,12 @@ export function VaultTab() {
   const [error, setError] = useState<string | null>(null)
   const [vaults, setVaults] = useState<VaultChoice[]>([])
   const [switching, setSwitching] = useState(false)
+  const [sealing, setSealing] = useState<string | null>(null)
+  const [unsealing, setUnsealing] = useState<string | null>(null)
+  const [recoveryKey, setRecoveryKey] = useState<string | null>(null)
+  const [unlocking, setUnlocking] = useState<string | null>(null)
+  const [typedKey, setTypedKey] = useState("")
+  const [wrongKey, setWrongKey] = useState(false)
 
   // The first is always the default, which cannot be forgotten.
   const defaultPath = vaults[0]?.path
@@ -72,6 +79,50 @@ export function VaultTab() {
       await after(await window.tova.preferences.addVault())
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : String(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  async function encrypt(path: string) {
+    setSealing(null)
+    setSwitching(true)
+    try {
+      // Shown once and never again: Tova keeps no readable copy of it, which
+      // is the only reason it is worth anything.
+      setRecoveryKey(await window.tova.preferences.encryptVault(path))
+      setVaults(await window.tova.preferences.listVaults())
+    } catch (problem) {
+      setError(describe(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  async function decrypt(path: string) {
+    setUnsealing(null)
+    setSwitching(true)
+    try {
+      await after(await window.tova.preferences.decryptVault(path))
+    } catch (problem) {
+      setError(describe(problem))
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  async function unlock(path: string) {
+    setSwitching(true)
+    try {
+      if (!(await window.tova.preferences.unlockVault(path, typedKey))) {
+        setWrongKey(true)
+        return
+      }
+      setUnlocking(null)
+      setTypedKey("")
+      await after(await window.tova.preferences.listVaults())
+    } catch (problem) {
+      setError(describe(problem))
     } finally {
       setSwitching(false)
     }
@@ -158,9 +209,42 @@ export function VaultTab() {
                 disabled={vault.active || switching}
                 onClick={() => void switchTo(vault.path)}
               >
-                <span className="vault-name">{vault.name}</span>
+                <span className="vault-name">
+                  {vault.name}
+                  {vault.encrypted && (
+                    <span className="vault-sealed">{vault.locked ? "Locked" : "Encrypted"}</span>
+                  )}
+                </span>
                 <span className="vault-path">{vault.path}</span>
               </button>
+
+              {vault.locked ? (
+                <button
+                  type="button"
+                  className="settings-button settings-button-primary"
+                  aria-label={`Unlock ${vault.name}`}
+                  disabled={switching}
+                  onClick={() => {
+                    setWrongKey(false)
+                    setTypedKey("")
+                    setUnlocking(vault.path)
+                  }}
+                >
+                  Unlock
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="settings-button"
+                  aria-label={vault.encrypted ? `Decrypt ${vault.name}` : `Encrypt ${vault.name}`}
+                  disabled={switching}
+                  onClick={() =>
+                    vault.encrypted ? setUnsealing(vault.path) : setSealing(vault.path)
+                  }
+                >
+                  {vault.encrypted ? "Decrypt" : "Encrypt"}
+                </button>
+              )}
 
               <button
                 type="button"
@@ -174,6 +258,13 @@ export function VaultTab() {
             </div>
           ))}
         </div>
+
+        <p className="settings-note">
+          Encrypting a vault seals every file in it — notes, pictures and older versions — so the
+          folder can sit in a synced drive without the drive being able to read it. Filenames are
+          not sealed, so the titles stay legible. Tova opens it on this machine by itself; the
+          recovery key is for any other, and is shown once.
+        </p>
 
         <div className="settings-row">
           <button
@@ -309,6 +400,95 @@ export function VaultTab() {
           </button>
         </div>
       </section>
+
+      {sealing !== null && (
+        <ConfirmDialog
+          title="Encrypt this vault?"
+          body="Every file in it is sealed, and Tova will need a key to read them. You will be shown a recovery key once — without it, a machine that loses its keychain loses the notes."
+          details={[sealing]}
+          confirmLabel="Encrypt"
+          onConfirm={() => void encrypt(sealing)}
+          onCancel={() => setSealing(null)}
+        />
+      )}
+
+      {unsealing !== null && (
+        <ConfirmDialog
+          title="Decrypt this vault?"
+          body="Every file goes back to plain markdown. Anything that can read the folder will be able to read the notes again."
+          details={[unsealing]}
+          confirmLabel="Decrypt"
+          destructive
+          onConfirm={() => void decrypt(unsealing)}
+          onCancel={() => setUnsealing(null)}
+        />
+      )}
+
+      {recoveryKey !== null && (
+        <ConfirmDialog
+          title="Write this down"
+          body="This is the only way into the vault from any other machine, and the only way back if this one forgets. Tova keeps no readable copy — it cannot show it to you again."
+          details={[recoveryKey]}
+          confirmLabel="I have written it down"
+          onConfirm={() => setRecoveryKey(null)}
+          onCancel={() => setRecoveryKey(null)}
+        />
+      )}
+
+      {unlocking !== null && (
+        <div className="confirm-backdrop">
+          <div className="confirm-panel" role="alertdialog" aria-modal="true">
+            <h2 className="confirm-title">Unlock this vault</h2>
+            <p className="confirm-body">
+              This machine has no key for it. Enter the recovery key that was written down when it
+              was encrypted.
+            </p>
+
+            <label className="confirm-word">
+              <span>Recovery key</span>
+              <input
+                className="text-input"
+                value={typedKey}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
+                aria-label="Recovery key"
+                onChange={(event) => {
+                  setTypedKey(event.target.value)
+                  setWrongKey(false)
+                }}
+              />
+            </label>
+
+            {wrongKey && (
+              <p className="settings-error" role="alert">
+                That key does not open this vault.
+              </p>
+            )}
+
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="settings-button"
+                onClick={() => {
+                  setUnlocking(null)
+                  setTypedKey("")
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="settings-button settings-button-primary"
+                disabled={typedKey.trim() === "" || switching}
+                onClick={() => void unlock(unlocking)}
+              >
+                Unlock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

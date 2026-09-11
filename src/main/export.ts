@@ -1,6 +1,7 @@
 import { BrowserWindow, dialog } from "electron"
-import { readFile, writeFile } from "fs/promises"
+import { writeFile } from "fs/promises"
 import { parseFrontMatter } from "../shared/frontMatter"
+import { readVaultText } from "./vaultFile"
 import { notePdfPage } from "../shared/notePdfPage"
 import { requireLocation, notePath } from "./vault"
 
@@ -11,7 +12,7 @@ import { requireLocation, notePath } from "./vault"
  */
 export async function exportNoteMarkdown(id: string): Promise<string | null> {
   const location = requireLocation(id)
-  const contents = await readFile(notePath(location), "utf-8")
+  const contents = await readVaultText(notePath(location))
 
   const { canceled, filePath } = await dialog.showSaveDialog({
     title: "Export note",
@@ -35,7 +36,7 @@ export async function exportNoteMarkdown(id: string): Promise<string | null> {
  */
 export async function exportNotePdf(id: string): Promise<string | null> {
   const location = requireLocation(id)
-  const raw = await readFile(notePath(location), "utf-8")
+  const raw = await readVaultText(notePath(location))
   const { data, body } = parseFrontMatter(raw)
 
   const title =
@@ -55,7 +56,12 @@ export async function exportNotePdf(id: string): Promise<string | null> {
 
   const window = new BrowserWindow({
     show: false,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, javascript: false }
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      javascript: false
+    }
   })
 
   try {

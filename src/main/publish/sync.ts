@@ -1,4 +1,5 @@
-import { readdir, readFile } from "fs/promises"
+import { readdir } from "fs/promises"
+import { readVaultText } from "../vaultFile"
 import { BlogSummary } from "../../shared/types"
 import {
   applyEdit,
@@ -43,7 +44,7 @@ async function localPosts(blog: BlogSummary): Promise<LocalPost[]> {
 
   const posts: LocalPost[] = []
   for (const filename of entries.filter((name) => name.endsWith(".md"))) {
-    const content = await readFile(`${directory}/${filename}`, "utf-8").catch(() => null)
+    const content = await readVaultText(`${directory}/${filename}`).catch(() => null)
     if (content !== null) posts.push({ filename, hash: hashContent(content) })
   }
   return posts
@@ -148,7 +149,7 @@ export async function syncBlog(blog: BlogSummary): Promise<SyncResult> {
     // on the way in, so the fetched text is not what the next sync will see.
     posts[filename] = {
       remoteSha: shaOf.get(filename) ?? file.sha,
-      localHash: hashContent(await readFile(localPath(blog, filename), "utf-8"))
+      localHash: hashContent(await readVaultText(localPath(blog, filename)))
     }
 
     if (action === "import") result.imported++
@@ -192,7 +193,7 @@ export async function conflictVersions(
     token
   )
 
-  return { local: await readFile(localPath(blog, filename), "utf-8"), remote }
+  return { local: await readVaultText(localPath(blog, filename)), remote }
 }
 
 /** Resolve a conflict by taking the blog's copy, overwriting what is here. */
@@ -237,7 +238,7 @@ async function recordSynced(
   remoteSha: string | null
 ): Promise<void> {
   const state = await syncStateFor(blog.id)
-  const content = await readFile(localPath(blog, filename), "utf-8").catch(() => null)
+  const content = await readVaultText(localPath(blog, filename)).catch(() => null)
   if (content === null || remoteSha === null) return
 
   await saveSyncState(blog.id, {

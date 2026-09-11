@@ -88,7 +88,10 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       listVaults: vi.fn(async () => []),
       addVault: vi.fn(async () => []),
       useVault: vi.fn(async () => []),
-      forgetVault: vi.fn(async () => [])
+      forgetVault: vi.fn(async () => []),
+      encryptVault: vi.fn(async () => "AAAA-BBBB-CCCC-DDDD-EEEE-FFFF"),
+      decryptVault: vi.fn(async () => []),
+      unlockVault: vi.fn(async () => true)
     },
     app: { info: vi.fn(), reveal: vi.fn(), openExternal: vi.fn() },
     events: { onNotesChanged: vi.fn(() => () => undefined) }

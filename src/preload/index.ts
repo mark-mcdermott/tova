@@ -125,7 +125,10 @@ const preferences: PreferencesApi = {
   listVaults: () => ipcRenderer.invoke("vault:list"),
   addVault: () => ipcRenderer.invoke("vault:add"),
   useVault: (path) => ipcRenderer.invoke("vault:use", path),
-  forgetVault: (path) => ipcRenderer.invoke("vault:forget", path)
+  forgetVault: (path) => ipcRenderer.invoke("vault:forget", path),
+  encryptVault: (path) => ipcRenderer.invoke("vault:encrypt", path),
+  decryptVault: (path) => ipcRenderer.invoke("vault:decrypt", path),
+  unlockVault: (path, recoveryKey) => ipcRenderer.invoke("vault:unlock", path, recoveryKey)
 }
 
 const events: EventsApi = {

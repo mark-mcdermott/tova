@@ -1,7 +1,8 @@
-import { readFile, stat } from "fs/promises"
+import { stat } from "fs/promises"
 import { listNotes } from "./notes"
 import { notePath, requireLocation } from "./vault"
 import { parseFrontMatter } from "../shared/frontMatter"
+import { readVaultText } from "./vaultFile"
 import { matchNote } from "../shared/search"
 import { SearchHit } from "../shared/types"
 
@@ -23,7 +24,7 @@ async function bodyOf(id: string): Promise<string> {
   const cached = bodies.get(id)
   if (cached !== undefined && cached.mtimeMs === mtimeMs) return cached.body
 
-  const { body } = parseFrontMatter(await readFile(path, "utf-8"))
+  const { body } = parseFrontMatter(await readVaultText(path))
   bodies.set(id, { mtimeMs, body })
   return body
 }
