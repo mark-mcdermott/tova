@@ -35,6 +35,8 @@
   --text-faint: rgb(255 255 255 / 65%);
   /* Hover and selection lift with light, since the ink here is white. */
   --glass-bg-raised: rgb(255 255 255 / 16%);
+  /* Enough to keep a tag from showing through the heading it scrolls under. */
+  --sidebar-heading-bg: rgb(38 34 52 / 82%);
   color: var(--text-primary);
   overflow: hidden;
 }
@@ -138,11 +140,42 @@
 }
 
 /* One scrolling region for the whole tree — no fixed-height splits. */
+/*
+ * The rail's places: the sections, their folders, and the rule under them.
+ *
+ * Shown whole, always. Not 0 1 auto — that let a long tag list squeeze this
+ * box until it scrolled too, so the rail had two scrollbars and the sections
+ * you were looking for were above the first of them.
+ *
+ * The cost is a rail with more sections and folders than the window is tall,
+ * where the bottom of the list would be cut off. That is a real ceiling and a
+ * far-off one; a list of places short enough to take in at a glance is the
+ * point of the rail.
+ */
+.sidebar-places {
+  flex: none;
+  padding: 0 var(--sidebar-edge);
+}
+
+/*
+ * The tags, which are the part with no ceiling — one per tag ever written. This
+ * is what moves.
+ */
 .sidebar-scroll {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding: 0 var(--sidebar-edge) var(--space-4);
+}
+
+/* Or a long list scrolls out from under its own heading and becomes a column
+   of words with nothing saying what they are. */
+.sidebar-scroll .disclosure-header-section {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--sidebar-heading-bg);
+  backdrop-filter: blur(12px);
 }
 
 /* ── Disclosure ───────────────────────────────────────────────────────── */
