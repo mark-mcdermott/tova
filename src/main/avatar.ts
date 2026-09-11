@@ -88,12 +88,14 @@ async function macAccountPhoto(): Promise<Buffer | null> {
 
   try {
     // execFile, not a shell: the username is interpolated into an argument.
-    const { stdout } = await run("dscl", [
-      ".",
-      "-read",
-      `/Users/${userInfo().username}`,
-      "JPEGPhoto"
-    ])
+    // The absolute path because a packaged app's PATH is not a shell's and
+    // need not have /usr/bin in it; maxBuffer because the default 1MB is the
+    // size of hex, not of picture, and a large portrait doubles past it.
+    const { stdout } = await run(
+      "/usr/bin/dscl",
+      [".", "-read", `/Users/${userInfo().username}`, "JPEGPhoto"],
+      { maxBuffer: 32 * 1024 * 1024 }
+    )
     const hex = stdout.replace(/^JPEGPhoto:/, "").replace(/\s+/g, "")
     if (hex.length < 8 || hex.length % 2 !== 0) return null
 

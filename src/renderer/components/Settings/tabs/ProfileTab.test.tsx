@@ -13,6 +13,7 @@ import {
 import { tovaAvatarUrl } from "../../../avatar"
 
 const write = vi.fn()
+const chooseAvatar = vi.fn()
 
 function store(avatar: AvatarChoice, sources: AvatarSources) {
   usePreferencesStore.setState({
@@ -25,6 +26,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   write.mockImplementation(async (value: unknown) => value)
   window.tova = stubBridge({ preferences: { write } })
+  usePreferencesStore.setState({ chooseAvatar })
   store("initials", NO_AVATARS)
 })
 
@@ -73,6 +75,14 @@ describe("the avatar picker", () => {
     expect(write.mock.calls[0][0].avatar).toBe("tova")
   })
 
+  it("leads with the account picture where there is one", () => {
+    // It is the one that is already a portrait of the reader.
+    store("initials", { system: "data:system", custom: "data:custom" })
+    render(<ProfileTab />)
+
+    expect(offered()).toEqual(["Account", "Initials", "The Tova robot", "Picture"])
+  })
+
   it("offers the account picture only where there is one to offer", () => {
     render(<ProfileTab />)
     expect(offered()).not.toContain("Account")
@@ -98,7 +108,39 @@ describe("the picture behind the Picture option", () => {
   it("is only offered for removal once there is one", () => {
     render(<ProfileTab />)
     expect(screen.queryByRole("button", { name: /Remove/ })).toBeNull()
-    expect(screen.getByRole("button", { name: "Choose a picture…" })).toBeDefined()
+
+    cleanup()
+    store("custom", { system: null, custom: "data:custom" })
+    render(<ProfileTab />)
+    expect(screen.getByRole("button", { name: /Remove/ })).toBeDefined()
+  })
+
+  it("is uploaded from an opening in the row, not a button beside it", () => {
+    render(<ProfileTab />)
+    const upload = screen.getByRole("button", { name: "Upload" })
+
+    // A tile in the row, and not one of the faces on offer.
+    expect(upload.classList.contains("avatar-choice")).toBe(true)
+    expect(upload.hasAttribute("aria-pressed")).toBe(false)
+    expect(offered()).not.toContain("Upload")
+  })
+
+  it("opens the picker from it", async () => {
+    render(<ProfileTab />)
+    await userEvent.click(screen.getByRole("button", { name: "Upload" }))
+
+    expect(chooseAvatar).toHaveBeenCalled()
+  })
+
+  it("hangs the × directly on the tile, which is what reveals it", () => {
+    // The stylesheet reveals a .choice-remove whose own parent is hovered. Put
+    // it a level deeper and it would be invisible and reachable by keyboard
+    // alone — which is how the first version of this went wrong.
+    store("custom", { system: null, custom: "data:custom" })
+    render(<ProfileTab />)
+    const remove = screen.getByRole("button", { name: /Remove/ })
+
+    expect(remove.parentElement?.classList.contains("avatar-choice")).toBe(true)
   })
 
   it("takes the choice off it when it goes", async () => {

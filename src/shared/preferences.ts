@@ -63,10 +63,15 @@ export type Theme = "light" | "dark"
  */
 export type AvatarChoice = "initials" | "tova" | "system" | "custom"
 
+/*
+ * The account picture leads: it is the one that is already a portrait of the
+ * reader, so where a Mac has one it is the likeliest answer. The rest follow
+ * in the order they take over from it.
+ */
 export const AVATARS: { value: AvatarChoice; label: string; hint?: string }[] = [
+  { value: "system", label: "Account", hint: "From your Mac account" },
   { value: "initials", label: "Initials" },
   { value: "tova", label: "The Tova robot" },
-  { value: "system", label: "Account", hint: "From your Mac account" },
   { value: "custom", label: "Picture", hint: "One you choose" }
 ]
 

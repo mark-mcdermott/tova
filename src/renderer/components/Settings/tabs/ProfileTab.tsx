@@ -70,19 +70,45 @@ export function ProfileTab() {
               {option.hint !== undefined && (
                 <span className="avatar-choice-hint">{option.hint}</span>
               )}
+              {/* On the tile rather than beside the row, the way an added font
+                  carries its own ×. A button cannot hold a button, so the
+                  control is a span that behaves like one. */}
+              {option.value === "custom" && (
+                <span
+                  className="choice-remove"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Remove the picture"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    void removePicture()
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" && event.key !== " ") return
+                    event.preventDefault()
+                    event.stopPropagation()
+                    void removePicture()
+                  }}
+                >
+                  ×
+                </span>
+              )}
             </button>
           ))}
-        </div>
 
-        <div className="profile-avatar-row">
-          <button type="button" className="settings-button" onClick={() => void chooseAvatar()}>
-            {avatarSources.custom === null ? "Choose a picture…" : "Choose another…"}
+          {/* Last in the row, as the font and background pickers have it. It
+              is how a picture arrives rather than one of the faces on offer,
+              so it is drawn as an opening rather than a tile. */}
+          <button
+            type="button"
+            className="avatar-choice avatar-add"
+            onClick={() => void chooseAvatar()}
+          >
+            <span className="avatar-add-glyph" aria-hidden="true">
+              +
+            </span>
+            <span className="choice-name">Upload</span>
           </button>
-          {avatarSources.custom !== null && (
-            <button type="button" className="settings-button" onClick={() => void removePicture()}>
-              Remove the picture
-            </button>
-          )}
         </div>
       </Field>
     </section>

@@ -422,13 +422,6 @@
   accent-color: var(--accent);
 }
 
-.profile-avatar-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 /*
  * Each option drawn as the face it would give, so the choice is made by eye —
  * the same bargain the font and background pickers make.
@@ -441,6 +434,7 @@
 }
 
 .avatar-choice {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -457,6 +451,29 @@
 
 .avatar-choice.is-chosen {
   border-color: var(--accent);
+}
+
+/*
+ * Not a face on offer but the way one arrives, so it is drawn as an opening in
+ * the row rather than a tile in it — the same dashed shape the font and
+ * background pickers use for the same job.
+ */
+.avatar-add {
+  justify-content: center;
+  border-style: dashed;
+  border-color: var(--frame-border);
+  color: var(--text-muted);
+}
+
+.avatar-add:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.avatar-add-glyph {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  line-height: 1;
 }
 
 /* The sidebar draws it at 2rem; a little larger here, where it is being picked
@@ -830,7 +847,12 @@
   transition: opacity 120ms ease;
 }
 
-.choice:hover .choice-remove,
+/*
+ * Whatever it sits on, rather than a list of the tiles that can carry one:
+ * naming only .choice left the avatar picker's × invisible and reachable by
+ * keyboard alone, and nothing about a new kind of tile would have said so.
+ */
+:hover > .choice-remove,
 .choice-remove:focus-visible {
   opacity: 1;
 }
