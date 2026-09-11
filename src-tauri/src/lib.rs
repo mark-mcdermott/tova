@@ -84,14 +84,23 @@ pub fn run() {
             // window as it is created, and that script is how the renderer
             // gets `window.tova` before its own first import — which is
             // exactly what the Electron preload does.
-            tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
-                .title("Tova")
-                .inner_size(1280.0, 860.0)
-                .min_inner_size(720.0, 480.0)
+            let window =
+                tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
+                    .title("Tova")
+                    .inner_size(1280.0, 860.0)
+                    .min_inner_size(720.0, 480.0)
+                    .initialization_script(bridge::INIT_SCRIPT);
+
+            // The traffic lights sit in the window, over the sidebar, the way
+            // Electron's titleBarStyle: "hiddenInset" puts them. Both builder
+            // methods are macOS-only, so the chain has to fork rather than
+            // carry them everywhere — CI compiles this on Linux.
+            #[cfg(target_os = "macos")]
+            let window = window
                 .title_bar_style(tauri::TitleBarStyle::Overlay)
-                .hidden_title(true)
-                .initialization_script(bridge::INIT_SCRIPT)
-                .build()?;
+                .hidden_title(true);
+
+            window.build()?;
             Ok(())
         })
         .run(tauri::generate_context!())
