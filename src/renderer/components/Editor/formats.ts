@@ -65,7 +65,7 @@ export const toolbarItems: ToolbarItem[] = [
   },
   {
     key: "strike",
-    label: "~~",
+    label: "—",
     title: "Strikethrough (Cmd+Shift+X)",
     shortcut: "Mod-Shift-x",
     format: { kind: "wrap", before: "~~", after: "~~" }

@@ -876,7 +876,7 @@
  * The card is the container, not the viewport: the sidebar collapses and the
  * prose width is a preference, so the same window can give the toolbar very
  * different widths. Breakpoints are the measured cost of each control — the
- * full row needs 566px, and each step below is what remains once the one above
+ * full row needs 559px, and each step below is what remains once the one above
  * it goes.
  *
  * Order is by how often a thing is reached for. Bold and italic never go; the
@@ -889,13 +889,13 @@
   overflow: hidden;
 }
 
-@container toolbar (max-width: 566px) {
+@container toolbar (max-width: 559px) {
   .toolbar-status:last-child {
     display: none;
   }
 }
 
-@container toolbar (max-width: 472px) {
+@container toolbar (max-width: 465px) {
   .toolbar-actions [data-glyph="strike"] {
     display: none;
   }
@@ -957,7 +957,7 @@
 
 /*
  * Letters sit on the baseline; these four do not. Measured against the letters
- * in a render, the code fences land 2px low and the tildes, the brackets and
+ * in a render, the code fences land 2px low and the rule, the brackets and
  * the list rule 1.5px, because a symbol is centred on the maths axis rather
  * than standing on the baseline. The nudge is on the glyph rather than the
  * button, so the hover background stays where it is and the mark centres in it.
