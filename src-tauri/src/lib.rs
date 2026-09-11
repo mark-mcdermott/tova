@@ -24,6 +24,7 @@ mod note_location;
 mod note_name;
 mod notes;
 mod preferences;
+mod publish_state;
 mod safe_storage;
 mod screen;
 mod search;
@@ -339,6 +340,11 @@ fn blog_set_secret(
 #[tauri::command]
 fn blog_can_store_secrets() -> bool {
     blogs::can_store_secrets()
+}
+
+#[tauri::command]
+fn blog_last_synced() -> std::collections::BTreeMap<String, f64> {
+    publish_state::last_synced(&data_dir())
 }
 
 /// One file from the reader, or nothing if they thought better of it.
@@ -714,7 +720,8 @@ pub fn run() {
             blog_delete,
             blog_post_count,
             blog_set_secret,
-            blog_can_store_secrets
+            blog_can_store_secrets,
+            blog_last_synced
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

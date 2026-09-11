@@ -113,6 +113,7 @@
   tova.blogs.postCount = (id) => invoke("blog_post_count", { id })
   tova.blogs.setSecret = (id, secret, value) => invoke("blog_set_secret", { id, secret, value })
   tova.blogs.canStoreSecrets = () => invoke("blog_can_store_secrets")
+  tova.blogs.lastSynced = () => invoke("blog_last_synced")
 
   window.tova = tova
 })()
