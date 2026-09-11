@@ -143,14 +143,17 @@
 /*
  * The rail's places: the sections, their folders, and the rule under them.
  *
- * Its own height, so it does not move — but able to give way and scroll if a
- * reader ever has more sections and folders than the window is tall, which is
- * better than clipping them against the footer.
+ * Shown whole, always. Not 0 1 auto — that let a long tag list squeeze this
+ * box until it scrolled too, so the rail had two scrollbars and the sections
+ * you were looking for were above the first of them.
+ *
+ * The cost is a rail with more sections and folders than the window is tall,
+ * where the bottom of the list would be cut off. That is a real ceiling and a
+ * far-off one; a list of places short enough to take in at a glance is the
+ * point of the rail.
  */
 .sidebar-places {
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: none;
   padding: 0 var(--sidebar-edge);
 }
 
