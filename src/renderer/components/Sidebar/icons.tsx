@@ -1,24 +1,27 @@
 import type { ReactElement } from "react"
 
+export type IconName =
+  | "notes"
+  | "daily"
+  | "ideas"
+  | "posts"
+  | "journal"
+  | "trash"
+  | "folder"
+  | "tag"
+  | "cog"
+  | "compose"
+  | "back"
+  | "star"
+  | "more"
+  | "search"
+  | "sun"
+  | "moon"
+  | "monitor"
+  | "list"
+
 interface IconProps {
-  name:
-    | "notes"
-    | "daily"
-    | "ideas"
-    | "posts"
-    | "journal"
-    | "trash"
-    | "folder"
-    | "tag"
-    | "cog"
-    | "compose"
-    | "back"
-    | "star"
-    | "more"
-    | "search"
-    | "sun"
-    | "moon"
-    | "monitor"
+  name: IconName
   className?: string
 }
 
@@ -26,7 +29,7 @@ interface IconProps {
  * Sidebar glyphs. Inline SVG rather than an icon package — five shapes at one
  * size does not justify a dependency, and these inherit currentColor.
  */
-const PATHS: Record<IconProps["name"], ReactElement> = {
+const PATHS: Record<IconName, ReactElement> = {
   sun: (
     <>
       <circle cx="8" cy="8" r="3.1" />
@@ -98,6 +101,16 @@ const PATHS: Record<IconProps["name"], ReactElement> = {
     </>
   ),
   tag: <path d="M8 2.5H3.5a1 1 0 0 0-1 1V8l5.5 5.5 5.5-5.5z" />,
+  // The lines a reader would write, each with its bullet — which is the one
+  // thing ≡ could not show.
+  list: (
+    <>
+      <circle cx="3.3" cy="3.8" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="3.3" cy="8" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="3.3" cy="12.2" r="0.9" fill="currentColor" stroke="none" />
+      <path d="M6 3.8h7.5M6 8h7.5M6 12.2h7.5" />
+    </>
+  ),
   // Drawn on a 24 grid and scaled to the shared 16 viewBox: radial spokes read
   // as a sun at this size, whereas a toothed ring reads as a cog.
   cog: (

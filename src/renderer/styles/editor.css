@@ -876,7 +876,7 @@
  * The card is the container, not the viewport: the sidebar collapses and the
  * prose width is a preference, so the same window can give the toolbar very
  * different widths. Breakpoints are the measured cost of each control — the
- * full row needs 556px, and each step below is what remains once the one above
+ * full row needs 567px, and each step below is what remains once the one above
  * it goes.
  *
  * Order is by how often a thing is reached for. Bold and italic never go; the
@@ -889,31 +889,31 @@
   overflow: hidden;
 }
 
-@container toolbar (max-width: 556px) {
+@container toolbar (max-width: 567px) {
   .toolbar-status:last-child {
     display: none;
   }
 }
 
-@container toolbar (max-width: 462px) {
+@container toolbar (max-width: 473px) {
   .toolbar-actions [data-glyph="strike"] {
     display: none;
   }
 }
 
-@container toolbar (max-width: 419px) {
+@container toolbar (max-width: 427px) {
   .toolbar-actions [data-glyph="codeBlock"] {
     display: none;
   }
 }
 
-@container toolbar (max-width: 360px) {
+@container toolbar (max-width: 368px) {
   .toolbar-actions [data-glyph="inlineCode"] {
     display: none;
   }
 }
 
-@container toolbar (max-width: 307px) {
+@container toolbar (max-width: 315px) {
   .toolbar-actions [data-glyph="list"] {
     display: none;
   }
@@ -957,19 +957,41 @@
 
 /*
  * Letters sit on the baseline; these four do not. Measured against the letters
- * in a render, the slash and the code fences land 2px low and the brackets and
- * the list rule 1.5px, because a symbol is centred on the maths axis rather
- * than standing on the baseline. The nudge is on the glyph rather than the
- * button, so the hover background stays where it is and the mark centres in it.
+ * in a render, the code fences land 2px low and the rule and the brackets
+ * 1.5px, because a symbol is centred on the maths axis rather than standing on
+ * the baseline. The nudge is on the glyph rather than the button, so the hover
+ * background stays where it is and the mark centres in it.
  */
-.toolbar-actions button[data-glyph="strike"] .toolbar-glyph,
 .toolbar-actions button[data-glyph="codeBlock"] .toolbar-glyph {
   transform: translateY(-2px);
 }
 
-.toolbar-actions button[data-glyph="inlineCode"] .toolbar-glyph,
-.toolbar-actions button[data-glyph="list"] .toolbar-glyph {
+.toolbar-actions button[data-glyph="strike"] .toolbar-glyph,
+.toolbar-actions button[data-glyph="inlineCode"] .toolbar-glyph {
   transform: translateY(-1.5px);
+}
+
+/*
+ * The list button is drawn rather than typed, so it needs no nudge: the shape
+ * is centred in its own box already. A little larger than the symbols, because
+ * three rules and their bullets need the room to read as a list.
+ */
+.toolbar-icon {
+  display: block;
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+/*
+ * The one letter set in the format it applies. A serif italic lowercase i has
+ * the slanted dot and the entry stroke a sans one lacks, and it carries only an
+ * x-height where its neighbours carry a cap, so it is set a little larger to
+ * weigh the same in the row.
+ */
+.toolbar-actions button[data-glyph="italic"] .toolbar-glyph {
+  font-family: Georgia, ui-serif, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 1.45rem;
 }
 
 .toolbar-glyph {

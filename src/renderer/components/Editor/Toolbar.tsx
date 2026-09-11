@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view"
 import { applyFormat, toolbarButtons } from "./formats"
 import { useTooltip } from "../../useTooltip"
+import { Icon } from "../Sidebar/icons"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
 
@@ -39,7 +40,9 @@ export function Toolbar({ viewRef, wordCount, saveStatus }: ToolbarProps) {
           >
             {/* The glyph is nudged on its own for some symbols, so it needs a
                 box of its own to move inside the button's. */}
-            <span className="toolbar-glyph">{item.label}</span>
+            <span className="toolbar-glyph">
+              {"icon" in item ? <Icon name={item.icon} className="toolbar-icon" /> : item.label}
+            </span>
           </button>
         ))}
       </div>
