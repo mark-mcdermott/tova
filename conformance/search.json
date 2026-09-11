@@ -1,0 +1,1474 @@
+{
+  "_readme": [
+    "Search, and the dates a daily note is named by.",
+    "",
+    "Every index in here is a JavaScript string index, which is a UTF-16 code",
+    "unit and not a byte or a character. snippetAround slices the body at an",
+    "index indexOf produced, so a body with one accent before the match cuts",
+    "in the wrong place if a port counts anything else - and in Rust, slicing",
+    "off a character boundary panics rather than being merely wrong.",
+    "",
+    "The word-boundary cases are the other trap: JavaScript's \\b follows \\w,",
+    "which without the u flag is [A-Za-z0-9_]. So `caf` is a whole word in",
+    "`café`, which is surprising, and is what both backends have to do.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "queryTerms": [
+    {
+      "query": "morning",
+      "terms": [
+        "morning"
+      ]
+    },
+    {
+      "query": "slow morning",
+      "terms": [
+        "slow",
+        "morning"
+      ]
+    },
+    {
+      "query": "MORNING",
+      "terms": [
+        "morning"
+      ]
+    },
+    {
+      "query": "  morning  ",
+      "terms": [
+        "morning"
+      ]
+    },
+    {
+      "query": "",
+      "terms": []
+    },
+    {
+      "query": "   ",
+      "terms": []
+    },
+    {
+      "query": "quiet",
+      "terms": [
+        "quiet"
+      ]
+    },
+    {
+      "query": "caf",
+      "terms": [
+        "caf"
+      ]
+    },
+    {
+      "query": "café",
+      "terms": [
+        "café"
+      ]
+    },
+    {
+      "query": "😀",
+      "terms": [
+        "😀"
+      ]
+    },
+    {
+      "query": "notes writing",
+      "terms": [
+        "notes",
+        "writing"
+      ]
+    },
+    {
+      "query": "zzz",
+      "terms": [
+        "zzz"
+      ]
+    },
+    {
+      "query": "morning slow",
+      "terms": [
+        "morning",
+        "slow"
+      ]
+    },
+    {
+      "query": "émile",
+      "terms": [
+        "émile"
+      ]
+    },
+    {
+      "query": "emile",
+      "terms": [
+        "emile"
+      ]
+    },
+    {
+      "query": "morning_side",
+      "terms": [
+        "morning_side"
+      ]
+    }
+  ],
+  "snippetAround": [
+    {
+      "body": "Coffee. Empty streets.",
+      "at": 0,
+      "length": 6,
+      "snippet": "Coffee. Empty streets."
+    },
+    {
+      "body": "A café — 😀 — then the word morning appears here.",
+      "at": 30,
+      "length": 7,
+      "snippet": "A café — 😀 — then the word morning appears here."
+    },
+    {
+      "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "at": 200,
+      "length": 6,
+      "snippet": "…xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy…"
+    },
+    {
+      "body": "short",
+      "at": 0,
+      "length": 5,
+      "snippet": "short"
+    },
+    {
+      "body": "line one\n\n   line   two   ",
+      "at": 9,
+      "length": 4,
+      "snippet": "line one line two"
+    },
+    {
+      "body": "😀😀😀 needle",
+      "at": 7,
+      "length": 6,
+      "snippet": "😀😀😀 needle"
+    }
+  ],
+  "match": [
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "morning",
+      "result": {
+        "where": "title",
+        "score": 45,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "slow morning",
+      "result": {
+        "where": "title",
+        "score": 145,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "MORNING",
+      "result": {
+        "where": "title",
+        "score": 45,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "  morning  ",
+      "result": {
+        "where": "title",
+        "score": 45,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "quiet",
+      "result": {
+        "where": "tag",
+        "score": 25,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "morning slow",
+      "result": {
+        "where": "title",
+        "score": 105,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet"
+        ],
+        "body": "Coffee. Empty streets."
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "morning",
+      "result": {
+        "where": "title",
+        "score": 120,
+        "snippet": "morning morning morning morning morning morning…"
+      }
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "MORNING",
+      "result": {
+        "where": "title",
+        "score": 120,
+        "snippet": "morning morning morning morning morning morning…"
+      }
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "  morning  ",
+      "result": {
+        "where": "title",
+        "score": 120,
+        "snippet": "morning morning morning morning morning morning…"
+      }
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morning",
+        "tags": [],
+        "body": "morning morning morning morning morning morning morning"
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "morning",
+      "result": {
+        "where": "title",
+        "score": 85,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "MORNING",
+      "result": {
+        "where": "title",
+        "score": 85,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "  morning  ",
+      "result": {
+        "where": "title",
+        "score": 85,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Morningside",
+        "tags": [
+          "morning"
+        ],
+        "body": "Nothing relevant."
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "morning",
+      "result": {
+        "where": "body",
+        "score": 10,
+        "snippet": "A café — 😀 — then the word morning appears here."
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "MORNING",
+      "result": {
+        "where": "body",
+        "score": 10,
+        "snippet": "A café — 😀 — then the word morning appears here."
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "  morning  ",
+      "result": {
+        "where": "body",
+        "score": 10,
+        "snippet": "A café — 😀 — then the word morning appears here."
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "caf",
+      "result": {
+        "where": "body",
+        "score": 10,
+        "snippet": "A café — 😀 — then the word morning appears h…"
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "café",
+      "result": {
+        "where": "body",
+        "score": 4,
+        "snippet": "A café — 😀 — then the word morning appears he…"
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "😀",
+      "result": {
+        "where": "body",
+        "score": 4,
+        "snippet": "A café — 😀 — then the word morning appears here."
+      }
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Untitled",
+        "tags": [],
+        "body": "A café — 😀 — then the word morning appears here."
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "MORNING",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "  morning  ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "notes writing",
+      "result": {
+        "where": "title",
+        "score": 125,
+        "snippet": null
+      }
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Notes",
+        "tags": [
+          "writing",
+          "slow"
+        ],
+        "body": ""
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "MORNING",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "  morning  ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "émile",
+      "result": {
+        "where": "title",
+        "score": 104,
+        "snippet": "émile wrote things"
+      }
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Émile",
+        "tags": [],
+        "body": "émile wrote things"
+      },
+      "query": "morning_side",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "morning",
+      "result": {
+        "where": "body",
+        "score": 16,
+        "snippet": "morningside morning morning_side #morning"
+      }
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "slow morning",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "MORNING",
+      "result": {
+        "where": "body",
+        "score": 16,
+        "snippet": "morningside morning morning_side #morning"
+      }
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "  morning  ",
+      "result": {
+        "where": "body",
+        "score": 16,
+        "snippet": "morningside morning morning_side #morning"
+      }
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "   ",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "quiet",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "caf",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "café",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "😀",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "notes writing",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "zzz",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "morning slow",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "émile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "emile",
+      "result": null
+    },
+    {
+      "note": {
+        "title": "Edge",
+        "tags": [],
+        "body": "morningside morning morning_side #morning"
+      },
+      "query": "morning_side",
+      "result": {
+        "where": "body",
+        "score": 10,
+        "snippet": "morningside morning morning_side #morning"
+      }
+    }
+  ],
+  "dates": [
+    {
+      "name": "2026-09-03",
+      "parsed": "2026-09-03",
+      "title": "9/3/26"
+    },
+    {
+      "name": "2026-09-03.md",
+      "parsed": "2026-09-03",
+      "title": "9/3/26"
+    },
+    {
+      "name": "2026-02-31",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "2026-13-01",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "2026-2-3",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "26-09-03",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "not a date",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "2026-09-03.txt",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "0001-01-01",
+      "parsed": null,
+      "title": null
+    },
+    {
+      "name": "2026-00-01",
+      "parsed": null,
+      "title": null
+    }
+  ],
+  "blankBody": [
+    {
+      "body": "",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "   ",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "\n\n\n",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "# 9/3/26",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "9/3/26",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "  # 9/3/26  ",
+      "title": "9/3/26",
+      "blank": true
+    },
+    {
+      "body": "Coffee.",
+      "title": "9/3/26",
+      "blank": false
+    },
+    {
+      "body": "# 9/3/26\n\nCoffee.",
+      "title": "9/3/26",
+      "blank": false
+    },
+    {
+      "body": "# Other",
+      "title": "9/3/26",
+      "blank": false
+    }
+  ]
+}

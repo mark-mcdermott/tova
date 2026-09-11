@@ -568,7 +568,7 @@ pub fn restore_note(id: &str) -> Result<NoteSummary, String> {
 
 /// Unlinks a note outright, with no Trash step. Every caller has to justify
 /// skipping the recoverable path, and there is exactly one.
-fn delete_note_file(id: &str) -> Result<(), String> {
+pub fn delete_note_file(id: &str) -> Result<(), String> {
     std::fs::remove_file(note_path(&require_location(id)?)?).map_err(|e| e.to_string())
 }
 

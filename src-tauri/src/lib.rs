@@ -13,6 +13,8 @@ mod bridge;
 #[cfg(test)]
 mod conformance;
 mod crypto;
+mod daily;
+mod date;
 mod front_matter;
 mod js;
 mod note_location;
@@ -21,6 +23,9 @@ mod notes;
 mod preferences;
 mod safe_storage;
 mod screen;
+mod search;
+#[cfg(test)]
+mod search_conformance;
 mod sections;
 mod session;
 mod tags;
@@ -225,6 +230,16 @@ fn section_delete(id: String) -> Result<Vec<String>, String> {
     notes::delete_section(&id)
 }
 
+#[tauri::command]
+fn note_search(query: String) -> Vec<search::Hit> {
+    search::search_notes(&query, 50)
+}
+
+#[tauri::command]
+fn note_today() -> Result<notes::Note, String> {
+    daily::today_note()
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -279,7 +294,9 @@ pub fn run() {
             folder_rename,
             folder_delete,
             section_create,
-            section_delete
+            section_delete,
+            note_search,
+            note_today
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

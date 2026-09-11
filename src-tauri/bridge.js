@@ -83,6 +83,8 @@
   tova.notes.deleteFolder = (name) => invoke("folder_delete", { name })
   tova.notes.createSection = (id) => invoke("section_create", { id })
   tova.notes.deleteSection = (id) => invoke("section_delete", { id })
+  tova.notes.search = (query) => invoke("note_search", { query })
+  tova.notes.today = () => invoke("note_today")
 
   window.tova = tova
 })()
