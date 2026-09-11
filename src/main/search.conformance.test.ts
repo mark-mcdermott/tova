@@ -53,7 +53,9 @@ describe("the search conformance fixture", () => {
     for (const one of doc.dates) {
       const date = parseDailyNoteName(one.name)
 
-      expect(date === null ? null : toDailyNoteName(date), JSON.stringify(one.name)).toBe(one.parsed)
+      expect(date === null ? null : toDailyNoteName(date), JSON.stringify(one.name)).toBe(
+        one.parsed
+      )
       expect(date === null ? null : formatDailyTitle(date)).toBe(one.title)
     }
   })
