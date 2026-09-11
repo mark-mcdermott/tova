@@ -27,6 +27,11 @@ asar: true
 mac:
   category: public.app-category.productivity
   icon: build/icon.png
+  # Electron ships 220 .lproj bundles — 48MB of Chromium's own interface strings
+  # in every language it has ever been translated into. Tova's interface is in
+  # one, and nothing here asks Chromium for its menus in another.
+  electronLanguages:
+    - en
   target:
     - target: dmg
       arch:
