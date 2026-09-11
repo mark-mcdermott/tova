@@ -18,6 +18,7 @@
 | 11 — Blog configuration           | Complete                                            |
 | 12 — Full settings panel          | Complete                                            |
 | 13 — Packaging                    | Signed `.dmg`; notarization needs Apple credentials |
+| 14 — Tauri backend                | 67 of 74 IPC methods; the rest need a running app   |
 
 **Deferred by choice, not left undone** — paging the snapshot list. All are in the README's roadmap with the reason
 each was set aside.
@@ -669,6 +670,91 @@ The baseline to compare against: today `spctl -a -vvv -t install` on the built
 app says `rejected`, `source=Unnotarized Developer ID`. The signature itself is
 already correct — `Developer ID Application: Mark McDermott (VRFF4MSHAC)` with
 `flags=0x10000(runtime)`. Notarization is the only missing piece.
+
+## The Tauri backend
+
+Electron is 192MB of Chromium that the app uses to draw text. The Tauri backend
+is the same application against the system webview, and it exists because a
+calm local-first writing tool should not cost a quarter of a gigabyte.
+
+It is being ported a slice at a time rather than rewritten, and the rule for
+the whole of it is that **the IPC surface does not move**. Every command in
+`src-tauri` answers to the same name and the same shape as the Electron handler
+it replaces, so both backends run against one renderer and a slice can land
+without the renderer knowing which one it is talking to.
+`src/main/surface.conformance.test.ts` is what holds that to account; it was
+maintained by hand until it was not.
+
+`src-tauri/bridge.js` is the progress bar. It builds `window.tova` out of Tauri
+commands, and anything not yet ported throws by name rather than returning
+undefined — so a gap is a loud failure in the console and not a component
+rendering blank.
+
+### Conformance, and why there is so much of it
+
+A port is not a rewrite, and the thing that makes it one is being able to show
+the two sides agree. `conformance/` holds fixtures generated from the
+TypeScript and read by both backends: preferences, screens, the cipher, the
+text layer a note is read and written through, search, the `@blog post` format,
+publishing's arithmetic, and blog configuration.
+
+They are generated rather than written, which matters — a fixture someone typed
+records what they believed, and one generated from the code records what it
+does. The difference showed up repeatedly: every divergence found in this port
+was a JavaScript coercion rule rather than anything about the logic.
+
+The ones worth knowing, because they will bite anything else ported from this
+codebase:
+
+- **`\w` and `\S` in a JavaScript regex are ASCII** without the `u` flag, and
+  Rust's `regex` crate reads them as Unicode. `#café` is not a tag; `café/repo`
+  is not a repository name. Every pattern here is hand-written for that reason,
+  and the project carries no regex crate.
+- **`\s` includes the byte-order mark and excludes U+0085**, and Rust's
+  `char::is_whitespace` does exactly the opposite.
+- **JavaScript string offsets are UTF-16 code units.** Search slices a body at
+  an index `indexOf` produced, and the editor applies an edit at an offset the
+  backend computed. Counting bytes there does not merely order things
+  differently: it cuts in the wrong place, and in Rust it panics.
+- **`<` on strings compares UTF-16 code units too**, so JavaScript says
+  `"\u{FFFD}" < "\u{10000}"` is false and Rust says true. A note titled with
+  an emoji sorts differently under each.
+- **`new Date(1, 0, 1)` is 1901**, so `0001-01-01` is not a daily note.
+- **NFKD is load-bearing in `slugify`**: without it `café` slugs as `caf-`, and
+  every accented title gets a different filename under each backend.
+
+`src-tauri/src/js.rs` is where those live, in one file, because each is small
+and wrong in a way no test of the port against itself would show.
+
+### Two places this deliberately differs
+
+**`localeCompare` is gone, from both backends.** It was the tie-break in
+`sortNotes` and the ordering in `listFolders`, and it could not be ported: it
+is a collation rather than a comparison, and matching it means carrying ICU's
+tables. Changing the TypeScript was the better trade anyway — called with no
+locale, as it was, it asks the operating system, so two readers with different
+locales already saw their folders in different orders.
+
+**The daily note is checked once a minute rather than at midnight.** Electron
+arms a timer for the exact distance and then carries a wake handler and a focus
+handler, because a single long timeout cannot be trusted across a suspend.
+Polling needs none of that, and there is no arithmetic about when midnight is —
+which is the part that went wrong in Xin.
+
+### What is left
+
+Seven methods, and they are the ones that cannot be ported without a running
+app: `notes.exportPdf`, which prints through Chromium, and the six spellcheck
+methods, which are Chromium's dictionary and its context menu. Both want
+Objective-C interop and a decision about how the renderer asks for suggestions
+when the webview does not hand them over the way Chromium does.
+
+One verification is also outstanding: `tools/safe-storage-vectors.js` and the
+ignored test beside it in `src-tauri/src/safe_storage.rs` are the pair that
+proves Electron's `safeStorage` and the Rust port read the same keychain item.
+They need a login keychain, so they have not been run. Until they are, a vault
+sealed under one backend may ask for its recovery key under the other — which
+fails safe, and does not announce itself.
 
 ## To resume
 
