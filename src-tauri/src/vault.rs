@@ -10,6 +10,8 @@ rather than clamped.
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 
+use crate::note_location::{parse_note_id, to_note_id, NoteLocation};
+
 /// Posts is not a configurable section: the blogs that sync into it own it.
 const ALWAYS: [&str; 1] = ["posts"];
 
@@ -38,13 +40,7 @@ pub fn set_active_vault(path: Option<PathBuf>) {
     }
 }
 
-/*
- * Read by everything that touches a file in the vault, which is nothing yet —
- * notes is the slice after this one. Ported early on purpose: `resolve_in_vault`
- * below is the single choke point for untrusted paths, and a guard is worth
- * having tested before the code that leans on it exists rather than after.
- */
-#[allow(dead_code)]
+/// Read by everything that touches a file in the vault.
 pub fn vault_root() -> PathBuf {
     ACTIVE
         .lock()
@@ -102,9 +98,26 @@ pub fn resolve_within(root: &Path, relative: &str) -> Result<PathBuf, String> {
 }
 
 /// The single choke point. A path that escapes is refused, not clamped.
-#[allow(dead_code)]
 pub fn resolve_in_vault(relative: &str) -> Result<PathBuf, String> {
     resolve_within(&vault_root(), relative)
+}
+
+/// The choke point with the error the command layer hands back. Every entry
+/// point that takes an id from the renderer goes through here.
+pub fn require_location(id: &str) -> Result<NoteLocation, String> {
+    parse_note_id(id).ok_or_else(|| format!("Invalid note id: {id}"))
+}
+
+pub fn note_path(location: &NoteLocation) -> Result<PathBuf, String> {
+    resolve_in_vault(&to_note_id(location))
+}
+
+pub fn directory_of(section: &str, folder: Option<&str>) -> Result<PathBuf, String> {
+    let relative = match folder {
+        None => section.to_string(),
+        Some(folder) => format!("{section}/{folder}"),
+    };
+    resolve_in_vault(&relative)
 }
 
 /// The section directories a vault is expected to have, made if they are not.

@@ -62,6 +62,19 @@ pub fn json_string(value: &str) -> String {
     out
 }
 
+/*
+ * How JavaScript orders two strings with `<`, which is by UTF-16 code unit and
+ * not by code point. The two agree for everything in the basic plane and part
+ * company above it: JavaScript says "\u{FFFD}" < "\u{10000}" is false, because
+ * the second starts with a surrogate at 0xD800, and Rust's own `<` says true.
+ *
+ * Measured rather than assumed, and the test below is the measurement. It only
+ * shows up in a title with an emoji in it — which is not a rare title.
+ */
+pub fn compare(a: &str, b: &str) -> std::cmp::Ordering {
+    a.encode_utf16().cmp(b.encode_utf16())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

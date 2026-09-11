@@ -7,6 +7,7 @@ replaces, so both backends stay runnable against one conformance suite and a
 slice can land without the renderer knowing which one it is talking to.
 */
 
+mod backup;
 mod bridge;
 /// The text layer's conformance tests, in one place — see the module for why.
 #[cfg(test)]
@@ -16,6 +17,7 @@ mod front_matter;
 mod js;
 mod note_location;
 mod note_name;
+mod notes;
 mod preferences;
 mod safe_storage;
 mod screen;
@@ -126,6 +128,53 @@ fn vault_unlock(path: String, recovery_key: String) -> Result<bool, String> {
     vaults::unlock_vault(&data_dir(), Path::new(&path), &recovery_key)
 }
 
+#[tauri::command]
+fn note_list() -> Vec<notes::NoteSummary> {
+    notes::list()
+}
+
+#[tauri::command]
+fn note_read(id: String) -> Result<notes::Note, String> {
+    notes::read(&id)
+}
+
+#[tauri::command]
+fn note_create(input: notes::CreateNoteInput) -> Result<notes::Note, String> {
+    notes::create(input)
+}
+
+#[tauri::command]
+fn note_write(id: String, title: String, body: String) -> Result<notes::NoteSummary, String> {
+    notes::write(&id, &title, &body)
+}
+
+#[tauri::command]
+fn note_rename(id: String, title: String) -> Result<notes::NoteSummary, String> {
+    notes::rename(&id, &title)
+}
+
+#[tauri::command]
+fn note_favorite(id: String, favorite: bool) -> Result<notes::NoteSummary, String> {
+    notes::set_favorite(&id, favorite)
+}
+
+/// Whatever arrives is normalised in `set_manual_tags`, so a hand-made call
+/// cannot put a name in front matter the tag rules would refuse.
+#[tauri::command]
+fn note_tags(id: String, tags: Vec<String>) -> Result<notes::NoteSummary, String> {
+    notes::set_manual_tags(&id, tags)
+}
+
+#[tauri::command]
+fn note_versions(id: String) -> Vec<String> {
+    backup::list_versions(&id)
+}
+
+#[tauri::command]
+fn note_version_read(id: String, version: String) -> Result<String, String> {
+    backup::read_version(&id, &version)
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -161,7 +210,16 @@ pub fn run() {
             vault_forget,
             vault_encrypt,
             vault_decrypt,
-            vault_unlock
+            vault_unlock,
+            note_list,
+            note_read,
+            note_create,
+            note_write,
+            note_rename,
+            note_favorite,
+            note_tags,
+            note_versions,
+            note_version_read
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

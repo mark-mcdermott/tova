@@ -1,5 +1,6 @@
 import { FOLDERED_SECTIONS, Section, isSection, NoteSummary } from "./types"
 import { FrontMatterValue } from "./frontMatter"
+import { compareTitles } from "./noteName"
 
 export interface NoteLocation {
   section: Section
@@ -79,6 +80,6 @@ export function sortNotes(notes: NoteSummary[]): NoteSummary[] {
   return [...notes].sort((a, b) => {
     if (a.favorite !== b.favorite) return a.favorite ? -1 : 1
     if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt
-    return a.title.localeCompare(b.title)
+    return compareTitles(a.title, b.title)
   })
 }

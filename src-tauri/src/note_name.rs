@@ -70,3 +70,28 @@ pub fn unique_slug<'a>(candidate: &str, taken: impl IntoIterator<Item = &'a str>
         .find(|next| !used.contains(next.as_str()))
         .expect("the integers do not run out")
 }
+
+/// The key two titles are ordered by: accents folded onto their base letters,
+/// case ignored. The same fold `slugify` does, and for the same reason —
+/// `Émile` belongs beside `Emile` rather than after `Zebra`.
+pub fn sort_key(value: &str) -> String {
+    value
+        .nfkd()
+        .filter(|c| !matches!(c, '\u{300}'..='\u{36f}'))
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Orders two titles, deterministically.
+///
+/// This replaces `localeCompare`, on both sides. See the note on the
+/// TypeScript's `compareTitles` for why it is gone: called with no locale, as
+/// it was, it asks the operating system, so two readers already saw their
+/// folders in different orders. Matching that collation here would mean
+/// carrying ICU's tables, which is a large thing to carry for a tie-break.
+pub fn compare_titles(a: &str, b: &str) -> std::cmp::Ordering {
+    match crate::js::compare(&sort_key(a), &sort_key(b)) {
+        std::cmp::Ordering::Equal => crate::js::compare(a, b),
+        other => other,
+    }
+}

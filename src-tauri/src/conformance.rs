@@ -296,3 +296,77 @@ fn puts_a_deleted_note_in_the_same_place() {
         assert_eq!(location.filename, text(&want["filename"]));
     }
 }
+
+#[test]
+fn folds_a_title_to_the_same_sort_key() {
+    for case in cases("sortKey") {
+        let title = text(&case["title"]);
+
+        assert_eq!(
+            note_name::sort_key(title),
+            text(&case["key"]),
+            "for {title:?}"
+        );
+    }
+}
+
+#[test]
+fn orders_titles_the_same_way() {
+    let doc = fixture();
+    let mut titles: Vec<String> = doc["compareTitles"]["titles"]
+        .as_array()
+        .expect("titles")
+        .iter()
+        .map(|t| text(t).to_string())
+        .collect();
+
+    titles.sort_by(|a, b| note_name::compare_titles(a, b));
+
+    let want: Vec<String> = doc["compareTitles"]["sorted"]
+        .as_array()
+        .expect("sorted")
+        .iter()
+        .map(|t| text(t).to_string())
+        .collect();
+    assert_eq!(titles, want);
+}
+
+#[test]
+fn orders_a_list_of_notes_the_same_way() {
+    /*
+     * The three that matter are at the end: an emoji, an astral character and
+     * U+FFFD. JavaScript orders them by UTF-16 code unit, which puts the
+     * emoji first; Rust's own `<` orders by code point, which does not. The
+     * fixture records JavaScript's answer, so a `js::compare` that forgot the
+     * surrogates fails here.
+     */
+    let doc = fixture();
+    let mut notes: Vec<crate::notes::NoteSummary> = doc["sortNotes"]["notes"]
+        .as_array()
+        .expect("notes")
+        .iter()
+        .map(|n| crate::notes::NoteSummary {
+            id: text(&n["id"]).to_string(),
+            title: text(&n["title"]).to_string(),
+            section: text(&n["section"]).to_string(),
+            folder: None,
+            tags: Vec::new(),
+            manual_tags: Vec::new(),
+            favorite: n["favorite"] == true,
+            updated_at: n["updatedAt"].as_f64().expect("updatedAt"),
+            created_at: 0.0,
+            deleted_at: None,
+        })
+        .collect();
+
+    crate::notes::sort_notes(&mut notes);
+
+    let order: Vec<&str> = notes.iter().map(|n| n.id.as_str()).collect();
+    let want: Vec<&str> = doc["sortNotes"]["order"]
+        .as_array()
+        .expect("order")
+        .iter()
+        .map(text)
+        .collect();
+    assert_eq!(order, want);
+}
