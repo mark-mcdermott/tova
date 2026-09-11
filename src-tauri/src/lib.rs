@@ -16,6 +16,7 @@ mod crypto;
 mod daily;
 mod date;
 mod front_matter;
+mod images;
 mod js;
 mod media;
 mod note_location;
@@ -273,6 +274,36 @@ fn backup_status() -> VaultStatus {
         empty: notes::list().is_empty(),
         backups: backup::list_backups(&backup::backup_root()),
     }
+}
+
+#[tauri::command]
+fn image_save(name: String, bytes: Vec<u8>) -> Result<String, String> {
+    images::save_image(&name, &bytes)
+}
+
+/// Writes the note to a location the reader picks. Exported verbatim, front
+/// matter included — the file that lands on disk is the file Tova has, which
+/// keeps the export lossless and re-importable.
+#[tauri::command]
+async fn note_export(app: tauri::AppHandle, id: String) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let location = vault::require_location(&id)?;
+    let contents = vault_file::read_vault_text(&vault::note_path(&location)?)?;
+
+    let chosen = app
+        .dialog()
+        .file()
+        .set_title("Export note")
+        .set_file_name(&location.filename)
+        .add_filter("Markdown", &["md"])
+        .blocking_save_file();
+
+    let Some(chosen) = chosen.and_then(|path| path.into_path().ok()) else {
+        return Ok(None);
+    };
+    std::fs::write(&chosen, contents).map_err(|e| e.to_string())?;
+    Ok(Some(chosen.to_string_lossy().into_owned()))
 }
 
 /// One file from the reader, or nothing if they thought better of it.
@@ -576,6 +607,19 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        /*
+         * Pictures a note holds, and backgrounds the reader added.
+         *
+         * Two schemes rather than one with a path prefix, so neither handler
+         * can ever be talked into serving the other's files: the vault's is
+         * the vault's, and userData is userData.
+         */
+        .register_uri_scheme_protocol("tova-asset", |_ctx, request| {
+            images::serve_asset(request.uri())
+        })
+        .register_uri_scheme_protocol("tova-bg", |_ctx, request| {
+            images::serve_background(&data_dir(), request.uri())
+        })
         .invoke_handler(tauri::generate_handler![
             app_info,
             preferences_read,
@@ -627,7 +671,9 @@ pub fn run() {
             settings_nuke_targets,
             settings_nuke,
             app_reveal,
-            app_open_external
+            app_open_external,
+            image_save,
+            note_export
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

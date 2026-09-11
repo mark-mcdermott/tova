@@ -4246,6 +4246,7 @@ dependencies = [
  "chrono",
  "getrandom 0.3.4",
  "hmac",
+ "http",
  "pbkdf2",
  "scrypt",
  "security-framework",
