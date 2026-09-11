@@ -1,0 +1,1007 @@
+{
+  "_readme": [
+    "The text layer every note goes through, and the answers the TypeScript",
+    "gives. src/shared/frontMatter.ts, noteName.ts, tags.ts and noteLocation.ts",
+    "are the source of truth while the port is in flight; the Rust in src-tauri",
+    "is held to them.",
+    "",
+    "These are pure functions, so unlike the cipher there is an output to pin,",
+    "and the cases are chosen for the places where a Rust idiom reads as the",
+    "obvious translation and answers differently:",
+    "",
+    "  * `\\\\w` in a JavaScript regex without the `u` flag is [A-Za-z0-9_].",
+    "    Rust's regex crate reads it as Unicode, so `#café` would parse as a",
+    "    tag here and not there.",
+    "  * `\\\\s` includes the byte-order mark and excludes U+0085. Rust's",
+    "    char::is_whitespace does the opposite.",
+    "  * slugify's NFKD is load-bearing: without it `café` slugs as `caf-`",
+    "    rather than `cafe`, and every accented title gets a different filename",
+    "    under one backend than the other.",
+    "  * needsQuotes only looks for a quote at the START of a value, so",
+    "    `he said \"no\"` is written bare. Faithful rather than improved — the",
+    "    rule decides what a note on disk looks like.",
+    "",
+    "Regenerating: only when the TypeScript changes on purpose. A fixture that",
+    "moves to meet the code is a fixture that checks nothing.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "parse": [
+    {
+      "raw": "",
+      "data": {},
+      "body": ""
+    },
+    {
+      "raw": "Just a body.\n",
+      "data": {},
+      "body": "Just a body.\n"
+    },
+    {
+      "raw": "---\ntitle: Slow Morning\n---\n\nCoffee.\n",
+      "data": {
+        "title": "Slow Morning"
+      },
+      "body": "Coffee.\n"
+    },
+    {
+      "raw": "---\r\ntitle: Windows Wrote This\r\n---\r\n\r\nCoffee.\r\n",
+      "data": {
+        "title": "Windows Wrote This"
+      },
+      "body": "Coffee.\n"
+    },
+    {
+      "raw": "---\ntitle: Slow Morning\ntags: [quiet, morning]\n---\n\nCoffee.\n",
+      "data": {
+        "title": "Slow Morning",
+        "tags": [
+          "quiet",
+          "morning"
+        ]
+      },
+      "body": "Coffee.\n"
+    },
+    {
+      "raw": "---\ntags: []\n---\n\nEmpty list.\n",
+      "data": {
+        "tags": []
+      },
+      "body": "Empty list.\n"
+    },
+    {
+      "raw": "---\ntags: [ one ,  two  ]\n---\nNo blank line after the fence.\n",
+      "data": {
+        "tags": [
+          "one",
+          "two"
+        ]
+      },
+      "body": "No blank line after the fence.\n"
+    },
+    {
+      "raw": "---\ntitle: \"Quoted: with colon\"\n---\n\nBody.\n",
+      "data": {
+        "title": "Quoted: with colon"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\ntitle: 'single quoted'\n---\n\nBody.\n",
+      "data": {
+        "title": "single quoted"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\n# a comment\n\ntitle: After A Comment\n---\n\nBody.\n",
+      "data": {
+        "title": "After A Comment"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\nno-colon-here\ntitle: Kept\n---\n\nBody.\n",
+      "data": {
+        "title": "Kept"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\n: leading colon\ntitle: Kept\n---\n\nBody.\n",
+      "data": {
+        "title": "Kept"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\ntitle: Unclosed fence\n\nBody.\n",
+      "data": {},
+      "body": "---\ntitle: Unclosed fence\n\nBody.\n"
+    },
+    {
+      "raw": "--- \ntitle: Fence with trailing space\n---\n\nBody.\n",
+      "data": {},
+      "body": "--- \ntitle: Fence with trailing space\n---\n\nBody.\n"
+    },
+    {
+      "raw": "---\ntitle: Two\ntitle: Wins\n---\n\nBody.\n",
+      "data": {
+        "title": "Wins"
+      },
+      "body": "Body.\n"
+    },
+    {
+      "raw": "---\ntitle: Slow Morning\n---\n\n\nTwo blank lines.\n",
+      "data": {
+        "title": "Slow Morning"
+      },
+      "body": "\nTwo blank lines.\n"
+    },
+    {
+      "raw": "---\ndeep: [a, \"b, still b\"]\n---\n\nCommas inside quotes are not ours.\n",
+      "data": {
+        "deep": [
+          "a",
+          "\"b",
+          "still b\""
+        ]
+      },
+      "body": "Commas inside quotes are not ours.\n"
+    },
+    {
+      "raw": "text before\n---\ntitle: Not front matter\n---\n",
+      "data": {},
+      "body": "text before\n---\ntitle: Not front matter\n---\n"
+    },
+    {
+      "raw": "---\n---\n\nEmpty front matter.\n",
+      "data": {},
+      "body": "Empty front matter.\n"
+    }
+  ],
+  "serialize": [
+    {
+      "data": {},
+      "body": "body",
+      "text": "body",
+      "order": []
+    },
+    {
+      "data": {
+        "title": "Slow Morning"
+      },
+      "body": "Coffee.\n",
+      "text": "---\ntitle: Slow Morning\n---\n\nCoffee.\n",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": ""
+      },
+      "body": "",
+      "text": "---\ntitle: \"\"\n---\n\n",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "has: colon"
+      },
+      "body": "b",
+      "text": "---\ntitle: \"has: colon\"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": " leading"
+      },
+      "body": "b",
+      "text": "---\ntitle: \" leading\"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "trailing "
+      },
+      "body": "b",
+      "text": "---\ntitle: \"trailing \"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "#hash"
+      },
+      "body": "b",
+      "text": "---\ntitle: \"#hash\"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "[bracket"
+      },
+      "body": "b",
+      "text": "---\ntitle: \"[bracket\"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "he said \"no\""
+      },
+      "body": "b",
+      "text": "---\ntitle: he said \"no\"\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "back\\slash"
+      },
+      "body": "b",
+      "text": "---\ntitle: back\\slash\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "tab\there"
+      },
+      "body": "b",
+      "text": "---\ntitle: tab\there\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "a:b"
+      },
+      "body": "b",
+      "text": "---\ntitle: a:b\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "ünicode"
+      },
+      "body": "b",
+      "text": "---\ntitle: ünicode\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    },
+    {
+      "data": {
+        "title": "Slow Morning",
+        "section": "notes",
+        "folder": "work"
+      },
+      "body": "b",
+      "text": "---\ntitle: Slow Morning\nsection: notes\nfolder: work\n---\n\nb",
+      "order": [
+        "title",
+        "section",
+        "folder"
+      ]
+    },
+    {
+      "data": {
+        "tags": []
+      },
+      "body": "b",
+      "text": "---\ntags: []\n---\n\nb",
+      "order": [
+        "tags"
+      ]
+    },
+    {
+      "data": {
+        "tags": [
+          "quiet",
+          "b c",
+          "",
+          "with: colon"
+        ]
+      },
+      "body": "b",
+      "text": "---\ntags: [quiet, b c, \"\", \"with: colon\"]\n---\n\nb",
+      "order": [
+        "tags"
+      ]
+    },
+    {
+      "data": {
+        "title": "bell\u0007"
+      },
+      "body": "b",
+      "text": "---\ntitle: bell\u0007\n---\n\nb",
+      "order": [
+        "title"
+      ]
+    }
+  ],
+  "slugify": [
+    {
+      "title": "Slow Morning",
+      "slug": "slow-morning"
+    },
+    {
+      "title": "café",
+      "slug": "cafe"
+    },
+    {
+      "title": "Émile",
+      "slug": "emile"
+    },
+    {
+      "title": "ﬁreside",
+      "slug": "fireside"
+    },
+    {
+      "title": "①②③",
+      "slug": "123"
+    },
+    {
+      "title": "Ω",
+      "slug": "untitled"
+    },
+    {
+      "title": "naïve café",
+      "slug": "naive-cafe"
+    },
+    {
+      "title": "über",
+      "slug": "uber"
+    },
+    {
+      "title": "日本語",
+      "slug": "untitled"
+    },
+    {
+      "title": "don't stop",
+      "slug": "dont-stop"
+    },
+    {
+      "title": "don’t stop",
+      "slug": "dont-stop"
+    },
+    {
+      "title": "back`tick",
+      "slug": "backtick"
+    },
+    {
+      "title": "hello---world",
+      "slug": "hello-world"
+    },
+    {
+      "title": "  spaced  ",
+      "slug": "spaced"
+    },
+    {
+      "title": "$$$",
+      "slug": "untitled"
+    },
+    {
+      "title": "ß",
+      "slug": "untitled"
+    },
+    {
+      "title": "İstanbul",
+      "slug": "istanbul"
+    },
+    {
+      "title": "",
+      "slug": "untitled"
+    },
+    {
+      "title": "-leading",
+      "slug": "leading"
+    },
+    {
+      "title": "trailing-",
+      "slug": "trailing"
+    },
+    {
+      "title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx y",
+      "slug": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "title": "Ⅻ roman",
+      "slug": "xii-roman"
+    },
+    {
+      "title": "½ a thing",
+      "slug": "1-2-a-thing"
+    },
+    {
+      "title": "émile",
+      "slug": "emile"
+    }
+  ],
+  "uniqueSlug": [
+    {
+      "candidate": "note",
+      "taken": [],
+      "unique": "note"
+    },
+    {
+      "candidate": "note",
+      "taken": [
+        "note"
+      ],
+      "unique": "note-2"
+    },
+    {
+      "candidate": "note",
+      "taken": [
+        "note",
+        "note-2"
+      ],
+      "unique": "note-3"
+    },
+    {
+      "candidate": "note",
+      "taken": [
+        "note-2"
+      ],
+      "unique": "note"
+    },
+    {
+      "candidate": "note",
+      "taken": [
+        "note",
+        "note-2",
+        "note-3",
+        "note-4"
+      ],
+      "unique": "note-5"
+    }
+  ],
+  "allTags": [
+    {
+      "manual": [],
+      "body": "",
+      "tags": []
+    },
+    {
+      "manual": [],
+      "body": "A #quiet morning with #Coffee and #quiet again.",
+      "tags": [
+        "quiet",
+        "Coffee"
+      ]
+    },
+    {
+      "manual": [
+        "asked"
+      ],
+      "body": "Picked up #asked and #other.",
+      "tags": [
+        "asked",
+        "other"
+      ]
+    },
+    {
+      "manual": [],
+      "body": "# Heading is not a tag, nor is #1 or # .",
+      "tags": []
+    },
+    {
+      "manual": [],
+      "body": "#a #a-b #a_b #a-b-c #ünicode #café",
+      "tags": [
+        "a",
+        "a-b",
+        "a_b",
+        "a-b-c",
+        "caf"
+      ]
+    },
+    {
+      "manual": [
+        "Row"
+      ],
+      "body": "#row in the prose too.",
+      "tags": [
+        "Row"
+      ]
+    },
+    {
+      "manual": [],
+      "body": "trailing#hash and mid#word",
+      "tags": [
+        "hash",
+        "word"
+      ]
+    },
+    {
+      "manual": [],
+      "body": "#tag, then punctuation. #other.",
+      "tags": [
+        "tag",
+        "other"
+      ]
+    },
+    {
+      "manual": [],
+      "body": "#éclair",
+      "tags": []
+    }
+  ],
+  "normalizeTag": [
+    {
+      "input": "plain",
+      "tag": "plain"
+    },
+    {
+      "input": "#plain",
+      "tag": "plain"
+    },
+    {
+      "input": "###plain",
+      "tag": "plain"
+    },
+    {
+      "input": "  #plain  ",
+      "tag": "plain"
+    },
+    {
+      "input": "1leading",
+      "tag": null
+    },
+    {
+      "input": "-leading",
+      "tag": null
+    },
+    {
+      "input": "",
+      "tag": null
+    },
+    {
+      "input": "#",
+      "tag": null
+    },
+    {
+      "input": "with space",
+      "tag": null
+    },
+    {
+      "input": "a-b_c",
+      "tag": "a-b_c"
+    },
+    {
+      "input": "café",
+      "tag": null
+    },
+    {
+      "input": "UPPER",
+      "tag": "UPPER"
+    }
+  ],
+  "normalizeManualTags": [
+    {
+      "value": [
+        "a",
+        "b",
+        "A"
+      ],
+      "tags": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "value": "single",
+      "tags": [
+        "single"
+      ]
+    },
+    {
+      "value": [],
+      "tags": []
+    },
+    {
+      "value": [
+        "#hash",
+        "1bad",
+        "good"
+      ],
+      "tags": [
+        "hash",
+        "good"
+      ]
+    },
+    {
+      "value": [
+        "a",
+        3,
+        "b"
+      ],
+      "tags": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "value": null,
+      "tags": []
+    },
+    {
+      "value": 42,
+      "tags": []
+    },
+    {
+      "value": [
+        "",
+        "  "
+      ],
+      "tags": []
+    }
+  ],
+  "parseNoteId": [
+    {
+      "id": "notes/a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      },
+      "roundTrip": "notes/a.md"
+    },
+    {
+      "id": "notes/work/a.md",
+      "location": {
+        "section": "notes",
+        "folder": "work",
+        "filename": "a.md"
+      },
+      "roundTrip": "notes/work/a.md"
+    },
+    {
+      "id": "posts/blog/a.md",
+      "location": {
+        "section": "posts",
+        "folder": "blog",
+        "filename": "a.md"
+      },
+      "roundTrip": "posts/blog/a.md"
+    },
+    {
+      "id": "daily/a.md",
+      "location": {
+        "section": "daily",
+        "folder": null,
+        "filename": "a.md"
+      },
+      "roundTrip": "daily/a.md"
+    },
+    {
+      "id": "daily/folder/a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "trash/a.md",
+      "location": {
+        "section": "trash",
+        "folder": null,
+        "filename": "a.md"
+      },
+      "roundTrip": "trash/a.md"
+    },
+    {
+      "id": "",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "/notes/a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/a.md/",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes//a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/../a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/./a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes\\a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/a.txt",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/work/deep/a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "NOTES/a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "-notes/a.md",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "notes/a.md\u0000",
+      "location": null,
+      "roundTrip": null
+    },
+    {
+      "id": "no-tes/a.md",
+      "location": {
+        "section": "no-tes",
+        "folder": null,
+        "filename": "a.md"
+      },
+      "roundTrip": "no-tes/a.md"
+    },
+    {
+      "id": "9notes/a.md",
+      "location": {
+        "section": "9notes",
+        "folder": null,
+        "filename": "a.md"
+      },
+      "roundTrip": "9notes/a.md"
+    },
+    {
+      "id": "notes/.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": ".md"
+      },
+      "roundTrip": "notes/.md"
+    },
+    {
+      "id": "notes/ /a.md",
+      "location": {
+        "section": "notes",
+        "folder": " ",
+        "filename": "a.md"
+      },
+      "roundTrip": "notes/ /a.md"
+    }
+  ],
+  "isValidFolderName": [
+    {
+      "name": "work",
+      "valid": true
+    },
+    {
+      "name": " work ",
+      "valid": true
+    },
+    {
+      "name": "",
+      "valid": false
+    },
+    {
+      "name": "   ",
+      "valid": false
+    },
+    {
+      "name": ".",
+      "valid": false
+    },
+    {
+      "name": "..",
+      "valid": false
+    },
+    {
+      "name": "a/b",
+      "valid": false
+    },
+    {
+      "name": "a\\b",
+      "valid": false
+    },
+    {
+      "name": "a\u0000b",
+      "valid": false
+    },
+    {
+      "name": "-",
+      "valid": true
+    },
+    {
+      "name": "日本",
+      "valid": true
+    }
+  ],
+  "restoreLocation": [
+    {
+      "data": {},
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "notes"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "notes",
+        "folder": "work"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": "work",
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "notes",
+        "folder": " work "
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": "work",
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "notes",
+        "folder": ""
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "notes",
+        "folder": "a/b"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "daily",
+        "folder": "work"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "daily",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "trash"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": "NOPE"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "section": [
+          "notes"
+        ]
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "data": {
+        "folder": "work"
+      },
+      "filename": "a.md",
+      "location": {
+        "section": "notes",
+        "folder": "work",
+        "filename": "a.md"
+      }
+    }
+  ],
+  "trashLocation": [
+    {
+      "filename": "a.md",
+      "location": {
+        "section": "trash",
+        "folder": null,
+        "filename": "a.md"
+      }
+    },
+    {
+      "filename": "deep name.md",
+      "location": {
+        "section": "trash",
+        "folder": null,
+        "filename": "deep name.md"
+      }
+    }
+  ]
+}

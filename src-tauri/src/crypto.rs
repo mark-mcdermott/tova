@@ -131,22 +131,13 @@ pub fn new_recovery_key() -> String {
         .join("-")
 }
 
-/*
- * What JavaScript's `\s` matches, which is not quite what Rust calls
- * whitespace: it strips the byte-order mark and leaves U+0085 alone, and Rust
- * does the opposite. Neither is likely in a key typed off paper, and both are
- * possible in one pasted out of a document — and a recovery key that works
- * under one backend and not the other is precisely the failure this port has
- * to not have.
- */
-fn is_js_whitespace(c: char) -> bool {
-    c == '\u{feff}' || (c.is_whitespace() && c != '\u{85}')
-}
-
 /// Dashes, spaces and case are how it was written down, not what it means.
 pub fn normalize_recovery_key(key: &str) -> String {
     key.chars()
-        .filter(|c| !is_js_whitespace(*c) && *c != '-')
+        // `js::is_whitespace` rather than Rust's, because a recovery key that
+        // works under one backend and not the other is precisely the failure
+        // this port has to not have.
+        .filter(|c| !crate::js::is_whitespace(*c) && *c != '-')
         .flat_map(char::to_uppercase)
         .collect()
 }
