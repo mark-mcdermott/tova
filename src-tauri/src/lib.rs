@@ -47,6 +47,7 @@ struct AppInfo {
     electron: String,
     chrome: String,
     vault_path: String,
+    backup_path: String,
 }
 
 /// `window.tova.app.info()`. The first slice, and the smallest: it proves the
@@ -57,7 +58,8 @@ fn app_info() -> AppInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
         electron: String::new(),
         chrome: tauri::webview_version().unwrap_or_else(|_| "unknown".into()),
-        vault_path: String::new(),
+        vault_path: vault::vault_root().to_string_lossy().into_owned(),
+        backup_path: backup::backup_root().to_string_lossy().into_owned(),
     }
 }
 
@@ -240,6 +242,37 @@ fn note_today() -> Result<notes::Note, String> {
     daily::today_note()
 }
 
+#[derive(Serialize)]
+struct VaultStatus {
+    empty: bool,
+    backups: Vec<backup::BackupSummary>,
+}
+
+#[tauri::command]
+fn backup_run() -> Result<backup::BackupSummary, String> {
+    backup::run_backup(&backup::backup_root(), backup::DEFAULT_BACKUP_LIMIT)
+}
+
+#[tauri::command]
+fn backup_list() -> Vec<backup::BackupSummary> {
+    backup::list_backups(&backup::backup_root())
+}
+
+#[tauri::command]
+fn backup_restore(name: String) -> Result<backup::BackupSummary, String> {
+    backup::restore_backup(&backup::backup_root(), &name)
+}
+
+/// What the first-run screen asks: is there anything here, and is there
+/// anything to put back if not.
+#[tauri::command]
+fn backup_status() -> VaultStatus {
+    VaultStatus {
+        empty: notes::list().is_empty(),
+        backups: backup::list_backups(&backup::backup_root()),
+    }
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -296,7 +329,11 @@ pub fn run() {
             section_create,
             section_delete,
             note_search,
-            note_today
+            note_today,
+            backup_run,
+            backup_list,
+            backup_restore,
+            backup_status
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

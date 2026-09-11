@@ -85,6 +85,10 @@
   tova.notes.deleteSection = (id) => invoke("section_delete", { id })
   tova.notes.search = (query) => invoke("note_search", { query })
   tova.notes.today = () => invoke("note_today")
+  tova.backups.run = () => invoke("backup_run")
+  tova.backups.list = () => invoke("backup_list")
+  tova.backups.restore = (name) => invoke("backup_restore", { name })
+  tova.backups.status = () => invoke("backup_status")
 
   window.tova = tova
 })()
