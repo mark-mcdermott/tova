@@ -301,7 +301,6 @@ pub fn set_blog_secret(
  * Backend only, and deliberately not on the IPC surface: a token is read here
  * to make a request, and never travels back to the renderer.
  */
-#[allow(dead_code)]
 pub fn blog_secret(data_dir: &Path, id: &str, secret: &str) -> Option<String> {
     let stored = load(data_dir)
         .blogs
