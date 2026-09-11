@@ -51,6 +51,9 @@
 
   // Ported so far. One line per slice, and the list is the progress bar.
   tova.app.info = () => invoke("app_info")
+  tova.preferences.read = () => invoke("preferences_read")
+  tova.preferences.write = (value) => invoke("preferences_write", { value })
+  tova.preferences.accountName = () => invoke("account_name")
 
   window.tova = tova
 })()
