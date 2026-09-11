@@ -17,6 +17,7 @@ mod crypto;
 mod daily;
 mod date;
 mod front_matter;
+mod github;
 mod images;
 mod js;
 mod media;
