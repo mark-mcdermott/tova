@@ -85,6 +85,12 @@ impl Data {
         self.values.is_empty()
     }
 
+    /// Key and value in the order they were set, which is the order
+    /// `Object.entries` gives on the other side.
+    pub fn in_order(&self) -> impl Iterator<Item = (&String, &Value)> {
+        self.entries()
+    }
+
     fn entries(&self) -> impl Iterator<Item = (&String, &Value)> {
         self.order.iter().filter_map(|key| {
             let value = self.values.get(key)?;
