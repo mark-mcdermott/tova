@@ -230,6 +230,8 @@ export interface PreferencesApi {
   chooseAvatar: () => Promise<string | null>
   /** The account picture and the chosen one, as data URLs where they exist. */
   avatarSources: () => Promise<import("./preferences").AvatarSources>
+  /** The Mac account's own name, or "" where there is no account to ask. */
+  accountName: () => Promise<string>
   /** Backgrounds the reader added, served over the tova-bg scheme. */
   listBackgrounds: (theme: "light" | "dark") => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */

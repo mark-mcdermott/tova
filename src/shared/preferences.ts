@@ -58,6 +58,22 @@ export function themeIcon(theme: ThemeChoice): "sun" | "moon" | "monitor" {
 export type Theme = "light" | "dark"
 
 /**
+ * Where the name beside the avatar comes from. Kept apart from `displayName`,
+ * so a spell on the account name does not throw away what was typed.
+ */
+export type DisplayNameSource = "none" | "system" | "custom"
+
+export const DISPLAY_NAMES: { value: DisplayNameSource; label: string }[] = [
+  { value: "system", label: "Mac account name" },
+  { value: "custom", label: "Custom" },
+  { value: "none", label: "None" }
+]
+
+function isDisplayNameSource(value: unknown): value is DisplayNameSource {
+  return DISPLAY_NAMES.some((option) => option.value === value)
+}
+
+/**
  * Which face the sidebar wears. Kept apart from `avatarFile`, so choosing the
  * initials for a while does not throw away the picture that was there.
  */
@@ -98,7 +114,9 @@ function isAvatarChoice(value: unknown): value is AvatarChoice {
 }
 
 export interface Preferences {
-  /** Shown beside the avatar in the sidebar footer. */
+  /** Where the name beside the avatar comes from. */
+  displayNameSource: DisplayNameSource
+  /** The name that was typed, kept whether or not it is the one in use. */
   displayName: string
   /** Which of the four the sidebar draws. */
   avatar: AvatarChoice
@@ -138,6 +156,7 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
+  displayNameSource: "none",
   displayName: "",
   avatar: "initials",
   avatarFile: null,
@@ -188,6 +207,14 @@ export function normalizePreferences(value: unknown): Preferences {
 
   return {
     displayName: text(raw.displayName, DEFAULT_PREFERENCES.displayName).slice(0, 60),
+    // Before there was anywhere to say where the name came from, a name in the
+    // field was one someone had typed — even the one seeded from the account,
+    // which was a copy from the moment it was written.
+    displayNameSource: isDisplayNameSource(raw.displayNameSource)
+      ? raw.displayNameSource
+      : text(raw.displayName, "") === ""
+        ? "none"
+        : "custom",
     // Before the four choices existed a picture was the only thing a file could
     // mean, so a file left over from then is the one being used.
     avatar: isAvatarChoice(raw.avatar)

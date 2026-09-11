@@ -75,6 +75,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       write: vi.fn(async (value: unknown) => value),
       chooseAvatar: vi.fn(),
       avatarSources: vi.fn(async () => ({ system: null, custom: null })),
+      accountName: vi.fn(async () => ""),
       listBackgrounds: vi.fn(async () => []),
       addBackground: vi.fn(async () => null),
       listTitleFonts: vi.fn(async () => []),

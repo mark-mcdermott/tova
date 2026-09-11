@@ -224,7 +224,7 @@ describe("Sidebar", () => {
 
   it("shows the configured name at the foot of the sidebar", () => {
     usePreferencesStore.setState({
-      preferences: { ...DEFAULT_PREFERENCES, displayName: "Mark" },
+      preferences: { ...DEFAULT_PREFERENCES, displayNameSource: "custom", displayName: "Mark" },
       avatarSources: { system: null, custom: null }
     })
     const { container } = render(<Sidebar />)

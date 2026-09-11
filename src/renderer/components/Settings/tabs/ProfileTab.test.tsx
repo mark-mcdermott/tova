@@ -17,14 +17,22 @@ const chooseAvatar = vi.fn()
 
 function store(avatar: AvatarChoice, sources: AvatarSources) {
   usePreferencesStore.setState({
-    preferences: { ...DEFAULT_PREFERENCES, displayName: "Mark McDermott", avatar },
-    avatarSources: sources
+    preferences: {
+      ...DEFAULT_PREFERENCES,
+      displayNameSource: "custom",
+      displayName: "Mark McDermott",
+      avatar
+    },
+    avatarSources: sources,
+    // Reset with everything else: a test that sets one would otherwise leave
+    // it set for the next.
+    accountName: ""
   })
 }
 
 /** The swatch, which is the colour input itself. */
 function swatch(): HTMLInputElement {
-  return screen.getByLabelText("Avatar Background Color") as HTMLInputElement
+  return screen.getByLabelText("Avatar background color") as HTMLInputElement
 }
 
 beforeEach(() => {
@@ -39,7 +47,10 @@ afterEach(cleanup)
 
 /** The options the picker is actually showing, by their labels. */
 function choices(): HTMLElement[] {
-  return screen.getAllByRole("button").filter((button) => button.hasAttribute("aria-pressed"))
+  return screen
+    .getAllByRole("button")
+    .filter((button) => button.classList.contains("avatar-choice"))
+    .filter((button) => button.hasAttribute("aria-pressed"))
 }
 
 /** Their labels, read off the same element every picker in Settings labels with. */
@@ -208,5 +219,77 @@ describe("the background colour", () => {
     expect(write).toHaveBeenCalledTimes(1)
     expect(write.mock.calls[0][0].avatarColor).toBe("#333333")
     vi.useRealTimers()
+  })
+})
+
+describe("where the display name comes from", () => {
+  /** The name options, which are the compact choices rather than the tiles. */
+  function sources(): HTMLElement[] {
+    return screen
+      .getAllByRole("button")
+      .filter((button) => button.classList.contains("choice-compact"))
+  }
+
+  function labels(): string[] {
+    return sources().map((button) => button.textContent ?? "")
+  }
+
+  it("offers the account name, a typed one, and none at all", () => {
+    usePreferencesStore.setState({ accountName: "stuxxnet" })
+    render(<ProfileTab />)
+
+    expect(labels()).toEqual(["Mac account name", "Custom", "None"])
+  })
+
+  it("keeps the account name back where there is no account to ask", () => {
+    render(<ProfileTab />)
+
+    expect(labels()).toEqual(["Custom", "None"])
+  })
+
+  it("marks the one in use and saves another when it is chosen", async () => {
+    usePreferencesStore.setState({ accountName: "stuxxnet" })
+    render(<ProfileTab />)
+    expect(screen.getByRole("button", { name: "Custom" }).getAttribute("aria-pressed")).toBe("true")
+
+    await userEvent.click(screen.getByRole("button", { name: "Mac account name" }))
+    await waitFor(() => expect(write).toHaveBeenCalled())
+    expect(write.mock.calls[0][0].displayNameSource).toBe("system")
+  })
+
+  it("asks for a name only where there is one to type", () => {
+    usePreferencesStore.setState({ accountName: "stuxxnet" })
+    render(<ProfileTab />)
+    expect(screen.getByPlaceholderText("Your name")).toBeDefined()
+
+    cleanup()
+    usePreferencesStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES, displayNameSource: "system" },
+      accountName: "stuxxnet"
+    })
+    render(<ProfileTab />)
+    expect(screen.queryByPlaceholderText("Your name")).toBeNull()
+  })
+
+  it("keeps what was typed while another source is in use", async () => {
+    // Switching to the account name for a while should not throw the typed one
+    // away — it is still there to come back to.
+    render(<ProfileTab />)
+    await userEvent.click(screen.getByRole("button", { name: "None" }))
+
+    await waitFor(() => expect(write).toHaveBeenCalled())
+    expect(write.mock.calls[0][0].displayName).toBe("Mark McDermott")
+    expect(write.mock.calls[0][0].displayNameSource).toBe("none")
+  })
+
+  it("draws the faces with the name the source gives, not the one typed", () => {
+    // The initials follow whatever the sidebar will show.
+    usePreferencesStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES, displayNameSource: "system", displayName: "Mark" },
+      accountName: "Ada Lovelace"
+    })
+    render(<ProfileTab />)
+
+    expect(screen.getByText("AL")).toBeDefined()
   })
 })

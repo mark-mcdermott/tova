@@ -10,6 +10,8 @@ interface PreferencesState {
   preferences: Preferences
   /** The two fetched faces; which of them is drawn is a preference. */
   avatarSources: AvatarSources
+  /** The Mac account's own name, read where it lives rather than stored. */
+  accountName: string
   /** Backgrounds the reader has added. */
   /** Pictures the reader added, kept per mode as the bundled ones are. */
   userBackgrounds: { light: string[]; dark: string[] }
@@ -25,18 +27,20 @@ interface PreferencesState {
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   preferences: DEFAULT_PREFERENCES,
   avatarSources: NO_AVATARS,
+  accountName: "",
   userBackgrounds: { light: [], dark: [] },
   loaded: false,
 
   load: async () => {
-    const [preferences, avatarSources, light, dark] = await Promise.all([
+    const [preferences, avatarSources, accountName, light, dark] = await Promise.all([
       window.tova.preferences.read(),
       window.tova.preferences.avatarSources(),
+      window.tova.preferences.accountName(),
       window.tova.preferences.listBackgrounds("light"),
       window.tova.preferences.listBackgrounds("dark")
     ])
     const userBackgrounds = { light, dark }
-    set({ preferences, avatarSources, userBackgrounds, loaded: true })
+    set({ preferences, avatarSources, accountName, userBackgrounds, loaded: true })
   },
 
   addBackground: async (theme) => {

@@ -20,17 +20,19 @@ afterAll(async () => {
 })
 
 describe("readPreferences", () => {
-  it("seeds the display name from the account on a first run", async () => {
-    // Compared against the real account rather than a mocked one: the point is
-    // that the sidebar footer is not blank on a fresh install.
-    expect((await readPreferences()).displayName).toBe(userInfo().username)
-    expect((await readPreferences()).displayName).not.toBe("")
+  it("starts a first run on the account's own name", async () => {
+    // Not copied into the field: the name is read where it lives, so renaming
+    // the account renames it here. The point is that the footer is not blank.
+    expect((await readPreferences()).displayNameSource).toBe("system")
+    expect(userInfo().username).not.toBe("")
   })
 
-  it("writes that seed, so it is editable like any other value", async () => {
+  it("writes that choice, so it is one like any other", async () => {
     await readPreferences()
     const stored = JSON.parse(await readFile(join(paths.userData, "preferences.json"), "utf-8"))
-    expect(stored.displayName).toBe(userInfo().username)
+    expect(stored.displayNameSource).toBe("system")
+    // The field stays empty: nothing was typed.
+    expect(stored.displayName).toBe("")
   })
 
   it("respects a name the writer cleared rather than seeding over it", async () => {

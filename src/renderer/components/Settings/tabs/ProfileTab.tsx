@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react"
-import { AVATARS, AvatarChoice } from "../../../../shared/preferences"
+import {
+  AVATARS,
+  AvatarChoice,
+  DISPLAY_NAMES,
+  DisplayNameSource
+} from "../../../../shared/preferences"
 import { discColor, offersAvatar, resolveAvatar } from "../../../avatar"
+import { offersDisplayName, resolveDisplayName } from "../../../displayName"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
 import { Avatar } from "../../Sidebar/Avatar"
 
 export function ProfileTab() {
-  const displayName = usePreferencesStore((state) => state.preferences.displayName)
+  const nameSource = usePreferencesStore((state) => state.preferences.displayNameSource)
+  const typedName = usePreferencesStore((state) => state.preferences.displayName)
+  const accountName = usePreferencesStore((state) => state.accountName)
   const avatar = usePreferencesStore((state) => state.preferences.avatar)
   const avatarSources = usePreferencesStore((state) => state.avatarSources)
   const avatarColor = usePreferencesStore((state) => state.preferences.avatarColor)
@@ -14,6 +22,9 @@ export function ProfileTab() {
   const chooseAvatar = usePreferencesStore((state) => state.chooseAvatar)
 
   const offered = AVATARS.filter((option) => offersAvatar(option.value, avatarSources))
+  const names = DISPLAY_NAMES.filter((option) => offersDisplayName(option.value, accountName))
+  // What the picker's faces are drawn with, since the initials come from it.
+  const displayName = resolveDisplayName(nameSource, typedName, accountName)
 
   /*
    * The colour the tiles are drawn in while the system picker is open. The
@@ -58,15 +69,33 @@ export function ProfileTab() {
         anywhere.
       </p>
 
-      <Field id="profile-name" label="Display name" hint="Leave it empty to show only the picture.">
-        <input
-          id="profile-name"
-          className="text-input"
-          value={displayName}
-          maxLength={60}
-          placeholder="Your name"
-          onChange={(event) => void update({ displayName: event.target.value })}
-        />
+      <Field id="profile-name" label="Display name" hint="None shows the picture on its own.">
+        <div className="choices">
+          {names.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`choice choice-compact${nameSource === option.value ? " is-chosen" : ""}`}
+              aria-pressed={nameSource === option.value}
+              onClick={() => void update({ displayNameSource: option.value as DisplayNameSource })}
+            >
+              <span className="choice-name">{option.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Only where there is something to type. The account name is not
+            editable here, and None has nothing to say. */}
+        {nameSource === "custom" && (
+          <input
+            id="profile-name"
+            className="text-input name-input"
+            value={typedName}
+            maxLength={60}
+            placeholder="Your name"
+            onChange={(event) => void update({ displayName: event.target.value })}
+          />
+        )}
       </Field>
 
       <Field
@@ -139,7 +168,7 @@ export function ProfileTab() {
 
       <Field
         id="avatar-colour"
-        label="Avatar Background Color"
+        label="Avatar background color"
         hint="Applies only to Initials and Tova Robot"
       >
         <input

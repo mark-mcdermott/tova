@@ -470,6 +470,11 @@
   color: var(--text-primary);
 }
 
+/* Under the row that calls for it, rather than beside it. */
+.name-input {
+  margin-top: var(--space-3);
+}
+
 /*
  * The disc's colour, as a swatch the size of the squares it paints. The native
  * input is the whole control: clicking it opens the system colour picker, and

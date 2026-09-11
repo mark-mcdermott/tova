@@ -8,6 +8,7 @@ import { composeTarget } from "../../../shared/composeTarget"
 import { visibleSections } from "../../../shared/sections"
 import { Icon } from "./icons"
 import { resolveAvatar } from "../../avatar"
+import { resolveDisplayName } from "../../displayName"
 import { Wordmark } from "./Wordmark"
 import { Avatar } from "./Avatar"
 import { usePreferencesStore } from "../../stores/preferencesStore"
@@ -21,7 +22,10 @@ export function Sidebar() {
   const createNote = useNotesStore((state) => state.createNote)
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
   const showSettings = useNotesStore((state) => state.showSettings)
-  const displayName = usePreferencesStore((state) => state.preferences.displayName)
+  const nameSource = usePreferencesStore((state) => state.preferences.displayNameSource)
+  const typedName = usePreferencesStore((state) => state.preferences.displayName)
+  const accountName = usePreferencesStore((state) => state.accountName)
+  const displayName = resolveDisplayName(nameSource, typedName, accountName)
   const avatar = usePreferencesStore((state) => state.preferences.avatar)
   const avatarSources = usePreferencesStore((state) => state.avatarSources)
   const avatarColor = usePreferencesStore((state) => state.preferences.avatarColor)

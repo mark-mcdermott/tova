@@ -112,6 +112,7 @@ const preferences: PreferencesApi = {
   write: (value) => ipcRenderer.invoke("prefs:write", value),
   chooseAvatar: () => ipcRenderer.invoke("prefs:chooseAvatar"),
   avatarSources: () => ipcRenderer.invoke("prefs:avatarSources"),
+  accountName: () => ipcRenderer.invoke("prefs:accountName"),
   listBackgrounds: (theme) => ipcRenderer.invoke("background:list", theme),
   addBackground: (theme) => ipcRenderer.invoke("background:add", theme),
   listTitleFonts: () => ipcRenderer.invoke("font:list"),

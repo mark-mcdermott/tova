@@ -66,11 +66,11 @@ describe("Settings", () => {
 
   it("switches panel when a tab is chosen", async () => {
     render(<Settings />)
-    expect(screen.getByLabelText("Display name")).toBeDefined()
+    expect(screen.getByText("Display name")).toBeDefined()
 
     await userEvent.click(screen.getByRole("tab", { name: "Docs" }))
     expect(screen.getByLabelText("Search the docs")).toBeDefined()
-    expect(screen.queryByLabelText("Display name")).toBeNull()
+    expect(screen.queryByText("Display name")).toBeNull()
   })
 
   it("names the tab it is showing", async () => {
