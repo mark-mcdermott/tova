@@ -37,6 +37,7 @@ mod search_conformance;
 mod sections;
 mod session;
 mod settings;
+mod sync;
 mod sync_plan;
 mod tags;
 mod vault;
@@ -350,6 +351,66 @@ fn blog_can_store_secrets() -> bool {
 #[tauri::command]
 fn blog_last_synced() -> std::collections::BTreeMap<String, f64> {
     publish_state::last_synced(&data_dir())
+}
+
+/// The blog the renderer named, or nothing doing. Every command below takes
+/// an id and acts on one of the reader's own blogs, never on a path.
+fn blog_by_id(id: &str) -> Result<blogs::Blog, String> {
+    blogs::list_blogs(&data_dir())
+        .into_iter()
+        .find(|blog| blog.blog.id == id)
+        .map(|summary| summary.blog)
+        .ok_or_else(|| "That blog no longer exists".to_string())
+}
+
+fn now_ms() -> f64 {
+    chrono::Local::now().timestamp_millis() as f64
+}
+
+#[tauri::command]
+fn blog_sync(id: String) -> Result<sync::SyncResult, String> {
+    sync::sync_blog(
+        &github::Api::default(),
+        &data_dir(),
+        &blog_by_id(&id)?,
+        now_ms(),
+    )
+}
+
+#[tauri::command]
+fn blog_conflict(id: String, filename: String) -> Result<sync::ConflictVersions, String> {
+    sync::conflict_versions(
+        &github::Api::default(),
+        &data_dir(),
+        &blog_by_id(&id)?,
+        &filename,
+    )
+}
+
+#[tauri::command]
+fn blog_resolve(id: String, filename: String, keep: String) -> Result<(), String> {
+    let api = github::Api::default();
+    let blog = blog_by_id(&id)?;
+
+    // Refused rather than defaulted. Defaulting to "remote" would mean a typo
+    // overwrites the copy that is here, which is the one of the two that only
+    // exists in one place.
+    match keep.as_str() {
+        "local" => sync::keep_local(&api, &data_dir(), &blog, &filename),
+        "remote" => sync::take_remote(&api, &data_dir(), &blog, &filename),
+        other => Err(format!("Unknown choice: {other}")),
+    }
+}
+
+#[tauri::command]
+fn blog_delete_post(id: String, filename: String, also_remote: bool) -> Result<(), String> {
+    sync::delete_post(
+        &github::Api::default(),
+        &data_dir(),
+        &blog_by_id(&id)?,
+        &filename,
+        also_remote,
+    )
 }
 
 /// One file from the reader, or nothing if they thought better of it.
@@ -726,7 +787,11 @@ pub fn run() {
             blog_post_count,
             blog_set_secret,
             blog_can_store_secrets,
-            blog_last_synced
+            blog_last_synced,
+            blog_sync,
+            blog_conflict,
+            blog_resolve,
+            blog_delete_post
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

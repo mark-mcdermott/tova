@@ -114,6 +114,11 @@
   tova.blogs.setSecret = (id, secret, value) => invoke("blog_set_secret", { id, secret, value })
   tova.blogs.canStoreSecrets = () => invoke("blog_can_store_secrets")
   tova.blogs.lastSynced = () => invoke("blog_last_synced")
+  tova.blogs.sync = (id) => invoke("blog_sync", { id })
+  tova.blogs.conflict = (id, filename) => invoke("blog_conflict", { id, filename })
+  tova.blogs.resolve = (id, filename, keep) => invoke("blog_resolve", { id, filename, keep })
+  tova.blogs.deletePost = (id, filename, alsoRemote) =>
+    invoke("blog_delete_post", { id, filename, alsoRemote })
 
   window.tova = tova
 })()
