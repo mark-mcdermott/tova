@@ -390,6 +390,46 @@ Grammar checking is **not** built. It needs a new dependency and the credible
 ones are large; that is a decision worth making deliberately rather than
 smuggling in beside spelling. It is on the README roadmap.
 
+### Chromium hands back no suggestions for some words
+
+Right-click a misspelling and the popup sometimes reads "No suggestions" for a
+word macOS has perfectly good corrections for. `teh` is the reliable example:
+Chromium marks it, reports it as the misspelled word — the popup names it — and
+hands over an empty `dictionarySuggestions`. `bwron` on the same line gets a
+list. The popup is doing what it is told; the list arrives empty.
+
+It is not the vault, the packaging or the locale trim. It behaves the same in
+`pnpm run dev`, and the trim removed 219 files, every one a `locale.pak` —
+neither build carries a dictionary at all, because macOS supplies it.
+
+Asked directly, macOS has the answers, and better ones than Chromium is
+passing on:
+
+| word      | `NSSpellChecker` guesses      |
+| --------- | ----------------------------- |
+| `teh`     | the, ten, tea, tech, feh, yeh |
+| `brwon`   | brown, Bryon                  |
+| `bwron`   | baron, boron, Byron           |
+| `recieve` | receive, relieve              |
+
+(`bwron` is genuinely what macOS thinks, so that one is not a bug — it is a
+different transposition from `brwon` and the dictionary answers accordingly.)
+
+The likely cause is language detection: asked about `teh` **without** naming a
+language, macOS reports it as correctly spelled, and `setSpellCheckerLanguages`
+is documented as a no-op on macOS. Short words are where automatic detection
+has least to go on.
+
+**Deliberately not fixed here.** Electron exposes no route to `NSSpellChecker`
+for suggestions — `webFrame.setSpellCheckProvider` decides which words are
+wrong, not what to offer instead — so fixing it under Electron means shipping a
+word list and an edit-distance search. That work does not survive a move off
+Chromium, where the suggestions have to come from our own call to the OS
+regardless. The table above is the evidence that the call returns what we want:
+`guesses(forWordRange:in:language:inSpellDocumentWithTag:)`, with `learnWord`
+for the personal dictionary. `SpellingMenu` renders whatever it is handed, so
+the renderer side needs no change either way.
+
 **Preferences are normalised in one place.** `normalizePreferences` runs over
 anything read from disk or sent by the renderer, so a hand-edited file cannot
 put the app into a state its own UI could not produce — a 400px font, a backup
@@ -509,7 +549,7 @@ like a section. What it cannot do is be deleted from here — that would take it
 stored tokens and its sync history with it, which belongs in the Blogs tab where
 the consequences are spelled out.
 
-A blog's row is *derived, not stored*. Blogs live in the app's data directory
+A blog's row is _derived, not stored_. Blogs live in the app's data directory
 and preferences cannot see them, so `reconcileBlogs` brings the two together at
 render time: a new blog appears at the top without anything being written, and a
 deleted one takes its row with it, so no row can outlive the blog it names. Only
