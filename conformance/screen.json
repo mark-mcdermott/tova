@@ -1,0 +1,202 @@
+{
+  "_readme": [
+    "Cases both backends must answer identically.",
+    "",
+    "The Electron main process is the source of truth while the port is in",
+    "flight: `expected` is what src/shared/screen.ts produces, and the Rust",
+    "in src-tauri is held to it. null means the stored screen was not one,",
+    "and the reader lands on the note Tova would have opened anyway.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "cases": [
+    null,
+    "nonsense",
+    42,
+    {},
+    {
+      "kind": "note",
+      "noteId": "notes/slow-morning.md"
+    },
+    {
+      "kind": "note",
+      "noteId": ""
+    },
+    {
+      "kind": "note",
+      "noteId": "   "
+    },
+    {
+      "kind": "note",
+      "noteId": 7
+    },
+    {
+      "kind": "note"
+    },
+    {
+      "kind": "note",
+      "noteId": "../../etc/passwd"
+    },
+    {
+      "kind": "note",
+      "noteId": "notes/../../escape.md"
+    },
+    {
+      "kind": "note",
+      "noteId": "notes/a..b.md"
+    },
+    {
+      "kind": "search",
+      "query": "coffee"
+    },
+    {
+      "kind": "index"
+    },
+    {
+      "kind": "index",
+      "target": null
+    },
+    {
+      "kind": "index",
+      "target": "notes"
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "section",
+        "section": "notes"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "section",
+        "section": ""
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "section"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "folder",
+        "folder": "correspondence"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "blog",
+        "blog": "markmcdermott.io"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tag",
+        "tag": "coffee"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tags"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tags",
+        "tag": "ignored"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "elsewhere"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tag",
+        "tag": "  spaced  "
+      }
+    }
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    {
+      "kind": "note",
+      "noteId": "notes/slow-morning.md"
+    },
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+      "kind": "index",
+      "target": {
+        "kind": "section",
+        "section": "notes"
+      }
+    },
+    null,
+    null,
+    {
+      "kind": "index",
+      "target": {
+        "kind": "folder",
+        "folder": "correspondence"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "blog",
+        "blog": "markmcdermott.io"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tag",
+        "tag": "coffee"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tags"
+      }
+    },
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tags"
+      }
+    },
+    null,
+    {
+      "kind": "index",
+      "target": {
+        "kind": "tag",
+        "tag": "  spaced  "
+      }
+    }
+  ]
+}
