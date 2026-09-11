@@ -31,6 +31,8 @@ hmac = { version = "0.13", default-features = false }
 aes = { version = "0.9", default-features = false }
 unicode-normalization = "0.1"
 chrono = "0.4"
+tauri-plugin-opener = "2"
+url = "2"
 
 # Only the keychain needs it, and only Electron's safeStorage format on macOS
 # has a keychain to read. Gated here rather than in the code alone so a Linux
