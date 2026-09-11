@@ -56,6 +56,10 @@
   tova.preferences.accountName = () => invoke("account_name")
   tova.session.read = () => invoke("session_read")
   tova.session.write = (value) => invoke("session_write", { value })
+  tova.preferences.listVaults = () => invoke("vault_list")
+  tova.preferences.useVault = (path) => invoke("vault_use", { path })
+  tova.preferences.addVault = () => invoke("vault_add")
+  tova.preferences.forgetVault = (path) => invoke("vault_forget", { path })
 
   window.tova = tova
 })()

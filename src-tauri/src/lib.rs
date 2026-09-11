@@ -12,10 +12,12 @@ mod preferences;
 mod screen;
 mod sections;
 mod session;
+mod vault;
+mod vaults;
 
 use serde::Serialize;
 use serde_json::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -82,15 +84,54 @@ fn session_write(value: Value) {
     session::write(&data_dir(), &value)
 }
 
+#[tauri::command]
+fn vault_list() -> Vec<vaults::VaultChoice> {
+    vaults::list(&data_dir())
+}
+
+#[tauri::command]
+fn vault_use(path: String) -> Result<Vec<vaults::VaultChoice>, String> {
+    vaults::use_vault(&data_dir(), Path::new(&path))
+}
+
+#[tauri::command]
+fn vault_forget(path: String) -> Result<Vec<vaults::VaultChoice>, String> {
+    vaults::forget_vault(&data_dir(), Path::new(&path))
+}
+
+/// The picker is here and the decision is not: `add_vault` takes a folder, so
+/// what Tova makes of one stays testable without a dialog on screen.
+#[tauri::command]
+async fn vault_add(app: tauri::AppHandle) -> Result<Vec<vaults::VaultChoice>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let chosen = app
+        .dialog()
+        .file()
+        .set_title("Choose a folder for the vault")
+        .blocking_pick_folder();
+
+    let Some(chosen) = chosen else {
+        return Ok(vaults::list(&data_dir()));
+    };
+    let path = chosen.into_path().map_err(|e| e.to_string())?;
+    vaults::add_vault(&data_dir(), &path)
+}
+
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             app_info,
             preferences_read,
             preferences_write,
             account_name,
             session_read,
-            session_write
+            session_write,
+            vault_list,
+            vault_use,
+            vault_add,
+            vault_forget
         ])
         .setup(|app| {
             // Built here rather than declared in tauri.conf.json for one
