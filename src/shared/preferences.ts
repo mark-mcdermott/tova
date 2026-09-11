@@ -65,7 +65,7 @@ export type AvatarChoice = "initials" | "tova" | "system" | "custom"
 
 export const AVATARS: { value: AvatarChoice; label: string; hint: string }[] = [
   { value: "initials", label: "Initials", hint: "Your name, in a circle" },
-  { value: "tova", label: "Tova", hint: "The robot from the icon" },
+  { value: "tova", label: "Tova", hint: "Tova's own robot" },
   { value: "system", label: "Account", hint: "From your Mac account" },
   { value: "custom", label: "Picture", hint: "One you choose" }
 ]

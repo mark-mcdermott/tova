@@ -1,7 +1,7 @@
 import { AvatarChoice, AvatarSources } from "../shared/preferences"
-import tovaAvatar from "./assets/avatars/tova.jpg"
+import tovaAvatar from "./assets/avatars/tova.png"
 
-/** The robot from the app icon, cropped to its head. */
+/** Tova's robot, drawn for this and no other purpose. */
 export const tovaAvatarUrl = tovaAvatar
 
 /**
