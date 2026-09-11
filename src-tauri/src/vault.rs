@@ -61,6 +61,22 @@ pub fn one_at_a_time() -> std::sync::MutexGuard<'static, ()> {
     ORDER.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// `path.resolve` of one absolute path: `.` dropped, `..` applied. Lexical,
+/// so the answer does not depend on what happens to exist on disk.
+pub fn normalize(path: &Path) -> PathBuf {
+    let mut out = PathBuf::new();
+    for part in path.components() {
+        match part {
+            Component::ParentDir => {
+                out.pop();
+            }
+            Component::CurDir => {}
+            other => out.push(other.as_os_str()),
+        }
+    }
+    out
+}
+
 /// Lexical resolution, which is what `path.resolve` does and what the guard
 /// below needs: the answer must not depend on what happens to exist on disk,
 /// or a symlink could decide whether a path is inside the vault.

@@ -17,6 +17,7 @@ mod daily;
 mod date;
 mod front_matter;
 mod js;
+mod media;
 mod note_location;
 mod note_name;
 mod notes;
@@ -28,6 +29,7 @@ mod search;
 mod search_conformance;
 mod sections;
 mod session;
+mod settings;
 mod tags;
 mod vault;
 mod vault_file;
@@ -273,6 +275,284 @@ fn backup_status() -> VaultStatus {
     }
 }
 
+/// One file from the reader, or nothing if they thought better of it.
+fn pick_file(
+    app: &tauri::AppHandle,
+    title: &str,
+    kind: &str,
+    extensions: &[&str],
+) -> Option<PathBuf> {
+    use tauri_plugin_dialog::DialogExt;
+
+    app.dialog()
+        .file()
+        .set_title(title)
+        .add_filter(kind, extensions)
+        .blocking_pick_file()
+        .and_then(|chosen| chosen.into_path().ok())
+}
+
+fn backgrounds_dir(theme: &str) -> PathBuf {
+    // A folder each, as the bundled photographs have. The reader picks a
+    // picture by clicking the + in one row or the other, which says which mode
+    // they meant it for — a bright sky cannot carry white text, and the
+    // reverse. Anything but "dark" is light, the way the handler reads it.
+    let theme = if theme == "dark" { "dark" } else { "light" };
+    data_dir().join("backgrounds").join(theme)
+}
+
+fn fonts_dir() -> PathBuf {
+    data_dir().join("fonts")
+}
+
+#[tauri::command]
+fn background_list(theme: String) -> Vec<String> {
+    media::list_in(&backgrounds_dir(&theme), &media::BACKGROUND_KINDS)
+}
+
+#[tauri::command]
+async fn background_add(app: tauri::AppHandle, theme: String) -> Result<Option<String>, String> {
+    let Some(source) = pick_file(
+        &app,
+        "Add a background",
+        "Images",
+        &["png", "jpg", "jpeg", "webp"],
+    ) else {
+        return Ok(None);
+    };
+
+    // Unique across both folders, not just this one: a stored preference is a
+    // bare filename, so two pictures sharing a name would be one answer to two
+    // questions.
+    let mut taken = media::list_in(&backgrounds_dir("light"), &media::BACKGROUND_KINDS);
+    taken.extend(media::list_in(
+        &backgrounds_dir("dark"),
+        &media::BACKGROUND_KINDS,
+    ));
+
+    media::copy_in(
+        &source,
+        &backgrounds_dir(&theme),
+        &media::BACKGROUND_KINDS,
+        "background",
+        &taken,
+    )
+    .map(Some)
+}
+
+#[tauri::command]
+fn font_list() -> Vec<String> {
+    media::list_in(&fonts_dir(), &media::FONT_KINDS)
+}
+
+#[tauri::command]
+async fn font_add(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let Some(source) = pick_file(
+        &app,
+        "Add a title font",
+        "Fonts",
+        &["otf", "ttf", "woff", "woff2"],
+    ) else {
+        return Ok(None);
+    };
+
+    let taken = media::list_in(&fonts_dir(), &media::FONT_KINDS);
+    media::copy_in(
+        &source,
+        &fonts_dir(),
+        &media::FONT_KINDS,
+        "title-font",
+        &taken,
+    )
+    .map(Some)
+}
+
+/// Removes an added face. Bundled ones are not files and never reach here.
+#[tauri::command]
+fn font_remove(name: String) -> Result<(), String> {
+    std::fs::remove_file(media::resolve_within(&fonts_dir(), &name)?).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn font_url(name: String) -> Option<String> {
+    media::resolve_within(&fonts_dir(), &name)
+        .ok()
+        .and_then(|path| media::data_url(&path))
+}
+
+#[tauri::command]
+async fn prefs_choose_avatar(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let Some(source) = pick_file(
+        &app,
+        "Choose a picture",
+        "Images",
+        &["png", "jpg", "jpeg", "webp"],
+    ) else {
+        return Ok(None);
+    };
+
+    let extension = source
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy().to_lowercase()))
+        .unwrap_or_default();
+    if !media::BACKGROUND_KINDS.contains(&extension.as_str()) {
+        return Err(format!("Tova cannot use {extension} for an avatar"));
+    }
+
+    // A fixed name per format, so replacing a picture never leaves the old one.
+    let filename = format!("avatar{extension}");
+    std::fs::copy(&source, data_dir().join(&filename)).map_err(|e| e.to_string())?;
+
+    // Chosen as well as copied: nobody picks a picture in order to not use it.
+    let mut stored = preferences::read(&data_dir());
+    stored.avatar = "custom".into();
+    stored.avatar_file = Some(filename.clone());
+    let value = serde_json::to_value(&stored).map_err(|e| e.to_string())?;
+    preferences::write_value(&data_dir(), &value);
+
+    Ok(Some(filename))
+}
+
+#[derive(Serialize)]
+struct AvatarSources {
+    system: Option<String>,
+    custom: Option<String>,
+}
+
+/*
+ * The macOS account picture. It lives in the directory service as a hex blob
+ * under JPEGPhoto — the `Picture` attribute beside it often names a stock image
+ * even when the user has set their own, so the blob is the honest source.
+ */
+#[cfg(target_os = "macos")]
+fn mac_account_photo() -> Option<Vec<u8>> {
+    // The absolute path because a packaged app's PATH is not a shell's and
+    // need not have /usr/bin in it. No shell at all: the username goes in as
+    // an argument, not as text something else will parse.
+    let user = std::env::var("USER").ok()?;
+    let output = std::process::Command::new("/usr/bin/dscl")
+        .args([".", "-read", &format!("/Users/{user}"), "JPEGPhoto"])
+        .output()
+        .inspect_err(|e| {
+            // Said out loud, because a silent None here is indistinguishable
+            // from a Mac with no picture set, and the option simply not
+            // appearing is a poor way to find out that reading it failed.
+            eprintln!("Account picture could not be read: {e}");
+        })
+        .ok()?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // dscl says so in its output rather than its exit code, and an account
+    // with no picture set is an ordinary thing, not a fault.
+    if stdout.lines().any(|line| line.starts_with("No such key:")) {
+        return None;
+    }
+
+    let hex: String = stdout
+        .trim_start_matches("JPEGPhoto:")
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
+    if hex.len() < 8 || !hex.len().is_multiple_of(2) {
+        eprintln!(
+            "Account picture: {} hex digits, which is not a picture.",
+            hex.len()
+        );
+        return None;
+    }
+
+    let bytes: Option<Vec<u8>> = (0..hex.len())
+        .step_by(2)
+        .map(|at| u8::from_str_radix(&hex[at..at + 2], 16).ok())
+        .collect();
+    let bytes = bytes?;
+
+    // FFD8 opens every JPEG; anything else is not a picture we should draw.
+    if bytes.starts_with(&[0xff, 0xd8]) {
+        return Some(bytes);
+    }
+    eprintln!("Account picture: read something that does not open like a JPEG.");
+    None
+}
+
+#[cfg(not(target_os = "macos"))]
+fn mac_account_photo() -> Option<Vec<u8>> {
+    None
+}
+
+/// Both fetched pictures, whichever is in use.
+///
+/// Both, because the picker draws every option as the face it would give you,
+/// and one call rather than two because they are read together at load. Data
+/// URLs: neither file is under the vault, so the asset protocol does not reach
+/// them, and both are small images read once.
+#[tauri::command]
+fn prefs_avatar_sources() -> AvatarSources {
+    use base64::Engine;
+
+    AvatarSources {
+        system: mac_account_photo().map(|photo| {
+            format!(
+                "data:image/jpeg;base64,{}",
+                base64::engine::general_purpose::STANDARD.encode(photo)
+            )
+        }),
+        custom: preferences::read(&data_dir())
+            .avatar_file
+            .and_then(|file| media::resolve_within(&data_dir(), &file).ok())
+            .and_then(|path| media::data_url(&path)),
+    }
+}
+
+#[tauri::command]
+fn settings_reset() -> Result<(), String> {
+    settings::reset_preferences(&data_dir())
+}
+
+#[tauri::command]
+fn settings_nuke_targets() -> Vec<String> {
+    settings::nuke_targets(&data_dir())
+}
+
+/// The app restarts rather than carrying on: every path it holds open has just
+/// been deleted underneath it, and a fresh start is the honest next state.
+#[tauri::command]
+fn settings_nuke(app: tauri::AppHandle) {
+    settings::nuke_everything(&data_dir());
+    app.restart();
+}
+
+/// Only the two vault directories are ever revealed — the renderer names which
+/// one, never a path.
+#[tauri::command]
+fn app_reveal(app: tauri::AppHandle, target: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+
+    let path = if target == "backups" {
+        backup::backup_root()
+    } else {
+        vault::vault_root()
+    };
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
+/// Only http(s) is ever opened, and only in the OS browser — a renderer that
+/// could hand any string to the shell could open a file or a script.
+#[tauri::command]
+fn app_open_external(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+
+    let parsed = url::Url::parse(&url).map_err(|e| e.to_string())?;
+    if parsed.scheme() != "http" && parsed.scheme() != "https" {
+        return Err(format!("Refusing to open {}: links", parsed.scheme()));
+    }
+    app.opener()
+        .open_url(parsed.to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -295,6 +575,7 @@ async fn vault_add(app: tauri::AppHandle) -> Result<Vec<vaults::VaultChoice>, St
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             app_info,
             preferences_read,
@@ -333,7 +614,20 @@ pub fn run() {
             backup_run,
             backup_list,
             backup_restore,
-            backup_status
+            backup_status,
+            background_list,
+            background_add,
+            font_list,
+            font_add,
+            font_remove,
+            font_url,
+            prefs_choose_avatar,
+            prefs_avatar_sources,
+            settings_reset,
+            settings_nuke_targets,
+            settings_nuke,
+            app_reveal,
+            app_open_external
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());
