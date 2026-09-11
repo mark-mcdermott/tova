@@ -32,6 +32,7 @@ mod preferences;
 mod publish_state;
 mod publisher;
 mod safe_storage;
+mod schedule;
 mod screen;
 mod search;
 #[cfg(test)]
@@ -50,6 +51,7 @@ mod vaults;
 use serde::Serialize;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
+use tauri::Manager;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -837,6 +839,23 @@ pub fn run() {
             let sections: Vec<String> = stored.sections.iter().map(|s| s.id.clone()).collect();
             let _ = vault::ensure_vault(&vault::vault_root(), &sections);
 
+            // The launch backup runs before the cleanup, so anything the sweep
+            // removes is already captured in a restorable snapshot.
+            schedule::on_launch(&data_dir());
+
+            /*
+             * Today's note, and the vault's backups, from here on. The handle
+             * is kept in state so the window's focus can ask for an early
+             * check and quitting can stop both threads.
+             */
+            let emitter = app.handle().clone();
+            let running = schedule::start(data_dir(), move || {
+                use tauri::Emitter;
+                // Tells the renderer the vault changed underneath it.
+                let _ = emitter.emit("notes:changed", ());
+            });
+            app.manage(running);
+
             // Built here rather than declared in tauri.conf.json for one
             // reason: an initialization script can only be attached to a
             // window as it is created, and that script is how the renderer
@@ -861,6 +880,22 @@ pub fn run() {
             window.build()?;
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("tova failed to start");
+        .on_window_event(|window, event| {
+            // A date change noticed the moment somebody comes back, rather
+            // than up to a minute later.
+            if let tauri::WindowEvent::Focused(true) = event {
+                if let Some(running) = window.try_state::<schedule::Schedule>() {
+                    running.refresh();
+                }
+            }
+        })
+        .build(tauri::generate_context!())
+        .expect("tova failed to start")
+        .run(|app, event| {
+            if let tauri::RunEvent::ExitRequested { .. } = event {
+                if let Some(running) = app.try_state::<schedule::Schedule>() {
+                    running.stop();
+                }
+            }
+        });
 }
