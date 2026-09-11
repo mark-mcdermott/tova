@@ -75,6 +75,105 @@ pub fn compare(a: &str, b: &str) -> std::cmp::Ordering {
     a.encode_utf16().cmp(b.encode_utf16())
 }
 
+/*
+ * A string as JavaScript sees it: a sequence of UTF-16 code units.
+ *
+ * `indexOf`, `slice` and `length` in JavaScript all count those, and a Rust
+ * port that counts bytes or characters instead does not merely order things
+ * differently — it cuts a snippet in the wrong place, and `&s[a..b]` on a
+ * boundary that is not a character boundary panics. Any body with an accent or
+ * an emoji before the match is enough.
+ */
+pub struct Utf16(Vec<u16>);
+
+impl Utf16 {
+    pub fn new(value: &str) -> Self {
+        Utf16(value.encode_utf16().collect())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn index_of(&self, needle: &Utf16) -> Option<usize> {
+        if needle.0.is_empty() {
+            return Some(0);
+        }
+        self.0.windows(needle.0.len()).position(|w| w == needle.0)
+    }
+
+    pub fn contains(&self, needle: &Utf16) -> bool {
+        self.index_of(needle).is_some()
+    }
+
+    pub fn starts_with(&self, needle: &Utf16) -> bool {
+        self.0.starts_with(&needle.0)
+    }
+
+    /// How many times `needle` occurs, counted the way `split(term).length - 1`
+    /// counts: without overlaps, left to right.
+    pub fn occurrences(&self, needle: &Utf16) -> usize {
+        if needle.0.is_empty() {
+            return 0;
+        }
+        let mut at = 0;
+        let mut found = 0;
+        while at + needle.0.len() <= self.0.len() {
+            if &self.0[at..at + needle.0.len()] == needle.0.as_slice() {
+                found += 1;
+                at += needle.0.len();
+            } else {
+                at += 1;
+            }
+        }
+        found
+    }
+
+    /// `slice(from, to)`, clamped the way JavaScript clamps it.
+    ///
+    /// A cut through a surrogate pair leaves JavaScript holding half of one.
+    /// Rust has no such string, so the half becomes U+FFFD — which is what a
+    /// reader would see either way, in a snippet that was cut mid-emoji.
+    pub fn slice(&self, from: usize, to: usize) -> String {
+        let from = from.min(self.0.len());
+        let to = to.clamp(from, self.0.len());
+        String::from_utf16_lossy(&self.0[from..to])
+    }
+}
+
+/*
+ * `\w` in a JavaScript regex without the `u` flag, and so `\b` too: ASCII
+ * letters, digits and underscore, and nothing else. A word boundary sits
+ * wherever one side is a word character and the other is not.
+ */
+fn is_word(unit: Option<&u16>) -> bool {
+    let Some(&c) = unit else { return false };
+    let c = c as u32;
+    (0x30..=0x39).contains(&c)
+        || (0x41..=0x5a).contains(&c)
+        || (0x61..=0x7a).contains(&c)
+        || c == 0x5f
+}
+
+impl Utf16 {
+    fn boundary_at(&self, at: usize) -> bool {
+        is_word(at.checked_sub(1).and_then(|i| self.0.get(i))) != is_word(self.0.get(at))
+    }
+
+    /// `new RegExp("\\b" + term + "\\b").test(self)` — whether the term
+    /// occurs as a whole word.
+    pub fn has_word(&self, needle: &Utf16) -> bool {
+        if needle.0.is_empty() {
+            return false;
+        }
+        (0..=self.0.len().saturating_sub(needle.0.len())).any(|at| {
+            self.0[at..].starts_with(&needle.0)
+                && self.boundary_at(at)
+                && self.boundary_at(at + needle.0.len())
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,6 +192,37 @@ mod tests {
         for c in ['a', '-', '\u{200b}'] {
             assert!(!is_whitespace(c), "{c:?}");
         }
+    }
+
+    #[test]
+    fn utf16_indices_are_the_ones_javascript_would_give() {
+        // "héllo 😀 world": the emoji is one character and two code units, and
+        // JavaScript's indexOf counts the second one.
+        let body = Utf16::new("héllo 😀 world");
+
+        assert_eq!(body.len(), 14);
+        assert_eq!(body.index_of(&Utf16::new("world")), Some(9));
+        assert_eq!(body.slice(9, 14), "world");
+        // A cut through the pair: half a character, which Rust cannot hold.
+        assert_eq!(body.slice(6, 7), "\u{fffd}");
+    }
+
+    #[test]
+    fn occurrences_are_counted_the_way_split_counts_them() {
+        assert_eq!(Utf16::new("aaa").occurrences(&Utf16::new("aa")), 1);
+        assert_eq!(Utf16::new("abab").occurrences(&Utf16::new("ab")), 2);
+        assert_eq!(Utf16::new("abc").occurrences(&Utf16::new("z")), 0);
+    }
+
+    #[test]
+    fn a_word_boundary_is_the_ascii_one() {
+        let body = Utf16::new("morning, morningside and café");
+
+        assert!(body.has_word(&Utf16::new("morning")));
+        assert!(!body.has_word(&Utf16::new("morningsid")));
+        // `é` is not a word character to JavaScript, so `caf` is a whole word
+        // here — surprising, and what the other backend does.
+        assert!(body.has_word(&Utf16::new("caf")));
     }
 
     #[test]
