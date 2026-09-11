@@ -88,6 +88,11 @@ export interface AvatarSources {
 
 export const NO_AVATARS: AvatarSources = { system: null, custom: null }
 
+/** Six hex digits, which is all the colour input can produce. */
+function isHexColor(value: unknown): value is string {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+}
+
 function isAvatarChoice(value: unknown): value is AvatarChoice {
   return AVATARS.some((avatar) => avatar.value === value)
 }
@@ -99,6 +104,11 @@ export interface Preferences {
   avatar: AvatarChoice
   /** The chosen picture, kept in the app's data directory. Null if never set. */
   avatarFile: string | null
+  /**
+   * What the disc behind the initials is painted. Null to take a colour from
+   * the name, which is what it did before there was anywhere to say otherwise.
+   */
+  avatarColor: string | null
   /** Editor body size in px. */
   fontSize: number
   /** Spaces an indent inserts. */
@@ -131,6 +141,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   displayName: "",
   avatar: "initials",
   avatarFile: null,
+  avatarColor: null,
   fontSize: 18,
   tabSize: 2,
   backupIntervalMinutes: 60,
@@ -185,6 +196,7 @@ export function normalizePreferences(value: unknown): Preferences {
         ? "custom"
         : "initials",
     avatarFile: typeof raw.avatarFile === "string" ? raw.avatarFile : null,
+    avatarColor: isHexColor(raw.avatarColor) ? raw.avatarColor.toLowerCase() : null,
     fontSize: clamp(Number(raw.fontSize ?? DEFAULT_PREFERENCES.fontSize), LIMITS.fontSize),
     tabSize: clamp(Number(raw.tabSize ?? DEFAULT_PREFERENCES.tabSize), LIMITS.tabSize),
     backupIntervalMinutes: clamp(

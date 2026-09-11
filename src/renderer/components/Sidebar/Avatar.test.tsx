@@ -37,38 +37,46 @@ describe("Avatar", () => {
     expect(container.querySelector(".avatar-wordmark")).not.toBeNull()
   })
 
-  it("takes the accent for the disc, there being no name to colour it by", () => {
+  it("takes the default disc colour when none has been chosen", () => {
     const { container } = render(<Avatar className="a" src={null} name="" />)
-    const disc = container.querySelector(".avatar-initials")
 
-    expect(disc?.classList.contains("is-unnamed")).toBe(true)
-    // Not an hsl() of a hash of nothing, which came out an arbitrary red.
-    expect(disc?.getAttribute("style")).toBeNull()
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
+      "background: rgb(49, 150, 201);"
+    )
+  })
+
+  it("paints the disc the colour it is given, whatever the name says", () => {
+    const { container } = render(<Avatar className="a" src={null} name="Mark" color="#123456" />)
+
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
+      "background: rgb(18, 52, 86);"
+    )
+  })
+
+  it("paints it behind a picture too, for the robot to sit on", () => {
+    // The robot is drawn with nothing behind it, so the disc is its background.
+    const { container } = render(
+      <Avatar className="a" src="data:image/png;base64,AA" name="Mark" color="#123456" />
+    )
+
+    expect(container.querySelector("img")?.getAttribute("style")).toBe(
+      "background: rgb(18, 52, 86);"
+    )
   })
 
   it("leaves a named one its own colour and no mark", () => {
     const { container } = render(<Avatar className="a" src={null} name="Mark" />)
 
     expect(container.querySelector(".avatar-wordmark")).toBeNull()
-    // jsdom rewrites hsl() to rgb(), so this asks that a colour was set at all.
     expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toMatch(/background/)
   })
 
-  it("gives the same name the same colour every time", () => {
-    const { container: first } = render(<Avatar className="a" src={null} name="Mark" />)
-    const one = first.querySelector(".avatar-initials")?.getAttribute("style")
-    cleanup()
-
-    const { container: second } = render(<Avatar className="a" src={null} name="Mark" />)
-    expect(second.querySelector(".avatar-initials")?.getAttribute("style")).toBe(one)
-  })
-
-  it("gives different names different colours", () => {
+  it("gives every name the same disc, the colour being a choice and not a hash", () => {
     const { container: a } = render(<Avatar className="a" src={null} name="Mark" />)
     const one = a.querySelector(".avatar-initials")?.getAttribute("style")
     cleanup()
 
     const { container: b } = render(<Avatar className="a" src={null} name="Alex" />)
-    expect(b.querySelector(".avatar-initials")?.getAttribute("style")).not.toBe(one)
+    expect(b.querySelector(".avatar-initials")?.getAttribute("style")).toBe(one)
   })
 })

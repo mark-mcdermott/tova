@@ -470,6 +470,30 @@
   color: var(--text-primary);
 }
 
+/*
+ * The disc's colour, as a swatch the size of the squares it paints. The native
+ * input is the whole control: clicking it opens the system colour picker, and
+ * dragging in there reports back as it goes.
+ */
+.avatar-colour {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+}
+
+.avatar-colour::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.avatar-colour::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
+}
+
 .avatar-add-glyph {
   font-family: var(--font-mono);
   font-size: 1.75rem;

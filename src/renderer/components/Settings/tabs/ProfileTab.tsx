@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from "react"
 import { AVATARS, AvatarChoice } from "../../../../shared/preferences"
-import { offersAvatar, resolveAvatar } from "../../../avatar"
+import { discColor, offersAvatar, resolveAvatar } from "../../../avatar"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { Field } from "../Field"
 import { Avatar } from "../../Sidebar/Avatar"
@@ -8,10 +9,33 @@ export function ProfileTab() {
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
   const avatar = usePreferencesStore((state) => state.preferences.avatar)
   const avatarSources = usePreferencesStore((state) => state.avatarSources)
+  const avatarColor = usePreferencesStore((state) => state.preferences.avatarColor)
   const update = usePreferencesStore((state) => state.update)
   const chooseAvatar = usePreferencesStore((state) => state.chooseAvatar)
 
   const offered = AVATARS.filter((option) => offersAvatar(option.value, avatarSources))
+
+  /*
+   * The colour the tiles are drawn in while the system picker is open. The
+   * picker reports every move of the wheel, and a preference that wrote to disk
+   * on each of them would be writing a hundred times for one choice — so the
+   * tiles follow the wheel from here and the file catches up when it settles.
+   */
+  const [dragging, setDragging] = useState<string | null>(null)
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const chosenColor = dragging ?? avatarColor
+
+  useEffect(() => {
+    return () => {
+      if (settle.current !== null) clearTimeout(settle.current)
+    }
+  }, [])
+
+  function pickColor(value: string) {
+    setDragging(value)
+    if (settle.current !== null) clearTimeout(settle.current)
+    settle.current = setTimeout(() => void update({ avatarColor: value }), 250)
+  }
 
   /**
    * Clearing the picture takes the choice off it too. Leaving it set would show
@@ -65,6 +89,7 @@ export function ProfileTab() {
                 className="avatar-choice-face"
                 src={resolveAvatar(option.value, avatarSources)}
                 name={displayName}
+                color={chosenColor}
               />
               <span className="choice-name">{option.label}</span>
               {option.hint !== undefined && (
@@ -110,6 +135,20 @@ export function ProfileTab() {
             <span className="choice-name">Upload</span>
           </button>
         </div>
+      </Field>
+
+      <Field
+        id="avatar-colour"
+        label="Background"
+        hint="Behind the initials, and behind the robot."
+      >
+        <input
+          type="color"
+          id="avatar-colour"
+          className="avatar-colour"
+          value={discColor(chosenColor)}
+          onChange={(event) => pickColor(event.target.value)}
+        />
       </Field>
     </section>
   )

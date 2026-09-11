@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { NO_AVATARS, normalizePreferences } from "../shared/preferences"
-import { offersAvatar, resolveAvatar, tovaAvatarUrl } from "./avatar"
+import { DEFAULT_DISC, discColor, offersAvatar, resolveAvatar, tovaAvatarUrl } from "./avatar"
 
 const both = { system: "data:system", custom: "data:custom" }
 
@@ -61,5 +61,23 @@ describe("a preferences file written before the choices existed", () => {
 
   it("refuses a choice that is not one of the four", () => {
     expect(normalizePreferences({ avatar: "robot", avatarFile: null }).avatar).toBe("initials")
+  })
+})
+
+describe("what the disc is painted", () => {
+  it("takes a chosen colour", () => {
+    expect(discColor("#123456")).toBe("#123456")
+  })
+
+  it("falls back to one colour for everyone, until someone says otherwise", () => {
+    // It used to be a hue hashed out of the name, which was a nice trick with
+    // nothing to say for itself once there was a picker.
+    expect(discColor(null)).toBe(DEFAULT_DISC)
+  })
+
+  it("answers in hex, which is what the colour input speaks", () => {
+    // The swatch and the disc read the same function, so they cannot disagree
+    // about what colour is in use.
+    expect(discColor(null)).toMatch(/^#[0-9a-f]{6}$/)
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen, cleanup, waitFor } from "@testing-library/react"
+import { render, screen, cleanup, waitFor, fireEvent, act } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { ProfileTab } from "./ProfileTab"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
@@ -10,7 +10,7 @@ import {
   DEFAULT_PREFERENCES,
   NO_AVATARS
 } from "../../../../shared/preferences"
-import { tovaAvatarUrl } from "../../../avatar"
+import { discColor, tovaAvatarUrl } from "../../../avatar"
 
 const write = vi.fn()
 const chooseAvatar = vi.fn()
@@ -20,6 +20,11 @@ function store(avatar: AvatarChoice, sources: AvatarSources) {
     preferences: { ...DEFAULT_PREFERENCES, displayName: "Mark McDermott", avatar },
     avatarSources: sources
   })
+}
+
+/** The swatch, which is the colour input itself. */
+function swatch(): HTMLInputElement {
+  return screen.getByLabelText("Background") as HTMLInputElement
 }
 
 beforeEach(() => {
@@ -162,5 +167,46 @@ describe("the picture behind the Picture option", () => {
 
     await waitFor(() => expect(write).toHaveBeenCalled())
     expect(write.mock.calls[0][0].avatar).toBe("tova")
+  })
+})
+
+describe("the background colour", () => {
+  it("opens on the colour the disc is already wearing", () => {
+    render(<ProfileTab />)
+
+    expect(swatch().value).toBe(discColor(null))
+  })
+
+  it("follows the wheel before it writes anything", async () => {
+    // The system picker reports every move. Writing each one would be a
+    // hundred writes for one choice, so the tiles follow and the file waits.
+    vi.useFakeTimers()
+    render(<ProfileTab />)
+    fireEvent.input(swatch(), { target: { value: "#112233" } })
+
+    expect(swatch().value).toBe("#112233")
+    expect(write).not.toHaveBeenCalled()
+
+    await act(async () => {
+      vi.advanceTimersByTime(250)
+    })
+    expect(write.mock.calls[0][0].avatarColor).toBe("#112233")
+    vi.useRealTimers()
+  })
+
+  it("writes once for a drag across many colours", async () => {
+    vi.useFakeTimers()
+    render(<ProfileTab />)
+    for (const value of ["#111111", "#222222", "#333333"]) {
+      fireEvent.input(swatch(), { target: { value } })
+      vi.advanceTimersByTime(60)
+    }
+
+    await act(async () => {
+      vi.advanceTimersByTime(250)
+    })
+    expect(write).toHaveBeenCalledTimes(1)
+    expect(write.mock.calls[0][0].avatarColor).toBe("#333333")
+    vi.useRealTimers()
   })
 })

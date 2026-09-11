@@ -24,6 +24,7 @@ export function Sidebar() {
   const displayName = usePreferencesStore((state) => state.preferences.displayName)
   const avatar = usePreferencesStore((state) => state.preferences.avatar)
   const avatarSources = usePreferencesStore((state) => state.avatarSources)
+  const avatarColor = usePreferencesStore((state) => state.preferences.avatarColor)
   const view = useNotesStore((state) => state.view)
   const indexTarget = useNotesStore((state) => state.indexTarget)
   const active = useNotesStore((state) => state.active)
@@ -135,6 +136,7 @@ export function Sidebar() {
             className="sidebar-avatar"
             src={resolveAvatar(avatar, avatarSources)}
             name={displayName}
+            color={avatarColor}
           />
           {displayName !== "" && <span className="sidebar-user">{displayName}</span>}
         </button>
