@@ -76,3 +76,58 @@ describe("ConfirmDialog", () => {
     expect(document.activeElement).toBe(cancel)
   })
 })
+
+describe("a confirm that asks for a word", () => {
+  const props = {
+    title: "Delete everything?",
+    body: "This cannot be undone.",
+    confirmLabel: "Delete everything",
+    confirmWord: "confirm",
+    destructive: true
+  }
+
+  it("will not fire until the word is typed exactly", async () => {
+    const onConfirm = vi.fn()
+    render(<ConfirmDialog {...props} onConfirm={onConfirm} onCancel={vi.fn()} />)
+    const confirm = screen.getByRole("button", { name: "Delete everything" })
+
+    expect(confirm).toHaveProperty("disabled", true)
+    await userEvent.type(screen.getByLabelText("Type confirm to confirm"), "confir")
+    expect(confirm).toHaveProperty("disabled", true)
+
+    await userEvent.type(screen.getByLabelText("Type confirm to confirm"), "m")
+    expect(confirm).toHaveProperty("disabled", false)
+    await userEvent.click(confirm)
+    expect(onConfirm).toHaveBeenCalled()
+  })
+
+  it("names what it is about to take, rather than gesturing at it", () => {
+    render(
+      <ConfirmDialog
+        {...props}
+        details={["/Users/someone/Documents/Tova", "/Users/someone/Library/tova"]}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("/Users/someone/Documents/Tova")).toBeDefined()
+    expect(screen.getByText("/Users/someone/Library/tova")).toBeDefined()
+  })
+
+  it("still fires straight away where no word is asked for", async () => {
+    const onConfirm = vi.fn()
+    render(
+      <ConfirmDialog
+        title="Move to trash?"
+        body="It can be restored."
+        confirmLabel="Move to trash"
+        onConfirm={onConfirm}
+        onCancel={vi.fn()}
+      />
+    )
+
+    await userEvent.click(screen.getByRole("button", { name: "Move to trash" }))
+    expect(onConfirm).toHaveBeenCalled()
+  })
+})

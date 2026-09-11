@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { PREFERENCE_LIMITS } from "../../../../shared/preferences"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
+import { ConfirmDialog } from "../../Popup/ConfirmDialog"
 import { Field } from "../Field"
 import { Stepper } from "../Stepper"
 
@@ -8,11 +9,28 @@ export function GeneralTab() {
   const preferences = usePreferencesStore((state) => state.preferences)
   const update = usePreferencesStore((state) => state.update)
 
+  const load = usePreferencesStore((state) => state.load)
+
   const [words, setWords] = useState<string[]>([])
+  const [asking, setAsking] = useState<"reset" | "nuke" | null>(null)
+  const [targets, setTargets] = useState<string[]>([])
 
   useEffect(() => {
     void window.tova.spellcheck.listWords().then(setWords)
   }, [])
+
+  async function askToNuke() {
+    // Fetched before the dialog opens, so it can name the folders it is about
+    // to delete rather than ask anyone to take that on trust.
+    setTargets(await window.tova.preferences.nukeTargets())
+    setAsking("nuke")
+  }
+
+  async function reset() {
+    setAsking(null)
+    await window.tova.preferences.reset()
+    await load()
+  }
 
   return (
     <>
@@ -120,6 +138,66 @@ export function GeneralTab() {
           />
         </Field>
       </section>
+
+      <section className="settings-section">
+        <h2 className="settings-section-title">Starting over</h2>
+        <p className="settings-note">
+          Two ways back to a blank page. The first changes nothing you have written; the second
+          leaves nothing at all.
+        </p>
+
+        {/* Not the two-column Field the rest of Settings uses: its label is a
+            <label>, and a label pointing at a button replaces the button's own
+            words with its own. These buttons say what they do. */}
+        <div className="reset-actions">
+          <div className="reset-action">
+            <button type="button" className="settings-button" onClick={() => setAsking("reset")}>
+              Reset all settings to defaults
+            </button>
+            <p className="field-hint">
+              Every preference back to its default. Vaults you have added are forgotten — the notes
+              in them stay where they are.
+            </p>
+          </div>
+
+          <div className="reset-action">
+            <button
+              type="button"
+              className="settings-button settings-button-danger"
+              onClick={() => void askToNuke()}
+            >
+              Nuke all settings, data and notes
+            </button>
+            <p className="field-hint">
+              No snapshot survives this, and Tova has no copy anywhere else.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {asking === "reset" && (
+        <ConfirmDialog
+          title="Reset all settings?"
+          body="Every preference goes back to its default and the default vault comes back into use. Nothing you have written is touched."
+          confirmLabel="Reset"
+          destructive
+          onConfirm={() => void reset()}
+          onCancel={() => setAsking(null)}
+        />
+      )}
+
+      {asking === "nuke" && (
+        <ConfirmDialog
+          title="Delete everything?"
+          body="Every note in every vault, and everything Tova stores about you. This cannot be undone, and Tova keeps no copy anywhere else."
+          details={targets}
+          confirmLabel="Delete everything"
+          confirmWord="confirm"
+          destructive
+          onConfirm={() => void window.tova.preferences.nuke()}
+          onCancel={() => setAsking(null)}
+        />
+      )}
     </>
   )
 }

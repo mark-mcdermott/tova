@@ -232,6 +232,12 @@ export interface PreferencesApi {
   avatarSources: () => Promise<import("./preferences").AvatarSources>
   /** The Mac account's own name, or "" where there is no account to ask. */
   accountName: () => Promise<string>
+  /** Every preference back to its default. Notes are not touched. */
+  reset: () => Promise<void>
+  /** The paths a nuke would delete, so a confirm can name them. */
+  nukeTargets: () => Promise<string[]>
+  /** Every vault, and everything Tova stores. Relaunches the app. */
+  nuke: () => Promise<void>
   /** Backgrounds the reader added, served over the tova-bg scheme. */
   listBackgrounds: (theme: "light" | "dark") => Promise<string[]>
   /** Opens a picker, copies the chosen image in, and returns its stored name. */

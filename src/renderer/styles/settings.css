@@ -470,6 +470,42 @@
   color: var(--text-primary);
 }
 
+/* Each one says what it does, so the hint sits under it rather than beside. */
+.reset-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.reset-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+/*
+ * The paths a destructive confirm is about to take. Monospaced and listed,
+ * because the whole point of them is being read carefully.
+ */
+.confirm-details {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-chrome);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.confirm-word {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 /* Under the row that calls for it, rather than beside it. */
 .name-input {
   margin-top: var(--space-3);
