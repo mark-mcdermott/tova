@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSuspendWindowDrag } from "../../useWindowDrag"
 
 interface ConfirmDialogProps {
@@ -8,6 +8,13 @@ interface ConfirmDialogProps {
   confirmLabel: string
   /** Colours the confirm button and nothing else. */
   destructive?: boolean
+  /** Named under the body — the paths an action will take, where it takes any. */
+  details?: string[]
+  /**
+   * Typed exactly before the confirm will do anything. For the handful of
+   * actions where a misplaced click would cost work that cannot be got back.
+   */
+  confirmWord?: string
   onConfirm: () => void
   onCancel: () => void
 }
@@ -25,11 +32,15 @@ export function ConfirmDialog({
   body,
   confirmLabel,
   destructive = false,
+  details,
+  confirmWord,
   onConfirm,
   onCancel
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const [typed, setTyped] = useState("")
+  const ready = confirmWord === undefined || typed.trim() === confirmWord
 
   useSuspendWindowDrag()
 
@@ -92,6 +103,30 @@ export function ConfirmDialog({
           {body}
         </p>
 
+        {details !== undefined && details.length > 0 && (
+          <ul className="confirm-details">
+            {details.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        )}
+
+        {confirmWord !== undefined && (
+          <label className="confirm-word">
+            <span>
+              Type <strong>{confirmWord}</strong> to confirm
+            </span>
+            <input
+              className="text-input"
+              value={typed}
+              autoComplete="off"
+              spellCheck={false}
+              aria-label={`Type ${confirmWord} to confirm`}
+              onChange={(event) => setTyped(event.target.value)}
+            />
+          </label>
+        )}
+
         <div className="confirm-actions">
           <button type="button" className="settings-button" ref={cancelRef} onClick={onCancel}>
             Cancel
@@ -99,6 +134,7 @@ export function ConfirmDialog({
           <button
             type="button"
             className={`settings-button ${destructive ? "settings-button-danger" : "settings-button-primary"}`}
+            disabled={!ready}
             onClick={onConfirm}
           >
             {confirmLabel}

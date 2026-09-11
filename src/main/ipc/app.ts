@@ -5,6 +5,7 @@ import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
 import { avatarSources, chooseAvatar } from "../avatar"
 import { accountName } from "../preferences"
+import { nukeEverything, nukeTargets, resetPreferences } from "../reset"
 import { addBackground, listBackgrounds } from "../backgrounds"
 import { readSession, writeSession } from "../session"
 import { addTitleFont, listTitleFonts, removeTitleFont, titleFontDataUrl } from "../titleFonts"
@@ -52,6 +53,10 @@ export function registerAppHandlers(): void {
   ipcMain.handle("prefs:chooseAvatar", () => chooseAvatar())
   ipcMain.handle("prefs:avatarSources", () => avatarSources())
   ipcMain.handle("prefs:accountName", () => accountName())
+
+  ipcMain.handle("settings:reset", () => resetPreferences())
+  ipcMain.handle("settings:nukeTargets", () => nukeTargets())
+  ipcMain.handle("settings:nuke", () => nukeEverything())
 
   ipcMain.handle("background:list", (_event, theme) =>
     listBackgrounds(theme === "dark" ? "dark" : "light")
