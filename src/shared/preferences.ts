@@ -70,7 +70,7 @@ export type AvatarChoice = "initials" | "tova" | "system" | "custom"
  */
 export const AVATARS: { value: AvatarChoice; label: string; hint?: string }[] = [
   { value: "system", label: "Account", hint: "From your Mac account" },
-  { value: "initials", label: "Initial" },
+  { value: "initials", label: "Initials" },
   { value: "tova", label: "The Tova robot" },
   { value: "custom", label: "Picture", hint: "One you choose" }
 ]

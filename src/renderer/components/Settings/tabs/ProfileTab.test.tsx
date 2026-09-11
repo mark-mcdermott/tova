@@ -48,10 +48,10 @@ function offered(): string[] {
 }
 
 describe("the avatar picker", () => {
-  it("offers the initial and the robot on a machine with nothing else", () => {
+  it("offers the initials and the robot on a machine with nothing else", () => {
     render(<ProfileTab />)
 
-    expect(offered()).toEqual(["Initial", "The Tova robot"])
+    expect(offered()).toEqual(["Initials", "The Tova robot"])
   })
 
   it("marks the one in use", () => {
@@ -85,7 +85,7 @@ describe("the avatar picker", () => {
     store("initials", { system: "data:system", custom: "data:custom" })
     render(<ProfileTab />)
 
-    expect(offered()).toEqual(["Account", "Initial", "The Tova robot", "Picture"])
+    expect(offered()).toEqual(["Account", "Initials", "The Tova robot", "Picture"])
   })
 
   it("offers the account picture only where there is one to offer", () => {
