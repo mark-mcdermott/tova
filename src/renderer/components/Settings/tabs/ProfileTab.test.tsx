@@ -51,7 +51,7 @@ describe("the avatar picker", () => {
   it("offers the initials and the robot on a machine with nothing else", () => {
     render(<ProfileTab />)
 
-    expect(offered()).toEqual(["Initials", "The Tova robot"])
+    expect(offered()).toEqual(["Initials", "Tova Robot"])
   })
 
   it("marks the one in use", () => {
@@ -74,7 +74,7 @@ describe("the avatar picker", () => {
 
   it("saves the choice", async () => {
     render(<ProfileTab />)
-    await userEvent.click(screen.getByRole("button", { name: "The Tova robot" }))
+    await userEvent.click(screen.getByRole("button", { name: "Tova Robot" }))
 
     await waitFor(() => expect(write).toHaveBeenCalled())
     expect(write.mock.calls[0][0].avatar).toBe("tova")
@@ -85,17 +85,17 @@ describe("the avatar picker", () => {
     store("initials", { system: "data:system", custom: "data:custom" })
     render(<ProfileTab />)
 
-    expect(offered()).toEqual(["Account", "Initials", "The Tova robot", "Picture"])
+    expect(offered()).toEqual(["Mac Account Avatar", "Initials", "Tova Robot", "Picture"])
   })
 
   it("offers the account picture only where there is one to offer", () => {
     render(<ProfileTab />)
-    expect(offered()).not.toContain("Account")
+    expect(offered()).not.toContain("Mac Account Avatar")
 
     cleanup()
     store("initials", { system: "data:system", custom: null })
     render(<ProfileTab />)
-    expect(offered()).toContain("Account")
+    expect(offered()).toContain("Mac Account Avatar")
   })
 
   it("offers the chosen picture only once one has been chosen", () => {

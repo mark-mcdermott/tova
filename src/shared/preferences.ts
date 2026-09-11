@@ -69,9 +69,9 @@ export type AvatarChoice = "initials" | "tova" | "system" | "custom"
  * in the order they take over from it.
  */
 export const AVATARS: { value: AvatarChoice; label: string; hint?: string }[] = [
-  { value: "system", label: "Account", hint: "From your Mac account" },
+  { value: "system", label: "Mac Account Avatar" },
   { value: "initials", label: "Initials" },
-  { value: "tova", label: "The Tova robot" },
+  { value: "tova", label: "Tova Robot" },
   { value: "custom", label: "Picture", hint: "One you choose" }
 ]
 
