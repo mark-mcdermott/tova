@@ -9,11 +9,11 @@ function pathToPreferences(): string {
 }
 
 /**
- * The account name, as a starting point for the sidebar's display name. Only
- * ever a seed: it is written into preferences on first read and is an ordinary
- * editable value from then on, so clearing the field really does clear it.
+ * The account name, for the sidebar to show where the reader asks it to. Read
+ * where it lives rather than copied into preferences, so renaming the account
+ * renames it here.
  */
-function accountName(): string {
+export function accountName(): string {
   try {
     return userInfo().username
   } catch {
@@ -26,13 +26,13 @@ export async function readPreferences(): Promise<Preferences> {
   try {
     return normalizePreferences(JSON.parse(await readFile(pathToPreferences(), "utf-8")))
   } catch {
-    // Nothing stored yet. Seed the name and picture from the account rather
-    // than starting blank, and write them so they are editable like any other.
-    const { seedAvatar } = await import("./avatar")
+    // Nothing stored yet. Start on the account's own name and picture rather
+    // than blank, which is a choice like any other and can be changed.
+    const { startingAvatar } = await import("./avatar")
     return writePreferences({
       ...normalizePreferences(null),
-      displayName: accountName(),
-      avatarFile: await seedAvatar()
+      displayNameSource: accountName() === "" ? "none" : "system",
+      avatar: await startingAvatar()
     })
   }
 }

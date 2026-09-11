@@ -6,7 +6,9 @@ afterEach(cleanup)
 
 describe("Avatar", () => {
   it("shows the picture when there is one", () => {
-    const { container } = render(<Avatar className="a" src="data:image/png;base64,AA" name="Mark" />)
+    const { container } = render(
+      <Avatar className="a" src="data:image/png;base64,AA" name="Mark" />
+    )
     expect(container.querySelector("img")?.getAttribute("src")).toBe("data:image/png;base64,AA")
   })
 
@@ -25,26 +27,56 @@ describe("Avatar", () => {
     expect(screen.getByText("MM")).toBeDefined()
   })
 
-  it("shows nothing rather than guessing when there is no name", () => {
+  it("signs it with Tova's t rather than guessing when there is no name", () => {
+    // An empty disc was what an empty name used to give. The t is the app's
+    // own, which is the honest thing to put there when the reader has not
+    // said who they are.
     const { container } = render(<Avatar className="a" src={null} name="" />)
+
     expect(container.querySelector(".avatar-initials")?.textContent).toBe("")
+    expect(container.querySelector(".avatar-wordmark")).not.toBeNull()
   })
 
-  it("gives the same name the same colour every time", () => {
-    const { container: first } = render(<Avatar className="a" src={null} name="Mark" />)
-    const one = first.querySelector(".avatar-initials")?.getAttribute("style")
-    cleanup()
+  it("takes the default disc colour when none has been chosen", () => {
+    const { container } = render(<Avatar className="a" src={null} name="" />)
 
-    const { container: second } = render(<Avatar className="a" src={null} name="Mark" />)
-    expect(second.querySelector(".avatar-initials")?.getAttribute("style")).toBe(one)
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
+      "background: rgb(49, 150, 201);"
+    )
   })
 
-  it("gives different names different colours", () => {
+  it("paints the disc the colour it is given, whatever the name says", () => {
+    const { container } = render(<Avatar className="a" src={null} name="Mark" color="#123456" />)
+
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
+      "background: rgb(18, 52, 86);"
+    )
+  })
+
+  it("paints it behind a picture too, for the robot to sit on", () => {
+    // The robot is drawn with nothing behind it, so the disc is its background.
+    const { container } = render(
+      <Avatar className="a" src="data:image/png;base64,AA" name="Mark" color="#123456" />
+    )
+
+    expect(container.querySelector("img")?.getAttribute("style")).toBe(
+      "background: rgb(18, 52, 86);"
+    )
+  })
+
+  it("leaves a named one its own colour and no mark", () => {
+    const { container } = render(<Avatar className="a" src={null} name="Mark" />)
+
+    expect(container.querySelector(".avatar-wordmark")).toBeNull()
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toMatch(/background/)
+  })
+
+  it("gives every name the same disc, the colour being a choice and not a hash", () => {
     const { container: a } = render(<Avatar className="a" src={null} name="Mark" />)
     const one = a.querySelector(".avatar-initials")?.getAttribute("style")
     cleanup()
 
     const { container: b } = render(<Avatar className="a" src={null} name="Alex" />)
-    expect(b.querySelector(".avatar-initials")?.getAttribute("style")).not.toBe(one)
+    expect(b.querySelector(".avatar-initials")?.getAttribute("style")).toBe(one)
   })
 })

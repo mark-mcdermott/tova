@@ -12,7 +12,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   write.mockImplementation(async (value: unknown) => value)
   window.tova = stubBridge({ preferences: { write } })
-  usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, avatarUrl: null })
+  usePreferencesStore.setState({
+    preferences: { ...DEFAULT_PREFERENCES },
+    avatarSources: { system: null, custom: null }
+  })
 })
 
 afterEach(cleanup)

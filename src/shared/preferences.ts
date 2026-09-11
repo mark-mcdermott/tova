@@ -57,11 +57,76 @@ export function themeIcon(theme: ThemeChoice): "sun" | "moon" | "monitor" {
 /** What the app is actually painting, once "system" has been resolved. */
 export type Theme = "light" | "dark"
 
+/**
+ * Where the name beside the avatar comes from. Kept apart from `displayName`,
+ * so a spell on the account name does not throw away what was typed.
+ */
+export type DisplayNameSource = "none" | "system" | "custom"
+
+export const DISPLAY_NAMES: { value: DisplayNameSource; label: string }[] = [
+  { value: "system", label: "Mac account name" },
+  { value: "custom", label: "Custom" },
+  { value: "none", label: "None" }
+]
+
+function isDisplayNameSource(value: unknown): value is DisplayNameSource {
+  return DISPLAY_NAMES.some((option) => option.value === value)
+}
+
+/**
+ * Which face the sidebar wears. Kept apart from `avatarFile`, so choosing the
+ * initials for a while does not throw away the picture that was there.
+ */
+export type AvatarChoice = "initials" | "tova" | "system" | "custom"
+
+/*
+ * The account picture leads: it is the one that is already a portrait of the
+ * reader, so where a Mac has one it is the likeliest answer. The rest follow
+ * in the order they take over from it.
+ */
+export const AVATARS: { value: AvatarChoice; label: string; hint?: string }[] = [
+  { value: "system", label: "Mac Account Avatar" },
+  { value: "initials", label: "Initials" },
+  { value: "tova", label: "Tova Robot" },
+  { value: "custom", label: "Picture", hint: "One you choose" }
+]
+
+/**
+ * The two faces that have to be fetched rather than drawn: the Mac account
+ * picture, which lives in the directory service, and the one the reader chose,
+ * which lives in the app's data directory. Neither is reachable from the
+ * renderer, so both are read in main and handed over as data URLs.
+ */
+export interface AvatarSources {
+  system: string | null
+  custom: string | null
+}
+
+export const NO_AVATARS: AvatarSources = { system: null, custom: null }
+
+/** Six hex digits, which is all the colour input can produce. */
+function isHexColor(value: unknown): value is string {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+}
+
+function isAvatarChoice(value: unknown): value is AvatarChoice {
+  return AVATARS.some((avatar) => avatar.value === value)
+}
+
 export interface Preferences {
-  /** Shown beside the avatar in the sidebar footer. */
+  /** Where the name beside the avatar comes from. */
+  displayNameSource: DisplayNameSource
+  /** The name that was typed, kept whether or not it is the one in use. */
   displayName: string
-  /** Avatar file kept in the app's data directory, or null for the bundled one. */
+  /** Which of the four the sidebar draws. */
+  avatar: AvatarChoice
+  /** The chosen picture, kept in the app's data directory. Null if never set. */
   avatarFile: string | null
+  /**
+   * What the disc behind the initials is painted. Null to take a colour from
+   * the name, which is what it did before there was anywhere to say otherwise.
+   */
+  avatarColor: string | null
   /** Editor body size in px. */
   fontSize: number
   /** Spaces an indent inserts. */
@@ -91,8 +156,11 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
+  displayNameSource: "none",
   displayName: "",
+  avatar: "initials",
   avatarFile: null,
+  avatarColor: null,
   fontSize: 18,
   tabSize: 2,
   backupIntervalMinutes: 60,
@@ -139,7 +207,23 @@ export function normalizePreferences(value: unknown): Preferences {
 
   return {
     displayName: text(raw.displayName, DEFAULT_PREFERENCES.displayName).slice(0, 60),
+    // Before there was anywhere to say where the name came from, a name in the
+    // field was one someone had typed — even the one seeded from the account,
+    // which was a copy from the moment it was written.
+    displayNameSource: isDisplayNameSource(raw.displayNameSource)
+      ? raw.displayNameSource
+      : text(raw.displayName, "") === ""
+        ? "none"
+        : "custom",
+    // Before the four choices existed a picture was the only thing a file could
+    // mean, so a file left over from then is the one being used.
+    avatar: isAvatarChoice(raw.avatar)
+      ? raw.avatar
+      : typeof raw.avatarFile === "string"
+        ? "custom"
+        : "initials",
     avatarFile: typeof raw.avatarFile === "string" ? raw.avatarFile : null,
+    avatarColor: isHexColor(raw.avatarColor) ? raw.avatarColor.toLowerCase() : null,
     fontSize: clamp(Number(raw.fontSize ?? DEFAULT_PREFERENCES.fontSize), LIMITS.fontSize),
     tabSize: clamp(Number(raw.tabSize ?? DEFAULT_PREFERENCES.tabSize), LIMITS.tabSize),
     backupIntervalMinutes: clamp(

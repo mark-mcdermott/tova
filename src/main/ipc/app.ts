@@ -3,7 +3,8 @@ import { AppInfo } from "../../shared/types"
 import { backupRoot } from "../backup"
 import { vaultRoot } from "../vault"
 import { readPreferences, writePreferences } from "../preferences"
-import { avatarDataUrl, chooseAvatar } from "../avatar"
+import { avatarSources, chooseAvatar } from "../avatar"
+import { accountName } from "../preferences"
 import { addBackground, listBackgrounds } from "../backgrounds"
 import { readSession, writeSession } from "../session"
 import { addTitleFont, listTitleFonts, removeTitleFont, titleFontDataUrl } from "../titleFonts"
@@ -49,7 +50,8 @@ export function registerAppHandlers(): void {
   ipcMain.handle("prefs:read", () => readPreferences())
   ipcMain.handle("prefs:write", (_event, preferences) => writePreferences(preferences))
   ipcMain.handle("prefs:chooseAvatar", () => chooseAvatar())
-  ipcMain.handle("prefs:avatarUrl", () => avatarDataUrl())
+  ipcMain.handle("prefs:avatarSources", () => avatarSources())
+  ipcMain.handle("prefs:accountName", () => accountName())
 
   ipcMain.handle("background:list", (_event, theme) =>
     listBackgrounds(theme === "dark" ? "dark" : "light")

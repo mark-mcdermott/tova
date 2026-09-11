@@ -422,21 +422,103 @@
   accent-color: var(--accent);
 }
 
-.profile-avatar-row {
+/*
+ * Each option drawn as the face it would give, so the choice is made by eye —
+ * the same bargain the font and background pickers make.
+ */
+.avatar-choices {
   display: flex;
-  align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+  margin-bottom: var(--space-4);
 }
 
-/* Nearer the 2rem it will actually be drawn at in the sidebar. At 3.5rem a
-   photograph was fine, but initials became a large disc of flat colour — a lot
-   of weight for one letter, and not what the rail will show. */
-.profile-avatar {
-  width: 2.5rem;
-  height: 2.5rem;
+.avatar-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  /* One width for all of them rather than each sized by its own hint, so the
+     row reads as a set. Stretch gives them a shared height with it. */
+  width: 7.5rem;
+  padding: var(--space-3);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  cursor: pointer;
+}
+
+.avatar-choice.is-chosen {
+  border-color: var(--accent);
+}
+
+/*
+ * Not a face on offer but the way one arrives, so it is drawn as an opening in
+ * the row rather than a tile in it — the same dashed shape the font and
+ * background pickers use for the same job.
+ */
+.avatar-add {
+  justify-content: center;
+  border-style: dashed;
+  border-color: var(--frame-border);
+  color: var(--text-muted);
+}
+
+.avatar-add:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+/* Under the row that calls for it, rather than beside it. */
+.name-input {
+  margin-top: var(--space-3);
+}
+
+/*
+ * The disc's colour, as a swatch the size of the squares it paints. The native
+ * input is the whole control: clicking it opens the system colour picker, and
+ * dragging in there reports back as it goes.
+ */
+.avatar-colour {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 1px solid var(--frame-border);
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+}
+
+.avatar-colour::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.avatar-colour::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
+}
+
+.avatar-add-glyph {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* The sidebar draws it at 2rem; a little larger here, where it is being picked
+   rather than glanced at. */
+.avatar-choice-face {
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   object-fit: cover;
+  margin-bottom: var(--space-1);
+}
+
+.avatar-choice-hint {
+  font-size: var(--text-chrome);
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .background-choices {
@@ -794,7 +876,12 @@
   transition: opacity 120ms ease;
 }
 
-.choice:hover .choice-remove,
+/*
+ * Whatever it sits on, rather than a list of the tiles that can carry one:
+ * naming only .choice left the avatar picker's × invisible and reachable by
+ * keyboard alone, and nothing about a new kind of tile would have said so.
+ */
+:hover > .choice-remove,
 .choice-remove:focus-visible {
   opacity: 1;
 }
