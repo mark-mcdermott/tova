@@ -3,6 +3,7 @@
 You are helping build **tova**, a calm local-first desktop writing application.
 
 Tova is a rebuild/rebrand of the earlier Xin project:
+
 - markdown notes
 - lightweight blogging
 - hybrid work/personal writing
@@ -10,6 +11,7 @@ Tova is a rebuild/rebrand of the earlier Xin project:
 - fast deletion/export of work-related notes
 
 Original project:
+
 - ~/Dev/xin-proj
 - https://github.com/mark-mcdermott/xin
 
@@ -26,6 +28,7 @@ them at build time.
 # Core Direction
 
 Tova should feel:
+
 - calm
 - focused
 - lightweight
@@ -36,6 +39,7 @@ Tova should feel:
 - personal
 
 Avoid:
+
 - gamification
 - noisy productivity UX
 - excessive animations
@@ -75,6 +79,7 @@ no waiting for approval on ordinary implementation work.
 - ESLint + Prettier
 
 Prefer:
+
 - explicit architecture
 - readable code
 - small functions
@@ -83,6 +88,7 @@ Prefer:
 - desktop-first thinking
 
 Avoid:
+
 - unnecessary abstractions
 - trendy architecture
 - dependency bloat
@@ -95,6 +101,7 @@ Avoid:
 Prettier: `semi: false`, `trailingComma: "none"`, `singleQuote: false`, `printWidth: 100`.
 
 Prefer:
+
 - readable TypeScript
 - semantic HTML
 - accessible UI
@@ -104,6 +111,7 @@ Prefer:
 - explicit state flow
 
 Avoid:
+
 - clever abstractions
 - hidden state
 - giant utility layers
@@ -117,12 +125,14 @@ Code should feel calm and understandable.
 # CSS
 
 Prefer:
+
 - modern CSS
 - CSS variables as design tokens
 - reusable tokens
 - understandable layouts
 
 Avoid:
+
 - fragile positioning hacks
 - deeply nested selectors
 - overly complex utility chains
@@ -157,6 +167,7 @@ CodeMirror is a core part of Tova. Editor behavior is the product.
 # Rebuild Philosophy
 
 Tova is not a rewrite for the sake of rewriting. Goals:
+
 - cleaner architecture
 - improved editor behavior
 - improved publishing workflows

@@ -19,7 +19,9 @@ class FakeFontFace {
 }
 
 const added = vi.fn()
-const titleFontUrl = vi.fn(async (name: string): Promise<string | null> => `data:font/ttf;base64,${name}`)
+const titleFontUrl = vi.fn(
+  async (name: string): Promise<string | null> => `data:font/ttf;base64,${name}`
+)
 
 beforeEach(() => {
   titleFontUrl.mockClear()
@@ -107,4 +109,3 @@ describe("loadSampleFace", () => {
     expect(FakeFontFace.loads).toEqual([])
   })
 })
-

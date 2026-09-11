@@ -27,15 +27,17 @@ export const grammarNotes = StateField.define<GrammarNote[]>({
     }
     if (!transaction.docChanged) return notes
 
-    return notes
-      .map((note) => ({
-        ...note,
-        from: transaction.changes.mapPos(note.from),
-        to: transaction.changes.mapPos(note.to)
-      }))
-      // An edit inside a flagged span makes the note stale; drop it and wait
-      // for the next pass rather than underlining the wrong words.
-      .filter((note) => note.to > note.from)
+    return (
+      notes
+        .map((note) => ({
+          ...note,
+          from: transaction.changes.mapPos(note.from),
+          to: transaction.changes.mapPos(note.to)
+        }))
+        // An edit inside a flagged span makes the note stale; drop it and wait
+        // for the next pass rather than underlining the wrong words.
+        .filter((note) => note.to > note.from)
+    )
   }
 })
 

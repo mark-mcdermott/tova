@@ -143,4 +143,3 @@ describe("relevance", () => {
     expect(matchNote(note("a (b)", [], ""), "(b)")).not.toBeNull()
   })
 })
-

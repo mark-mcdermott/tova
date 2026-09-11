@@ -83,4 +83,3 @@ describe("proseWidth", () => {
     expect(normalizePreferences({ proseWidth: "poetry" }).proseWidth).toBe("narrow")
   })
 })
-

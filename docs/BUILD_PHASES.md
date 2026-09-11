@@ -1,6 +1,7 @@
 # Tova — Build Phases
 
 ## Phase 0 — Project Scaffold
+
 **Goal:** Electron + Vite + React + TypeScript dev environment, blank window.
 
 - [x] `package.json`: `dev`, `build`, `check` scripts; core deps
@@ -18,6 +19,7 @@
 ---
 
 ## Phase 1 — Editor Core (Platform Baseline)
+
 **Goal:** Title + CodeMirror live WYSIWYG. Every platform shortcut works.
 
 - [x] Title `<input>` (Alagambe script font) above CodeMirror
@@ -35,6 +37,7 @@ Write Vitest tests: tag extraction utility, front-matter parser, date formatter.
 ---
 
 ## Phase 2 — File System & Note Management
+
 **Goal:** Real notes on disk. Sections. Trash.
 
 - [x] IPC: `note:list`, `note:read`, `note:write`, `note:create`, `note:rename`, `note:move`, `note:delete` (→ Trash), `note:restore`, `note:permanentDelete`
@@ -53,6 +56,7 @@ Write Playwright test: create note → file on disk; delete → Trash.
 ---
 
 ## Phase 3 — Backups & Data Safety
+
 **Goal:** No data loss possible.
 
 - [x] IPC: `backup:run`, `backup:list`, `backup:restore`
@@ -70,6 +74,7 @@ Write Playwright test: backup folder exists after launch.
 ---
 
 ## Phase 4 — Daily Notes
+
 **Goal:** Today's note on launch. Midnight creation. Blank past notes auto-cleaned.
 
 - [x] Auto-create + auto-open today's `YYYY-MM-DD.md` on launch
@@ -85,6 +90,7 @@ Write Playwright test: blank past daily note gone after launch.
 ---
 
 ## Phase 5 — Navigation & Sidebar Polish
+
 **Goal:** Back/forward, breadcrumbs, context menus, drag-and-drop.
 
 - [x] Navigation history stack (Zustand)
@@ -102,6 +108,7 @@ Write Vitest tests: navigation history push/pop/forward.
 ---
 
 ## Phase 6 — Glassmorphic UI
+
 **Goal:** Looks exactly like the mockup.
 
 - [x] Full-bleed background photo — one light photograph; the dark variant went with the dark theme
@@ -125,6 +132,7 @@ Write Vitest tests: navigation history push/pop/forward.
 ---
 
 ## Phase 7 — Search & Tags
+
 **Goal:** Find any note by content or tag.
 
 - [ ] Search: sidebar icon → expanded input + RECENT MATCHES + "View all results →"
@@ -138,6 +146,7 @@ Write Vitest tests: navigation history push/pop/forward.
 ---
 
 ## Phase 8 — Spellcheck & Grammar
+
 **Goal:** Writing quality feedback.
 
 - [x] Spell check — Chromium's own, not a CM6 decoration layer; right-click correction popup
@@ -151,6 +160,7 @@ Write Vitest tests: navigation history push/pop/forward.
 ---
 
 ## Phase 9 — Blog Authoring & Publishing
+
 **Goal:** Write and publish inline. Rocket → progress → checkmark.
 
 - [x] `@` → blog selector popup → front-matter block inserted inline
@@ -170,6 +180,7 @@ Write Playwright test: publish request sent, progress bar appears.
 ---
 
 ## Phase 10 — Blog Sync & POSTS Sidebar
+
 **Goal:** Bidirectional sync. Blog posts in FOLDERS sidebar.
 
 - [x] Blog folder entry in FOLDERS sidebar (user-defined label, fallback: blog name truncated)
@@ -185,6 +196,7 @@ Write Playwright test: publish request sent, progress bar appears.
 ---
 
 ## Phase 11 — Blog Configuration (Settings — Blogs Tab)
+
 **Goal:** Full blog CRUD in Settings.
 
 - [x] Blogs tab: list + sync/edit/delete per blog
@@ -196,6 +208,7 @@ Write Playwright test: publish request sent, progress bar appears.
 ---
 
 ## Phase 12 — Full Settings Panel
+
 **Goal:** All tabs complete. Docs accessible. Support channels in place.
 
 - [x] Settings with tabs: Profile | Appearance | Vault | Blogs | General | Docs
@@ -211,6 +224,7 @@ Write Playwright test: publish request sent, progress bar appears.
 ---
 
 ## Phase 13 — Packaging
+
 **Goal:** Installable `.dmg`.
 
 - [x] electron-builder finalized
