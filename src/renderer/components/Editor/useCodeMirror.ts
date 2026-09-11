@@ -5,7 +5,8 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirro
 import {
   markdown,
   markdownLanguage,
-  markdownKeymap,
+  insertNewlineContinueMarkupCommand,
+  deleteMarkupBackward,
   pasteURLAsLink
 } from "@codemirror/lang-markdown"
 import { languages } from "@codemirror/language-data"
@@ -18,6 +19,7 @@ import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
 import { blogSelector, SelectorAnchor } from "./blogSelector"
 import { formatKeymap } from "./formats"
+import { continueBullet } from "./listContinue"
 import { bodyStart, tagToggleEdits } from "../../../shared/tags"
 
 interface UseCodeMirrorOptions {
@@ -116,7 +118,10 @@ export function useCodeMirror({
           // Fenced blocks get their language's highlighting. `languages` is a
           // table of dynamic imports, so a grammar is fetched the first time a
           // block actually uses it rather than bundled into the app.
-          markdown({ base: markdownLanguage, codeLanguages: languages }),
+          // addKeymap: false because it would install markdown's Enter and
+          // Backspace at high precedence, over everything in the keymap below —
+          // they are bound there instead, in an order that means something.
+          markdown({ base: markdownLanguage, codeLanguages: languages, addKeymap: false }),
           codeHighlight(),
           searchHighlighting(),
           grammarChecking((text) => onCheckGrammarRef.current?.(text)),
@@ -164,7 +169,14 @@ export function useCodeMirror({
               }
             },
             ...formatKeymap,
-            ...markdownKeymap,
+            // Ahead of markdown's own Enter, which leaves a blank line behind
+            // in a list that already has one.
+            { key: "Enter", run: continueBullet },
+            // Markdown's pair, with the one behaviour turned off that put the
+            // blank lines there: pressing Enter on an empty second item used to
+            // space the list out rather than end it.
+            { key: "Enter", run: insertNewlineContinueMarkupCommand({ nonTightLists: false }) },
+            { key: "Backspace", run: deleteMarkupBackward },
             ...historyKeymap,
             ...defaultKeymap,
             indentWithTab
