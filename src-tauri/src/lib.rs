@@ -8,6 +8,7 @@ slice can land without the renderer knowing which one it is talking to.
 */
 
 mod backup;
+mod blogs;
 mod bridge;
 /// The text layer's conformance tests, in one place — see the module for why.
 #[cfg(test)]
@@ -304,6 +305,40 @@ async fn note_export(app: tauri::AppHandle, id: String) -> Result<Option<String>
     };
     std::fs::write(&chosen, contents).map_err(|e| e.to_string())?;
     Ok(Some(chosen.to_string_lossy().into_owned()))
+}
+
+#[tauri::command]
+fn blog_list() -> Vec<blogs::BlogSummary> {
+    blogs::list_blogs(&data_dir())
+}
+
+#[tauri::command]
+fn blog_save(blog: blogs::Blog) -> Result<blogs::BlogSummary, String> {
+    blogs::save_blog(&data_dir(), &blog)
+}
+
+#[tauri::command]
+fn blog_delete(id: String, trash_posts: bool) -> Result<(), String> {
+    blogs::remove_blog(&data_dir(), &id, trash_posts)
+}
+
+#[tauri::command]
+fn blog_post_count(id: String) -> Result<usize, String> {
+    blogs::post_count(&data_dir(), &id)
+}
+
+#[tauri::command]
+fn blog_set_secret(
+    id: String,
+    secret: String,
+    value: String,
+) -> Result<blogs::BlogSummary, String> {
+    blogs::set_blog_secret(&data_dir(), &id, &secret, &value)
+}
+
+#[tauri::command]
+fn blog_can_store_secrets() -> bool {
+    blogs::can_store_secrets()
 }
 
 /// One file from the reader, or nothing if they thought better of it.
@@ -673,7 +708,13 @@ pub fn run() {
             app_reveal,
             app_open_external,
             image_save,
-            note_export
+            note_export,
+            blog_list,
+            blog_save,
+            blog_delete,
+            blog_post_count,
+            blog_set_secret,
+            blog_can_store_secrets
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());

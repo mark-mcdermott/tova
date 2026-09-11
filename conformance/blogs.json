@@ -1,0 +1,977 @@
+{
+  "_readme": [
+    "Blog configuration: what a form's values become on the way to disk, and",
+    "which of them are refused.",
+    "",
+    "normalizeBlog has two quirks a tidier implementation would lose, and both",
+    "are pinned here: an empty live path becomes \"//\", and an interior double",
+    "slash is left exactly as written. Neither is a good answer; both are the",
+    "answer the other backend gives, and a blog whose paths changed shape",
+    "under one of them would push posts somewhere else.",
+    "",
+    "The repo pattern is [\\w.-]+/[\\w.-]+, and \\w without the u flag is",
+    "ASCII - so café/repo is not a repository name.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "normalize": [
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "  notes  ",
+        "siteUrl": "https://example.com///",
+        "livePostPath": "posts",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "notes",
+        "siteUrl": "https://example.com",
+        "livePostPath": "/posts/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "a//b",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/a//b/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "///",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "  owner/repo  ",
+          "branch": " main ",
+          "contentPath": "/src/posts"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo",
+          "branch": "main",
+          "contentPath": "src/posts/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "cloudflare",
+          "accountId": " abc ",
+          "projectName": " site ",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "cloudflare",
+          "accountId": "abc",
+          "projectName": "site",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "vercel",
+          "accountId": "",
+          "projectName": "",
+          "projectId": " prj_1 "
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "vercel",
+          "accountId": "",
+          "projectName": "",
+          "projectId": "prj_1"
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "has space",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "not-a-repo",
+          "branch": "",
+          "contentPath": ""
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "has space",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "not-a-repo",
+          "branch": "",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "ok",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "owner/repo",
+          "branch": "main",
+          "contentPath": "posts/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "ok",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo",
+          "branch": "main",
+          "contentPath": "posts/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "émile",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "owner/repo-2.x",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "émile",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo-2.x",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "owner/repo/extra",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo/extra",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "owner/",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "café",
+        "siteUrl": "",
+        "livePostPath": "/",
+        "github": {
+          "repo": "café/repo",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "normalized": {
+        "id": "",
+        "name": "café",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "café/repo",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      }
+    }
+  ],
+  "validate": [
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "notes",
+        "siteUrl": "https://example.com",
+        "livePostPath": "/posts/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "/a//b/",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo",
+          "branch": "main",
+          "contentPath": "src/posts/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "cloudflare",
+          "accountId": "abc",
+          "projectName": "site",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "",
+          "branch": "main",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "vercel",
+          "accountId": "",
+          "projectName": "",
+          "projectId": "prj_1"
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Which repository holds the posts?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "has space",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "not-a-repo",
+          "branch": "",
+          "contentPath": "/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "The name is the @handle, so it cannot contain spaces",
+        "repo": "Expected owner/repo",
+        "branch": "Which branch should posts land on?"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "ok",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo",
+          "branch": "main",
+          "contentPath": "posts/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {}
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "émile",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo-2.x",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {}
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/repo/extra",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Expected owner/repo"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "owner/",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "name": "A blog needs a name",
+        "repo": "Expected owner/repo"
+      }
+    },
+    {
+      "blog": {
+        "id": "",
+        "name": "café",
+        "siteUrl": "",
+        "livePostPath": "//",
+        "github": {
+          "repo": "café/repo",
+          "branch": "main",
+          "contentPath": "p/"
+        },
+        "deploy": {
+          "provider": "none",
+          "accountId": "",
+          "projectName": "",
+          "projectId": ""
+        }
+      },
+      "errors": {
+        "repo": "Expected owner/repo"
+      }
+    }
+  ],
+  "postUrl": [
+    {
+      "siteUrl": "",
+      "livePostPath": "/posts/",
+      "slug": "a-post",
+      "url": null
+    },
+    {
+      "siteUrl": "https://example.com",
+      "livePostPath": "/posts/",
+      "slug": "a-post",
+      "url": "https://example.com/posts/a-post"
+    },
+    {
+      "siteUrl": "https://example.com",
+      "livePostPath": "/posts/",
+      "slug": "",
+      "url": "https://example.com/posts/"
+    }
+  ]
+}
