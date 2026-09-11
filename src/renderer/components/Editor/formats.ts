@@ -1,14 +1,14 @@
 import { EditorView, KeyBinding } from "@codemirror/view"
 import { ChangeSet } from "@codemirror/state"
+import type { IconName } from "../Sidebar/icons"
 
 export type Format =
   | { kind: "wrap"; before: string; after: string }
   | { kind: "linePrefix"; prefix: string }
   | { kind: "codeBlock" }
 
-export interface ToolbarItem {
+interface ToolbarAction {
   key: string
-  label: string
   title: string
   shortcut: string
   format: Format
@@ -20,6 +20,9 @@ export interface ToolbarItem {
    */
   inToolbar?: boolean
 }
+
+/** A button carries a character, or a shape where no character will do. */
+export type ToolbarItem = ToolbarAction & ({ label: string } | { icon: IconName })
 
 /**
  * Single source of truth for the bottom toolbar and the editor keymap, so a
@@ -86,7 +89,7 @@ export const toolbarItems: ToolbarItem[] = [
   },
   {
     key: "list",
-    label: "≡",
+    icon: "list",
     title: "List (Cmd+Shift+L)",
     shortcut: "Mod-Shift-l",
     format: { kind: "linePrefix", prefix: "- " }
