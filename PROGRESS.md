@@ -677,6 +677,12 @@ Electron is 192MB of Chromium that the app uses to draw text. The Tauri backend
 is the same application against the system webview, and it exists because a
 calm local-first writing tool should not cost a quarter of a gigabyte.
 
+Measured, now that it builds: **241MB packaged under Electron, about 38MB
+under Tauri** — a 19.5MB binary beside the same 19MB of renderer. Fifteen of
+those renderer megabytes are the grammar checker's WebAssembly, which loads on
+demand and is still packaged, so there is another two thirds to be had off the
+larger half of what is left.
+
 It is being ported a slice at a time rather than rewritten, and the rule for
 the whole of it is that **the IPC surface does not move**. Every command in
 `src-tauri` answers to the same name and the same shape as the Electron handler
