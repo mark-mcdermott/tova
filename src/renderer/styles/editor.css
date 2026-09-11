@@ -920,18 +920,12 @@
 }
 
 @container toolbar (max-width: 265px) {
-  .toolbar-actions [data-glyph="plain"] {
-    display: none;
-  }
-}
-
-@container toolbar (max-width: 222px) {
   .toolbar-actions [data-glyph="h2"] {
     display: none;
   }
 }
 
-@container toolbar (max-width: 168px) {
+@container toolbar (max-width: 210px) {
   .toolbar-actions [data-glyph="h1"] {
     display: none;
   }
