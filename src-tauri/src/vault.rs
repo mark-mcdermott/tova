@@ -53,6 +53,18 @@ pub fn vault_root() -> PathBuf {
         .unwrap_or_else(default_vault_root)
 }
 
+/*
+ * Tests that switch the vault in use are touching the state above, and there
+ * is one of it per test binary rather than one per test. This is the lock they
+ * take, and it lives here because the state does — a second copy in some other
+ * module would not exclude anything.
+ */
+#[cfg(test)]
+pub fn one_at_a_time() -> std::sync::MutexGuard<'static, ()> {
+    static ORDER: Mutex<()> = Mutex::new(());
+    ORDER.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// Lexical resolution, which is what `path.resolve` does and what the guard
 /// below needs: the answer must not depend on what happens to exist on disk,
 /// or a symlink could decide whether a path is inside the vault.

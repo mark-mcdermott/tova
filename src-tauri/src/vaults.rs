@@ -1,13 +1,6 @@
 /*!
 The vaults a reader holds, and switching between them — a port of
 `src/main/vaults.ts`.
-
-Encryption is not here yet. `encrypted` is answered honestly, by looking for the
-marker file a sealed vault carries; `locked` is answered honestly too, and says
-true for every sealed vault, because this backend cannot open one until the
-keychain and the cipher are ported. The renderer will offer Unlock and the
-unlock will say it is not ported, which is the truth and is better than a vault
-that claims to be open and then reads as gibberish.
 */
 
 use serde::Serialize;
@@ -15,6 +8,8 @@ use std::path::{Path, PathBuf};
 
 use crate::preferences;
 use crate::vault::{default_vault_root, ensure_vault, set_active_vault};
+use crate::vault_file::{decrypt_vault as unseal_vault, encrypt_vault as seal_vault};
+use crate::vault_keys::{is_vault_encrypted, unlock_vault as open_vault, unlock_with_recovery_key};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct VaultChoice {
@@ -25,14 +20,6 @@ pub struct VaultChoice {
     pub encrypted: bool,
     /// Encrypted, and this machine cannot open it without the recovery key.
     pub locked: bool,
-}
-
-/// The file a sealed vault carries, kept in the vault so the folder travels
-/// knowing what it is.
-const MARKER: &str = ".tova-vault";
-
-fn is_encrypted(path: &Path) -> bool {
-    path.join(MARKER).is_file()
 }
 
 fn name_of(path: &Path) -> String {
@@ -64,14 +51,14 @@ pub fn list(data_dir: &Path) -> Vec<VaultChoice> {
     paths
         .into_iter()
         .map(|path| {
-            let encrypted = is_encrypted(&path);
+            let encrypted = is_vault_encrypted(&path);
             VaultChoice {
                 name: name_of(&path),
                 active: path == active,
                 encrypted,
-                // Not yet ported: there is no key to hold, so a sealed vault
-                // is one this backend cannot open.
-                locked: encrypted,
+                // Asked rather than assumed: unlocking is what says whether
+                // this machine's keychain still holds the key.
+                locked: encrypted && !open_vault(data_dir, &path),
                 path: path.to_string_lossy().into_owned(),
             }
         })
@@ -99,6 +86,9 @@ pub fn use_vault(data_dir: &Path, path: &Path) -> Result<Vec<VaultChoice>, Strin
     };
 
     set_active_vault(chosen.clone());
+    // Before anything reads from it, so a sealed vault opens rather than
+    // looking like a folder full of gibberish.
+    open_vault(data_dir, path);
 
     let mut stored = preferences::read(data_dir);
     stored.active_vault = chosen.map(|p| p.to_string_lossy().into_owned());
@@ -154,18 +144,47 @@ pub fn forget_vault(data_dir: &Path, path: &Path) -> Result<Vec<VaultChoice>, St
     Ok(list(data_dir))
 }
 
+/// Seals the vault, handing back the one way in that is not this machine.
+pub fn encrypt_vault(data_dir: &Path, path: &Path) -> Result<String, String> {
+    assert_known(data_dir, path)?;
+    if is_vault_encrypted(path) {
+        return Err("That vault is already encrypted".into());
+    }
+
+    seal_vault(data_dir, path)?.ok_or_else(|| "That vault is already encrypted".into())
+}
+
+pub fn decrypt_vault(data_dir: &Path, path: &Path) -> Result<Vec<VaultChoice>, String> {
+    assert_known(data_dir, path)?;
+    unseal_vault(data_dir, path)?;
+    Ok(list(data_dir))
+}
+
+pub fn unlock_vault(data_dir: &Path, path: &Path, recovery_key: &str) -> Result<bool, String> {
+    assert_known(data_dir, path)?;
+    Ok(unlock_with_recovery_key(data_dir, path, recovery_key))
+}
+
+/// The renderer names a path; only one of the reader's own is ever acted on.
+fn assert_known(data_dir: &Path, path: &Path) -> Result<(), String> {
+    if known(data_dir).contains(&path.to_path_buf()) {
+        return Ok(());
+    }
+    Err("That is not one of your vaults".into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
 
+    use crate::vault::one_at_a_time;
+    use crate::vault_keys::lock_vault;
+
     /*
      * These write preferences and switch the vault in use, which is global
-     * state, so they run one at a time under a lock of their own rather than
-     * racing each other for it.
+     * state, so they run one at a time rather than racing each other for it.
      */
-    static ORDER: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
     struct Scratch {
         data: PathBuf,
         _held: std::sync::MutexGuard<'static, ()>,
@@ -173,7 +192,7 @@ mod tests {
 
     impl Scratch {
         fn new(name: &str) -> Self {
-            let held = ORDER.lock().unwrap_or_else(|e| e.into_inner());
+            let held = one_at_a_time();
             let data = std::env::temp_dir().join(format!("tova-vaults-{name}"));
             let _ = std::fs::remove_dir_all(&data);
             std::fs::create_dir_all(&data).unwrap();
@@ -286,9 +305,36 @@ mod tests {
     }
 
     #[test]
-    fn a_sealed_vault_says_so_and_says_this_backend_cannot_open_it() {
+    fn a_sealed_vault_says_so_and_says_whether_this_machine_can_open_it() {
         let s = Scratch::new("sealed");
         let other = s.elsewhere("sealed-vault");
+        add_vault(&s.data, &other).unwrap();
+
+        encrypt_vault(&s.data, &other).unwrap();
+
+        let listed = |s: &Scratch| {
+            list(&s.data)
+                .into_iter()
+                .find(|v| v.path == other.to_string_lossy())
+                .unwrap()
+        };
+        let sealed = listed(&s);
+        assert!(sealed.encrypted);
+        // Sealing left it open, so it is not locked.
+        assert!(!sealed.locked);
+
+        lock_vault(&other);
+
+        // And with no key held and none remembered, it is.
+        assert!(listed(&s).locked);
+    }
+
+    #[test]
+    fn a_stray_marker_does_not_lock_a_reader_out_of_plain_notes() {
+        // The file has to say how the vault is opened, not merely exist. A
+        // leftover or half-written one should read as "not sealed".
+        let s = Scratch::new("stray");
+        let other = s.elsewhere("stray-marker");
         std::fs::write(
             other.join(".tova-vault"),
             json!({ "version": 1 }).to_string(),
@@ -296,14 +342,74 @@ mod tests {
         .unwrap();
         add_vault(&s.data, &other).unwrap();
 
-        let sealed = list(&s.data)
+        let listed = list(&s.data)
             .into_iter()
             .find(|v| v.path == other.to_string_lossy())
             .unwrap();
 
-        assert!(sealed.encrypted);
-        // Honest rather than optimistic: there is no key to hold until the
-        // keychain is ported, so it is locked.
-        assert!(sealed.locked);
+        assert!(!listed.encrypted);
+        assert!(!listed.locked);
+    }
+
+    #[test]
+    fn sealing_the_same_vault_twice_is_refused() {
+        // vault_file will happily finish an interrupted conversion; this layer
+        // will not, because a second recovery key for the same vault is a
+        // thing a reader would reasonably believe replaced the first.
+        let s = Scratch::new("twice-sealed");
+        let other = s.elsewhere("vault");
+        add_vault(&s.data, &other).unwrap();
+        encrypt_vault(&s.data, &other).unwrap();
+
+        assert_eq!(
+            encrypt_vault(&s.data, &other),
+            Err("That vault is already encrypted".into())
+        );
+    }
+
+    #[test]
+    fn unsealing_lists_it_as_plain_again() {
+        let s = Scratch::new("unsealed");
+        let other = s.elsewhere("vault");
+        add_vault(&s.data, &other).unwrap();
+        encrypt_vault(&s.data, &other).unwrap();
+
+        let listed = decrypt_vault(&s.data, &other).unwrap();
+
+        let one = listed
+            .iter()
+            .find(|v| v.path == other.to_string_lossy())
+            .unwrap();
+        assert!(!one.encrypted);
+        assert!(!one.locked);
+    }
+
+    #[test]
+    fn what_was_written_down_opens_it_and_anything_else_does_not() {
+        let s = Scratch::new("recovery");
+        let other = s.elsewhere("vault");
+        add_vault(&s.data, &other).unwrap();
+        let recovery = encrypt_vault(&s.data, &other).unwrap();
+        lock_vault(&other);
+
+        assert_eq!(
+            unlock_vault(&s.data, &other, "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ"),
+            Ok(false)
+        );
+        assert_eq!(unlock_vault(&s.data, &other, &recovery), Ok(true));
+    }
+
+    #[test]
+    fn none_of_it_touches_a_folder_it_was_never_told_about() {
+        // The renderer names a path, and only one of the reader's own is ever
+        // acted on — sealing a stranger's folder would be an odd way to lose
+        // somebody else's files.
+        let s = Scratch::new("stranger");
+        let stranger = s.elsewhere("stranger");
+
+        assert!(encrypt_vault(&s.data, &stranger).is_err());
+        assert!(decrypt_vault(&s.data, &stranger).is_err());
+        assert!(unlock_vault(&s.data, &stranger, "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ").is_err());
+        assert!(!stranger.join(".tova-vault").exists());
     }
 }

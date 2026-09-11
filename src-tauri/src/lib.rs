@@ -8,11 +8,15 @@ slice can land without the renderer knowing which one it is talking to.
 */
 
 mod bridge;
+mod crypto;
 mod preferences;
+mod safe_storage;
 mod screen;
 mod sections;
 mod session;
 mod vault;
+mod vault_file;
+mod vault_keys;
 mod vaults;
 
 use serde::Serialize;
@@ -99,6 +103,21 @@ fn vault_forget(path: String) -> Result<Vec<vaults::VaultChoice>, String> {
     vaults::forget_vault(&data_dir(), Path::new(&path))
 }
 
+#[tauri::command]
+fn vault_encrypt(path: String) -> Result<String, String> {
+    vaults::encrypt_vault(&data_dir(), Path::new(&path))
+}
+
+#[tauri::command]
+fn vault_decrypt(path: String) -> Result<Vec<vaults::VaultChoice>, String> {
+    vaults::decrypt_vault(&data_dir(), Path::new(&path))
+}
+
+#[tauri::command]
+fn vault_unlock(path: String, recovery_key: String) -> Result<bool, String> {
+    vaults::unlock_vault(&data_dir(), Path::new(&path), &recovery_key)
+}
+
 /// The picker is here and the decision is not: `add_vault` takes a folder, so
 /// what Tova makes of one stays testable without a dialog on screen.
 #[tauri::command]
@@ -131,9 +150,20 @@ pub fn run() {
             vault_list,
             vault_use,
             vault_add,
-            vault_forget
+            vault_forget,
+            vault_encrypt,
+            vault_decrypt,
+            vault_unlock
         ])
         .setup(|app| {
+            let stored = preferences::read(&data_dir());
+            vault::set_active_vault(stored.active_vault.as_ref().map(PathBuf::from));
+            // Before ensure_vault, which writes: a sealed vault has to be open
+            // first or the files it makes are plain inside a closed vault.
+            vault_keys::unlock_vault(&data_dir(), &vault::vault_root());
+            let sections: Vec<String> = stored.sections.iter().map(|s| s.id.clone()).collect();
+            let _ = vault::ensure_vault(&vault::vault_root(), &sections);
+
             // Built here rather than declared in tauri.conf.json for one
             // reason: an initialization script can only be attached to a
             // window as it is created, and that script is how the renderer
