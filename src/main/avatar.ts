@@ -96,14 +96,27 @@ async function macAccountPhoto(): Promise<Buffer | null> {
       [".", "-read", `/Users/${userInfo().username}`, "JPEGPhoto"],
       { maxBuffer: 32 * 1024 * 1024 }
     )
+    // dscl says so in its output rather than its exit code, and an account
+    // with no picture set is an ordinary thing, not a fault.
+    if (/^No such key:/m.test(stdout)) return null
+
     const hex = stdout.replace(/^JPEGPhoto:/, "").replace(/\s+/g, "")
-    if (hex.length < 8 || hex.length % 2 !== 0) return null
+    if (hex.length < 8 || hex.length % 2 !== 0) {
+      console.warn(`Account picture: ${hex.length} hex digits, which is not a picture.`)
+      return null
+    }
 
     const bytes = Buffer.from(hex, "hex")
-    // FFD8 opens every JPEG; anything else is not a picture we should write.
-    return bytes.length > 0 && bytes[0] === 0xff && bytes[1] === 0xd8 ? bytes : null
-  } catch {
-    // No dscl, no such attribute, or no picture set.
+    // FFD8 opens every JPEG; anything else is not a picture we should draw.
+    if (bytes.length > 0 && bytes[0] === 0xff && bytes[1] === 0xd8) return bytes
+
+    console.warn("Account picture: read something that does not open like a JPEG.")
+    return null
+  } catch (error) {
+    // Said out loud, because a silent null here is indistinguishable from a
+    // Mac with no picture set, and the option simply not appearing is a poor
+    // way to find out that reading it failed.
+    console.warn("Account picture could not be read:", error)
     return null
   }
 }
