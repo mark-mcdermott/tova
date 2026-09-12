@@ -138,6 +138,20 @@ mod system {
      * The squiggle itself is the system's. All Tova does is ask for it.
      */
     pub fn set_underlining(enabled: bool) {
+        /*
+         * English, said once and for the whole process.
+         *
+         * The squiggles and the suggestions come from the same shared checker,
+         * and until now only `suggest` told it what language to read. So the
+         * two disagreed: `bwron` was underlined and `teh` was not, though
+         * right-clicking `teh` offered `the`. Left to identify the language
+         * itself the checker will not commit on a short word, and `teh` is a
+         * short word. Measured, both ways, with a screenshot.
+         */
+        let checker = NSSpellChecker::sharedSpellChecker();
+        checker.setAutomaticallyIdentifiesLanguages(false);
+        checker.setLanguage(&english());
+
         let defaults = objc2_foundation::NSUserDefaults::standardUserDefaults();
         defaults.setBool_forKey(
             enabled,
@@ -300,10 +314,42 @@ mod tests {
          * a real dictionary. They are not conformance tests — there is no
          * TypeScript to agree with, because the Electron side had no working
          * checker on macOS at all.
+         *
+         * There is one of it per process, and each of these tests configures
+         * it, so they take it in turn. Without that they were quietly setting
+         * each other up: the language test passed against a build with the
+         * language line removed, because a `suggest` test on another thread
+         * had already set it.
          */
+        fn one_at_a_time() -> std::sync::MutexGuard<'static, ()> {
+            static CHECKER: std::sync::Mutex<()> = std::sync::Mutex::new(());
+            CHECKER.lock().unwrap_or_else(|held| held.into_inner())
+        }
+
+        /*
+         * The squiggles and the suggestions read the same shared checker, so
+         * whatever `set_underlining` leaves it in is what the underlines use.
+         * Left on automatic it will not commit on a short word: `teh` went
+         * unmarked while `bwron` beside it was underlined, and right-clicking
+         * the unmarked word still offered `the`.
+         */
+        #[test]
+        fn the_underlines_read_the_same_language_as_the_suggestions() {
+            let _turn = one_at_a_time();
+            let checker = objc2_app_kit::NSSpellChecker::sharedSpellChecker();
+
+            // Put back what a fresh process starts with, so this asks
+            // `set_underlining` rather than whatever ran before it.
+            checker.setAutomaticallyIdentifiesLanguages(true);
+            super::super::set_underlining(true);
+
+            assert!(!checker.automaticallyIdentifiesLanguages());
+            assert_eq!(checker.language().to_string(), "en");
+        }
 
         #[test]
         fn finds_the_misspelled_word_the_reader_clicked_on() {
+            let _turn = one_at_a_time();
             let dir = scratch("suggest");
             let line = "teh quick bwron fox";
 
@@ -327,6 +373,7 @@ mod tests {
 
         #[test]
         fn a_word_that_is_spelled_correctly_offers_nothing() {
+            let _turn = one_at_a_time();
             // The menu appears on a misspelling and never on its own.
             let dir = scratch("correct");
 
@@ -336,6 +383,7 @@ mod tests {
 
         #[test]
         fn a_click_past_the_last_misspelling_offers_nothing() {
+            let _turn = one_at_a_time();
             let dir = scratch("past");
 
             assert!(suggest(&dir, "teh quick brown fox", 15).is_none());
@@ -344,6 +392,7 @@ mod tests {
 
         #[test]
         fn the_word_this_app_was_reported_as_getting_wrong() {
+            let _turn = one_at_a_time();
             /*
              * `teh` is the word that started this: under Electron it drew a
              * squiggle and offered no suggestions, because macOS Electron
@@ -367,6 +416,7 @@ mod tests {
 
         #[test]
         fn a_word_the_reader_added_stops_being_a_misspelling() {
+            let _turn = one_at_a_time();
             let dir = scratch("known");
             let line = "the zblorp is quick";
             assert!(
@@ -384,6 +434,7 @@ mod tests {
 
         #[test]
         fn an_offset_is_counted_the_way_javascript_counts_one() {
+            let _turn = one_at_a_time();
             // UTF-16 code units, because that is what the bridge sends and
             // what NSRange means. An emoji before the word is two of them.
             let dir = scratch("offsets");
