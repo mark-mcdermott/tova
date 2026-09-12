@@ -264,7 +264,11 @@ export interface Purged {
   notesDeleted: number
   notesTrimmed: number
   blocksRemoved: number
-  /** Notes that could not be written or removed. */
+  /** Files removed from the version history and from backup snapshots. */
+  copiesDeleted: number
+  /** Files in those places rewritten with the tag's lines taken out. */
+  copiesTrimmed: number
+  /** Notes and copies that could not be written or removed. */
   failed: string[]
 }
 
