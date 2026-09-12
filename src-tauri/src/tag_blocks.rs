@@ -15,12 +15,6 @@ The editor already draws these two differently — `.cm-tag-top` against
 anything is deleted on the strength of it.
 */
 
-// Landed ahead of its caller, the way `tags.rs` and `vault.rs` were. This is
-// the layer that decides what a deletion takes, and it is worth having under
-// its own tests — and tampered against them — before the code that deletes on
-// the strength of it exists, rather than after.
-#![allow(dead_code)]
-
 use crate::tags::is_tag_only_line;
 
 /// A block's reach, as byte offsets into the text it was found in.
