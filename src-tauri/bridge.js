@@ -259,6 +259,20 @@
   }
 
   document.addEventListener("contextmenu", (event) => {
+    /*
+     * Before anything else, and whatever else happens.
+     *
+     * WKWebView opens its own menu unless this event is cancelled, and asking
+     * the backend for the misspelled word first is too late — the event has
+     * returned by the time the answer lands, and the system menu is already
+     * up. Tova's own menu then opened behind it and appeared when the system
+     * one was dismissed.
+     *
+     * Electron drew no context menu of its own either, so cancelling it
+     * always is the behaviour being ported, not a new opinion about menus.
+     */
+    event.preventDefault()
+
     if (!spellingOn || spellingListeners.size === 0) return
 
     const found = lineAt(event.clientX, event.clientY)
@@ -428,9 +442,24 @@
   }
 
   /*
-   * Every way this has failed so far has been silent: no drag regions found,
-   * so nothing drags, so there is nothing to see. Said once, on the first
-   * click that wanted one, rather than never.
+   * Every way this has failed so far has been silent, and the quietest was
+   * the last: `startDragging` is a core command, Tauri refuses any that a
+   * capability file does not name, and the refusal arrives as a rejected
+   * promise nobody was holding. The header simply did not move. So the
+   * promise is held now, and what comes back out of it is said out loud.
+   */
+  const moveWindow = (method) => {
+    const said = (error) => console.error(`The window would not ${method}`, error)
+    try {
+      void Promise.resolve(runtime().window.getCurrentWindow()[method]()).catch(said)
+    } catch (error) {
+      said(error)
+    }
+  }
+
+  /*
+   * And the other silence: no drag regions found, so nothing drags, so there
+   * is nothing to see. Said once, on the first click that wanted one.
    */
   let complained = false
 
@@ -454,7 +483,7 @@
     if (!(event.target instanceof Element) || !isDragHandle(event.target)) return
 
     event.preventDefault()
-    void runtime().window.getCurrentWindow().startDragging()
+    moveWindow("startDragging")
   })
 
   /*
@@ -466,7 +495,7 @@
     if (!(event.target instanceof Element) || !isDragHandle(event.target)) return
 
     event.preventDefault()
-    void runtime().window.getCurrentWindow().toggleMaximize()
+    moveWindow("toggleMaximize")
   })
 
   window.tova = tova

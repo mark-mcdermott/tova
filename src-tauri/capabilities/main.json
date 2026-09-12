@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "What bridge.js is allowed to call. Tauri denies every core command that is not named here, and says so only in the console — a missing line reads as a feature that quietly does nothing, which is how dragging the window was lost. The app's own commands are not subject to this; only the core plugins are.",
+  "windows": ["main"],
+  "permissions": [
+    "core:event:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize"
+  ]
+}
