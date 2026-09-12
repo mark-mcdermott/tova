@@ -22,11 +22,18 @@ mod front_matter;
 mod github;
 mod images;
 mod js;
-mod markdown_html;
 mod media;
 mod note_location;
 mod note_name;
 mod notes;
+/*
+ * Public for one reason: `examples/print-check.rs` drives them, and it has to
+ * be an example rather than a test because AppKit refuses to print off the
+ * main thread and libtest runs every test on a thread it spawned. Nothing else
+ * consumes this crate, so the wider surface costs nothing.
+ */
+pub mod markdown_html;
+pub mod pdf;
 #[cfg(test)]
 mod posts_conformance;
 mod preferences;
@@ -450,6 +457,113 @@ async fn publish_start(
     .map_err(|e| e.to_string())
 }
 
+/*
+ * A PDF, printed by the system webview rather than by a layout library —
+ * there is already a browser engine here, and adding a renderer for a single
+ * button would be a large dependency for a small feature.
+ *
+ * The page is loaded into a window of its own so nothing about it can reach
+ * the app: no bridge, no commands, and it never becomes visible. Written to a
+ * file rather than handed over as a data URL, because WKWebView will not load
+ * one as a main frame the way Chromium will.
+ */
+#[cfg(target_os = "macos")]
+#[tauri::command]
+async fn note_export_pdf(app: tauri::AppHandle, id: String) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let location = vault::require_location(&id)?;
+    let raw = vault_file::read_vault_text(&vault::note_path(&location)?)?;
+    let parsed = front_matter::parse(&raw);
+    let title = parsed
+        .data
+        .str("title")
+        .filter(|recorded| !js::trim(recorded).is_empty())
+        .unwrap_or_else(|| location.filename.trim_end_matches(".md"))
+        .to_string();
+
+    let chosen = app
+        .dialog()
+        .file()
+        .set_title("Export as PDF")
+        .set_file_name(location.filename.replace(".md", ".pdf"))
+        .add_filter("PDF", &["pdf"])
+        .blocking_save_file();
+
+    let Some(destination) = chosen.and_then(|path| path.into_path().ok()) else {
+        return Ok(None);
+    };
+
+    // Beside the app's own data rather than in the vault: this is scaffolding
+    // for one export, and a vault is for notes.
+    let page = data_dir().join("export.html");
+    std::fs::write(&page, markdown_html::note_pdf_page(&title, &parsed.body))
+        .map_err(|e| e.to_string())?;
+
+    let url = tauri::Url::from_file_path(&page).map_err(|()| "That path is not a URL")?;
+    let window = tauri::WebviewWindowBuilder::new(&app, "export", tauri::WebviewUrl::External(url))
+        .title("Exporting")
+        .visible(false)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    // Forgotten first, so a failure is not reported twice and a success is
+    // not inherited by the next note.
+    pdf::forget_last();
+
+    // The window is torn down whatever happens below, so a failed export does
+    // not leave an invisible window behind for the rest of the session.
+    let printed = print_when_loaded(&window, &destination);
+    let _ = window.close();
+    let _ = std::fs::remove_file(&page);
+
+    printed?;
+    Ok(Some(destination.to_string_lossy().into_owned()))
+}
+
+/// Waits for the page, then prints it. Polling rather than a load callback:
+/// the callback fires on another thread and the printing has to happen on the
+/// main one, so it would have to hop back anyway.
+#[cfg(target_os = "macos")]
+fn print_when_loaded(
+    window: &tauri::WebviewWindow,
+    destination: &std::path::Path,
+) -> Result<(), String> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+
+    loop {
+        if std::time::Instant::now() > deadline {
+            return Err("The page took too long to lay out".into());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        let destination = destination.to_path_buf();
+        window
+            .with_webview(move |webview| {
+                // Safety: inside with_webview, where the pointer is live and
+                // the thread is the main one.
+                let ready = unsafe { pdf::print_when_ready(webview.inner(), &destination) };
+                let _ = tx.send(ready);
+            })
+            .map_err(|e| e.to_string())?;
+
+        match rx.recv().map_err(|e| e.to_string())? {
+            pdf::Printed::NotYet => continue,
+            pdf::Printed::Done => return Ok(()),
+            pdf::Printed::Failed(why) => return Err(why),
+        }
+    }
+}
+
+/// Everywhere else, the same answer the renderer would get from a missing
+/// command, but said properly.
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+async fn note_export_pdf(_app: tauri::AppHandle, _id: String) -> Result<Option<String>, String> {
+    Err("Exporting a PDF needs macOS".into())
+}
+
 /// One file from the reader, or nothing if they thought better of it.
 fn pick_file(
     app: &tauri::AppHandle,
@@ -829,7 +943,8 @@ pub fn run() {
             blog_conflict,
             blog_resolve,
             blog_delete_post,
-            publish_start
+            publish_start,
+            note_export_pdf
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());
