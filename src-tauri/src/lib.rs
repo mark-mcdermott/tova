@@ -574,6 +574,13 @@ fn spellcheck_suggest(line: String, at: usize) -> Option<spellcheck::Misspelling
     spellcheck::suggest(&data_dir(), &line, at)
 }
 
+/// The checkbox in Settings. The word list is Tova's; the underline is the
+/// system's, and this is what asks it to stop.
+#[tauri::command]
+fn spellcheck_set_enabled(enabled: bool) {
+    spellcheck::set_underlining(enabled);
+}
+
 #[tauri::command]
 fn spellcheck_words() -> Vec<String> {
     spellcheck::list_words(&data_dir())
@@ -971,6 +978,7 @@ pub fn run() {
             publish_start,
             note_export_pdf,
             spellcheck_suggest,
+            spellcheck_set_enabled,
             spellcheck_words,
             spellcheck_add_word,
             spellcheck_remove_word
@@ -983,6 +991,11 @@ pub fn run() {
             vault_keys::unlock_vault(&data_dir(), &vault::vault_root());
             let sections: Vec<String> = stored.sections.iter().map(|s| s.id.clone()).collect();
             let _ = vault::ensure_vault(&vault::vault_root(), &sections);
+
+            // Before the webview exists: WebKit reads the switch once, from a
+            // user default, and `spellcheck="true"` on the element is not
+            // enough on its own.
+            spellcheck::set_underlining(stored.spellcheck);
 
             // The launch backup runs before the cleanup, so anything the sweep
             // removes is already captured in a restorable snapshot.

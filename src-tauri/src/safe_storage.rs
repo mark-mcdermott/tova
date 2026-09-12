@@ -128,6 +128,36 @@ fn password() -> Option<&'static [u8]> {
     }
 }
 
+/*
+ * Under test there is no platform keychain, only the stand-in — so this asks
+ * whether one has been set rather than claiming macOS always has one. The
+ * tests that turn it off are testing the branch where nothing can be stored,
+ * and they have to be able to reach it.
+ */
+#[cfg(test)]
+pub fn is_available() -> bool {
+    password().is_some()
+}
+
+/*
+ * Whether secrets can be kept at all — which is a question about the platform,
+ * not about the key.
+ *
+ * Answering it by reading the key is what the first version did, and it put a
+ * keychain prompt on screen at every launch: the renderer asks this when the
+ * blogs store loads, so a reader with no blogs and no encrypted vault was
+ * being asked for their login password to establish something they were never
+ * going to use. macOS has a keychain; that is the whole of the answer here.
+ *
+ * The key itself is fetched when a secret is actually written or read, and the
+ * prompt then belongs to something the reader just did.
+ */
+#[cfg(all(target_os = "macos", not(test)))]
+pub fn is_available() -> bool {
+    true
+}
+
+#[cfg(all(not(target_os = "macos"), not(test)))]
 pub fn is_available() -> bool {
     password().is_some()
 }
