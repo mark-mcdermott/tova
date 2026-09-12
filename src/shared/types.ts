@@ -268,6 +268,8 @@ export interface Purged {
   copiesDeleted: number
   /** Files in those places rewritten with the tag's lines taken out. */
   copiesTrimmed: number
+  /** Backups belonging to a different vault, which were left alone. */
+  snapshotsSkipped: number
   /** Notes and copies that could not be written or removed. */
   failed: string[]
 }
