@@ -104,7 +104,7 @@ loop; all three stay green.
 ## Building
 
 ```bash
-pnpm run tauri:build   # signed .dmg, ~14MB, into src-tauri/target/release/bundle/
+pnpm run tauri:build   # universal .dmg, ~26MB, into src-tauri/target/universal-apple-darwin/
 pnpm run package       # the Electron build: signed .dmg for arm64 and x64, into release/
 pnpm run icon          # regenerate build/icon.png from tools/icon-source.png
 ```

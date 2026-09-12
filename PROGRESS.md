@@ -18,7 +18,7 @@
 | 11 — Blog configuration           | Complete                                        |
 | 12 — Full settings panel          | Complete                                        |
 | 13 — Packaging                    | Signed, notarized, stapled `.dmg`               |
-| 14 — Tauri backend                | All 74 IPC methods; runs; 14MB notarized `.dmg` |
+| 14 — Tauri backend                | All 74 IPC methods; runs; 26MB universal `.dmg` |
 
 **Deferred by choice, not left undone** — purging a tag, managing several
 vaults from Settings, paging the snapshot list, a tip jar and a feedback form.
@@ -639,8 +639,12 @@ a suggestion about a sentence is a softer claim than a misspelt word.
 ## Notarization
 
 Done, for the Tauri build: signed, notarized, stapled, and accepted by
-Gatekeeper on a copy carrying the quarantine attribute. A 14.4MB `.dmg` that
-opens on any Mac without a warning.
+Gatekeeper on a copy carrying the quarantine attribute.
+
+The shipped image is universal — `x86_64` and `arm64` in one binary, as
+electron-builder produced two separate ones. 26.5MB against Electron's 160MB
+per architecture. Building one architecture is `cargo tauri build` with no
+target; it is half the size and half the wait, and it is not what ships.
 
 The 403 this section used to describe — "a required agreement is missing or has
 expired" — was an Apple account state and it cleared when the membership
@@ -666,9 +670,11 @@ Then sign, submit the signed image, and staple the ticket into it:
 
 ```bash
 APPLE_SIGNING_IDENTITY="Developer ID Application: Mark McDermott (VRFF4MSHAC)" pnpm run tauri:build
-xcrun notarytool submit src-tauri/target/release/bundle/dmg/Tova_<version>_aarch64.dmg \
+xcrun notarytool submit \
+  src-tauri/target/universal-apple-darwin/release/bundle/dmg/Tova_<version>_universal.dmg \
   --keychain-profile "tova" --wait
-xcrun stapler staple src-tauri/target/release/bundle/dmg/Tova_<version>_aarch64.dmg
+xcrun stapler staple \
+  src-tauri/target/universal-apple-darwin/release/bundle/dmg/Tova_<version>_universal.dmg
 ```
 
 **Why not let `tauri build` do all three.** It will — the warning it prints
