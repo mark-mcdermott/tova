@@ -14,13 +14,26 @@ leaving the window.
   as you like and pick the target as you write.
 - **Can be 100% offline and private**, if you want — including vaults encrypted
   at rest, one folder at a time.
-- **TODO:** you can write under different tags in one file, and if you ever need
-  to delete everything for one tag — you leave your job, say — you can do that
-  with one click without losing your other notes.
 - **Everything else you would expect is here:** daily notes, tags, spellcheck,
   sections you can rename and reorder, full-text search, live preview with no
   pane or toggle, autosave as you type, dated snapshots of the whole vault, and
   export to markdown or PDF.
+
+## Not built yet
+
+Deferred on purpose rather than left undone, and each for a reason:
+
+- **Purging a tag.** Write under different tags in one file, and delete
+  everything under one of them — you leave your job, say — without losing the
+  rest. The appeal is obvious; the danger is too, and a one-click delete of an
+  unknown number of notes wants more thought than it has had.
+- **Managing several vaults from Settings.** Tova holds as many as you like and
+  switches between them; the Vault tab shows the one that is open rather than
+  listing them all.
+- **Paging the snapshot list.** Every snapshot is there and restorable — the
+  list just gets long.
+- **A tip jar and a feedback form.** Both need a destination Tova does not
+  have. The GitHub issues link is here instead.
 
 ## Delete Tova and your notes are still there
 
@@ -91,15 +104,15 @@ loop; all three stay green.
 ## Building
 
 ```bash
-pnpm run package    # signed .dmg for arm64 and x64, into release/
-pnpm run icon       # regenerate build/icon.png from tools/icon-source.png
+pnpm run tauri:build   # signed .dmg, ~14MB, into src-tauri/target/release/bundle/
+pnpm run package       # the Electron build: signed .dmg for arm64 and x64, into release/
+pnpm run icon          # regenerate build/icon.png from tools/icon-source.png
 ```
 
-macOS only — there is no Windows or Linux target. Packaging signs from
-whatever Developer ID is in the keychain. Notarization is configured but not
-run: it needs an Apple ID, an app-specific password and a team ID in the
-environment, and until it has, Gatekeeper will refuse the app on any machine
-that did not build it.
+macOS only — there is no Windows or Linux target. Both sign from whatever
+Developer ID is in the keychain; `tauri:build` wants it named in
+`APPLE_SIGNING_IDENTITY`. Notarization is a separate step and `PROGRESS.md`
+has it.
 
 ## Stack
 

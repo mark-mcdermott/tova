@@ -2,26 +2,28 @@
 
 ## Current state
 
-| Phase                             | Status                                              |
-| --------------------------------- | --------------------------------------------------- |
-| 0 — Project scaffold              | Complete                                            |
-| 1 — Editor core                   | Complete                                            |
-| 2 — File system & note management | Complete                                            |
-| 3 — Backups & data safety         | Complete                                            |
-| 4 — Daily notes                   | Complete                                            |
-| 5 — Navigation & sidebar polish   | Complete                                            |
-| 6 — Glassmorphic UI               | Complete                                            |
-| 7 — Search & tags                 | Complete                                            |
-| 8 — Spellcheck & grammar          | Complete                                            |
-| 9 — Blog authoring & publishing   | Complete                                            |
-| 10 — Blog sync & posts sidebar    | Complete                                            |
-| 11 — Blog configuration           | Complete                                            |
-| 12 — Full settings panel          | Complete                                            |
-| 13 — Packaging                    | Signed `.dmg`; notarization needs Apple credentials |
-| 14 — Tauri backend                | All 74 IPC methods; never launched                  |
+| Phase                             | Status                                          |
+| --------------------------------- | ----------------------------------------------- |
+| 0 — Project scaffold              | Complete                                        |
+| 1 — Editor core                   | Complete                                        |
+| 2 — File system & note management | Complete                                        |
+| 3 — Backups & data safety         | Complete                                        |
+| 4 — Daily notes                   | Complete                                        |
+| 5 — Navigation & sidebar polish   | Complete                                        |
+| 6 — Glassmorphic UI               | Complete                                        |
+| 7 — Search & tags                 | Complete                                        |
+| 8 — Spellcheck & grammar          | Complete                                        |
+| 9 — Blog authoring & publishing   | Complete                                        |
+| 10 — Blog sync & posts sidebar    | Complete                                        |
+| 11 — Blog configuration           | Complete                                        |
+| 12 — Full settings panel          | Complete                                        |
+| 13 — Packaging                    | Signed, notarized, stapled `.dmg`               |
+| 14 — Tauri backend                | All 74 IPC methods; runs; 14MB notarized `.dmg` |
 
-**Deferred by choice, not left undone** — paging the snapshot list. All are in the README's roadmap with the reason
-each was set aside.
+**Deferred by choice, not left undone** — purging a tag, managing several
+vaults from Settings, paging the snapshot list, a tip jar and a feedback form.
+All are under "Not built yet" in the README with the reason each was set
+aside.
 
 Focus mode and folder reordering were dropped outright rather than deferred.
 
@@ -389,7 +391,8 @@ personal dictionary is Chromium's too, surfaced under General.
 
 Grammar checking is **not** built. It needs a new dependency and the credible
 ones are large; that is a decision worth making deliberately rather than
-smuggling in beside spelling. It is on the README roadmap.
+smuggling in beside spelling. It was made later, and the Grammar section below
+records what was chosen.
 
 ### Chromium hands back no suggestions for some words
 
@@ -442,7 +445,8 @@ a restart, and the backup schedule is re-read on every tick rather than
 captured when the timer was armed.
 
 **Settings is tabbed**, and one tab is honestly partial: Vault shows the one
-vault rather than managing several. It is on the roadmap; nothing is half-built
+vault rather than managing several. It is under "Not built yet" in the README;
+nothing is half-built
 in the UI. The tip jar and feedback form from the original spec are not built either —
 they need a destination Tova does not have. The GitHub issues link is.
 
@@ -632,30 +636,56 @@ a suggestion about a sentence is a softer claim than a misspelt word.
 - Blockquotes, tables and the Cmd+K link popup are specified but belong to later
   phases.
 
-## Resuming notarization
+## Notarization
 
-Not started, and blocked outside this repository: `notarytool` returns a 403,
-"a required agreement is missing or has expired", which is an Apple account
-state — a membership renewal — rather than anything here.
+Done, for the Tauri build: signed, notarized, stapled, and accepted by
+Gatekeeper on a copy carrying the quarantine attribute. A 14.4MB `.dmg` that
+opens on any Mac without a warning.
 
-Everything on this side is ready. The Developer ID certificate is valid to
-March 2031, the hardened runtime is on, and `build/entitlements.mac.plist`
-carries the two JIT allowances Chromium needs or a notarized build launches to
-a blank window. No config change is needed either: in electron-builder 26 the
-`mac.notarize` option means _whether to disable_ notarization, so its absence
-from `electron-builder.yml` enables it. It runs as soon as credentials are in
-the environment.
+The 403 this section used to describe — "a required agreement is missing or has
+expired" — was an Apple account state and it cleared when the membership
+renewal went through. `notarytool history` shows the account was working again
+on 10 September, before anyone noticed.
 
-Team ID is `VRFF4MSHAC`. That is not a secret — it is embedded in the code
-signature of every build and readable with `codesign -dv` on any copy. The
-app-specific password is the secret, which is why it goes into the keychain and
-only a profile _name_ reaches the environment.
+### How
+
+The app-specific password goes into the keychain once and is referenced by
+profile name after that. Team ID `VRFF4MSHAC` is not a secret — it is embedded
+in the code signature of every build and readable with `codesign -dv` on any
+copy. The password is.
 
 ```bash
 xcrun notarytool store-credentials "tova" --apple-id "<your apple id>" --team-id "VRFF4MSHAC"
-APPLE_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db" APPLE_KEYCHAIN_PROFILE="tova" pnpm run package
-xcrun stapler validate release/Tova-<version>-arm64.dmg
 ```
+
+`store-credentials` validates against Apple before saving, so it doubles as the
+account check: if an agreement is outstanding it fails there in seconds rather
+than after a full submission.
+
+Then sign, submit the signed image, and staple the ticket into it:
+
+```bash
+APPLE_SIGNING_IDENTITY="Developer ID Application: Mark McDermott (VRFF4MSHAC)" pnpm run tauri:build
+xcrun notarytool submit src-tauri/target/release/bundle/dmg/Tova_<version>_aarch64.dmg \
+  --keychain-profile "tova" --wait
+xcrun stapler staple src-tauri/target/release/bundle/dmg/Tova_<version>_aarch64.dmg
+```
+
+**Why not let `tauri build` do all three.** It will — the warning it prints
+when the Apple variables are absent says as much — but it reads `APPLE_ID`,
+`APPLE_PASSWORD` and `APPLE_TEAM_ID` from the environment and has no
+keychain-profile option for the app itself. That means the password in a shell
+variable, and a fresh release build of something already built and signed.
+Submitting the existing image with a profile name is faster and keeps the
+secret where it belongs.
+
+**No entitlements file.** The two JIT allowances in
+`build/entitlements.mac.plist` are Chromium's; WKWebView runs its JIT in the
+system's WebContent process, not in the app, so the Tauri bundle signs with the
+hardened runtime and nothing else. `hardenedRuntime` is Tauri's default, so
+there is no configuration for it either.
+
+### Checking it, which is easy to do wrongly
 
 **Verifying on the machine that built it proves almost nothing.** Gatekeeper
 only challenges files carrying `com.apple.quarantine`, which is set when a file
@@ -663,13 +693,38 @@ arrives from a browser, AirDrop or mail — never on a local build. Either copy
 the `.dmg` to a second Mac, or set the attribute by hand:
 
 ```bash
-xattr -w com.apple.quarantine "0081;00000000;Safari;" release/Tova-<version>-arm64.dmg
+cp <the dmg> /tmp/check.dmg
+xattr -w com.apple.quarantine "0081;00000000;Safari;" /tmp/check.dmg
+spctl -a -t open --context context:primary-signature -vv /tmp/check.dmg
 ```
 
-The baseline to compare against: today `spctl -a -vvv -t install` on the built
-app says `rejected`, `source=Unnotarized Developer ID`. The signature itself is
-already correct — `Developer ID Application: Mark McDermott (VRFF4MSHAC)` with
-`flags=0x10000(runtime)`. Notarization is the only missing piece.
+What that should say, and does:
+
+```
+accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Mark McDermott (VRFF4MSHAC)
+```
+
+`xcrun stapler validate <the dmg>` is the other half: it says the ticket is
+inside the image rather than only on Apple's servers, which is what makes it
+work on a machine with no network.
+
+### The submission history does not need tidying
+
+`notarytool history` keeps every submission, including the Electron `Tova.zip`
+from 10 September. There is no way to remove one — `notarytool` has no such
+command — and no reason to want one. It is a record of what was submitted, not
+a place anything is published from: nothing is served to anyone out of it, and
+a stale entry costs nothing.
+
+### The Electron build
+
+Still signs and notarizes through electron-builder, whose configuration is
+untouched and whose `mac.notarize` option means _whether to disable_ it — so
+its absence from `electron-builder.yml` enables it, and it runs as soon as
+credentials are in the environment. Worth knowing that doing this for Electron
+is work thrown away if the Tauri build is the one that ships.
 
 ## The Tauri backend
 
@@ -780,10 +835,26 @@ no way to enumerate what it has learned.
 Nothing of the surface. `src/main/surface.conformance.test.ts` holds it to
 that: every method the renderer can call is answered by both backends.
 
-The app has never been launched. Everything here was verified without one —
-conformance fixtures, a stub GitHub on a loopback port, a print check that
-writes a real PDF, the system spell checker asked directly — and none of that
-is the same as opening the window and clicking.
+It runs, and running it is what found the last of the bugs. Everything before
+that had been verified without a window — conformance fixtures, a stub GitHub
+on a loopback port, a print check that writes a real PDF, the system spell
+checker asked directly — and none of it was the same as opening the app and
+clicking.
+
+Four things only a launch could find, and none of them were in the ported
+logic:
+
+- `window.__TAURI__` does not exist unless `app.withGlobalTauri` says so, and
+  the bridge is built out of it. Every call threw, the renderer's first one
+  rejected, and the app painted its background and nothing else.
+- `-webkit-app-region: drag` is Chromium's. WKWebView has never implemented it,
+  so the window moved only by its real title bar. `bridge.js` reads the rule
+  out of the stylesheets and starts the drag itself, which keeps the answer in
+  the CSS.
+- `spellcheck="true"` on the editable element is not enough. WebKit reads the
+  switch from a user default, before the webview exists.
+- Asking "can secrets be kept here?" by reading the key put a keychain prompt
+  on screen at every launch, for readers who had no secrets to keep.
 
 The keychain is verified. `tools/safe-storage-vectors.js` and the ignored test
 beside it in `src-tauri/src/safe_storage.rs` are the pair that proves Electron's
