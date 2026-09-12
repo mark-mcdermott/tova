@@ -79,6 +79,13 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       accountName: vi.fn(async () => ""),
       reset: vi.fn(async () => undefined),
       nukeTargets: vi.fn(async () => []),
+      tagPurgePlan: vi.fn(async () => ({ tag: "", notes: [] })),
+      tagPurge: vi.fn(async () => ({
+        notesDeleted: 0,
+        notesTrimmed: 0,
+        blocksRemoved: 0,
+        failed: []
+      })),
       nuke: vi.fn(async () => undefined),
       listBackgrounds: vi.fn(async () => []),
       addBackground: vi.fn(async () => null),

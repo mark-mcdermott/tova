@@ -52,6 +52,7 @@ mod spellcheck;
 mod sync;
 mod sync_plan;
 mod tag_blocks;
+mod tag_purge;
 mod tags;
 mod vault;
 mod vault_file;
@@ -600,6 +601,26 @@ fn spellcheck_set_enabled(enabled: bool) {
     spellcheck::quiet_the_system();
 }
 
+/*
+ * What deleting everything under a tag would take. Reads only.
+ *
+ * Split from `tag_purge_apply` on purpose: the apply is not recoverable, so
+ * the reader is meant to be shown this first. See `tag_purge.rs`.
+ */
+#[tauri::command]
+fn tag_purge_plan(tag: String) -> tag_purge::Plan {
+    tag_purge::plan(&tag)
+}
+
+/// Carries out a plan. Nothing it removes can be brought back.
+#[tauri::command]
+fn tag_purge_apply(tag: String) -> tag_purge::Purged {
+    // Planned again here rather than taking one from the renderer: what is on
+    // disk now is what gets deleted, and a plan that crossed the IPC boundary
+    // is a description of what was on disk when it was made.
+    tag_purge::apply(&tag_purge::plan(&tag))
+}
+
 #[tauri::command]
 fn spellcheck_words() -> Vec<String> {
     spellcheck::list_words(&data_dir())
@@ -999,6 +1020,8 @@ pub fn run() {
             spellcheck_suggest,
             spellcheck_check,
             spellcheck_set_enabled,
+            tag_purge_plan,
+            tag_purge_apply,
             spellcheck_words,
             spellcheck_add_word,
             spellcheck_remove_word

@@ -93,6 +93,25 @@ pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
     found
 }
 
+/// The tags on a block's head line, in the order they were written.
+///
+/// A head line can name more than one tag, and then the text under it belongs
+/// to all of them — so deleting one takes text the others were heading. The
+/// preview needs to be able to say so.
+pub fn head_tags(text: &str, block: &Block) -> Vec<String> {
+    text[block.from..block.to]
+        .split('\n')
+        .next()
+        .map(|line| {
+            crate::js::trim(line)
+                .split(|c: char| crate::js::is_whitespace(c))
+                .filter(|word| !word.is_empty())
+                .map(|word| word.trim_start_matches('#').to_string())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// The text with every block `tag` heads taken out of it.
 pub fn without_blocks(text: &str, tag: &str) -> String {
     let blocks = blocks_for(text, tag);
