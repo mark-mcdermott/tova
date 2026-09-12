@@ -127,6 +127,121 @@ pub fn plan(tag: &str) -> Plan {
     Plan { tag, notes }
 }
 
+/*
+ * The copies.
+ *
+ * A note deleted from the vault is still in two other places, and a feature
+ * called "delete everything under this tag" that leaves them is a feature
+ * that does not do what its name says:
+ *
+ * - `.versions/` inside the vault, where every edit files the text it
+ *   replaced.
+ * - `Documents/Tova Backups/<snapshot>/`, whole copies of the vault taken on
+ *   a schedule — each of which contains its own `.versions/`.
+ *
+ * Both hold note files rather than notes, so they are swept by the same two
+ * rules applied to the text on disk: the tag in the front matter takes the
+ * file, a block takes its own lines.
+ */
+
+/// What one file on disk should become.
+#[derive(Debug, PartialEq, Eq)]
+enum Sweep {
+    Delete,
+    Rewrite(String),
+    Leave,
+}
+
+/*
+ * The front matter block, verbatim, and the body after it.
+ *
+ * Verbatim rather than re-serialised from the parsed data: these are copies,
+ * and rewriting one should change the lines the tag owned and nothing else.
+ * A version file reformatted on its way past would be a quiet edit to
+ * somebody's history.
+ */
+fn split_file(raw: &str) -> (&str, &str) {
+    const FENCE: &str = "---";
+
+    if !raw.starts_with("---\n") {
+        return ("", raw);
+    }
+
+    let mut at = 4;
+    for line in raw[4..].split('\n') {
+        let end = at + line.len() + 1;
+        if line == FENCE {
+            return raw.split_at(end.min(raw.len()));
+        }
+        at = end;
+    }
+    ("", raw)
+}
+
+fn sweep_text(raw: &str, tag: &str) -> Sweep {
+    let manual =
+        crate::tags::normalize_manual_tags(crate::front_matter::parse(raw).data.get("tags"));
+    if manual.iter().any(|own| same_tag(own, tag)) {
+        return Sweep::Delete;
+    }
+
+    let (front, body) = split_file(raw);
+    if blocks_for(body, tag).is_empty() {
+        return Sweep::Leave;
+    }
+
+    let left = without_blocks(body, tag);
+    if crate::js::trim(&left).is_empty() {
+        Sweep::Delete
+    } else {
+        Sweep::Rewrite(format!("{front}{left}"))
+    }
+}
+
+/// Every `.md` under a directory, however deep. Copies nest by section and
+/// folder, and a snapshot nests one level deeper again.
+fn markdown_under(root: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(root) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            markdown_under(&path, found);
+        } else if path.extension().is_some_and(|ext| ext == "md") {
+            found.push(path);
+        }
+    }
+}
+
+/// Sweeps every note file under `root`, returning how many went and how many
+/// were rewritten.
+fn sweep_tree(root: &std::path::Path, tag: &str, done: &mut Purged) {
+    let mut files = Vec::new();
+    markdown_under(root, &mut files);
+
+    for path in files {
+        let Ok(raw) = std::fs::read_to_string(&path) else {
+            done.failed.push(path.to_string_lossy().into_owned());
+            continue;
+        };
+
+        let outcome = match sweep_text(&raw, tag) {
+            Sweep::Leave => continue,
+            Sweep::Delete => std::fs::remove_file(&path).map(|()| {
+                done.copies_deleted += 1;
+            }),
+            Sweep::Rewrite(text) => std::fs::write(&path, text).map(|()| {
+                done.copies_trimmed += 1;
+            }),
+        };
+
+        if outcome.is_err() {
+            done.failed.push(path.to_string_lossy().into_owned());
+        }
+    }
+}
+
 /// What a purge did, for saying so afterwards.
 #[derive(Debug, Default, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -134,8 +249,13 @@ pub struct Purged {
     pub notes_deleted: usize,
     pub notes_trimmed: usize,
     pub blocks_removed: usize,
-    /// Notes that could not be written or removed, by id. Reported rather
-    /// than swallowed: a purge that half worked is worth knowing about.
+    /// Files removed from the version history and from backup snapshots.
+    pub copies_deleted: usize,
+    /// Files in those places rewritten with the tag's lines taken out.
+    pub copies_trimmed: usize,
+    /// Notes and copies that could not be written or removed. Reported rather
+    /// than swallowed: a purge that half worked is worth knowing about, and
+    /// this one half working means the text is still somewhere.
     pub failed: Vec<String>,
 }
 
@@ -143,6 +263,15 @@ pub struct Purged {
 pub fn apply(plan: &Plan) -> Purged {
     let mut done = Purged::default();
 
+    // Nothing at all for something that is not a tag. The plan is already
+    // empty, but the sweep below reads the tag rather than the plan, and the
+    // one unacceptable reading of a bad tag is "everything".
+    if plan.tag.is_empty() {
+        return done;
+    }
+
+    // The live vault first, then the copies of it. Order matters only in that
+    // a backup taken between the two would be swept by the second pass.
     for note in &plan.notes {
         if note.deletes_note {
             match crate::notes::delete_note_file(&note.id) {
@@ -171,6 +300,25 @@ pub fn apply(plan: &Plan) -> Purged {
             Err(_) => done.failed.push(note.id.clone()),
         }
     }
+
+    /*
+     * Swept whatever the plan said, and swept unconditionally: a snapshot can
+     * hold a note that is no longer in the vault at all, so there is nothing
+     * in the plan to match it against. The rules are applied to what is
+     * found rather than to a list made earlier.
+     */
+    sweep_tree(
+        &crate::vault::vault_root().join(".versions"),
+        &plan.tag,
+        &mut done,
+    );
+    /*
+     * Every snapshot, not only this vault's. A backup folder is named after
+     * the date it was taken and says nothing about which vault it came from,
+     * so there is no way to sweep one vault's history and leave another's —
+     * and of the two, leaving copies behind is the failure that matters.
+     */
+    sweep_tree(&crate::backup::backup_root(), &plan.tag, &mut done);
 
     done
 }
@@ -404,6 +552,150 @@ mod tests {
 
         for input in ["work", "#work", "WORK", "#Work"] {
             assert_eq!(plan(input).notes.len(), 1, "for {input:?}");
+        }
+    }
+
+    /*
+     * The copies. A note deleted from the vault is still in its version
+     * history and in every backup snapshot, and a feature called "delete
+     * everything under this tag" that leaves those is one that does not do
+     * what its name says.
+     */
+    /*
+     * The note itself carries no tag, so only the sweep of `.versions` can
+     * remove this. Filed directly rather than through two edits: save_version
+     * throttles, so the second edit files nothing and the test would be
+     * checking an empty list — which is how the first version of it passed
+     * against a build with the sweep taken out.
+     */
+    #[test]
+    fn a_version_holding_the_tag_goes_even_when_the_note_does_not() {
+        let scratch = Scratch::new("version-files");
+        let id = made("notes", "Job", "Nothing tagged here now.\n");
+        crate::backup::save_version(&id, "#work\nThe job.\n", &chrono::Local::now()).unwrap();
+
+        let before: Vec<String> = crate::backup::list_versions(&id);
+        assert_eq!(before.len(), 1, "a version to sweep");
+
+        apply(&plan("work"));
+
+        let left: Vec<String> = crate::backup::list_versions(&id)
+            .iter()
+            .filter_map(|name| crate::backup::read_version(&id, name).ok())
+            .filter(|text| text.contains("The job"))
+            .collect();
+        assert!(left.is_empty(), "the job is still in its history: {left:?}");
+        assert!(scratch.exists(&id), "the note itself was not the tag's");
+    }
+
+    #[test]
+    fn a_backup_snapshot_is_swept_too() {
+        let scratch = Scratch::new("snapshots");
+        made("notes", "Job", "#work\nThe job.\n");
+        made("notes", "Keep", "#garden\nTomatoes.\n");
+
+        // A snapshot of the vault as it is, taken the way the app takes one.
+        let backups = scratch
+            .vault
+            .join("..")
+            .join("tova-purge-snapshots-backups");
+        let _ = std::fs::remove_dir_all(&backups);
+        crate::backup::run_backup(&backups, 5).unwrap();
+        let copies = |needle: &str| {
+            let mut found = Vec::new();
+            super::markdown_under(&backups, &mut found);
+            found
+                .iter()
+                .filter_map(|path| std::fs::read_to_string(path).ok())
+                .filter(|text| text.contains(needle))
+                .count()
+        };
+        assert_eq!(copies("The job."), 1, "the snapshot has it to begin with");
+
+        // Swept by path, the way apply sweeps the real backup root.
+        let mut done = Purged::default();
+        super::sweep_tree(&backups, "work", &mut done);
+
+        assert_eq!(copies("The job."), 0, "the snapshot still has it");
+        assert_eq!(copies("Tomatoes."), 1, "the other note was touched");
+        assert_eq!(done.copies_deleted, 1);
+        let _ = std::fs::remove_dir_all(&backups);
+    }
+
+    #[test]
+    fn a_copy_keeps_its_front_matter_word_for_word() {
+        let raw = "---\ntitle: Mixed\nsection: notes\ncreated: 2026-01-01\n---\nKeep.\n\n#work\nThe job.\n";
+
+        let Sweep::Rewrite(left) = sweep_text(raw, "work") else {
+            panic!("expected a rewrite");
+        };
+        assert_eq!(
+            left,
+            "---\ntitle: Mixed\nsection: notes\ncreated: 2026-01-01\n---\nKeep.\n\n"
+        );
+    }
+
+    #[test]
+    fn a_copy_whose_front_matter_carries_the_tag_goes_whole() {
+        let raw = "---\ntitle: Standup\ntags: [\"work\", \"daily\"]\n---\nNothing about it here.\n";
+
+        assert_eq!(sweep_text(raw, "work"), Sweep::Delete);
+        assert_eq!(sweep_text(raw, "garden"), Sweep::Leave);
+    }
+
+    #[test]
+    fn a_copy_that_is_nothing_but_the_tags_blocks_goes_whole() {
+        let raw = "---\ntitle: All Work\n---\n#work\nEvery word.\n";
+
+        assert_eq!(sweep_text(raw, "work"), Sweep::Delete);
+    }
+
+    #[test]
+    fn a_copy_with_no_front_matter_is_still_swept() {
+        assert_eq!(
+            sweep_text("Keep.\n\n#work\nThe job.\n", "work"),
+            Sweep::Rewrite("Keep.\n\n".to_string())
+        );
+    }
+
+    /*
+     * The front matter fence is `---`, which is also what ends a block. The
+     * body has to be taken from past the fence, or the first block in every
+     * note would stop at the front matter that precedes it.
+     */
+    #[test]
+    fn the_front_matter_fence_is_not_read_as_a_rule() {
+        let raw = "---\ntitle: Job\n---\n#work\nThe job.\n\nStill the job.\n";
+
+        assert_eq!(sweep_text(raw, "work"), Sweep::Delete);
+    }
+
+    /*
+     * Two answers to the same question, because the sweep reads the tag
+     * rather than the plan. `apply` returns early, and `sweep_text` would
+     * refuse anyway — the early return is what stops it walking every backup
+     * on the machine to reach that conclusion.
+     */
+    #[test]
+    fn something_that_is_not_a_tag_sweeps_nothing() {
+        let scratch = Scratch::new("sweep-nonsense");
+        let id = made("notes", "Job", "#work\nThe job.\n");
+
+        let done = apply(&Plan {
+            tag: String::new(),
+            notes: Vec::new(),
+        });
+
+        assert_eq!(done.copies_deleted + done.copies_trimmed, 0);
+        assert!(scratch.exists(&id));
+    }
+
+    #[test]
+    fn a_copy_is_left_alone_by_a_tag_that_is_not_one() {
+        let raw = "---\ntags: [\"work\"]\n---\n#work\nThe job.\n";
+
+        for input in ["", "#", " "] {
+            assert_eq!(sweep_text(raw, input), Sweep::Leave, "for {input:?}");
         }
     }
 
