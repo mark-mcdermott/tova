@@ -1,5 +1,16 @@
 # Tova — Build Phases
 
+**This is the order it was built in, not a description of what it is.** The
+phases below were written and ticked against an Electron app; Tova runs on
+Tauri now, and Electron is gone. Where a line says Chromium or
+electron-builder it is recording what was true at the time, and it is left
+that way rather than rewritten — `PROGRESS.md` carries the cutover and the
+reasoning. Three places where the answer later changed are marked **↳ since**.
+
+The **Verification** list at the end is the exception: it is an instruction
+rather than a record, so it says what to run today.
+
+
 ## Phase 0 — Project Scaffold
 
 **Goal:** Electron + Vite + React + TypeScript dev environment, blank window.
@@ -15,6 +26,10 @@
 - [x] TUTORIAL.md started
 
 **Deliverable:** `pnpm run dev` → blank window. `pnpm run build` passes. `pnpm run test` runs (0 tests, no failures).
+
+**↳ since:** the stack is Tauri, React, TypeScript and Vite. There is no
+`pnpm run dev` — `pnpm run tauri:dev` opens the app, and `pnpm run build`
+builds the renderer alone for Tauri to bundle.
 
 ---
 
@@ -152,8 +167,14 @@ Write Vitest tests: navigation history push/pop/forward.
 - [x] Spell check — Chromium's own, not a CM6 decoration layer; right-click correction popup
 - [x] Timing: correct by construction — Chromium only marks a finished word
 - [x] Personal dictionary (Add to dictionary in popup; managed under General)
-- [ ] Grammar check — deferred to the roadmap: needs a new dependency, and the good ones are heavy
-- [ ] Grammar toggle in Settings — with the check above
+- [x] Grammar check — Harper, on-device, loaded only when the preference is on
+- [x] Grammar toggle in Settings
+
+**↳ since:** both of the first two lines are now the opposite of what happens.
+Spelling *is* a CM6 decoration layer, drawn from `NSSpellChecker`, because
+WebKit only marks a word as it is typed — a note written yesterday opened with
+nothing underlined in it. "Correct by construction" was Chromium's timing, and
+it did not survive the engine change.
 
 **Deliverable:** Editor feels like a real writing tool. Timing correct (fixed Xin bug).
 
@@ -231,7 +252,14 @@ Write Playwright test: publish request sent, progress bar appears.
 - [x] App icon — generated, not from `/branding/logo.png`; see PROGRESS.md
 - [x] macOS `.dmg` (arm64 + x64, signed)
 - [x] Code signing — automatic from the Developer ID in the keychain
-- [ ] Notarization — needs Apple ID credentials; configured but not run
+- [x] Notarization — done; submission accepted, stapled, Gatekeeper-checked
+
+**↳ since:** packaging is `cargo tauri build --target universal-apple-darwin`,
+producing one universal `.dmg` where electron-builder produced two. Signing is
+no longer automatic — Tauri signs only when `APPLE_SIGNING_IDENTITY` is in the
+environment and warns when it is not, so an unsigned release is a successful
+build. The icon can no longer be rebuilt in this repository: the script used
+Electron as its rasteriser. See **Notarization** in `PROGRESS.md`.
 
 **Deliverable:** Installable app.
 
@@ -241,6 +269,8 @@ Write Playwright test: publish request sent, progress bar appears.
 
 - `pnpm run check` — TypeScript strict passes
 - `pnpm run test` — fast suite green
-- `pnpm run build` — builds without errors
-- `pnpm run dev` — opens, phase features work manually
-- Append section to `TUTORIAL.md`
+- `pnpm run build` — the renderer builds without errors
+- `cargo test --manifest-path src-tauri/Cargo.toml` — the Rust suite is green
+- `pnpm run tauri:dev` — opens, the feature works manually
+
+`TUTORIAL.md` was retired; `PROGRESS.md` is where the record goes now.
