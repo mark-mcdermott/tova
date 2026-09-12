@@ -18,7 +18,7 @@
 | 11 — Blog configuration           | Complete                                            |
 | 12 — Full settings panel          | Complete                                            |
 | 13 — Packaging                    | Signed `.dmg`; notarization needs Apple credentials |
-| 14 — Tauri backend                | 67 of 74 IPC methods; the rest need a running app   |
+| 14 — Tauri backend                | All 74 IPC methods; never launched                  |
 
 **Deferred by choice, not left undone** — paging the snapshot list. All are in the README's roadmap with the reason
 each was set aside.
@@ -747,13 +747,43 @@ handler, because a single long timeout cannot be trusted across a suspend.
 Polling needs none of that, and there is no arithmetic about when midnight is —
 which is the part that went wrong in Xin.
 
+### The two that were not ports
+
+**Printing.** Electron called `webContents.printToPDF`. The obvious replacement,
+`NSPrintOperation`, paginates and would have matched it — and deadlocks, because
+WKWebView renders out of process and paginating it needs the run loop that
+`runOperation` blocks. `createPDFWithConfiguration:` answers through a
+completion block instead, at the cost of one continuous page rather than a run
+of Letter-sized ones.
+
+**Spelling**, which is a fix rather than a port. Chromium drew the squiggles,
+kept the dictionary, and handed the app the misspelled word from the event that
+opened the context menu. On macOS it also shipped no dictionary, so the
+squiggles appeared and the suggestions never did — the bug that prompted this.
+`NSSpellChecker` has the dictionary the rest of the Mac uses.
+
+WKWebView hands over nothing on a right-click, so that part moved into
+`bridge.js`, which is where it belongs: the preload it replaces is renderer-side
+too. The IPC surface did not have to move for it, and the renderer did not
+change. What the backend is asked is a line and a position — the checker decides
+where the word starts and ends, so no idea of what a word is lives in the
+bridge.
+
+One behaviour is deliberately wider than Electron's: adding a word tells the
+Mac, not only Tova. That is the only way the squiggle goes away, since the
+underline is the system's, and it is what every other Mac writing app's
+"Learn Spelling" does. Tova keeps its own list as well, because the system has
+no way to enumerate what it has learned.
+
 ### What is left
 
-Seven methods, and they are the ones that cannot be ported without a running
-app: `notes.exportPdf`, which prints through Chromium, and the six spellcheck
-methods, which are Chromium's dictionary and its context menu. Both want
-Objective-C interop and a decision about how the renderer asks for suggestions
-when the webview does not hand them over the way Chromium does.
+Nothing of the surface. `src/main/surface.conformance.test.ts` holds it to
+that: every method the renderer can call is answered by both backends.
+
+The app has never been launched. Everything here was verified without one —
+conformance fixtures, a stub GitHub on a loopback port, a print check that
+writes a real PDF, the system spell checker asked directly — and none of that
+is the same as opening the window and clicking.
 
 The keychain is verified. `tools/safe-storage-vectors.js` and the ignored test
 beside it in `src-tauri/src/safe_storage.rs` are the pair that proves Electron's

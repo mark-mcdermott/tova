@@ -48,6 +48,7 @@ mod search_conformance;
 mod sections;
 mod session;
 mod settings;
+mod spellcheck;
 mod sync;
 mod sync_plan;
 mod tags;
@@ -564,6 +565,29 @@ async fn note_export_pdf(_app: tauri::AppHandle, _id: String) -> Result<Option<S
     Err("Exporting a PDF needs macOS".into())
 }
 
+/// The misspelled word at a position in a line, if there is one. The bridge
+/// sends the line and where the reader right-clicked; the checker decides what
+/// counts as a word, which is better than the bridge guessing.
+#[tauri::command]
+fn spellcheck_suggest(line: String, at: usize) -> Option<spellcheck::Misspelling> {
+    spellcheck::suggest(&data_dir(), &line, at)
+}
+
+#[tauri::command]
+fn spellcheck_words() -> Vec<String> {
+    spellcheck::list_words(&data_dir())
+}
+
+#[tauri::command]
+fn spellcheck_add_word(word: String) -> Result<Vec<String>, String> {
+    spellcheck::add_word(&data_dir(), &word)
+}
+
+#[tauri::command]
+fn spellcheck_remove_word(word: String) -> Result<Vec<String>, String> {
+    spellcheck::remove_word(&data_dir(), &word)
+}
+
 /// One file from the reader, or nothing if they thought better of it.
 fn pick_file(
     app: &tauri::AppHandle,
@@ -944,7 +968,11 @@ pub fn run() {
             blog_resolve,
             blog_delete_post,
             publish_start,
-            note_export_pdf
+            note_export_pdf,
+            spellcheck_suggest,
+            spellcheck_words,
+            spellcheck_add_word,
+            spellcheck_remove_word
         ])
         .setup(|app| {
             let stored = preferences::read(&data_dir());
