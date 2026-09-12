@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { EditorState } from "@codemirror/state"
-import { grammarNotes, noteAt, setGrammarNotes, GrammarNote } from "./grammar"
+import { grammarNotes, markFor, noteAt, setGrammarNotes, GrammarNote } from "./grammar"
 
 const note = (from: number, to: number): GrammarNote => ({
   from,
@@ -59,5 +59,27 @@ describe("noteAt", () => {
   it("finds nothing elsewhere", () => {
     expect(noteAt(notes, 1)).toBeNull()
     expect(noteAt([], 5)).toBeNull()
+  })
+})
+
+/*
+ * The checker reports spelling alongside grammar, and a misspelling drawn in
+ * the grammar colour meant the same mistake looked one way when it had just
+ * been typed — where the system draws its own red squiggle over it — and
+ * another when it was already on the page when the note opened.
+ */
+describe("which underline a note gets", () => {
+  it("draws a misspelt word in spelling's colour", () => {
+    expect(markFor("Spelling").spec.class).toContain("cm-grammar-spelling")
+  })
+
+  it("leaves every other kind in grammar's", () => {
+    for (const kind of ["Agreement", "Repetition", "Capitalization", "Style"]) {
+      expect(markFor(kind).spec.class).toBe("cm-grammar")
+    }
+  })
+
+  it("keeps the shared class, which is what carries the underline itself", () => {
+    expect(markFor("Spelling").spec.class).toContain("cm-grammar")
   })
 })

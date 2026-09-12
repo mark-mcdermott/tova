@@ -1499,6 +1499,17 @@
   cursor: help;
 }
 
+/*
+ * Except when the note is about a word rather than a sentence. The checker
+ * reports spelling too, and a misspelling drawn in the grammar colour meant
+ * the same mistake looked one way if it had just been typed — where the
+ * system draws its own red squiggle — and another if it was already on the
+ * page when the note opened.
+ */
+.cm-grammar-spelling {
+  text-decoration-color: var(--spelling-ink);
+}
+
 /* ── Confirm dialog ───────────────────────────────────────────────────── */
 
 /*
