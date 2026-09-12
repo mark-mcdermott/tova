@@ -91,6 +91,8 @@
       "accountName",
       "reset",
       "nukeTargets",
+      "tagPurgePlan",
+      "tagPurge",
       "nuke",
       "listBackgrounds",
       "addBackground",
@@ -167,6 +169,8 @@
   tova.preferences.reset = () => invoke("settings_reset")
   tova.preferences.nukeTargets = () => invoke("settings_nuke_targets")
   tova.preferences.nuke = () => invoke("settings_nuke")
+  tova.preferences.tagPurgePlan = (tag) => invoke("tag_purge_plan", { tag })
+  tova.preferences.tagPurge = (tag) => invoke("tag_purge_apply", { tag })
   tova.app.reveal = (target) => invoke("app_reveal", { target })
   tova.app.openExternal = (url) => invoke("app_open_external", { url })
   // Bytes cross as an array: Tauri's invoke serialises arguments as JSON, so a

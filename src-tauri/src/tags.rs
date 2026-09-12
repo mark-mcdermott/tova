@@ -68,6 +68,39 @@ pub fn all_tags(manual: &[String], body: &str) -> Vec<String> {
     unique(manual.iter().cloned().chain(find_tags(body)))
 }
 
+/*
+ * True when a line holds nothing but tags and whitespace — a port of
+ * `isTagOnlyLine` in `src/shared/tags.ts`, where it decides which of the two
+ * pill styles a tag is drawn in.
+ *
+ * The same rule answers a second question now: a line like this is where a
+ * tag's *block* begins. See `tag_blocks.rs`.
+ *
+ * `js::is_whitespace` rather than Rust's, and `is_tag_body` rather than a
+ * regex, for the reason at the top of this file: JavaScript's `\s` and `\w`
+ * are not Rust's, and this has to agree with the editor about which lines are
+ * which.
+ */
+pub fn is_tag_only_line(line: &str) -> bool {
+    let trimmed = crate::js::trim(line);
+    if trimmed.is_empty() {
+        return false;
+    }
+
+    trimmed
+        .split(|c: char| crate::js::is_whitespace(c))
+        .filter(|word| !word.is_empty())
+        .all(is_tag_word)
+}
+
+/// `#word`: a hash, a letter, then tag characters.
+fn is_tag_word(word: &str) -> bool {
+    let mut chars = word.chars();
+    chars.next() == Some('#')
+        && chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+        && chars.all(is_tag_body)
+}
+
 /// A tag as it would be written: no hash, no spaces, and a letter to start.
 pub fn normalize_tag(input: &str) -> Option<String> {
     let tag = crate::js::trim(input).trim_start_matches('#');

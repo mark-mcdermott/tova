@@ -237,6 +237,37 @@ export interface SpellcheckApi {
   setEnabled: (enabled: boolean) => Promise<void>
 }
 
+/** Why a whole note goes, when deleting a tag takes one. */
+export type PurgeBecause = "tagRow" | "emptied"
+
+/** What deleting a tag would do to one note. */
+export interface PurgePlanned {
+  id: string
+  title: string
+  section: string
+  /** Blocks to remove. Zero when the tag is in the note's own tag row. */
+  blocks: number
+  /** Whether the file is deleted rather than rewritten. */
+  deletesNote: boolean
+  because: PurgeBecause | null
+  /** Other tags heading the same blocks, which lose their text with this one. */
+  sharedWith: string[]
+}
+
+export interface PurgePlan {
+  /** The tag as it was understood, or "" when the input was not a tag. */
+  tag: string
+  notes: PurgePlanned[]
+}
+
+export interface Purged {
+  notesDeleted: number
+  notesTrimmed: number
+  blocksRemoved: number
+  /** Notes that could not be written or removed. */
+  failed: string[]
+}
+
 export interface PreferencesApi {
   read: () => Promise<import("./preferences").Preferences>
   write: (
@@ -252,6 +283,13 @@ export interface PreferencesApi {
   reset: () => Promise<void>
   /** The paths a nuke would delete, so a confirm can name them. */
   nukeTargets: () => Promise<string[]>
+  /**
+   * What deleting everything under a tag would take. Reads only — this is
+   * what the confirmation is built from.
+   */
+  tagPurgePlan: (tag: string) => Promise<import("./types").PurgePlan>
+  /** Carries it out. Nothing it removes can be brought back. */
+  tagPurge: (tag: string) => Promise<import("./types").Purged>
   /** Every vault, and everything Tova stores. Relaunches the app. */
   nuke: () => Promise<void>
   /** Backgrounds the reader added, served over the tova-bg scheme. */

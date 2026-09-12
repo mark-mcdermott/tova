@@ -572,6 +572,20 @@ pub fn delete_note_file(id: &str) -> Result<(), String> {
     std::fs::remove_file(note_path(&require_location(id)?)?).map_err(|e| e.to_string())
 }
 
+/*
+ * Replaces a note's body without snapshotting the one it replaces.
+ *
+ * `write` saves a version first, which is right when somebody is editing and
+ * exactly wrong here: this is called to make text stop existing, and a
+ * version of it would be a copy of what was just deleted, written by the act
+ * of deleting it. See `tag_purge.rs`.
+ */
+pub fn overwrite_body(id: &str, body: &str) -> Result<(), String> {
+    let mut note = load(&require_location(id)?)?;
+    note.body = body.to_string();
+    persist(&note)
+}
+
 pub fn permanent_delete(id: &str) -> Result<(), String> {
     let location = require_location(id)?;
     // Permanent deletion is only ever reachable from Trash.
