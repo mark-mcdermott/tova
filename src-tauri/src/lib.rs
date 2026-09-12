@@ -51,6 +51,7 @@ mod settings;
 mod spellcheck;
 mod sync;
 mod sync_plan;
+mod tag_blocks;
 mod tags;
 mod vault;
 mod vault_file;
