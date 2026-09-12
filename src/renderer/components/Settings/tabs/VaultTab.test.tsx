@@ -8,8 +8,10 @@ import { stubBridge } from "../../../testing/bridge"
 
 const info = {
   version: "1.0.0",
-  electron: "42.0.0",
-  chrome: "140.0.0",
+  tauri: "2.11.5",
+  // The shape WKWebView actually reports, which is a WebKit build number and
+  // not the Chromium-looking version that sat here while Electron shipped.
+  webview: "21624.5.1.11.3",
   vaultPath: "/Users/writer/Documents/Tova",
   backupPath: "/Users/writer/Library/Application Support/tova/backups"
 }
@@ -76,6 +78,24 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("VaultTab", () => {
+  /*
+   * The About panel named Electron and Chromium, which is what used to be
+   * drawing this. One of those rows went blank at the cutover and the other
+   * was labelling a WebKit version.
+   */
+  it("names what is actually running the app", async () => {
+    render(<VaultTab />)
+
+    for (const [label, value] of [
+      ["Tova", info.version],
+      ["Tauri", info.tauri],
+      ["WebKit", info.webview]
+    ]) {
+      const term = await screen.findByText(label)
+      expect(term.nextElementSibling?.textContent, `${label} row`).toBe(value)
+    }
+  })
+
   it("shows where the vault and its backups live", async () => {
     render(<VaultTab />)
     expect(await screen.findByText(info.vaultPath)).toBeDefined()

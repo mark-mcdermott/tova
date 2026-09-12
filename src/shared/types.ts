@@ -74,8 +74,8 @@ export interface MoveNoteInput {
 
 export interface AppInfo {
   version: string
-  electron: string
-  chrome: string
+  tauri: string
+  webview: string
   vaultPath: string
   backupPath: string
 }

@@ -67,10 +67,10 @@ use tauri::Manager;
 #[serde(rename_all = "camelCase")]
 struct AppInfo {
     version: String,
-    /// Empty here: there is no Electron to name. The field stays because the
-    /// renderer's About panel reads it.
-    electron: String,
-    chrome: String,
+    tauri: String,
+    /// The web engine drawing the app. WKWebView on macOS, so a WebKit
+    /// version — it was labelled Chromium while Electron was what shipped.
+    webview: String,
     vault_path: String,
     backup_path: String,
 }
@@ -81,8 +81,8 @@ struct AppInfo {
 fn app_info() -> AppInfo {
     AppInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
-        electron: String::new(),
-        chrome: tauri::webview_version().unwrap_or_else(|_| "unknown".into()),
+        tauri: tauri::VERSION.to_string(),
+        webview: tauri::webview_version().unwrap_or_else(|_| "unknown".into()),
         vault_path: vault::vault_root().to_string_lossy().into_owned(),
         backup_path: backup::backup_root().to_string_lossy().into_owned(),
     }

@@ -379,12 +379,12 @@ export function VaultTab() {
             <dd>{info?.version ?? "…"}</dd>
           </div>
           <div>
-            <dt>Electron</dt>
-            <dd>{info?.electron ?? "…"}</dd>
+            <dt>Tauri</dt>
+            <dd>{info?.tauri ?? "…"}</dd>
           </div>
           <div>
-            <dt>Chromium</dt>
-            <dd>{info?.chrome ?? "…"}</dd>
+            <dt>WebKit</dt>
+            <dd>{info?.webview ?? "…"}</dd>
           </div>
         </dl>
 
