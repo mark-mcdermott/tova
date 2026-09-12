@@ -6,9 +6,11 @@
   "build": {
     "frontendDist": "../out/renderer",
     "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "pnpm exec vite --config vite.renderer.config.ts",
     "beforeBuildCommand": "pnpm run build"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [],
     "security": {
       "csp": null

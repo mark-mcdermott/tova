@@ -10,7 +10,23 @@
  * console and not a component rendering blank.
  */
 ;(() => {
-  const invoke = (name, args) => window.__TAURI__.core.invoke(name, args)
+  /*
+   * `window.__TAURI__` exists only when tauri.conf.json says
+   * `app.withGlobalTauri`. Without it every method below throws "Cannot read
+   * properties of undefined", the renderer's first call rejects, and the app
+   * paints its background and nothing else — which is a long way from the
+   * cause. Said once, in words, instead.
+   */
+  const runtime = () => {
+    const tauri = window.__TAURI__
+    if (tauri === undefined) {
+      throw new Error("window.__TAURI__ is missing — set app.withGlobalTauri in tauri.conf.json")
+    }
+    return tauri
+  }
+
+  const invoke = (name, args) => runtime().core.invoke(name, args)
+  const listen = (name, handler) => runtime().event.listen(name, handler)
 
   const pending = (group, method) => () => {
     throw new Error(`tova.${group}.${method} is not ported yet`)
@@ -164,7 +180,7 @@
   tova.blogs.deletePost = (id, filename, alsoRemote) =>
     invoke("blog_delete_post", { id, filename, alsoRemote })
   tova.events.onNotesChanged = (listener) => {
-    const stopping = window.__TAURI__.event.listen("notes:changed", () => listener())
+    const stopping = listen("notes:changed", () => listener())
     return () => {
       void stopping.then((stop) => stop())
     }
@@ -175,9 +191,7 @@
   // unsubscribe straight away, so the returned function waits for the
   // subscription before undoing it.
   tova.publish.onUpdate = (listener) => {
-    const stopping = window.__TAURI__.event.listen("publish:update", (event) =>
-      listener(event.payload)
-    )
+    const stopping = listen("publish:update", (event) => listener(event.payload))
     return () => {
       void stopping.then((stop) => stop())
     }
