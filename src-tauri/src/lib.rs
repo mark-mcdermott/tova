@@ -89,13 +89,17 @@ fn app_info() -> AppInfo {
 }
 
 /*
- * Electron's userData, not Tauri's own.
+ * Where Electron kept its userData, which is where Tova keeps it.
  *
- * Tauri would put this under the bundle identifier and Electron puts it under
- * the app name, so the two would keep separate preferences and separate
- * avatars — and the point of porting a slice at a time is being able to run
- * either backend against the same state and see the same app. It moves when the
- * Electron side is gone, not before.
+ * Tauri would put this under the bundle identifier instead. It was pinned to
+ * Electron's path so both backends could be run against one set of
+ * preferences; it stays pinned because that is where the reader's settings,
+ * vault list, avatar, custom dictionary and window position already are.
+ *
+ * Moving would mean a migration — copy, verify, and decide what to do when
+ * the copy half fails — to arrive at a directory named after a bundle
+ * identifier instead of a directory named after the app. That is a risk taken
+ * for a tidier path, paid by the only person whose data is in it.
  */
 fn data_dir() -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_default();

@@ -1,9 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "module": "preserve",
     "moduleResolution": "bundler"
   },
-  "include": ["src/main", "src/preload", "src/shared", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/shared",
+    "vite.renderer.config.ts",
+    "vitest.config.ts"
+  ]
 }

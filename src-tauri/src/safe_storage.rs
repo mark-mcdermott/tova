@@ -67,10 +67,15 @@ fn from_keychain() -> Option<&'static [u8]> {
     use std::sync::LazyLock;
 
     /*
-     * Electron names its keychain item after the app, and the app is "tova" in
-     * development and "Tova" packaged. Pinned to the first for the same reason
-     * `data_dir` is pinned to Electron's userData: both backends have to find
-     * the same one, and it moves when the Electron side is gone, not before.
+     * The name Electron gave the keychain item, kept now that Electron is
+     * gone.
+     *
+     * It was pinned so both backends could read one item. It stays pinned
+     * because the item is already there, with the key that every blog token
+     * on this machine was encrypted under. A tidier name would be a name with
+     * nothing behind it, and every token would have to be entered again — and
+     * a token is not something the reader can look up, so some of them would
+     * simply be lost. The name is worth nothing; what it opens is not.
      *
      * Declared in here rather than beside the module's other constants so the
      * name exists only where something reads it — CI compiles this on Linux,

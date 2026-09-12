@@ -67,11 +67,11 @@ no waiting for approval on ordinary implementation work.
 
 # Stack
 
-- Electron 42
+- Tauri 2 (Rust backend, WKWebView on macOS)
 - React 19
 - TypeScript 6 (strict, no `any`)
 - CodeMirror 6
-- electron-vite 5 / Vite 7
+- Vite 7
 - Custom CSS with design tokens (no utility framework, no component library)
 - Zustand (state, arrives Phase 5)
 - Vitest 4
@@ -116,7 +116,7 @@ Avoid:
 - hidden state
 - giant utility layers
 - premature optimization
-- inline styles (never — Electron is Chromium, same rules as web)
+- inline styles (never — a webview is a browser, same rules as web)
 
 Code should feel calm and understandable.
 
@@ -142,12 +142,18 @@ two-column form layout) are specified in `docs/SPEC.md`.
 
 ---
 
-# Electron
+# Tauri
 
-- Secure defaults: `contextIsolation: true`, `nodeIntegration: false`
-- All privileged work goes through explicit IPC handlers in `src/main/ipc/`
-- The preload script is the only bridge; keep its surface small and typed
-- Filesystem access stays in main, never the renderer
+- Every privileged operation is an explicit `#[tauri::command]` in `src-tauri/src/`
+- `src-tauri/bridge.js` is the only bridge — it builds `window.tova` out of
+  those commands, and is the counterpart of the preload Electron used to have
+- Filesystem access stays in Rust, never the renderer
+- A core command is refused unless `src-tauri/capabilities/` names it, and the
+  refusal only reaches the webview's console — so a missing permission reads as
+  a feature that quietly does nothing. `surface.conformance` and
+  `capabilities.conformance` are what make both kinds of gap fail loudly
+- The renderer knows nothing about Tauri. It calls `window.tova`, which is
+  declared in `src/renderer/tova.d.ts` and described in `src/shared/types.ts`
 
 ---
 
@@ -186,7 +192,8 @@ After each meaningful change:
 
 - `pnpm run check` — TypeScript strict passes
 - `pnpm run test` — suite green
-- `pnpm run build` — builds without errors
-- `pnpm run dev` — opens, feature works manually
+- `pnpm run build` — the renderer builds without errors
+- `cargo test --manifest-path src-tauri/Cargo.toml` — the Rust suite is green
+- `pnpm run tauri:dev` — opens, feature works manually
 
 Keep all four green. Update `PROGRESS.md` when a phase completes.

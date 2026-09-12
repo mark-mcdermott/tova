@@ -838,8 +838,8 @@ no way to enumerate what it has learned.
 
 ### What is left
 
-Nothing of the surface. `src/main/surface.conformance.test.ts` holds it to
-that: every method the renderer can call is answered by both backends.
+Nothing of the surface. `src/shared/surface.conformance.test.ts` holds it to
+that: every method the renderer can call is answered by the bridge.
 
 It runs, and running it is what found the last of the bugs. Everything before
 that had been verified without a window — conformance fixtures, a stub GitHub
@@ -863,8 +863,9 @@ logic:
   on screen at every launch, for readers who had no secrets to keep.
 
 The keychain is verified. `tools/safe-storage-vectors.js` and the ignored test
-beside it in `src-tauri/src/safe_storage.rs` are the pair that proves Electron's
-`safeStorage` and the Rust port reach the same key, and they have been run:
+beside it in `src-tauri/src/safe_storage.rs` were the pair that proved
+Electron's `safeStorage` and the Rust port reach the same key, and they were
+run before the tool was retired with Electron:
 Rust wrapped the same string to exactly the bytes Electron did. The scheme has
 no nonce, so identical output proves both directions at once.
 
@@ -873,6 +874,48 @@ It failed on the first attempt, and on the tool rather than the port. Run as
 `Electron Safe Storage` — a key with nothing to do with Tova. The tool sets the
 name now. If it ever fails again, check which keychain item each side actually
 used before suspecting the cipher.
+
+## The cutover
+
+Electron is gone. What it leaves behind is `conformance/`, which is the part
+that mattered: eleven files of fixtures generated from the TypeScript while it
+still ran, and the Rust tests that read them. The reference implementation was
+deleted; the record of what it did was not.
+
+What went: `src/main/`, `src/preload/`, `vite.config.ts`,
+`electron-builder.yml`, the electron/electron-vite/electron-builder
+dependencies, and the scripts that drove them. 61 TypeScript files, and with
+them 268 of the 1270 tests — every one of which was testing an implementation
+that no longer exists, against fixtures the Rust suite still checks.
+
+**Two names did not move, on purpose.** `data_dir()` still points at
+`~/Library/Application Support/tova`, which is Electron's `userData` path
+rather than the bundle-identifier directory Tauri would choose. The keychain
+item is still `tova Safe Storage`. Both were pinned so the two backends could
+share one set of state; both stay pinned because that state is the reader's —
+settings, vault list, avatar, custom dictionary, window position, and the key
+every blog token was encrypted under. Moving means a migration, and a
+migration means deciding what to do when half of it fails, to arrive at a
+tidier path nobody looks at. The names are worth nothing; what they open is
+not.
+
+**The surface check moved before anything was deleted.** It read the Electron
+preload, which was about to stop existing. It reads `src/renderer/tova.d.ts`
+and the interfaces in `src/shared/types.ts` now — a better anchor, because it
+is the contract TypeScript already enforces from the renderer's side. Both
+sources were parsed and compared name for name before the swap: same 75
+methods.
+
+**Retired with it.** `tools/make-icon.js` and `tools/icon.html` used Electron
+as a rasteriser, and `tools/safe-storage-vectors.js` needed `safeStorage` to
+generate its fixture. The artwork stays at `tools/icon-source.png`; rebuilding
+the icon from it now needs a rasteriser this repository does not have. The
+safe-storage fixture is frozen, which is the honest state of it — Electron's
+blob format is a historical contract Tova has to keep reading, not something
+to regenerate.
+
+`pnpm run build` is `vite build` now, writing the same `out/renderer` that
+`frontendDist` has always pointed at.
 
 ## To resume
 
