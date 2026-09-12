@@ -81,6 +81,14 @@ pub fn remove_word(data_dir: &Path, word: &str) -> Result<Vec<String>, String> {
     Ok(words)
 }
 
+/// Asks the webview to underline misspellings, or to stop.
+///
+/// Separate from everything else here because it is the only part that is not
+/// about a word: it is a switch on the engine that draws the squiggle.
+pub fn set_underlining(enabled: bool) {
+    system::set_underlining(enabled);
+}
+
 /// The misspelled word at `at`, if there is one — where `at` is where the
 /// reader right-clicked, counted in UTF-16 code units from the start of
 /// `line`.
@@ -116,6 +124,28 @@ mod system {
     /// same thing with its "Learn Spelling" item.
     pub fn learn(word: &str) {
         NSSpellChecker::sharedSpellChecker().learnWord(&NSString::from_str(word));
+    }
+
+    /*
+     * Whether the webview underlines misspellings as they are typed.
+     *
+     * WKWebView exposes nothing for this, and `spellcheck="true"` on the
+     * editable element is not enough on its own: WebKit reads the switch from
+     * a user default that has carried the same name since WebKit 1. Set before
+     * the webview exists, which is why this is called from `setup` rather than
+     * from the command the renderer calls.
+     *
+     * The squiggle itself is the system's. All Tova does is ask for it.
+     */
+    pub fn set_underlining(enabled: bool) {
+        let defaults = objc2_foundation::NSUserDefaults::standardUserDefaults();
+        defaults.setBool_forKey(
+            enabled,
+            &NSString::from_str("WebContinuousSpellCheckingEnabled"),
+        );
+        // Off deliberately: Tova's grammar checking is its own, and WebKit's
+        // would draw a second kind of underline under different rules.
+        defaults.setBool_forKey(false, &NSString::from_str("WebGrammarCheckingEnabled"));
     }
 
     pub fn unlearn(word: &str) {
@@ -209,6 +239,7 @@ mod system {
 
     pub fn learn(_word: &str) {}
     pub fn unlearn(_word: &str) {}
+    pub fn set_underlining(_enabled: bool) {}
 
     pub fn suggest(_line: &str, _at: usize, _known: &[String]) -> Option<Misspelling> {
         None

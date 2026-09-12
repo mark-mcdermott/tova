@@ -310,11 +310,83 @@
     for (const editable of document.querySelectorAll("[contenteditable]")) {
       editable.spellcheck = spellingOn
     }
+    // The attribute says the text is checkable; the switch underneath decides
+    // whether anything draws an underline. Both are needed.
+    await invoke("spellcheck_set_enabled", { enabled: spellingOn })
   }
 
   tova.spellcheck.listWords = () => invoke("spellcheck_words")
   tova.spellcheck.addWord = (word) => invoke("spellcheck_add_word", { word })
   tova.spellcheck.removeWord = (word) => invoke("spellcheck_remove_word", { word })
+
+  /*
+   * Dragging the window by its header.
+   *
+   * The renderer says which parts of the chrome are a handle with
+   * `-webkit-app-region: drag`, which is Chromium's and which WKWebView has
+   * never implemented — so under Tauri only the real title bar strip at the
+   * very top could move the window, which is not how a Mac app behaves.
+   *
+   * The rule is still the right one to obey, so it is read rather than
+   * replaced: the stylesheets say which selectors are handles and which are
+   * cut out of one, and a press on anything matching starts a drag. That keeps
+   * the answer in the CSS, where a designer can change it, rather than in a
+   * list here that would quietly go stale.
+   */
+  const dragRegions = { drag: [], noDrag: null }
+
+  const collectDragRegions = () => {
+    const drag = []
+    const noDrag = []
+
+    for (const sheet of document.styleSheets) {
+      let rules
+      try {
+        rules = sheet.cssRules
+      } catch {
+        // A stylesheet from another origin. Tova has none, but asking costs
+        // nothing and throwing here would take the whole handler with it.
+        continue
+      }
+      for (const rule of rules) {
+        const region = rule.style?.getPropertyValue("-webkit-app-region")
+        if (region === "drag") drag.push(rule.selectorText)
+        if (region === "no-drag") noDrag.push(rule.selectorText)
+      }
+    }
+
+    dragRegions.drag = drag.filter(Boolean)
+    dragRegions.noDrag = noDrag.filter(Boolean).join(", ") || null
+  }
+
+  const isDragHandle = (target) => {
+    if (dragRegions.drag.length === 0) collectDragRegions()
+    if (dragRegions.noDrag !== null && target.closest(dragRegions.noDrag) !== null) return false
+    return dragRegions.drag.some((selector) => target.closest(selector) !== null)
+  }
+
+  document.addEventListener("mousedown", (event) => {
+    // The left button only, and never a second press of a double click: that
+    // is the gesture for zooming a window, not moving one.
+    if (event.button !== 0 || event.detail > 1) return
+    if (!(event.target instanceof Element) || !isDragHandle(event.target)) return
+
+    event.preventDefault()
+    void runtime().window.getCurrentWindow().startDragging()
+  })
+
+  /*
+   * Double-clicking the title bar does what the reader has told macOS it
+   * should — zoom, minimise or nothing. Read once; it is a system preference,
+   * not something that changes while an app is open.
+   */
+  document.addEventListener("dblclick", (event) => {
+    if (event.button !== 0) return
+    if (!(event.target instanceof Element) || !isDragHandle(event.target)) return
+
+    event.preventDefault()
+    void runtime().window.getCurrentWindow().toggleMaximize()
+  })
 
   window.tova = tova
 })()
