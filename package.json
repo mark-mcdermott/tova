@@ -13,7 +13,7 @@
     "package:dir": "electron-vite build && electron-builder --dir",
     "icon": "electron tools/make-icon.js",
     "tauri:dev": "cargo tauri dev",
-    "tauri:build": "cargo tauri build"
+    "tauri:build": "cargo tauri build --target universal-apple-darwin"
   },
   "keywords": [],
   "author": "Mark McDermott <mark@markmcdermott.io>",
