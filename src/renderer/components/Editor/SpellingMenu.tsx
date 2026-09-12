@@ -7,7 +7,7 @@ import { Menu, MenuItem } from "../Popup/Menu"
  * Chromium's, the popup is Tova's. Suggestions come from the same event that
  * raised the menu, so the word and its range are the ones actually clicked.
  */
-export function SpellingMenu() {
+export function SpellingMenu({ onDictionaryChange }: { onDictionaryChange: () => void }) {
   const [misspelling, setMisspelling] = useState<Misspelling | null>(null)
 
   useEffect(() => {
@@ -36,7 +36,14 @@ export function SpellingMenu() {
         "separator",
         {
           label: `Add “${misspelling.word}” to dictionary`,
-          onSelect: () => void window.tova.spellcheck.addWord(misspelling.word)
+          onSelect: () => {
+            // Checked again once the word is in, so its underline goes now
+            // rather than at the reader's next keystroke.
+            void (async () => {
+              await window.tova.spellcheck.addWord(misspelling.word)
+              onDictionaryChange()
+            })()
+          }
         }
       ]}
       onClose={() => setMisspelling(null)}

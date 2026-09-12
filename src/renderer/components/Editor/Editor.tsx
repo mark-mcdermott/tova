@@ -18,6 +18,7 @@ import { GrammarMenu } from "./GrammarMenu"
 import { SpellingMenu } from "./SpellingMenu"
 import { checkGrammar } from "../../grammarLinter"
 import { setGrammarNotes } from "./grammar"
+import { setSpellingSpans } from "./spelling"
 import { showMatches } from "./searchHighlight"
 import { usePublishStore } from "../../stores/publishStore"
 import { usePreferencesStore } from "../../stores/preferencesStore"
@@ -33,6 +34,8 @@ interface EditorProps {
 export function Editor({ note }: EditorProps) {
   const grammarOn = usePreferencesStore((state) => state.preferences.grammar)
   const grammarRef = useRef<(text: string) => void>(() => undefined)
+  const spellingOn = usePreferencesStore((state) => state.preferences.spellcheck)
+  const spellingRef = useRef<(text: string) => void>(() => undefined)
   const openSeq = useNotesStore((state) => state.openSeq)
   const showIndex = useNotesStore((state) => state.showIndex)
   const [finding, setFinding] = useState(false)
@@ -118,6 +121,7 @@ export function Editor({ note }: EditorProps) {
     onPublish: (blog, headerLine) => void publishPost(blog, headerLine),
     onLeaveBackwards: () => tagAddRef.current?.focus(),
     onCheckGrammar: grammarOn ? (text) => void grammarRef.current(text) : undefined,
+    onCheckSpelling: spellingOn ? (text) => void spellingRef.current(text) : undefined,
     onFind: () => findRef.current()
   })
 
@@ -155,6 +159,11 @@ export function Editor({ note }: EditorProps) {
     } catch {
       // A checker that will not load is not a reason to stop writing.
     }
+  }
+
+  spellingRef.current = async (text: string) => {
+    const spans = await window.tova.spellcheck.check(text)
+    viewRef.current?.dispatch({ effects: setSpellingSpans.of(spans) })
   }
 
   /**
@@ -318,7 +327,12 @@ export function Editor({ note }: EditorProps) {
 
       <PublishToasts />
 
-      <SpellingMenu />
+      <SpellingMenu
+        onDictionaryChange={() => {
+          const view = viewRef.current
+          if (view !== null) void spellingRef.current(view.state.doc.toString())
+        }}
+      />
 
       <GrammarMenu viewRef={viewRef} />
 

@@ -22,14 +22,6 @@ const article: GrammarNote = {
   suggestions: ["an"]
 }
 
-const misspelt: GrammarNote = {
-  from: 2,
-  to: 7,
-  message: "Did you mean to spell `apple` this way?",
-  kind: "Spelling",
-  suggestions: ["apple"]
-}
-
 function editor(notes: GrammarNote[], withGrammar = true) {
   const view = new EditorView({
     state: EditorState.create({
@@ -78,19 +70,6 @@ describe("the grammar menu", () => {
     await userEvent.click(screen.getByRole("menuitem", { name: "an" }))
 
     expect(view.state.doc.toString()).toBe("an apple")
-  })
-
-  /*
-   * The system's spelling menu knows the words the reader has added and can
-   * add another, so those clicks are left to it. Answering them here as well
-   * would open two menus on one right-click, which is the bug next door.
-   */
-  it("leaves a misspelt word to the spelling menu", () => {
-    const { view, ref } = editor([misspelt])
-    render(<GrammarMenu viewRef={ref} />)
-
-    rightClickAt(view, 4)
-    expect(row(misspelt.message)).toBeNull()
   })
 
   it("says nothing where there is no note", () => {

@@ -574,11 +574,25 @@ fn spellcheck_suggest(line: String, at: usize) -> Option<spellcheck::Misspelling
     spellcheck::suggest(&data_dir(), &line, at)
 }
 
-/// The checkbox in Settings. The word list is Tova's; the underline is the
-/// system's, and this is what asks it to stop.
+/// Every misspelling in a note, for the underlines the editor draws.
+#[tauri::command]
+fn spellcheck_check(text: String) -> Vec<spellcheck::Span> {
+    spellcheck::check(&data_dir(), &text)
+}
+
+/*
+ * The checkbox in Settings, which the renderer now acts on itself — it draws
+ * the underlines, so it is the only side that can stop drawing them. What is
+ * left here is making sure the system does not start underlining alongside it,
+ * whichever way the checkbox went.
+ *
+ * The command stays because the surface does not move while both backends are
+ * runnable, and because the Electron side still has work to do in it.
+ */
 #[tauri::command]
 fn spellcheck_set_enabled(enabled: bool) {
-    spellcheck::set_underlining(enabled);
+    let _ = enabled;
+    spellcheck::quiet_the_system();
 }
 
 #[tauri::command]
@@ -978,6 +992,7 @@ pub fn run() {
             publish_start,
             note_export_pdf,
             spellcheck_suggest,
+            spellcheck_check,
             spellcheck_set_enabled,
             spellcheck_words,
             spellcheck_add_word,
@@ -992,10 +1007,11 @@ pub fn run() {
             let sections: Vec<String> = stored.sections.iter().map(|s| s.id.clone()).collect();
             let _ = vault::ensure_vault(&vault::vault_root(), &sections);
 
-            // Before the webview exists: WebKit reads the switch once, from a
-            // user default, and `spellcheck="true"` on the element is not
-            // enough on its own.
-            spellcheck::set_underlining(stored.spellcheck);
+            // Before the webview exists: WebKit reads the switch once, from
+            // a user default, and would otherwise underline alongside the
+            // editor's own marks out of a different dictionary.
+            let _ = stored.spellcheck;
+            spellcheck::quiet_the_system();
 
             // The launch backup runs before the cleanup, so anything the sweep
             // removes is already captured in a restorable snapshot.

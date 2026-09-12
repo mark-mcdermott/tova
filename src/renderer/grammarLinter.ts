@@ -34,7 +34,7 @@ function ready(): Promise<Linter> {
   return linter
 }
 
-interface RawLint {
+export interface RawLint {
   span: () => { start: number; end: number }
   message: () => string
   lint_kind: () => string
@@ -46,23 +46,42 @@ interface RawLint {
  * rather than as a typo — which is the difference between useful and unusable
  * in a markdown editor.
  */
+/*
+ * Harper's own kind for a word it does not know, which Tova does not draw.
+ *
+ * Spelling has one checker here, and it is the system's: that is the one the
+ * right-click menu asks, the one "Add to dictionary" writes to, and the one
+ * whose answer the reader can act on. Harper carries a second dictionary that
+ * knows nothing about the words the reader has added, so its spelling notes
+ * underlined words that Tova had been told were words.
+ */
+const SPELLING = "Spelling"
+
+/**
+ * What Tova draws, out of what Harper found. Separate from the call so it can
+ * be checked without loading fifteen megabytes of dictionary.
+ */
+export function notesFrom(found: RawLint[]): GrammarNote[] {
+  return found
+    .filter((lint) => lint.lint_kind() !== SPELLING)
+    .map((lint) => {
+      const span = lint.span()
+      return {
+        from: span.start,
+        to: span.end,
+        message: lint.message(),
+        kind: lint.lint_kind(),
+        suggestions: lint
+          .suggestions()
+          .map((suggestion) => suggestion.get_replacement_text())
+          .filter((text) => text !== "")
+          .slice(0, 6)
+      }
+    })
+}
+
 export async function checkGrammar(text: string): Promise<GrammarNote[]> {
   if (text.trim() === "") return []
 
-  const found = (await (await ready()).lint(text, { language: "markdown" })) as RawLint[]
-
-  return found.map((lint) => {
-    const span = lint.span()
-    return {
-      from: span.start,
-      to: span.end,
-      message: lint.message(),
-      kind: lint.lint_kind(),
-      suggestions: lint
-        .suggestions()
-        .map((suggestion) => suggestion.get_replacement_text())
-        .filter((text) => text !== "")
-        .slice(0, 6)
-    }
-  })
+  return notesFrom((await (await ready()).lint(text, { language: "markdown" })) as RawLint[])
 }

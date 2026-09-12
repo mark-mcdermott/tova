@@ -15,6 +15,7 @@ import { markdownDecorations } from "./markdownDecorations"
 import { codeHighlight } from "./codeHighlight"
 import { searchHighlighting } from "./searchHighlight"
 import { grammarChecking } from "./grammar"
+import { spellChecking } from "./spelling"
 import { imageDrop } from "./imageDrop"
 import { blogDecorations } from "./blogDecorations"
 import { blogSelector, SelectorAnchor } from "./blogSelector"
@@ -40,6 +41,7 @@ interface UseCodeMirrorOptions {
   tabSize?: number
   /** Asked for a fresh grammar pass once the writing pauses. */
   onCheckGrammar?: (text: string) => void
+  onCheckSpelling?: (text: string) => void
   /** Cmd+F from inside the editor. */
   onFind?: () => void
   /**
@@ -60,6 +62,7 @@ export function useCodeMirror({
   onSelectBlog,
   onLeaveBackwards,
   onCheckGrammar,
+  onCheckSpelling,
   onFind,
   tabSize = 2
 }: UseCodeMirrorOptions) {
@@ -97,6 +100,8 @@ export function useCodeMirror({
   onLeaveBackwardsRef.current = onLeaveBackwards
   const onCheckGrammarRef = useRef(onCheckGrammar)
   onCheckGrammarRef.current = onCheckGrammar
+  const onCheckSpellingRef = useRef(onCheckSpelling)
+  onCheckSpellingRef.current = onCheckSpelling
 
   useEffect(() => {
     const container = containerRef.current
@@ -110,9 +115,13 @@ export function useCodeMirror({
           drawSelection(),
           dropCursor(),
           EditorView.lineWrapping,
-          // CodeMirror disables this by default. Chromium's own checker is
-          // what draws the squiggles, and it only marks a word once it is
-          // finished — which is the timing the build plan asks for.
+          /*
+           * Left on for the Electron backend, where Chromium draws the
+           * squiggles. Over Tauri the webview is told not to underline at all
+           * and `spellChecking` below draws them instead — the webview only
+           * marks a word as it is typed, so a note written yesterday opened
+           * with nothing underlined in it.
+           */
           EditorView.contentAttributes.of({ spellcheck: "true" }),
           indent.current.of(indentUnit.of(" ".repeat(tabSize))),
           // Fenced blocks get their language's highlighting. `languages` is a
@@ -125,6 +134,7 @@ export function useCodeMirror({
           codeHighlight(),
           searchHighlighting(),
           grammarChecking((text) => onCheckGrammarRef.current?.(text)),
+          spellChecking((text) => onCheckSpellingRef.current?.(text)),
           markdownDecorations({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null,
             onOpenTag: (tag) => onOpenTagRef.current?.(tag)

@@ -29,6 +29,14 @@ the same decision the squiggle was drawn from.
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
+/// A misspelled range, in UTF-16 code units — which is what JavaScript counts
+/// string offsets in, and so what the editor counts document positions in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct Span {
+    pub from: usize,
+    pub to: usize,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Misspelling {
@@ -81,12 +89,27 @@ pub fn remove_word(data_dir: &Path, word: &str) -> Result<Vec<String>, String> {
     Ok(words)
 }
 
-/// Asks the webview to underline misspellings, or to stop.
-///
-/// Separate from everything else here because it is the only part that is not
-/// about a word: it is a switch on the engine that draws the squiggle.
-pub fn set_underlining(enabled: bool) {
-    system::set_underlining(enabled);
+/*
+ * Makes sure the system is not underlining as well.
+ *
+ * This used to be the switch behind the Settings checkbox, when the squiggle
+ * was the webview's. It is not any more: the webview only marks a word as it
+ * is typed, so a note written yesterday opened with nothing underlined in it,
+ * and its dictionary was not the one "Add to dictionary" writes to. Tova
+ * draws them itself now, from `check`, and the preference is honoured in the
+ * renderer where the drawing happens.
+ *
+ * What is left is making sure there is one underline rather than two, and
+ * telling the shared checker what language it is reading — which the
+ * underlines and the suggestions both depend on.
+ */
+pub fn quiet_the_system() {
+    system::quiet_the_system();
+}
+
+/// Every misspelling in a text, with the reader's own words left alone.
+pub fn check(data_dir: &Path, text: &str) -> Vec<Span> {
+    system::check(text, &list_words(data_dir))
 }
 
 /// The misspelled word at `at`, if there is one — where `at` is where the
@@ -99,7 +122,7 @@ pub fn suggest(data_dir: &Path, line: &str, at: usize) -> Option<Misspelling> {
 
 #[cfg(target_os = "macos")]
 mod system {
-    use super::Misspelling;
+    use super::{Misspelling, Span};
     use objc2_app_kit::NSSpellChecker;
     use objc2_foundation::{NSArray, NSInteger, NSString};
 
@@ -137,7 +160,7 @@ mod system {
      *
      * The squiggle itself is the system's. All Tova does is ask for it.
      */
-    pub fn set_underlining(enabled: bool) {
+    pub fn quiet_the_system() {
         /*
          * English, said once and for the whole process.
          *
@@ -152,35 +175,96 @@ mod system {
         checker.setAutomaticallyIdentifiesLanguages(false);
         checker.setLanguage(&english());
 
+        // Both off: Tova's spelling and grammar are its own, and the
+        // webview's would draw a second set of underlines under different
+        // rules and out of a different dictionary.
         let defaults = objc2_foundation::NSUserDefaults::standardUserDefaults();
-        defaults.setBool_forKey(
-            enabled,
-            &NSString::from_str("WebContinuousSpellCheckingEnabled"),
-        );
-        // Off deliberately: Tova's grammar checking is its own, and WebKit's
-        // would draw a second kind of underline under different rules.
-        defaults.setBool_forKey(false, &NSString::from_str("WebGrammarCheckingEnabled"));
+        for key in [
+            "WebContinuousSpellCheckingEnabled",
+            "WebGrammarCheckingEnabled",
+        ] {
+            defaults.setBool_forKey(false, &NSString::from_str(key));
+        }
     }
 
     pub fn unlearn(word: &str) {
         NSSpellChecker::sharedSpellChecker().unlearnWord(&NSString::from_str(word));
     }
 
-    pub fn suggest(line: &str, at: usize, known: &[String]) -> Option<Misspelling> {
+    /// The shared checker, told what language it is reading and which words
+    /// the reader has said are words. Both callers need exactly this, and the
+    /// language is the part that cannot be left out — see the note at the top
+    /// of the file, which is the one thing here that had to be measured.
+    fn prepared(known: &[String]) -> objc2::rc::Retained<NSSpellChecker> {
         let checker = NSSpellChecker::sharedSpellChecker();
-        let language = english();
-
-        // Without this the checker flags nothing at all — see the note at the
-        // top of the file, which is the one thing here that had to be
-        // measured.
         checker.setAutomaticallyIdentifiesLanguages(false);
-        checker.setLanguage(&language);
+        checker.setLanguage(&english());
 
-        // The reader's own words, which are not misspellings.
         let ignored: Vec<objc2::rc::Retained<NSString>> =
             known.iter().map(|word| NSString::from_str(word)).collect();
         let ignored: Vec<&NSString> = ignored.iter().map(|word| &**word).collect();
         checker.setIgnoredWords_inSpellDocumentWithTag(&NSArray::from_slice(&ignored), tag());
+        checker
+    }
+
+    /// The next misspelled range at or after `from`, in UTF-16 code units.
+    /// Empty when there is none: the checker reports the *next* one from an
+    /// offset rather than the one at it, which is why both callers walk.
+    fn next_misspelling(
+        checker: &NSSpellChecker,
+        text: &NSString,
+        from: usize,
+    ) -> objc2_foundation::NSRange {
+        let mut count: NSInteger = 0;
+        unsafe {
+            checker.checkSpellingOfString_startingAt_language_wrap_inSpellDocumentWithTag_wordCount(
+                text,
+                from as NSInteger,
+                Some(&english()),
+                false,
+                tag(),
+                &mut count,
+            )
+        }
+    }
+
+    /*
+     * Every misspelling in a text, for the underlines.
+     *
+     * Tova draws them rather than the system, because the system only marks a
+     * word as it is typed: a note written yesterday opened with nothing
+     * underlined in it at all, which read as spellchecking being broken. It
+     * also means one dictionary rather than two — a word added here stops
+     * being underlined, which is the whole point of adding it.
+     */
+    pub fn check(text: &str, known: &[String]) -> Vec<Span> {
+        let checker = prepared(known);
+        let string = NSString::from_str(text);
+        let units = text.encode_utf16().count();
+
+        let mut found = Vec::new();
+        let mut from = 0usize;
+        while from < units {
+            let range = next_misspelling(&checker, &string, from);
+            if range.length == 0 {
+                break;
+            }
+
+            let to = range.location + range.length;
+            found.push(Span {
+                from: range.location,
+                to,
+            });
+            // Never backwards, and never the same place twice: the checker is
+            // a foreign call and this loop is over a whole document.
+            from = to.max(from + 1);
+        }
+        found
+    }
+
+    pub fn suggest(line: &str, at: usize, known: &[String]) -> Option<Misspelling> {
+        let checker = prepared(known);
+        let language = english();
 
         let text = NSString::from_str(line);
         let units = line.encode_utf16().count();
@@ -190,18 +274,7 @@ mod system {
         // clicked. Walked rather than asked directly because the checker
         // reports the *next* misspelling from an offset, not the one at it.
         while from < units {
-            let mut count: NSInteger = 0;
-            let found = unsafe {
-                checker
-                    .checkSpellingOfString_startingAt_language_wrap_inSpellDocumentWithTag_wordCount(
-                        &text,
-                        from as NSInteger,
-                        Some(&language),
-                        false,
-                        tag(),
-                        &mut count,
-                    )
-            };
+            let found = next_misspelling(&checker, &text, from);
             if found.length == 0 {
                 return None;
             }
@@ -253,7 +326,11 @@ mod system {
 
     pub fn learn(_word: &str) {}
     pub fn unlearn(_word: &str) {}
-    pub fn set_underlining(_enabled: bool) {}
+    pub fn quiet_the_system() {}
+
+    pub fn check(_text: &str, _known: &[String]) -> Vec<super::Span> {
+        Vec::new()
+    }
 
     pub fn suggest(_line: &str, _at: usize, _known: &[String]) -> Option<Misspelling> {
         None
@@ -328,7 +405,7 @@ mod tests {
 
         /*
          * The squiggles and the suggestions read the same shared checker, so
-         * whatever `set_underlining` leaves it in is what the underlines use.
+         * whatever `quiet_the_system` leaves it in is what they both read.
          * Left on automatic it will not commit on a short word: `teh` went
          * unmarked while `bwron` beside it was underlined, and right-clicking
          * the unmarked word still offered `the`.
@@ -339,12 +416,83 @@ mod tests {
             let checker = objc2_app_kit::NSSpellChecker::sharedSpellChecker();
 
             // Put back what a fresh process starts with, so this asks
-            // `set_underlining` rather than whatever ran before it.
+            // `quiet_the_system` rather than whatever ran before it.
             checker.setAutomaticallyIdentifiesLanguages(true);
-            super::super::set_underlining(true);
+            super::super::quiet_the_system();
 
             assert!(!checker.automaticallyIdentifiesLanguages());
             assert_eq!(checker.language().to_string(), "en");
+        }
+
+        /*
+         * The underlines. Tova draws these rather than the webview, which
+         * only marks a word as it is typed — a note written yesterday opened
+         * with nothing underlined in it at all.
+         */
+        #[test]
+        fn finds_every_misspelling_in_a_whole_note() {
+            let _turn = one_at_a_time();
+            let dir = scratch("check-all");
+            let text = "teh quick bwron fox\n\njumpd over the lazzy dog";
+
+            let found = check(&dir, text);
+            let words: Vec<String> = found
+                .iter()
+                .map(|span| {
+                    String::from_utf16_lossy(
+                        &text.encode_utf16().collect::<Vec<u16>>()[span.from..span.to],
+                    )
+                })
+                .collect();
+
+            assert_eq!(words, ["teh", "bwron", "jumpd", "lazzy"]);
+            let _ = std::fs::remove_dir_all(&dir);
+        }
+
+        #[test]
+        fn a_note_with_nothing_wrong_in_it_underlines_nothing() {
+            let _turn = one_at_a_time();
+            let dir = scratch("check-clean");
+
+            assert!(check(&dir, "The quick brown fox jumped over the lazy dog.").is_empty());
+            assert!(check(&dir, "").is_empty());
+            let _ = std::fs::remove_dir_all(&dir);
+        }
+
+        /*
+         * The reason for doing this at all: one dictionary. The webview kept
+         * its own, so a word added in Tova went on being underlined.
+         */
+        #[test]
+        fn a_word_the_reader_added_stops_being_underlined() {
+            let _turn = one_at_a_time();
+            let dir = scratch("check-known");
+            let text = "bwron and zzyzx";
+
+            assert_eq!(check(&dir, text).len(), 2);
+
+            add_word(&dir, "zzyzx").unwrap();
+            let found = check(&dir, text);
+            assert_eq!(found.len(), 1, "only bwron is left");
+            assert_eq!(found[0].from, 0);
+
+            remove_word(&dir, "zzyzx").unwrap();
+            let _ = std::fs::remove_dir_all(&dir);
+        }
+
+        /// Counted the way the editor counts them, which is not bytes.
+        #[test]
+        fn an_offset_is_counted_in_utf16_the_way_the_editor_counts_one() {
+            let _turn = one_at_a_time();
+            let dir = scratch("check-utf16");
+
+            // An emoji is two UTF-16 code units and four bytes.
+            let text = "🙂 bwron";
+            let found = check(&dir, text);
+
+            assert_eq!(found.len(), 1);
+            assert_eq!((found[0].from, found[0].to), (3, 8));
+            let _ = std::fs::remove_dir_all(&dir);
         }
 
         #[test]

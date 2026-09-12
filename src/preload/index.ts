@@ -88,6 +88,7 @@ const publishing: PublishApi = {
 }
 
 const spellcheck: SpellcheckApi = {
+  check: (text) => ipcRenderer.invoke("spellcheck:check", text),
   onSuggest: (listener) => {
     const handler = (_event: unknown, misspelling: Misspelling): void => listener(misspelling)
     ipcRenderer.on("spellcheck:suggest", handler)
