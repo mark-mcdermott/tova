@@ -86,6 +86,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
         blocksRemoved: 0,
         copiesDeleted: 0,
         copiesTrimmed: 0,
+        snapshotsSkipped: 0,
         failed: []
       })),
       nuke: vi.fn(async () => undefined),

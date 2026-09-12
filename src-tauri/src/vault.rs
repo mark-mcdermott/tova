@@ -137,6 +137,47 @@ pub fn directory_of(section: &str, folder: Option<&str>) -> Result<PathBuf, Stri
 }
 
 /// The section directories a vault is expected to have, made if they are not.
+/*
+ * A vault's name for itself.
+ *
+ * Backups are folders named after the minute they were taken, and said
+ * nothing about where they came from — so anything sweeping them had to treat
+ * every snapshot on the machine as possibly this vault's. Recording the
+ * vault's path would have worked until the vault moved, and then every older
+ * snapshot would look like a stranger's.
+ *
+ * An id written inside the vault moves with it, and a backup is a copy of the
+ * vault, so every snapshot carries one without anything having to put it
+ * there. Restoring one brings the same id back, which is right: it is the
+ * same vault.
+ *
+ * Hidden, and not a section, so nothing that walks the vault for notes sees
+ * it.
+ */
+const IDENTITY: &str = ".tova-vault";
+
+/// The id recorded in a directory, without making one. For reading a backup
+/// snapshot, which is a copy of a vault and must not be written to.
+pub fn identity_of(root: &Path) -> Option<String> {
+    let found = std::fs::read_to_string(root.join(IDENTITY)).ok()?;
+    let found = crate::js::trim(&found).to_string();
+    (!found.is_empty()).then_some(found)
+}
+
+/// The vault's id, making one if this vault has never had one.
+///
+/// A vault with no id is not an error: every vault predating this had none,
+/// and one is written the next time the app opens it.
+pub fn identity(root: &Path) -> Option<String> {
+    if let Some(existing) = identity_of(root) {
+        return Some(existing);
+    }
+
+    let path = root.join(IDENTITY);
+    let made = uuid::Uuid::new_v4().to_string();
+    std::fs::write(&path, &made).ok().map(|()| made)
+}
+
 pub fn ensure_vault(root: &Path, sections: &[String]) -> std::io::Result<()> {
     let mut wanted: Vec<&str> = sections.iter().map(String::as_str).collect();
     wanted.extend(ALWAYS);
@@ -146,12 +187,58 @@ pub fn ensure_vault(root: &Path, sections: &[String]) -> std::io::Result<()> {
     for section in wanted {
         std::fs::create_dir_all(root.join(section))?;
     }
+
+    // After the directories exist, so the first run writes into a vault
+    // rather than making one by accident.
+    identity(root);
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /*
+     * Every vault gets a name the first time the app opens it, which is what
+     * lets a backup say which vault it came from. Written into the vault
+     * rather than recorded beside it, so it survives the vault being moved.
+     */
+    #[test]
+    fn opening_a_vault_gives_it_a_name_and_keeps_it() {
+        let vault = std::env::temp_dir().join("tova-vault-identity");
+        let _ = std::fs::remove_dir_all(&vault);
+        std::fs::create_dir_all(&vault).unwrap();
+
+        assert_eq!(identity_of(&vault), None, "nothing there to begin with");
+
+        ensure_vault(&vault, &[]).unwrap();
+        let named = identity_of(&vault).expect("a name after opening");
+        assert!(!named.is_empty());
+
+        ensure_vault(&vault, &[]).unwrap();
+        assert_eq!(identity_of(&vault), Some(named), "and it is not renamed");
+
+        let _ = std::fs::remove_dir_all(&vault);
+    }
+
+    #[test]
+    fn two_vaults_are_not_given_the_same_name() {
+        let roots: Vec<std::path::PathBuf> = ["tova-vault-one", "tova-vault-two"]
+            .iter()
+            .map(|name| {
+                let path = std::env::temp_dir().join(name);
+                let _ = std::fs::remove_dir_all(&path);
+                std::fs::create_dir_all(&path).unwrap();
+                ensure_vault(&path, &[]).unwrap();
+                path
+            })
+            .collect();
+
+        assert_ne!(identity_of(&roots[0]), identity_of(&roots[1]));
+        for path in roots {
+            let _ = std::fs::remove_dir_all(&path);
+        }
+    }
 
     fn root() -> PathBuf {
         PathBuf::from("/Users/someone/Documents/Tova")

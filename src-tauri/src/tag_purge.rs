@@ -242,6 +242,36 @@ fn sweep_tree(root: &std::path::Path, tag: &str, done: &mut Purged) {
     }
 }
 
+/*
+ * The snapshots that are this vault's, and the ones nobody can vouch for.
+ *
+ * A backup is a copy of the vault, so it carries the vault's id — see
+ * `vault::identity`. A snapshot whose id is somebody else's vault is left
+ * alone; one taken before ids existed has nothing to go on, and is swept,
+ * because of the two ways to be wrong about a snapshot the worse one is
+ * leaving behind the copy somebody asked to have destroyed.
+ */
+fn sweep_snapshots(root: &std::path::Path, tag: &str, done: &mut Purged) {
+    let ours = crate::vault::identity(&crate::vault::vault_root());
+
+    let Ok(entries) = std::fs::read_dir(root) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let snapshot = entry.path();
+        if !snapshot.is_dir() {
+            continue;
+        }
+
+        match crate::vault::identity_of(&snapshot) {
+            Some(theirs) if Some(&theirs) != ours.as_ref() => {
+                done.snapshots_skipped += 1;
+            }
+            _ => sweep_tree(&snapshot, tag, done),
+        }
+    }
+}
+
 /// What a purge did, for saying so afterwards.
 #[derive(Debug, Default, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -253,6 +283,8 @@ pub struct Purged {
     pub copies_deleted: usize,
     /// Files in those places rewritten with the tag's lines taken out.
     pub copies_trimmed: usize,
+    /// Backups belonging to a different vault, which were left alone.
+    pub snapshots_skipped: usize,
     /// Notes and copies that could not be written or removed. Reported rather
     /// than swallowed: a purge that half worked is worth knowing about, and
     /// this one half working means the text is still somewhere.
@@ -312,13 +344,7 @@ pub fn apply(plan: &Plan) -> Purged {
         &plan.tag,
         &mut done,
     );
-    /*
-     * Every snapshot, not only this vault's. A backup folder is named after
-     * the date it was taken and says nothing about which vault it came from,
-     * so there is no way to sweep one vault's history and leave another's —
-     * and of the two, leaving copies behind is the failure that matters.
-     */
-    sweep_tree(&crate::backup::backup_root(), &plan.tag, &mut done);
+    sweep_snapshots(&crate::backup::backup_root(), &plan.tag, &mut done);
 
     done
 }
@@ -620,6 +646,87 @@ mod tests {
         assert_eq!(copies("Tomatoes."), 1, "the other note was touched");
         assert_eq!(done.copies_deleted, 1);
         let _ = std::fs::remove_dir_all(&backups);
+    }
+
+    /*
+     * The reason a vault has an id at all: one backup folder holds every
+     * vault's snapshots, named only by the minute they were taken.
+     */
+    #[test]
+    fn a_snapshot_from_another_vault_is_left_alone() {
+        let scratch = Scratch::new("other-vault");
+        made("notes", "Job", "#work\nThe job.\n");
+
+        // Named, so the snapshot carries the name — without this the snapshot
+        // is merely unidentified, and this test passes for the wrong reason.
+        let ours = crate::vault::identity(&scratch.vault).expect("our vault is named");
+
+        let backups = std::env::temp_dir().join("tova-purge-other-backups");
+        let _ = std::fs::remove_dir_all(&backups);
+
+        // Ours, and a stranger's, side by side under one root.
+        crate::backup::run_backup(&backups, 5).unwrap();
+        let mine = crate::backup::list_backups(&backups)[0].name.clone();
+        assert_eq!(
+            crate::vault::identity_of(&backups.join(&mine)),
+            Some(ours),
+            "the snapshot carries the vault's name"
+        );
+        let theirs = backups.join("2020-01-01_00-00-00");
+        std::fs::create_dir_all(theirs.join("notes")).unwrap();
+        std::fs::write(theirs.join(".tova-vault"), "somebody-elses-vault").unwrap();
+        std::fs::write(theirs.join("notes").join("job.md"), "#work\nTheir job.\n").unwrap();
+
+        let mut done = Purged::default();
+        super::sweep_snapshots(&backups, "work", &mut done);
+
+        assert_eq!(done.snapshots_skipped, 1, "the stranger's was left");
+        assert!(
+            theirs.join("notes").join("job.md").is_file(),
+            "their note was deleted"
+        );
+        assert_eq!(done.copies_deleted, 1, "ours was swept");
+
+        let _ = std::fs::remove_dir_all(&backups);
+        let _ = scratch;
+    }
+
+    /*
+     * A snapshot taken before vaults had ids has nothing to go on. Swept,
+     * because the worse of the two mistakes is leaving behind the copy
+     * somebody asked to have destroyed.
+     */
+    #[test]
+    fn a_snapshot_with_no_id_is_swept_rather_than_trusted() {
+        let _s = Scratch::new("old-snapshot");
+        let backups = std::env::temp_dir().join("tova-purge-old-backups");
+        let _ = std::fs::remove_dir_all(&backups);
+
+        let old = backups.join("2019-01-01_00-00-00");
+        std::fs::create_dir_all(old.join("notes")).unwrap();
+        std::fs::write(old.join("notes").join("job.md"), "#work\nThe job.\n").unwrap();
+
+        let mut done = Purged::default();
+        super::sweep_snapshots(&backups, "work", &mut done);
+
+        assert_eq!(done.snapshots_skipped, 0);
+        assert_eq!(done.copies_deleted, 1);
+        let _ = std::fs::remove_dir_all(&backups);
+    }
+
+    /// A vault keeps the same id when it moves, so its old backups stay its own.
+    #[test]
+    fn a_vault_that_moves_takes_its_id_with_it() {
+        let scratch = Scratch::new("moved");
+        let first = crate::vault::identity(&scratch.vault).unwrap();
+
+        let moved = std::env::temp_dir().join("tova-purge-moved-elsewhere");
+        let _ = std::fs::remove_dir_all(&moved);
+        std::fs::create_dir_all(&moved).unwrap();
+        std::fs::copy(scratch.vault.join(".tova-vault"), moved.join(".tova-vault")).unwrap();
+
+        assert_eq!(crate::vault::identity_of(&moved), Some(first));
+        let _ = std::fs::remove_dir_all(&moved);
     }
 
     #[test]
