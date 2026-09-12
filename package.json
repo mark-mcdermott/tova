@@ -12,8 +12,8 @@
     "package": "electron-vite build && electron-builder",
     "package:dir": "electron-vite build && electron-builder --dir",
     "icon": "electron tools/make-icon.js",
-    "tauri:dev": "cargo tauri dev --manifest-path src-tauri/Cargo.toml",
-    "tauri:build": "cargo tauri build --manifest-path src-tauri/Cargo.toml"
+    "tauri:dev": "cargo tauri dev",
+    "tauri:build": "cargo tauri build"
   },
   "keywords": [],
   "author": "Mark McDermott <mark@markmcdermott.io>",
