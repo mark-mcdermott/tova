@@ -116,7 +116,6 @@ describe("what is left of the port", () => {
     const done = ported()
 
     expect(all.filter((name) => !done.has(name)).sort()).toEqual([
-      "notes.exportPdf",
       "spellcheck.addWord",
       "spellcheck.listWords",
       "spellcheck.onSuggest",

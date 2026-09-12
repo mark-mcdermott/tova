@@ -150,6 +150,7 @@
   tova.images.save = (name, bytes) =>
     invoke("image_save", { name, bytes: Array.from(new Uint8Array(bytes)) })
   tova.notes.exportMarkdown = (id) => invoke("note_export", { id })
+  tova.notes.exportPdf = (id) => invoke("note_export_pdf", { id })
   tova.blogs.list = () => invoke("blog_list")
   tova.blogs.save = (blog) => invoke("blog_save", { blog })
   tova.blogs.remove = (id, trashPosts) => invoke("blog_delete", { id, trashPosts })
