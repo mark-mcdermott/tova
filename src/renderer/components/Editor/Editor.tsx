@@ -14,6 +14,7 @@ import { useBlogsStore } from "../../stores/blogsStore"
 import { SelectorAnchor, insertPostBlock } from "./blogSelector"
 import { Menu } from "../Popup/Menu"
 import { PublishToasts } from "./PublishToast"
+import { GrammarMenu } from "./GrammarMenu"
 import { SpellingMenu } from "./SpellingMenu"
 import { checkGrammar } from "../../grammarLinter"
 import { setGrammarNotes } from "./grammar"
@@ -318,6 +319,8 @@ export function Editor({ note }: EditorProps) {
       <PublishToasts />
 
       <SpellingMenu />
+
+      <GrammarMenu viewRef={viewRef} />
 
       {blogAnchor !== null && blogs.length > 0 && (
         <Menu

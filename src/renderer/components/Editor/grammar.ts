@@ -12,7 +12,22 @@ export interface GrammarNote {
 /** Results arrive later than the edit that asked for them, so they come in as an effect. */
 export const setGrammarNotes = StateEffect.define<GrammarNote[]>()
 
-const mark = Decoration.mark({ class: "cm-grammar" })
+/*
+ * Harper reports spelling alongside grammar, and the two are not the same
+ * claim. Spelling gets the red the system uses for it, so a word the reader
+ * typed and a word that was already there look alike.
+ */
+export const SPELLING = "Spelling"
+
+const marks = {
+  grammar: Decoration.mark({ class: "cm-grammar" }),
+  spelling: Decoration.mark({ class: "cm-grammar cm-grammar-spelling" })
+}
+
+/** Which mark a note is drawn with, from the kind the checker gave it. */
+export function markFor(kind: string): Decoration {
+  return kind === SPELLING ? marks.spelling : marks.grammar
+}
 
 /**
  * The notes Harper last returned, mapped through every edit since. Mapping
@@ -45,7 +60,7 @@ function decorate(notes: GrammarNote[], length: number): DecorationSet {
   const ranges: Range<Decoration>[] = []
   for (const note of notes) {
     if (note.from >= 0 && note.to <= length && note.to > note.from) {
-      ranges.push(mark.range(note.from, note.to))
+      ranges.push(markFor(note.kind).range(note.from, note.to))
     }
   }
   return Decoration.set(ranges, true)

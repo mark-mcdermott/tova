@@ -177,6 +177,12 @@
      softer claim than a misspelt word. */
   --grammar-ink: #8a6d3b;
 
+  /* And spelling's red, for the checker's own spelling notes. The system
+     draws its squiggle in this family under words as they are typed; a word
+     already on the page when the note opened is flagged by Harper instead,
+     and the reader should not have to know which one spoke. */
+  --spelling-ink: #a3242c;
+
   /* Type */
   --font-sans: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: "Noto Sans Mono", ui-monospace, Menlo, monospace;
@@ -358,6 +364,7 @@
   --code-operator: rgb(243 240 249 / 72%);
   --code-property: #d6cdf0;
   --grammar-ink: #d8b88a;
+  --spelling-ink: #ff8d86;
 
   /* Still an opaque pill with white ink, and still clears AA — the fill has to
      stay dark for that even though everything around it lightened. */
