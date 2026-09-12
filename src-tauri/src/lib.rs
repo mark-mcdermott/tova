@@ -22,6 +22,7 @@ mod front_matter;
 mod github;
 mod images;
 mod js;
+mod markdown_html;
 mod media;
 mod note_location;
 mod note_name;
