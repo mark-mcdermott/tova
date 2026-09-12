@@ -322,52 +322,134 @@
   /*
    * Dragging the window by its header.
    *
-   * The renderer says which parts of the chrome are a handle with
-   * `-webkit-app-region: drag`, which is Chromium's and which WKWebView has
-   * never implemented — so under Tauri only the real title bar strip at the
-   * very top could move the window, which is not how a Mac app behaves.
+   * The renderer marks the handles with `-webkit-app-region: drag`, which is
+   * Chromium's. WKWebView does not merely ignore it — `CSS.supports` says no
+   * and the parser drops the declaration, so it is absent from `cssRules` and
+   * from `cssText` alike. There is nothing to read back out of the stylesheet
+   * once the browser has been through it.
    *
-   * The rule is still the right one to obey, so it is read rather than
-   * replaced: the stylesheets say which selectors are handles and which are
-   * cut out of one, and a press on anything matching starts a drag. That keeps
-   * the answer in the CSS, where a designer can change it, rather than in a
-   * list here that would quietly go stale.
+   * So the source text is read instead, before the parser gets to it: a style
+   * element carries its own text, and a linked sheet can be fetched. That
+   * keeps the answer in the CSS, where a designer changing the header does not
+   * also have to know about this file.
    */
-  const dragRegions = { drag: [], noDrag: null }
 
-  const collectDragRegions = () => {
+  /*
+   * `selector, selector { … -webkit-app-region: drag … }`, pulled out with a
+   * regex because the parser has already refused to help. Narrow on purpose:
+   * it matches the shape the renderer writes and nothing more ambitious.
+   *
+   * Comments come out first, because a brace inside one would read as the
+   * start of a block and shift every rule after it by one. The selectors
+   * themselves survive a comment — CSS allows one anywhere, `closest`
+   * included — so this is about the braces and nothing else.
+   */
+  const COMMENT = /\/\*[\s\S]*?\*\//g
+  const RULE = /([^{}]+)\{([^}]*)\}/g
+  const REGION = /-webkit-app-region:\s*(drag|no-drag)/
+
+  const findDragRegions = (source) => {
     const drag = []
     const noDrag = []
 
-    for (const sheet of document.styleSheets) {
-      let rules
-      try {
-        rules = sheet.cssRules
-      } catch {
-        // A stylesheet from another origin. Tova has none, but asking costs
-        // nothing and throwing here would take the whole handler with it.
-        continue
-      }
-      for (const rule of rules) {
-        const region = rule.style?.getPropertyValue("-webkit-app-region")
-        if (region === "drag") drag.push(rule.selectorText)
-        if (region === "no-drag") noDrag.push(rule.selectorText)
-      }
+    for (const [, selector, body] of source.replace(COMMENT, "").matchAll(RULE)) {
+      const region = REGION.exec(body)
+      if (region === null) continue
+      // An at-rule's prelude is not a selector; a nested block's is.
+      const cleaned = selector.trim()
+      if (cleaned.startsWith("@")) continue
+      ;(region[1] === "drag" ? drag : noDrag).push(cleaned)
     }
 
-    dragRegions.drag = drag.filter(Boolean)
-    dragRegions.noDrag = noDrag.filter(Boolean).join(", ") || null
+    // One selector rather than a list: the question asked of it is only ever
+    // whether the target is inside any of them.
+    return { drag: drag.join(", ") || null, noDrag: noDrag.join(", ") || null }
   }
 
+  /*
+   * Read when it is asked for rather than at startup. This script runs at
+   * document start, where `document.styleSheets` is still empty — reading
+   * then finds nothing at all, and finds it silently. Asking on the mousedown
+   * that needs the answer sidesteps the whole question of when the styles
+   * arrive, and picks up an edit made by dev-server reload for free.
+   */
+  const fetched = new Map()
+  let lastSource = null
+  let regions = { drag: null, noDrag: null }
+
+  /** A style element carries its own source; a linked sheet has to be asked. */
+  const inlineSources = () => {
+    const sources = []
+    for (const sheet of document.styleSheets) {
+      const node = sheet.ownerNode
+      if (node instanceof HTMLStyleElement) sources.push(node.textContent ?? "")
+    }
+    return sources
+  }
+
+  /*
+   * The built app links its stylesheet instead of inlining it, and a fetch is
+   * not something a mousedown can wait for. So the text is collected in the
+   * background and folded in when it lands: the first click of a session may
+   * miss it, every later one has it. In the dev server, where the styles are
+   * inlined, this finds nothing and costs nothing.
+   */
+  const collectLinked = () => {
+    for (const sheet of document.styleSheets) {
+      const href = sheet.href
+      if (href === null || fetched.has(href)) continue
+      fetched.set(href, "")
+      void fetch(href)
+        .then((response) => response.text())
+        .then((text) => fetched.set(href, text))
+        .catch((error) => {
+          console.warn(`Could not read ${href}; the window may not drag`, error)
+        })
+    }
+  }
+
+  const dragRegions = () => {
+    collectLinked()
+    const source = [...inlineSources(), ...fetched.values()].join("\n")
+    if (source !== lastSource) {
+      lastSource = source
+      regions = findDragRegions(source)
+    }
+    return regions
+  }
+
+  const matches = (target, selector) => {
+    try {
+      return target.closest(selector) !== null
+    } catch {
+      // A selector this browser will not parse cannot match anything.
+      return false
+    }
+  }
+
+  /*
+   * Every way this has failed so far has been silent: no drag regions found,
+   * so nothing drags, so there is nothing to see. Said once, on the first
+   * click that wanted one, rather than never.
+   */
+  let complained = false
+
   const isDragHandle = (target) => {
-    if (dragRegions.drag.length === 0) collectDragRegions()
-    if (dragRegions.noDrag !== null && target.closest(dragRegions.noDrag) !== null) return false
-    return dragRegions.drag.some((selector) => target.closest(selector) !== null)
+    const { drag, noDrag } = dragRegions()
+    if (drag === null) {
+      if (!complained) {
+        complained = true
+        console.warn("No -webkit-app-region rules in any stylesheet; the window will not drag")
+      }
+      return false
+    }
+    if (noDrag !== null && matches(target, noDrag)) return false
+    return matches(target, drag)
   }
 
   document.addEventListener("mousedown", (event) => {
-    // The left button only, and never a second press of a double click: that
-    // is the gesture for zooming a window, not moving one.
+    // The left button only, and never the second press of a double click:
+    // that gesture zooms a window rather than moving one.
     if (event.button !== 0 || event.detail > 1) return
     if (!(event.target instanceof Element) || !isDragHandle(event.target)) return
 
@@ -377,8 +459,7 @@
 
   /*
    * Double-clicking the title bar does what the reader has told macOS it
-   * should — zoom, minimise or nothing. Read once; it is a system preference,
-   * not something that changes while an app is open.
+   * should. Zoom is the common setting and the only one Tauri offers.
    */
   document.addEventListener("dblclick", (event) => {
     if (event.button !== 0) return
