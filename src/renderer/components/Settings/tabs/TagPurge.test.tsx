@@ -3,6 +3,7 @@ import { render, screen, cleanup } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { TagPurge } from "./TagPurge"
 import { stubBridge } from "../../../testing/bridge"
+import { useNotesStore } from "../../../stores/notesStore"
 import type { PurgePlan, Purged } from "../../../../shared/types"
 
 /*
@@ -144,6 +145,22 @@ describe("deleting everything under a tag", () => {
     expect(said.textContent).toContain("1 trimmed")
     expect(said.textContent).toContain("4 copies in backups and history")
     expect(said.textContent).toContain("2 snapshots from another vault left alone")
+  })
+
+  /*
+   * The reported bug: a note whose file had gone was still listed, and opening
+   * it said "No such file or directory". The list is held in the renderer and
+   * nothing had told it.
+   */
+  it("reloads the notes it just deleted out from under the sidebar", async () => {
+    const reload = vi.spyOn(useNotesStore.getState(), "load").mockResolvedValue()
+    render(<TagPurge />)
+    await ask("work")
+    await userEvent.type(screen.getByLabelText(/type/i), "confirm")
+    await userEvent.click(screen.getByRole("button", { name: /Delete everything under #work/ }))
+
+    await screen.findByRole("status")
+    expect(reload).toHaveBeenCalled()
   })
 
   it("says when something could not be removed, rather than reporting success", async () => {

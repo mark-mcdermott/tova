@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { PurgePlan, PurgePlanned, Purged } from "../../../../shared/types"
 import { ConfirmDialog } from "../../Popup/ConfirmDialog"
+import { useNotesStore } from "../../../stores/notesStore"
 import { Field } from "../Field"
 
 /**
@@ -52,6 +53,12 @@ export function TagPurge() {
   const [plan, setPlan] = useState<PurgePlan | null>(null)
   const [said, setSaid] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /*
+   * The sidebar and the index are holding a list of notes, some of which are
+   * about to stop existing. The backend says so too, for anything else
+   * listening; this is the half that does not wait for a round trip.
+   */
+  const reload = useNotesStore((state) => state.load)
 
   async function look(): Promise<void> {
     setSaid(null)
@@ -78,7 +85,9 @@ export function TagPurge() {
     setPlan(null)
     setBusy(true)
     try {
-      setSaid(summarize(await window.tova.preferences.tagPurge(target)))
+      const done = await window.tova.preferences.tagPurge(target)
+      await reload()
+      setSaid(summarize(done))
       setTag("")
     } finally {
       setBusy(false)
