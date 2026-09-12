@@ -183,5 +183,124 @@
     }
   }
 
+  /*
+   * Spelling.
+   *
+   * The only part of the surface that is not a command with a different name
+   * underneath. Electron got the misspelled word and its suggestions handed to
+   * it by Chromium, from the event that opened the context menu; WKWebView
+   * offers nothing of the kind. So the work moves here — which is the right
+   * place for it, because the preload it replaces is renderer-side too, and
+   * because everything needed is in the document.
+   *
+   * What the backend is asked is deliberately small: a line and a position.
+   * The spell checker decides where the word starts and ends, so no idea of
+   * what a word is lives in this file.
+   */
+  let spellingOn = true
+  let clicked = null
+  const spellingListeners = new Set()
+
+  /** The editor line a point landed in, and where in its text that is. */
+  const lineAt = (x, y) => {
+    const caret = document.caretRangeFromPoint(x, y)
+    if (caret === null) return null
+
+    const line = caret.startContainer.parentElement?.closest(".cm-line")
+    if (!line) return null
+
+    // Everything before the caret within the line, measured as the text the
+    // reader sees rather than as nodes.
+    const before = document.createRange()
+    before.setStart(line, 0)
+    before.setEnd(caret.startContainer, caret.startOffset)
+
+    return { line, text: line.textContent ?? "", at: before.toString().length }
+  }
+
+  /**
+   * A DOM range over `[from, to)` of a line's text, so a replacement lands on
+   * the word rather than near it. Walks the text nodes because a highlighted
+   * line is many of them.
+   */
+  const rangeOver = (line, from, to) => {
+    const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT)
+    const range = document.createRange()
+    let seen = 0
+    let started = false
+
+    for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+      const length = node.data.length
+      if (!started && seen + length >= from) {
+        range.setStart(node, from - seen)
+        started = true
+      }
+      if (started && seen + length >= to) {
+        range.setEnd(node, to - seen)
+        return range
+      }
+      seen += length
+    }
+    return started ? range : null
+  }
+
+  document.addEventListener("contextmenu", (event) => {
+    if (!spellingOn || spellingListeners.size === 0) return
+
+    const found = lineAt(event.clientX, event.clientY)
+    if (found === null) return
+
+    invoke("spellcheck_suggest", { line: found.text, at: found.at }).then((misspelling) => {
+      if (misspelling === null) return
+
+      // Held so `replace` knows what it is replacing. The word, not the click.
+      clicked = rangeOver(found.line, misspelling.from, misspelling.to)
+      const update = {
+        word: misspelling.word,
+        suggestions: misspelling.suggestions,
+        x: event.clientX,
+        y: event.clientY
+      }
+      for (const listener of spellingListeners) listener(update)
+    })
+  })
+
+  tova.spellcheck.onSuggest = (listener) => {
+    spellingListeners.add(listener)
+    return () => spellingListeners.delete(listener)
+  }
+
+  /*
+   * Typed in rather than written into the DOM: the editor is a CodeMirror
+   * document, and text that appears underneath it without an input event is
+   * text CodeMirror does not know it has. `insertText` is the same event a
+   * keystroke raises, which is also what the system's own spelling menu uses.
+   */
+  tova.spellcheck.replace = async (word) => {
+    if (clicked === null) return
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(clicked)
+    document.execCommand("insertText", false, word)
+    clicked = null
+  }
+
+  /*
+   * The squiggles are the webview's, so turning them off is a matter of
+   * telling the document rather than the backend — and the menu stops
+   * offering itself at the same time.
+   */
+  tova.spellcheck.setEnabled = async (enabled) => {
+    spellingOn = enabled === true
+    document.body.spellcheck = spellingOn
+    for (const editable of document.querySelectorAll("[contenteditable]")) {
+      editable.spellcheck = spellingOn
+    }
+  }
+
+  tova.spellcheck.listWords = () => invoke("spellcheck_words")
+  tova.spellcheck.addWord = (word) => invoke("spellcheck_add_word", { word })
+  tova.spellcheck.removeWord = (word) => invoke("spellcheck_remove_word", { word })
+
   window.tova = tova
 })()

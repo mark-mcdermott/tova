@@ -104,24 +104,20 @@ describe("the two backends offer the same thing to the renderer", () => {
 })
 
 describe("what is left of the port", () => {
-  it("is the native handful, and says so out loud", () => {
+  it("is nothing", () => {
     /*
-     * Not a target to beat — a record of which methods still throw under
-     * Tauri, so the list cannot shrink by accident or grow without somebody
-     * noticing. Both of those have happened to the count in a PR description.
+     * Every method the renderer can call is answered by both backends.
+     *
+     * Kept as a test rather than deleted, and kept in this shape rather than
+     * asserting a count: a method added to the surface and wired on only one
+     * side fails here, which is the state this whole file exists to make
+     * impossible to reach quietly.
      */
     const all = [...fromPreload].flatMap(([group, methods]) =>
       [...methods].map((m) => `${group}.${m}`)
     )
     const done = ported()
 
-    expect(all.filter((name) => !done.has(name)).sort()).toEqual([
-      "spellcheck.addWord",
-      "spellcheck.listWords",
-      "spellcheck.onSuggest",
-      "spellcheck.removeWord",
-      "spellcheck.replace",
-      "spellcheck.setEnabled"
-    ])
+    expect(all.filter((name) => !done.has(name))).toEqual([])
   })
 })
