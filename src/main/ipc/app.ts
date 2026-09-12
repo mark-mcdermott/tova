@@ -87,6 +87,16 @@ export function registerAppHandlers(): void {
     unlockVault(asString(path, "path"), asString(key, "recoveryKey"))
   )
 
+  /*
+   * Chromium draws the squiggles on this backend and keeps the word list that
+   * decides them, so there is nothing here to ask: it never exposed a way to
+   * spell-check a string from the main process. The renderer's underlines are
+   * the ones Tova draws over the Tauri backend, where the checker can be asked
+   * directly — here Chromium's own marks stand in, and this answers empty so
+   * the two do not both draw.
+   */
+  ipcMain.handle("spellcheck:check", () => [])
+
   ipcMain.handle("spellcheck:setEnabled", (_event, enabled) => {
     if (typeof enabled !== "boolean") throw new Error("enabled must be a boolean")
     setSpellcheckEnabled(enabled)

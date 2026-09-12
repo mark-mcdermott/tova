@@ -73,7 +73,15 @@
       "deletePost"
     ],
     publish: ["start", "onUpdate"],
-    spellcheck: ["onSuggest", "replace", "addWord", "removeWord", "listWords", "setEnabled"],
+    spellcheck: [
+      "check",
+      "onSuggest",
+      "replace",
+      "addWord",
+      "removeWord",
+      "listWords",
+      "setEnabled"
+    ],
     session: ["read", "write"],
     preferences: [
       "read",
@@ -329,6 +337,7 @@
     await invoke("spellcheck_set_enabled", { enabled: spellingOn })
   }
 
+  tova.spellcheck.check = (text) => invoke("spellcheck_check", { text })
   tova.spellcheck.listWords = () => invoke("spellcheck_words")
   tova.spellcheck.addWord = (word) => invoke("spellcheck_add_word", { word })
   tova.spellcheck.removeWord = (word) => invoke("spellcheck_remove_word", { word })

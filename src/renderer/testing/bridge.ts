@@ -59,6 +59,7 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
     },
     publish: { start: vi.fn(), onUpdate: vi.fn(() => () => undefined) },
     spellcheck: {
+      check: vi.fn(async () => []),
       onSuggest: vi.fn(() => () => undefined),
       replace: vi.fn(),
       addWord: vi.fn(async () => []),

@@ -1,7 +1,7 @@
 import { useEffect, useState, type RefObject } from "react"
 import type { EditorView } from "@codemirror/view"
 import { Menu, MenuItem } from "../Popup/Menu"
-import { grammarNotes, noteAt, SPELLING, type GrammarNote } from "./grammar"
+import { grammarNotes, noteAt, type GrammarNote } from "./grammar"
 
 interface Opened {
   note: GrammarNote
@@ -16,10 +16,11 @@ interface Opened {
  * is the least useful half of a grammar checker. `noteAt` was written for this
  * menu and then sat unused — right-clicking an underline did nothing at all.
  *
- * Spelling is deliberately not answered here. The checker reports it, but the
- * system's own menu is the better one: it knows the words the reader has
- * added, and it can add another. Leaving those clicks alone is what keeps one
- * right-click from opening two menus.
+ * Spelling never reaches here: `checkGrammar` drops those notes, because the
+ * system's checker owns spelling — it is the one the right-click menu asks
+ * and the one "Add to dictionary" writes to. So a click on a red underline
+ * finds no grammar note and falls through to the spelling menu, and one
+ * right-click opens one menu.
  */
 export function GrammarMenu({ viewRef }: { viewRef: RefObject<EditorView | null> }) {
   const [opened, setOpened] = useState<Opened | null>(null)
@@ -38,7 +39,7 @@ export function GrammarMenu({ viewRef }: { viewRef: RefObject<EditorView | null>
       if (position === null) return
 
       const note = noteAt(notes, position)
-      if (note === null || note.kind === SPELLING) return
+      if (note === null) return
 
       setOpened({ note, x: event.clientX, y: event.clientY })
     }

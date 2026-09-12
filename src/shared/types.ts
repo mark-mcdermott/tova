@@ -214,7 +214,19 @@ export interface Misspelling {
   y: number
 }
 
+/** A misspelled range, in the editor's own document positions. */
+export interface SpellingSpan {
+  from: number
+  to: number
+}
+
 export interface SpellcheckApi {
+  /**
+   * Every misspelling in a note, for the underlines the editor draws. The
+   * system only marks a word as it is typed, which left a note written
+   * yesterday with nothing underlined in it.
+   */
+  check: (text: string) => Promise<SpellingSpan[]>
   /** Fires when a right-click lands on a misspelling. Returns an unsubscribe. */
   onSuggest: (listener: (misspelling: Misspelling) => void) => () => void
   /** Replaces the word the context menu was opened on. */

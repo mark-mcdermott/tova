@@ -1500,14 +1500,17 @@
 }
 
 /*
- * Except when the note is about a word rather than a sentence. The checker
- * reports spelling too, and a misspelling drawn in the grammar colour meant
- * the same mistake looked one way if it had just been typed — where the
- * system draws its own red squiggle — and another if it was already on the
- * page when the note opened.
+ * Spelling, which Tova draws rather than the webview.
+ *
+ * The webview's own squiggle only appears under a word as it is typed, so a
+ * note written yesterday opened with nothing underlined in it, and its word
+ * list was not the one "Add to dictionary" writes to. This mark comes from
+ * the same checker the right-click menu asks.
  */
-.cm-grammar-spelling {
-  text-decoration-color: var(--spelling-ink);
+.cm-spelling {
+  text-decoration: underline dotted var(--spelling-ink);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
 }
 
 /* ── Confirm dialog ───────────────────────────────────────────────────── */
