@@ -586,10 +586,20 @@
   background: rgb(139 123 247 / 16%);
 }
 
-/* A row naming a thing rather than an action: the name carries the accent and
-   what kind of thing it is sits quietly on the right. */
+/*
+ * A row naming a thing rather than an action: the name carries the accent and
+ * what kind of thing it is sits quietly on the right.
+ *
+ * Written out rather than taken from --accent-bright, like the three colours
+ * above it. This panel is light glass in both themes, and that token is not —
+ * in the dark theme it is #c3b8ff, which on this white is 1.74:1. Every
+ * suggestion in every popup was that: a spelling correction, a blog name, a
+ * grammar fix, all of them looking disabled and one of them reported as a
+ * menu row that did nothing when clicked. It was clicked; it could not be
+ * read. 8.65:1 now.
+ */
 .popup-menu button.is-accent {
-  color: var(--accent-bright);
+  color: #4436a8;
   font-weight: 500;
 }
 
