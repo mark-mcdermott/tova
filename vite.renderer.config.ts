@@ -17,5 +17,15 @@ import react from "@vitejs/plugin-react"
 export default defineConfig({
   root: "src/renderer",
   plugins: [react()],
-  server: { port: 5173, strictPort: true }
+  server: { port: 5173, strictPort: true },
+
+  /*
+   * Harper finds its own WebAssembly with `new URL("….wasm", import.meta.url)`.
+   * Pre-bundled, `import.meta.url` points into node_modules/.vite/deps, where
+   * the .wasm was never copied — so the dev server answers the request with
+   * index.html and the grammar checker dies on `module doesn't start with
+   * '\0asm'`. Left where it lives, the binary sits beside the JS that asks
+   * for it. The production build resolves this on its own and emits the file.
+   */
+  optimizeDeps: { exclude: ["harper.js"] }
 })

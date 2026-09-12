@@ -3,11 +3,11 @@
 /// <reference types="node" />
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { readFileSync } from "node:fs"
+import { loadTauriBridge, type TauriStub } from "./testing/tauriBridge"
 
 // Read rather than imported: Vitest hands back an empty string for a CSS
 // import unless CSS processing is turned on for the whole suite, and an empty
 // stylesheet would make every assertion here vacuous.
-const bridge = readFileSync("src-tauri/bridge.js", "utf-8")
 const globals = readFileSync("src/renderer/styles/globals.css", "utf-8")
 
 /*
@@ -34,20 +34,8 @@ if (!globals.includes("-webkit-app-region")) {
  * So the real bridge is loaded against the real stylesheet, and the assertion
  * is on what a click actually does.
  */
-const startDragging = vi.fn()
-const toggleMaximize = vi.fn()
-
-/** Enough of `window.__TAURI__` for the bridge to build itself against. */
-function stubRuntime(): void {
-  Object.defineProperty(window, "__TAURI__", {
-    configurable: true,
-    value: {
-      core: { invoke: vi.fn() },
-      event: { listen: vi.fn() },
-      window: { getCurrentWindow: () => ({ startDragging, toggleMaximize }) }
-    }
-  })
-}
+let startDragging: TauriStub["startDragging"]
+let toggleMaximize: TauriStub["toggleMaximize"]
 
 /**
  * The header markup the stylesheet is written against, with the interactive
@@ -88,9 +76,7 @@ describe("dragging the window by its header", () => {
     document.head.append(style)
 
     paint()
-    stubRuntime()
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    new Function(bridge)()
+    ;({ startDragging, toggleMaximize } = loadTauriBridge())
   })
 
   it("drags from the bare part of a header", () => {
@@ -136,8 +122,7 @@ describe("dragging the window by its header", () => {
   it("finds the styles that arrive after it does", () => {
     document.head.innerHTML = ""
     paint()
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    new Function(bridge)()
+    ;({ startDragging } = loadTauriBridge())
 
     press("title")
     expect(startDragging).not.toHaveBeenCalled()
@@ -182,8 +167,7 @@ describe("dragging the window by its header", () => {
       vi.fn(async () => ({ text: async () => globals }))
     )
     paint()
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    new Function(bridge)()
+    ;({ startDragging } = loadTauriBridge())
 
     // The first click is the one that asks; it cannot wait for the answer.
     press("title")
