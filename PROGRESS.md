@@ -641,6 +641,18 @@ a suggestion about a sentence is a softer claim than a misspelt word.
 Done, for the Tauri build: signed, notarized, stapled, and accepted by
 Gatekeeper on a copy carrying the quarantine attribute.
 
+Done again after the cutover, which is the point at which it needed redoing:
+`pnpm run build` is a different command producing a differently-shaped
+`out/renderer`, and a release that bundles the wrong thing looks exactly like
+one that bundles the right thing until it is opened. Submission
+`e6cd8f96-246e-41fb-b301-303541160bef`, accepted. 26MB, `x86_64 arm64`, 35MB
+installed.
+
+The check that the bundle is not merely well-formed but working: launch it with
+a scratch `HOME` and look for `session.json` and the day's note. Neither is
+written unless the renderer booted and called through the bridge, so an app
+that opens to a blank window fails it — which a signature check would not.
+
 The shipped image is universal — `x86_64` and `arm64` in one binary, as
 electron-builder produced two separate ones. 26.5MB against Electron's 160MB
 per architecture. Building one architecture is `cargo tauri build` with no
@@ -726,11 +738,16 @@ a stale entry costs nothing.
 
 ### The Electron build
 
-Still signs and notarizes through electron-builder, whose configuration is
-untouched and whose `mac.notarize` option means _whether to disable_ it — so
-its absence from `electron-builder.yml` enables it, and it runs as soon as
-credentials are in the environment. Worth knowing that doing this for Electron
-is work thrown away if the Tauri build is the one that ships.
+Signed and notarized through electron-builder, whose `mac.notarize` option
+means _whether to disable_ it — so its absence from `electron-builder.yml`
+enabled it, and it ran as soon as credentials were in the environment.
+
+None of that is here any more; see **The cutover**. The one thing worth
+carrying forward is that electron-builder did the signing as part of packaging
+and Tauri does not do it unprompted: it signs when `APPLE_SIGNING_IDENTITY` is
+in the environment and prints a warning when it is not. A release built
+without that variable is an unsigned one, and it looks exactly like a signed
+one until somebody opens it on another Mac.
 
 ## The Tauri backend
 
