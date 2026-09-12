@@ -197,10 +197,19 @@ mod tests {
      * The half no fixture can check: that Electron's safeStorage is the thing
      * this file is a port of, and reads the item this file reads.
      *
-     * Ignored, because it needs a login keychain, an Electron, and somebody to
-     * run the two in order. That is what `#[ignore]` is for, and leaving the
-     * procedure here as a runnable test beats leaving it in a commit message
-     * nobody will find:
+     * Run, and it passes: Rust wrapped the same string to exactly the bytes
+     * Electron did. The scheme has no nonce, so identical output proves both
+     * directions at once — each backend will read what the other remembered.
+     *
+     * It failed the first time, and on the tool rather than on this file. Run
+     * as `electron tools/…`, `app.getName()` is "Electron", so safeStorage
+     * reached for `Electron Safe Storage` — a key with nothing to do with
+     * Tova — and the comparison was between two different keys. The tool sets
+     * the name now. Worth knowing if this ever fails again: check which
+     * keychain item each side actually used before suspecting the cipher.
+     *
+     * Still ignored, because it needs a login keychain, an Electron, and
+     * somebody to run the two in order:
      *
      *   npx electron tools/safe-storage-vectors.js
      *   TOVA_ELECTRON_BLOB=<the blob it printed> \
