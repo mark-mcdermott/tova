@@ -174,6 +174,20 @@ impl Utf16 {
     }
 }
 
+/*
+ * `Math.round`, which rounds a half toward positive infinity rather than away
+ * from zero. Rust's `f64::round` does the latter, so they part company on
+ * exactly the negative halves: JavaScript says -20.5 rounds to -20 and Rust
+ * says -21.
+ *
+ * A window remembered a pixel above the top of a screen is where that shows
+ * up, which is not much — but it is a stored value two backends disagree
+ * about, and those are the ones that accumulate.
+ */
+pub fn round(value: f64) -> f64 {
+    (value + 0.5).floor()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,6 +206,17 @@ mod tests {
         for c in ['a', '-', '\u{200b}'] {
             assert!(!is_whitespace(c), "{c:?}");
         }
+    }
+
+    #[test]
+    fn a_half_rounds_the_way_javascript_rounds_one() {
+        // Up, not away from zero — the two agree everywhere except here.
+        assert_eq!(round(-20.5), -20.0);
+        assert_eq!(round(20.5), 21.0);
+        assert_eq!(round(-20.6), -21.0);
+        assert_eq!(round(-21.0), -21.0);
+        assert_eq!(round(0.5), 1.0);
+        assert_eq!(round(-0.5), 0.0);
     }
 
     #[test]

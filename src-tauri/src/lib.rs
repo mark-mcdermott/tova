@@ -56,6 +56,7 @@ mod vault;
 mod vault_file;
 mod vault_keys;
 mod vaults;
+mod window_state;
 
 use serde::Serialize;
 use serde_json::Value;
@@ -1000,6 +1001,29 @@ pub fn run() {
             });
             app.manage(running);
 
+            /*
+             * Where the window was last left, if that place still exists. The
+             * work areas are the displays attached now, in logical pixels —
+             * a frame remembered on a monitor that has since been unplugged
+             * opens off-screen, which looks exactly like a failure to start.
+             */
+            let areas: Vec<window_state::Area> = app
+                .available_monitors()
+                .unwrap_or_default()
+                .iter()
+                .map(|monitor| {
+                    let area = monitor.work_area();
+                    let scale = monitor.scale_factor();
+                    window_state::Area {
+                        x: area.position.x as f64 / scale,
+                        y: area.position.y as f64 / scale,
+                        width: area.size.width as f64 / scale,
+                        height: area.size.height as f64 / scale,
+                    }
+                })
+                .collect();
+            let frame = window_state::read(&data_dir(), &areas);
+
             // Built here rather than declared in tauri.conf.json for one
             // reason: an initialization script can only be attached to a
             // window as it is created, and that script is how the renderer
@@ -1008,9 +1032,15 @@ pub fn run() {
             let window =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
                     .title("Tova")
-                    .inner_size(1280.0, 860.0)
+                    .inner_size(frame.width, frame.height)
                     .min_inner_size(720.0, 480.0)
+                    .maximized(frame.maximized)
                     .initialization_script(bridge::INIT_SCRIPT);
+
+            let window = match (frame.x, frame.y) {
+                (Some(x), Some(y)) => window.position(x, y),
+                _ => window.center(),
+            };
 
             // The traffic lights sit in the window, over the sidebar, the way
             // Electron's titleBarStyle: "hiddenInset" puts them. Both builder
@@ -1021,7 +1051,8 @@ pub fn run() {
                 .title_bar_style(tauri::TitleBarStyle::Overlay)
                 .hidden_title(true);
 
-            window.build()?;
+            let window = window.build()?;
+            window_state::remember(&window, data_dir());
             Ok(())
         })
         .on_window_event(|window, event| {

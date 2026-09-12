@@ -1,0 +1,522 @@
+{
+  "_readme": [
+    "Where the window was left, and whether that place still exists.",
+    "",
+    "Both backends read and write the same window.json, so they have to agree",
+    "about what a half-written one means. The fallback is per field rather",
+    "than all at once: a file with a good size and a nonsense position keeps",
+    "the size.",
+    "",
+    "Everything is logical pixels. Tauri reports physical ones, so what comes",
+    "off the window is divided by the scale factor before it is written -",
+    "otherwise a window left at 1345 wide on a Retina display is remembered as",
+    "2690 and comes back filling two of them.",
+    "",
+    "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
+  ],
+  "normalize": [
+    {
+      "stored": null,
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": null,
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": 42,
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": "nonsense",
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": [],
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {},
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "width": 1000,
+        "height": 700,
+        "x": 10,
+        "y": 20,
+        "maximized": true
+      },
+      "state": {
+        "width": 1000,
+        "height": 700,
+        "x": 10,
+        "y": 20,
+        "maximized": true
+      }
+    },
+    {
+      "stored": {
+        "width": 100,
+        "height": 100
+      },
+      "state": {
+        "width": 720,
+        "height": 480,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "width": 720,
+        "height": 480
+      },
+      "state": {
+        "width": 720,
+        "height": 480,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "width": 1000.4,
+        "height": 700.6,
+        "x": 10.5,
+        "y": -20.5
+      },
+      "state": {
+        "width": 1000,
+        "height": 701,
+        "x": 11,
+        "y": -20,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "width": "1000",
+        "height": null,
+        "x": "10"
+      },
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "width": null,
+        "height": null,
+        "x": null,
+        "y": 0
+      },
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": 0,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "maximized": "yes"
+      },
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": false
+      }
+    },
+    {
+      "stored": {
+        "maximized": true
+      },
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": null,
+        "y": null,
+        "maximized": true
+      }
+    },
+    {
+      "stored": {
+        "x": 0,
+        "y": 0
+      },
+      "state": {
+        "width": 1345,
+        "height": 915,
+        "x": 0,
+        "y": 0,
+        "maximized": false
+      }
+    }
+  ],
+  "onScreen": [
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 100,
+        "y": 100,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 5000,
+        "y": 5000,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": -700,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1900,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": null,
+        "y": null,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1920,
+        "y": 0,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 100,
+        "y": 100,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 5000,
+        "y": 5000,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": -700,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1900,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": null,
+        "y": null,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "width": 1280,
+          "height": 800
+        }
+      ],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1920,
+        "y": 0,
+        "maximized": false
+      },
+      "onScreen": true
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 100,
+        "y": 100,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 5000,
+        "y": 5000,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": -700,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1900,
+        "y": 10,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": null,
+        "y": null,
+        "maximized": false
+      },
+      "onScreen": false
+    },
+    {
+      "areas": [],
+      "state": {
+        "width": 800,
+        "height": 600,
+        "x": 1920,
+        "y": 0,
+        "maximized": false
+      },
+      "onScreen": false
+    }
+  ]
+}
