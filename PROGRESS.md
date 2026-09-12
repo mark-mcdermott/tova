@@ -755,12 +755,17 @@ methods, which are Chromium's dictionary and its context menu. Both want
 Objective-C interop and a decision about how the renderer asks for suggestions
 when the webview does not hand them over the way Chromium does.
 
-One verification is also outstanding: `tools/safe-storage-vectors.js` and the
-ignored test beside it in `src-tauri/src/safe_storage.rs` are the pair that
-proves Electron's `safeStorage` and the Rust port read the same keychain item.
-They need a login keychain, so they have not been run. Until they are, a vault
-sealed under one backend may ask for its recovery key under the other — which
-fails safe, and does not announce itself.
+The keychain is verified. `tools/safe-storage-vectors.js` and the ignored test
+beside it in `src-tauri/src/safe_storage.rs` are the pair that proves Electron's
+`safeStorage` and the Rust port reach the same key, and they have been run:
+Rust wrapped the same string to exactly the bytes Electron did. The scheme has
+no nonce, so identical output proves both directions at once.
+
+It failed on the first attempt, and on the tool rather than the port. Run as
+`electron tools/…`, `app.getName()` is "Electron", so `safeStorage` reached for
+`Electron Safe Storage` — a key with nothing to do with Tova. The tool sets the
+name now. If it ever fails again, check which keychain item each side actually
+used before suspecting the cipher.
 
 ## To resume
 

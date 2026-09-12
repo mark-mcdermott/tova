@@ -22,6 +22,19 @@ const { app, safeStorage } = require("electron")
 
 const PLAIN = "tova-safe-storage-conformance"
 
+/*
+ * The name decides which keychain item safeStorage reaches for: Chromium keys
+ * it on `<app name> Safe Storage`. Run as `electron tools/…` the name is
+ * "Electron", so without this the script wraps its blob with a key that has
+ * nothing to do with Tova — and the comparison it exists to make is between
+ * two different keys, which it will report as a mismatch.
+ *
+ * "tova", lower case, because that is what `app.getName()` gives in
+ * development and what src-tauri reads. A packaged build is "Tova"; the two
+ * are pinned together and both move when the Electron side is gone.
+ */
+app.setName("tova")
+
 app.disableHardwareAcceleration()
 
 app.whenReady().then(() => {
