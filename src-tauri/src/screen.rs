@@ -22,6 +22,8 @@ pub enum IndexTarget {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum Screen {
+    /// The page behind the wordmark. It holds nothing, which is the point.
+    Home,
     #[serde(rename_all = "camelCase")]
     Note {
         note_id: String,
@@ -54,6 +56,7 @@ pub fn normalize_screen(value: Option<&Value>) -> Option<Screen> {
     }
 
     match raw.get("kind").and_then(Value::as_str) {
+        Some("home") => Some(Screen::Home),
         Some("note") => {
             let note_id = text(raw, "noteId")?;
             // The vault's own guard rejects a path that climbs; this only has

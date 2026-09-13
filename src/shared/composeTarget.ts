@@ -9,10 +9,14 @@ import { NoteSummary, Section } from "./types"
  * opens today's instead, which creates it if the day has none.
  */
 export function composeTarget(
-  view: "editor" | "settings" | "index",
+  view: "editor" | "settings" | "index" | "home",
   indexTarget: IndexTarget | null,
   active: NoteSummary | null
 ): { section: Section; folder: string | null } | null {
+  // Home is deliberately nowhere: it holds no notes and stands for none, so
+  // the button means Notes rather than wherever the reader last was.
+  if (view === "home") return { section: "notes", folder: null }
+
   if (view === "index" && indexTarget !== null) {
     switch (indexTarget.kind) {
       case "section":

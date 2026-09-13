@@ -126,6 +126,13 @@
         "kind": "tag",
         "tag": "  spaced  "
       }
+    },
+    {
+      "kind": "home"
+    },
+    {
+      "kind": "home",
+      "extra": 1
     }
   ],
   "expected": [
@@ -197,6 +204,12 @@
         "kind": "tag",
         "tag": "  spaced  "
       }
+    },
+    {
+      "kind": "home"
+    },
+    {
+      "kind": "home"
     }
   ]
 }

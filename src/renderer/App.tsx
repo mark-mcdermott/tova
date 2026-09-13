@@ -11,6 +11,7 @@ import { useBlogsStore } from "./stores/blogsStore"
 import { usePreferencesStore } from "./stores/preferencesStore"
 import { applyTitleFont } from "./titleFont"
 import { applyBackground, resolveBackground } from "./backgrounds"
+import { Home } from "./components/Home/Home"
 import { Tooltip } from "./components/Popup/Tooltip"
 import { useTooltip } from "./useTooltip"
 import { systemTheme, watchSystemTheme } from "./theme"
@@ -18,6 +19,7 @@ import { Theme } from "../shared/preferences"
 import "./styles/editor.css"
 import "./styles/sidebar.css"
 import "./styles/settings.css"
+import "./styles/home.css"
 
 export default function App() {
   const load = useNotesStore((state) => state.load)
@@ -157,6 +159,8 @@ export default function App() {
             </div>
           ) : view === "settings" ? (
             <Settings />
+          ) : view === "home" ? (
+            <Home />
           ) : view === "index" ? (
             <IndexPage />
           ) : active === null ? (

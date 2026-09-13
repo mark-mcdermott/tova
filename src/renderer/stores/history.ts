@@ -31,6 +31,7 @@ export const emptyHistory: History = { entries: [], index: -1 }
  */
 export function screenKey(screen: Screen): string {
   if (screen.kind === "note") return `note:${screen.noteId}`
+  if (screen.kind === "home") return "home"
 
   const target = screen.target
   switch (target.kind) {

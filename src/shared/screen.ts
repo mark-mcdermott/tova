@@ -6,7 +6,11 @@ import { IndexTarget } from "./indexTarget"
  * Shared rather than kept with the history that uses it, because main writes
  * one to disk between launches and has to be able to check what it reads back.
  */
-export type Screen = { kind: "note"; noteId: string } | { kind: "index"; target: IndexTarget }
+export type Screen =
+  | { kind: "note"; noteId: string }
+  | { kind: "index"; target: IndexTarget }
+  /** The page behind the wordmark. It holds nothing, which is the point. */
+  | { kind: "home" }
 
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() !== "" ? value : null
@@ -24,6 +28,8 @@ function text(value: unknown): string | null {
 export function normalizeScreen(value: unknown): Screen | null {
   if (typeof value !== "object" || value === null) return null
   const raw = value as Record<string, unknown>
+
+  if (raw.kind === "home") return { kind: "home" }
 
   if (raw.kind === "note") {
     const noteId = text(raw.noteId)
