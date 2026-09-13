@@ -501,11 +501,112 @@ describe("Sidebar", () => {
     expect(useNotesStore.getState().indexTarget).toEqual({ kind: "folder", folder: "ideas" })
   })
 
-  it("opens a section that holds nothing, so the index can say so", async () => {
-    render(<Sidebar />)
+  /*
+   * A listing with nothing in it is a page saying so, shown to somebody who
+   * has just asked for somewhere to write. The first note is made instead.
+   */
+  it("starts a section that holds nothing rather than saying it is empty", async () => {
+    bridge.create.mockResolvedValue({
+      id: "journal/untitled.md",
+      title: "",
+      section: "journal",
+      folder: null,
+      tags: [],
+      manualTags: [],
+      favorite: false,
+      updatedAt: 9,
+      createdAt: 9,
+      deletedAt: null,
+      body: ""
+    })
 
+    render(<Sidebar />)
     await userEvent.click(screen.getByRole("button", { name: /^Journal/ }))
-    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "journal" })
+
+    expect(bridge.create).toHaveBeenCalledWith({ section: "journal", folder: null, title: "" })
+    await waitFor(() => {
+      expect(useNotesStore.getState().view).toBe("editor")
+      expect(useNotesStore.getState().activeId).toBe("journal/untitled.md")
+    })
+  })
+
+  /* A section that already holds something opens its listing, as before. */
+  it("opens a section that holds notes rather than adding to it", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    expect(bridge.create).not.toHaveBeenCalled()
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "notes" })
+  })
+
+  /* The case it was asked for: a folder made and not yet written in. */
+  it("starts an empty folder rather than saying it is empty", async () => {
+    bridge.create.mockResolvedValue({
+      id: "notes/drafts/untitled.md",
+      title: "",
+      section: "notes",
+      folder: "drafts",
+      tags: [],
+      manualTags: [],
+      favorite: false,
+      updatedAt: 9,
+      createdAt: 9,
+      deletedAt: null,
+      body: ""
+    })
+
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^drafts/ }))
+
+    expect(bridge.create).toHaveBeenCalledWith({ section: "notes", folder: "drafts", title: "" })
+    await waitFor(() => expect(useNotesStore.getState().view).toBe("editor"))
+  })
+
+  /* A folder that already holds something opens its listing, as before. */
+  it("opens a folder that holds notes rather than adding to it", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
+
+    expect(bridge.create).not.toHaveBeenCalled()
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "folder", folder: "ideas" })
+  })
+
+  /*
+   * Daily's first note is today's, which already has a name and a shape. An
+   * untitled note in there would be one the daily logic does not recognise.
+   */
+  it("opens today rather than an untitled note when Daily is empty", async () => {
+    useNotesStore.setState({ notes: notes.filter((one) => one.section !== "daily") })
+    bridge.today.mockResolvedValue({
+      id: "daily/2026-09-12.md",
+      title: "9/12/26",
+      section: "daily",
+      folder: null,
+      tags: [],
+      manualTags: [],
+      favorite: false,
+      updatedAt: 9,
+      createdAt: 9,
+      deletedAt: null,
+      body: ""
+    })
+
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Daily/ }))
+
+    expect(bridge.create).not.toHaveBeenCalled()
+    await waitFor(() => expect(bridge.today).toHaveBeenCalled())
+  })
+
+  /* Trash is where notes go to stop being anywhere; an empty one is the point. */
+  it("never starts a note in the trash", async () => {
+    useNotesStore.setState({ notes: notes.filter((one) => one.section !== "trash") })
+
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Trash/ }))
+
+    expect(bridge.create).not.toHaveBeenCalled()
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "trash" })
   })
 
   /*

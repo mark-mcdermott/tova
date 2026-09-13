@@ -69,7 +69,7 @@ export function indexKey(target: IndexTarget): string {
   }
 }
 
-function held(notes: NoteSummary[], target: IndexTarget): NoteSummary[] {
+export function held(notes: NoteSummary[], target: IndexTarget): NoteSummary[] {
   switch (target.kind) {
     case "section":
       // A section lists everything under it, folders included: the index is the

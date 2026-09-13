@@ -41,7 +41,7 @@ function FolderRow({
   onContextMenu: (event: MouseEvent) => void
   onMove: (note: NoteSummary, folder: string) => void
 }) {
-  const showIndex = useNotesStore((state) => state.showIndex)
+  const openListing = useNotesStore((state) => state.openListing)
   const { isDropActive, dropHandlers } = useDropTarget({ kind: "folder", folder }, (note) =>
     onMove(note, folder)
   )
@@ -53,7 +53,7 @@ function FolderRow({
       count={notes.length}
       icon="folder"
       depth={2}
-      onActivate={() => showIndex({ kind: "folder", folder })}
+      onActivate={() => void openListing({ kind: "folder", folder })}
       onContextMenu={onContextMenu}
       dropHandlers={dropHandlers}
       isDropActive={isDropActive}
@@ -63,6 +63,7 @@ function FolderRow({
 
 export function FolderTree({ notes, folders }: FolderTreeProps) {
   const showIndex = useNotesStore((state) => state.showIndex)
+  const openListing = useNotesStore((state) => state.openListing)
   const createNote = useNotesStore((state) => state.createNote)
   const createFolder = useNotesStore((state) => state.createFolder)
   const renameFolder = useNotesStore((state) => state.renameFolder)
@@ -158,7 +159,7 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               count={held.length}
               icon={section.icon}
               depth={1}
-              onActivate={() => showIndex({ kind: "section", section: section.id })}
+              onActivate={() => void openListing({ kind: "section", section: section.id })}
               onContextMenu={section.id === "daily" ? dailyMenu.open : undefined}
               dropHandlers={drop?.dropHandlers}
               isDropActive={drop?.isDropActive}
