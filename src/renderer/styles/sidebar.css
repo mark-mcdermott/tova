@@ -36,7 +36,6 @@
   /* Hover and selection lift with light, since the ink here is white. */
   --glass-bg-raised: rgb(255 255 255 / 16%);
   /* Enough to keep a tag from showing through the heading it scrolls under. */
-  --sidebar-heading-bg: rgb(38 34 52 / 82%);
   color: var(--text-primary);
   overflow: hidden;
 }
@@ -168,16 +167,6 @@
   padding: 0 var(--sidebar-edge) var(--space-4);
 }
 
-/* Or a long list scrolls out from under its own heading and becomes a column
-   of words with nothing saying what they are. */
-.sidebar-scroll .disclosure-header-section {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--sidebar-heading-bg);
-  backdrop-filter: blur(12px);
-}
-
 /* ── Disclosure ───────────────────────────────────────────────────────── */
 
 /*
@@ -307,14 +296,19 @@
 }
 
 /*
- * The section label — TAGS — is a signpost rather than a row, so it takes its
- * own class rather than being reached through its parent. It sits further left
- * than the rows beneath it, as the mockup has it: the rows indent to clear
- * their icons, and a label with no icon has nothing to clear.
+ * The section label — TAGS — is a signpost rather than a row, so it is a
+ * heading rather than a button and carries none of a row's styling. It sits
+ * further left than the rows beneath it, as the mockup has it: the rows indent
+ * to clear their icons, and a label with no icon has nothing to clear.
+ *
+ * It used to be sticky, on a panel of its own, so a long list could not scroll
+ * out from under it. The panel was a dark bar across the rail; without one,
+ * sticky would only let the rows slide underneath the words. Both went
+ * together, and the heading scrolls with its list.
  */
-.disclosure-header-section {
-  margin-top: var(--space-4);
-  padding-left: var(--space-2);
+.tag-list-heading {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
@@ -470,7 +464,9 @@
   cursor: pointer;
 }
 
+/* The same lift a folder gets, so the whole rail answers a pointer alike. */
 .tag-row:hover {
+  background: var(--glass-bg-raised);
   color: var(--text-primary);
 }
 

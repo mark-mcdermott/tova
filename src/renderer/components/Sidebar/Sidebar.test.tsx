@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+/// <reference types="node" />
+import { readFileSync } from "node:fs"
 import { render, screen, cleanup, waitFor, fireEvent, act } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Sidebar } from "./Sidebar"
@@ -506,11 +508,27 @@ describe("Sidebar", () => {
     expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "journal" })
   })
 
-  it("opens every tag from the Tags heading", async () => {
+  /*
+   * The heading is a signpost, not a control. It used to open an index of
+   * every tag — a page listing the same words already on screen underneath it.
+   */
+  it("says TAGS without offering anything to click", () => {
     render(<Sidebar />)
 
-    await userEvent.click(screen.getByRole("button", { name: "TAGS" }))
-    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "tags" })
+    expect(screen.getByRole("heading", { name: "TAGS" })).toBeDefined()
+    expect(screen.queryByRole("button", { name: "TAGS" })).toBeNull()
+  })
+
+  /* A tag row answers a pointer the way a folder does, which it did not. */
+  it("lifts a tag row under the pointer, like the rows above it", () => {
+    render(<Sidebar />)
+
+    const styles = readFileSync("src/renderer/styles/sidebar.css", "utf-8")
+    const hover = /\.tag-row:hover \{([^}]*)\}/.exec(styles)?.[1] ?? ""
+    const folder = /\.disclosure-header:hover \{([^}]*)\}/.exec(styles)?.[1] ?? ""
+
+    expect(folder).toMatch(/background:/)
+    expect(hover).toContain("background: var(--glass-bg-raised)")
   })
 
   it("opens one tag from its row", async () => {
