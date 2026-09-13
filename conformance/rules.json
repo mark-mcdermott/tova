@@ -1,0 +1,140 @@
+{
+  "rules": [
+    {
+      "line": "---",
+      "rule": true
+    },
+    {
+      "line": "----",
+      "rule": true
+    },
+    {
+      "line": "-----",
+      "rule": true
+    },
+    {
+      "line": "***",
+      "rule": true
+    },
+    {
+      "line": "****",
+      "rule": true
+    },
+    {
+      "line": "___",
+      "rule": true
+    },
+    {
+      "line": "____",
+      "rule": true
+    },
+    {
+      "line": "* * *",
+      "rule": true
+    },
+    {
+      "line": "- - -",
+      "rule": true
+    },
+    {
+      "line": "_ _ _",
+      "rule": true
+    },
+    {
+      "line": "- - - -",
+      "rule": true
+    },
+    {
+      "line": "--- ---",
+      "rule": true
+    },
+    {
+      "line": " ---",
+      "rule": true
+    },
+    {
+      "line": "  ---",
+      "rule": true
+    },
+    {
+      "line": "   ---",
+      "rule": true
+    },
+    {
+      "line": "    ---",
+      "rule": false
+    },
+    {
+      "line": "\t---",
+      "rule": false
+    },
+    {
+      "line": "---  ",
+      "rule": true
+    },
+    {
+      "line": "  ---  ",
+      "rule": true
+    },
+    {
+      "line": "--",
+      "rule": false
+    },
+    {
+      "line": "**",
+      "rule": false
+    },
+    {
+      "line": "__",
+      "rule": false
+    },
+    {
+      "line": "-",
+      "rule": false
+    },
+    {
+      "line": "*",
+      "rule": false
+    },
+    {
+      "line": "_",
+      "rule": false
+    },
+    {
+      "line": "",
+      "rule": false
+    },
+    {
+      "line": "-*-",
+      "rule": false
+    },
+    {
+      "line": "*-*",
+      "rule": false
+    },
+    {
+      "line": "---x",
+      "rule": false
+    },
+    {
+      "line": "x---",
+      "rule": false
+    },
+    {
+      "line": "* item",
+      "rule": false
+    },
+    {
+      "line": "- item",
+      "rule": false
+    },
+    {
+      "line": "*emphasis*",
+      "rule": false
+    },
+    {
+      "line": "***bold***",
+      "rule": false
+    }
+  ]
+}

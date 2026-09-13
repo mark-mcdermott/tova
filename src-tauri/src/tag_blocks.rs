@@ -30,14 +30,51 @@ pub struct Block {
 /*
  * A horizontal rule, which ends a block.
  *
+ * Three or more of the same mark — `-`, `*` or `_` — with spaces allowed
+ * between them. This knew only dashes at first, which made the editor and the
+ * deletion disagree: `***` was drawn as a divider and was not treated as one,
+ * so text a reader had deliberately separated off would have gone with the
+ * block above it. Matched against the parser the editor uses rather than
+ * written from memory of the spec.
+ *
  * Markdown also reads `---` under a line of text as a setext heading
  * underline rather than a rule. That is not distinguished here, and
  * deliberately: treating it as a terminator ends the block sooner, and for
  * something that deletes what it finds, sooner is the side to err on.
  */
 fn is_rule(line: &str) -> bool {
-    let trimmed = crate::js::trim(line);
-    trimmed.len() >= 3 && trimmed.chars().all(|c| c == '-')
+    // Four columns of indent is a code block rather than a rule, and a tab is
+    // four. Three is still a rule, which is why this counts rather than trims.
+    let marks_at = line
+        .find(|c: char| c != ' ' && c != '\t')
+        .unwrap_or(line.len());
+    let indent: usize = line[..marks_at]
+        .chars()
+        .map(|c| if c == '\t' { 4 } else { 1 })
+        .sum();
+    if indent >= 4 {
+        return false;
+    }
+
+    let mut marks = line[marks_at..]
+        .chars()
+        .filter(|c| !crate::js::is_whitespace(*c));
+
+    let Some(first) = marks.next() else {
+        return false;
+    };
+    if !matches!(first, '-' | '*' | '_') {
+        return false;
+    }
+
+    let mut seen = 1;
+    for mark in marks {
+        if mark != first {
+            return false;
+        }
+        seen += 1;
+    }
+    seen >= 3
 }
 
 /// Whether a tag-only line names this tag. Case-insensitive, because the
@@ -206,6 +243,60 @@ After.
 Job notes.
 "],
                 "for {rule:?}"
+            );
+        }
+    }
+
+    /*
+     * A block stops where a reader sees a line across the page, and the reader
+     * sees whatever the editor's Markdown parser draws one for. The two are
+     * held together by `conformance/rules.json`, which is generated from that
+     * parser and read from both sides — this test and its counterpart in
+     * `src/renderer/rules.conformance.test.ts`.
+     *
+     * They had already drifted once: this knew only dashes, so `***` was drawn
+     * as a divider and not treated as one, and text a reader had deliberately
+     * separated off would have gone with the block above it.
+     */
+    #[test]
+    fn a_rule_is_whatever_the_editor_draws_a_rule_for() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../conformance/rules.json");
+        let fixture: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("json");
+        let cases = fixture["rules"].as_array().expect("rules");
+        assert!(cases.len() > 20, "a fixture worth checking");
+
+        for case in cases {
+            let line = case["line"].as_str().expect("line");
+            let wanted = case["rule"].as_bool().expect("rule");
+            assert_eq!(is_rule(line), wanted, "for {line:?}");
+        }
+    }
+
+    /// And the same shapes, seen from the outside: what a block gives up at.
+    #[test]
+    fn a_line_that_only_looks_like_a_rule_does_not_end_one() {
+        for plain in [
+            "--",
+            "**",
+            "__",
+            "-*-",
+            "---x",
+            "* item",
+            "*emphasis*",
+            "-",
+            "    ---",
+        ] {
+            let note = format!("#work\nJob notes.\n{plain}\nStill the job.\n");
+            assert_eq!(covered(&note, "work"), [note.as_str()], "for {plain:?}");
+        }
+
+        for rule in ["***", "___", "* * *", "   ---"] {
+            let note = format!("#work\nJob notes.\n{rule}\nAfter.\n");
+            assert_eq!(
+                covered(&note, "work"),
+                ["#work\nJob notes.\n"],
+                "expected {rule:?} to end the block"
             );
         }
     }
