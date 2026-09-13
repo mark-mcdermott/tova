@@ -340,6 +340,9 @@ export function Editor({ note }: EditorProps) {
         <Menu
           x={blogAnchor.x}
           y={blogAnchor.y}
+          /* Offered while the reader is mid-line: the caret keeps the keyboard,
+             so carrying on typing — or backspacing the `@` away — still works. */
+          takesFocus={false}
           items={blogs.map((blog) => ({
             label: blog.name,
             hint: "blog",
