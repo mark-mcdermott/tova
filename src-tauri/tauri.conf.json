@@ -34,7 +34,7 @@
       "endpoints": [
         "https://github.com/mark-mcdermott/tova/releases/latest/download/latest.json"
       ],
-      "pubkey": "PUBKEY_GOES_HERE",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJEQzUzMTg3NUVGODBGMEUKUldRT0QvaGVoekhGTFVTeXl4ZHlGQjB2Q3ZZUUNxVmtmakNuc0I2eStBWVdDNlo2UHI3eGxMNnUK",
       "windows": {
         "installMode": "passive"
       }
