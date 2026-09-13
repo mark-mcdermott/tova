@@ -66,3 +66,26 @@ describe("starting over", () => {
     await waitFor(() => expect(nuke).toHaveBeenCalled())
   })
 })
+
+/*
+ * The only thing Tova sends anywhere on its own. Off has to mean off, and the
+ * switch has to be findable — a preference nobody can locate is not a choice.
+ */
+describe("checking for updates", () => {
+  it("is on to begin with, and says so", async () => {
+    render(<GeneralTab />)
+
+    const box = await screen.findByLabelText("Check for updates")
+    expect((box as HTMLInputElement).checked).toBe(true)
+  })
+
+  it("can be turned off", async () => {
+    const write = vi.fn(async (next) => next)
+    window.tova = stubBridge({ preferences: { write } })
+
+    render(<GeneralTab />)
+    await userEvent.click(await screen.findByLabelText("Check for updates"))
+
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ updates: false }))
+  })
+})

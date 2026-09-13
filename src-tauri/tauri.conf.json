@@ -18,9 +18,26 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg"],
-    "icon": ["icons/icon.icns", "icons/icon.png"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
+    "icon": [
+      "icons/icon.icns",
+      "icons/icon.png"
+    ],
     "category": "Productivity",
     "copyright": "\u00a9 Mark McDermott"
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/mark-mcdermott/tova/releases/latest/download/latest.json"
+      ],
+      "pubkey": "PUBKEY_GOES_HERE",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }
