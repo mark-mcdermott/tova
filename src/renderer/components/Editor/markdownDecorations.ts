@@ -283,6 +283,24 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
           return
         }
 
+        /*
+         * `Text` with `---` or `===` under it is a heading in Markdown — a
+         * setext heading — and nothing here drew one, so the line stayed
+         * ordinary prose and the underline sat there looking like a rule that
+         * had failed to render. It is neither: a rule needs a blank line above
+         * it, or the dashes are read as underlining the line before.
+         *
+         * Drawn as the heading it is, with the underline left visible. Hiding
+         * it would leave an empty line behind and take away the only sign of
+         * which kind of heading this is.
+         */
+        if (name.startsWith("SetextHeading")) {
+          const level = Number(name.slice("SetextHeading".length))
+          const text = state.doc.lineAt(from)
+          decorations.push(headingMarks[level - 1].range(text.from, text.to))
+          return false
+        }
+
         if (name.startsWith("ATXHeading")) {
           const level = Number(name.slice("ATXHeading".length))
           decorations.push(headingMarks[level - 1].range(from, to))

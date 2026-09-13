@@ -20,6 +20,14 @@ interface MenuProps {
   x: number
   y: number
   items: MenuItem[]
+  /**
+   * Whether opening the menu moves focus into it. True for a menu raised by a
+   * right-click, where the pointer is the way in and the keyboard should follow
+   * it. False where the menu is offered *while the reader is typing* — taking
+   * focus then means the next keystroke goes to a button instead of the
+   * document, and backspace appears to do nothing at all.
+   */
+  takesFocus?: boolean
   onClose: () => void
 }
 
@@ -29,7 +37,7 @@ const EDGE_GAP = 8
  * The shared popup menu — context menus, the editor `...` menu and every later
  * dropdown use this one component rather than each growing their own.
  */
-export function Menu({ x, y, items, onClose }: MenuProps) {
+export function Menu({ x, y, items, takesFocus = true, onClose }: MenuProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ left: x, top: y })
 
@@ -48,7 +56,7 @@ export function Menu({ x, y, items, onClose }: MenuProps) {
   }, [x, y])
 
   useEffect(() => {
-    ref.current?.querySelector("button")?.focus()
+    if (takesFocus) ref.current?.querySelector("button")?.focus()
 
     function onPointerDown(event: MouseEvent) {
       if (!ref.current?.contains(event.target as Node)) onClose()
@@ -63,7 +71,7 @@ export function Menu({ x, y, items, onClose }: MenuProps) {
       document.removeEventListener("mousedown", onPointerDown)
       document.removeEventListener("keydown", onKeyDown)
     }
-  }, [onClose])
+  }, [onClose, takesFocus])
 
   /*
    * Rendered into document.body rather than in place. The glass panels carry
