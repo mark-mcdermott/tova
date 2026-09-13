@@ -13,7 +13,7 @@ import {
   forget as forgetHistory,
   rename as renameHistory
 } from "./history"
-import { IndexSort, IndexTarget } from "../../shared/indexTarget"
+import { IndexSort, IndexTarget, held } from "../../shared/indexTarget"
 import { SearchHit } from "../../shared/types"
 
 export type View = "editor" | "settings" | "index"
@@ -75,6 +75,8 @@ interface NotesState {
   showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
   showIndex: (target: IndexTarget) => void
+  /** Opens a listing, or starts it where it is empty and can hold notes. */
+  openListing: (target: IndexTarget) => Promise<void>
   setIndexSort: (sort: IndexSort) => void
   setSearchSort: (sort: IndexSort) => void
   runSearch: (query: string) => Promise<void>
@@ -99,6 +101,22 @@ interface NotesState {
   trash: (id: string) => Promise<void>
   restore: (id: string) => Promise<void>
   destroy: (id: string) => Promise<void>
+}
+
+/**
+ * Where a note would go if one were made for this listing, or null where the
+ * listing is not somewhere notes can be put.
+ *
+ * Trash is not: it is where notes go to stop being anywhere, and an empty one
+ * is the good outcome. A tag is not: a tag describes notes rather than holding
+ * them, and there is nothing to write in. A blog is not: its notes are posts,
+ * which carry front matter and a publishing history, and an untitled draft
+ * appearing because somebody clicked the folder is not the same favour.
+ */
+function placeForNewNote(target: IndexTarget): { section: Section; folder: string | null } | null {
+  if (target.kind === "folder") return { section: "notes", folder: target.folder }
+  if (target.kind !== "section" || target.section === "trash") return null
+  return { section: target.section, folder: null }
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -219,6 +237,33 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       indexTarget: target,
       history: pushHistory(state.history, { kind: "index", target })
     }))
+  },
+
+  /*
+   * Opening a listing the way the rail does: by going somewhere to write.
+   *
+   * An empty listing is a page saying there is nothing here, shown to somebody
+   * who has just asked for somewhere to put something. Where the listing is a
+   * place notes can go, the first one is made and opened instead.
+   *
+   * Separate from `showIndex` rather than folded into it, because most of the
+   * ways a listing opens are not that gesture: a breadcrumb going up a level,
+   * back and forward, and the session reopening where it was left all pass
+   * through `showIndex`, and none of them should add a note to the vault.
+   */
+  openListing: async (target) => {
+    const place = placeForNewNote(target)
+    if (place === null || held(get().notes, target).length > 0) {
+      get().showIndex(target)
+      return
+    }
+
+    // Daily's first note is today's, which has a name and a shape already.
+    if (place.section === "daily") {
+      await get().openToday()
+      return
+    }
+    await get().createNote(place.section, place.folder)
   },
 
   setIndexSort: (sort) => {
