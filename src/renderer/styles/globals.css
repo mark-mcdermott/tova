@@ -458,6 +458,49 @@ body {
  * it and the rows under the strip do not even light up on hover, except where
  * the title input has already punched a no-drag hole.
  */
+/*
+ * The app's own tooltip, in place of the browser's `title`.
+ *
+ * A small dark slab rather than a glass panel: it is the one popup that
+ * appears without being asked for, and it has to read instantly over a photo
+ * background without becoming another pane of furniture. Dark in both themes
+ * for the same reason a caption is — it is annotation, not surface.
+ *
+ * `pointer-events: none` so it can never be the thing under the pointer; a
+ * tooltip that can be hovered is a tooltip that flickers.
+ */
+.tooltip {
+  position: fixed;
+  z-index: 60;
+  max-width: 18rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: rgb(28 24 40 / 94%);
+  color: #f4f1fb;
+  font-size: var(--text-chrome);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-wrap: balance;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
+  pointer-events: none;
+  animation: tooltip-in 120ms ease-out;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+/* A hint that arrives without being asked for should not also move. */
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+  }
+}
+
 .popup-menu,
 .confirm-backdrop,
 .confirm-panel {
