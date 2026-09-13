@@ -11,6 +11,8 @@ import { useBlogsStore } from "./stores/blogsStore"
 import { usePreferencesStore } from "./stores/preferencesStore"
 import { applyTitleFont } from "./titleFont"
 import { applyBackground, resolveBackground } from "./backgrounds"
+import { Tooltip } from "./components/Popup/Tooltip"
+import { useTooltip } from "./useTooltip"
 import { systemTheme, watchSystemTheme } from "./theme"
 import { Theme } from "../shared/preferences"
 import "./styles/editor.css"
@@ -25,6 +27,7 @@ export default function App() {
   const view = useNotesStore((state) => state.view)
   const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
+  const tip = useTooltip()
   const loadBlogs = useBlogsStore((state) => state.load)
   const loadPreferences = usePreferencesStore((state) => state.load)
   const fontSize = usePreferencesStore((state) => state.preferences.fontSize)
@@ -129,12 +132,15 @@ export default function App() {
 
   return (
     <div className={`app${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
+      {/* One of these for the whole app: a tooltip is drawn against the
+          viewport, so it has nothing to do with where its control sits. */}
+      <Tooltip />
       <div className="shell">
         {sidebarCollapsed ? (
           <button
             type="button"
             className="sidebar-reveal"
-            title="Show sidebar (Cmd+\\)"
+            {...tip("Show sidebar (Cmd+\\)")}
             aria-label="Show sidebar"
             onClick={toggleSidebar}
           >
