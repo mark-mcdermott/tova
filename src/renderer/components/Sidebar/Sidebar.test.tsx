@@ -119,16 +119,19 @@ describe("Sidebar", () => {
     expect(screen.getByLabelText("New note")).toBeDefined()
   })
 
-  it("goes home from the wordmark, to whichever section is at the top", async () => {
+  /*
+   * The wordmark used to open whichever section sat at the top of the rail,
+   * which the rail's own first row already did. It opens the home page now —
+   * the one screen that is not a list of work or a piece of work.
+   */
+  it("goes home from the wordmark", async () => {
     render(<Sidebar />)
-    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+    await userEvent.click(screen.getByRole("button", { name: "Tova" }))
 
-    const state = useNotesStore.getState()
-    expect(state.view).toBe("index")
-    expect(state.indexTarget).toEqual({ kind: "section", section: "daily" })
+    expect(useNotesStore.getState().view).toBe("home")
   })
 
-  it("follows the rail when the top section is not the default one", async () => {
+  it("says so plainly, rather than naming a section it no longer opens", () => {
     usePreferencesStore.setState({
       preferences: {
         ...DEFAULT_PREFERENCES,
@@ -140,18 +143,22 @@ describe("Sidebar", () => {
     })
 
     render(<Sidebar />)
-    expect(screen.getByRole("button", { name: "Tova — open Journal" })).toBeDefined()
 
-    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
-    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "section", section: "journal" })
+    expect(screen.getByRole("button", { name: "Tova" })).toBeDefined()
+    expect(screen.queryByRole("button", { name: /Tova — open/ })).toBeNull()
   })
 
-  it("marks that section as where you are", async () => {
+  /* Home is a place, so back returns to it rather than stepping over it. */
+  it("can be left and come back to", async () => {
     render(<Sidebar />)
-    await userEvent.click(screen.getByRole("button", { name: /^Tova/ }))
+    await userEvent.click(screen.getByRole("button", { name: "Tova" }))
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+    expect(useNotesStore.getState().view).toBe("index")
 
-    const row = screen.getByRole("button", { name: /^Daily/ })
-    expect(row.className).toContain("is-active")
+    await act(async () => {
+      await useNotesStore.getState().back()
+    })
+    expect(useNotesStore.getState().view).toBe("home")
   })
 
   it("opens settings from the avatar and from the cog", async () => {

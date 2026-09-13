@@ -1,0 +1,109 @@
+/*
+ * The page behind the wordmark.
+ *
+ * Every other screen is a list of work or a piece of work. This one is only
+ * the app saying what it is for, so it is the one place that gets to be a
+ * picture with four words on it and nothing to do.
+ */
+.home {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-8);
+  border-radius: inherit;
+  /* Behind the art while it decodes, and the whole page until there is art:
+     the brand's own night, so the page is never a white flash. */
+  background: linear-gradient(160deg, #1e1b2e 0%, #2a2540 55%, #4f5d7a 100%);
+}
+
+.home-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Faded in so a large picture arrives rather than snapping into place. */
+  opacity: 0;
+  transition: opacity 400ms ease-out;
+}
+
+.home-art.is-loaded {
+  opacity: 1;
+}
+
+/*
+ * The words sit on the picture, and a picture is not a colour: every one of
+ * them carries its own shadow rather than relying on the art being dark in
+ * the right corner.
+ */
+.home-plate,
+.home-line {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 55%);
+}
+
+.home-plate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.home-wordmark {
+  width: clamp(7rem, 14vw, 11rem);
+  margin: 0;
+  color: #ffffff;
+}
+
+.home-wordmark .wordmark {
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * Uppercase, letter-spaced and small, the way the brand sheet sets them —
+ * quiet type beside a large mark rather than a second headline competing
+ * with it.
+ */
+.home-line {
+  max-width: 22ch;
+  margin: 0;
+  font-size: var(--text-chrome);
+  font-weight: 500;
+  line-height: 1.9;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.home-line-trail {
+  align-self: flex-end;
+  text-align: right;
+}
+
+/* Under a rule, as the sheet has it: a mark rather than a divider. */
+.home-line-lead::after,
+.home-line-trail::after {
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  margin-top: var(--space-4);
+  background: var(--accent-bright);
+  content: "";
+}
+
+.home-line-trail::after {
+  margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-art {
+    transition: none;
+  }
+}

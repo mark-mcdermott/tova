@@ -16,7 +16,7 @@ import {
 import { IndexSort, IndexTarget, held } from "../../shared/indexTarget"
 import { SearchHit } from "../../shared/types"
 
-export type View = "editor" | "settings" | "index"
+export type View = "editor" | "settings" | "index" | "home"
 
 export const SETTINGS_TABS = ["profile", "appearance", "vault", "blogs", "general", "docs"] as const
 
@@ -75,6 +75,8 @@ interface NotesState {
   showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
   showIndex: (target: IndexTarget) => void
+  /** The page behind the wordmark. */
+  showHome: () => void
   /** Opens a listing, or starts it where it is empty and can hold notes. */
   openListing: (target: IndexTarget) => Promise<void>
   setIndexSort: (sort: IndexSort) => void
@@ -172,6 +174,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const screen = await window.tova.session.read()
     if (screen === null) return false
 
+    if (screen.kind === "home") {
+      get().showHome()
+      return true
+    }
+
     if (screen.kind === "index") {
       get().showIndex(screen.target)
       return true
@@ -229,6 +236,13 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   showSettings: (tab = "profile") => {
     set({ view: "settings", settingsTab: tab })
+  },
+
+  showHome: () => {
+    set((state) => ({
+      view: "home",
+      history: pushHistory(state.history, { kind: "home" })
+    }))
   },
 
   showIndex: (target) => {
@@ -522,6 +536,12 @@ async function travel(
   if (entry === null || next === state.history) return
 
   const screen = entry.screen
+
+  // Home holds nothing at all, so there is nothing to read or to fail.
+  if (screen.kind === "home") {
+    set({ view: "home", history: next, error: null })
+    return
+  }
 
   // A listing needs nothing read: it is a filter over what is already held, so
   // it lands immediately and cannot fail the way a missing file can.
