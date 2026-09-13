@@ -8,8 +8,11 @@ interface TagListProps {
 
 /**
  * Always open, unlike the sections above it: the tags are the shortest list in
- * the rail and the one most worth seeing at a glance. The heading opens an
- * index of every tag; a row opens an index of that one.
+ * the rail and the one most worth seeing at a glance.
+ *
+ * The heading is a label and not a control. It used to open an index of every
+ * tag, which is a page listing the same words that are already on screen
+ * directly underneath it.
  */
 export function TagList({ notes }: TagListProps) {
   const tags = tagCounts(notes)
@@ -22,16 +25,7 @@ export function TagList({ notes }: TagListProps) {
 
   return (
     <div className="disclosure disclosure-section">
-      <button
-        type="button"
-        className={`disclosure-header disclosure-header-section${
-          onIndex && target?.kind === "tags" ? " is-active" : ""
-        }`}
-        data-depth={0}
-        onClick={() => showIndex({ kind: "tags" })}
-      >
-        <span className="disclosure-label">TAGS</span>
-      </button>
+      <h2 className="tag-list-heading">TAGS</h2>
 
       <div className="disclosure-body">
         {tags.length === 0 ? (
