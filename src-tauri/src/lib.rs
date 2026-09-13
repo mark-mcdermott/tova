@@ -614,11 +614,25 @@ fn tag_purge_plan(tag: String) -> tag_purge::Plan {
 
 /// Carries out a plan. Nothing it removes can be brought back.
 #[tauri::command]
-fn tag_purge_apply(tag: String) -> tag_purge::Purged {
+fn tag_purge_apply(app: tauri::AppHandle, tag: String) -> tag_purge::Purged {
     // Planned again here rather than taking one from the renderer: what is on
     // disk now is what gets deleted, and a plan that crossed the IPC boundary
     // is a description of what was on disk when it was made.
-    tag_purge::apply(&tag_purge::plan(&tag))
+    let done = tag_purge::apply(&tag_purge::plan(&tag));
+
+    /*
+     * The vault changed under the renderer, which asked for this from
+     * Settings and has no other way to know. Without it the sidebar and the
+     * index go on listing notes whose files are gone, and opening one is an
+     * error about a missing file — which reads as the delete having broken
+     * something rather than having worked.
+     */
+    if done.notes_deleted > 0 || done.notes_trimmed > 0 {
+        use tauri::Emitter;
+        let _ = app.emit("notes:changed", ());
+    }
+
+    done
 }
 
 #[tauri::command]

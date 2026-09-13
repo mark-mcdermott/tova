@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { PREFERENCE_LIMITS } from "../../../../shared/preferences"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { ConfirmDialog } from "../../Popup/ConfirmDialog"
+import { TagPurge } from "./TagPurge"
 import { Field } from "../Field"
 import { Stepper } from "../Stepper"
 
@@ -137,6 +138,17 @@ export function GeneralTab() {
             onChange={(backupLimit) => void update({ backupLimit })}
           />
         </Field>
+      </section>
+
+      <section className="settings-section">
+        <h2 className="settings-section-title">Leaving something behind</h2>
+        <p className="settings-note">
+          For when a job ends, or a part of your life does, and the notes from it should stop
+          existing. A tag on a line of its own owns what is written under it, down to the next such
+          line, a <code>---</code>, or the end of the note. A tag inside a sentence owns nothing.
+        </p>
+
+        <TagPurge />
       </section>
 
       <section className="settings-section">
