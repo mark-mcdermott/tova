@@ -28,8 +28,11 @@ enlarged 4.7× from its real pixels once the display doubles it.
   is resized, so anything much wider than 4:3 gets its edges taken.
 - **Keep the subject central.** Assume the outer ~15% on every side may not be
   there.
-- **Dark where the words sit** — top-left and bottom-right. Each line carries
-  its own shadow, but a shadow is not a background.
+- **Bright corners are fine.** The page lays a scrim over the top-left and
+  bottom-right, so the words hold up over sky as well as over shadow. The
+  strength was measured against a picture whose lead lines came in at 2.77:1
+  before it and 4.9:1 after — but a picture that is bright *everywhere* the
+  words go is still worth re-cropping rather than leaning on it.
 
 JPEG at quality 80 lands around 300–600KB at that size, which is nothing beside
 the 15MB the grammar checker already contributes to the download.

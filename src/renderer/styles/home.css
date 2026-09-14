@@ -37,6 +37,31 @@
 }
 
 /*
+ * A scrim in the two corners the words sit in.
+ *
+ * Measured against the picture rather than guessed at. White on the lead lines
+ * reached 2.77:1 in its brightest tenth — where the palm frond gives way to
+ * open sky — against the 4.5:1 that small text wants. These two gradients take
+ * that corner to 4.9:1 and the trailing line to 6.5:1, while the middle of the
+ * frame, which is the picture people actually look at, darkens by around a
+ * sixth.
+ *
+ * It is drawn for the corners rather than over the whole image because the
+ * alternative is a flat wash that costs the artwork everywhere to fix two
+ * places. It also means the page survives new artwork: a hero that happens to
+ * be bright where the words go no longer costs legibility.
+ */
+.home::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  background:
+    linear-gradient(to bottom right, rgb(0 0 0 / 50%), rgb(0 0 0 / 0%) 62%),
+    linear-gradient(to top left, rgb(0 0 0 / 40%), rgb(0 0 0 / 0%) 62%);
+}
+
+/*
  * The words sit on the picture, and a picture is not a colour: every one of
  * them carries its own shadow rather than relying on the art being dark in
  * the right corner.
