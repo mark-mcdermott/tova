@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs"
 import { EditorState } from "@codemirror/state"
 import { markdown } from "@codemirror/lang-markdown"
 import { ensureSyntaxTree } from "@codemirror/language"
+import type { SyntaxNode } from "@lezer/common"
 
 import { codeRanges, inCode } from "../shared/markdownCode"
 import { allTags } from "../shared/tags"
@@ -35,7 +36,7 @@ function parserSaysCode(text: string, at: number): boolean {
   const tree = ensureSyntaxTree(state, text.length, 10_000)
   if (tree === null) throw new Error("the parser gave up")
 
-  for (let node = tree.resolveInner(at, 1); node; node = node.parent) {
+  for (let node: SyntaxNode | null = tree.resolveInner(at, 1); node; node = node.parent) {
     if (CODE.test(node.name)) return true
   }
   return false
