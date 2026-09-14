@@ -31,17 +31,21 @@ A hash, a space, then words: an ATX heading.
 A link to https://example.com/page#ephemeral and a bare anchor #ephemeral-ish
 written mid-sentence.
 
-## Inside code — worth watching
+## Inside code
 
-The line inside this fence is a tag alone on a line. Nothing here reads
-fences, so it may well be treated as a block head:
+The line inside this fence is a tag alone on a line. It is a comment, not a
+tag: nothing is drawn on it, it puts nothing in the sidebar, and a purge of
+ephemeral leaves it and everything under it alone.
+
+This is the case that had it wrong. The block used to run from here to the end
+of the note, taking the closing fence with it.
 
 ```
 #ephemeral
 this text sits under it
 ```
 
-And indented code, same question:
+And indented code, the same:
 
     #ephemeral
     this text sits under it
