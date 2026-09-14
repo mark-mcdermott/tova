@@ -32,6 +32,7 @@ mod notes;
  * main thread and libtest runs every test on a thread it spawned. Nothing else
  * consumes this crate, so the wider surface costs nothing.
  */
+mod markdown_code;
 pub mod markdown_html;
 pub mod pdf;
 #[cfg(test)]

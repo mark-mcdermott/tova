@@ -92,6 +92,19 @@ fn line_names(line: &str, tag: &str) -> bool {
 pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
     let mut found = Vec::new();
 
+    /*
+     * Code is not prose, and a tag in it is not a tag.
+     *
+     * Without this, a `#deprecated` comment alone on a line inside a pasted
+     * shell script headed a block and owned everything under it — while the
+     * editor, which knows it is code, drew no tag there at all. The reader saw
+     * nothing and lost the paragraphs below.
+     *
+     * It applies to what ends a block as well as what starts one: a `---`
+     * inside a fence is a line of code, not a rule.
+     */
+    let code = crate::markdown_code::code_ranges(text);
+
     // Offsets alongside the lines, so a block can be cut out of the original
     // text rather than rebuilt from pieces.
     let mut starts = Vec::new();
@@ -102,8 +115,10 @@ pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
         at += line.len() + 1;
     }
 
+    let is_code = |index: usize| crate::markdown_code::in_code(&code, starts[index]);
+
     for (index, line) in lines.iter().enumerate() {
-        if !is_tag_only_line(line) || !line_names(line, tag) {
+        if !is_tag_only_line(line) || !line_names(line, tag) || is_code(index) {
             continue;
         }
 
@@ -112,7 +127,7 @@ pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
             .iter()
             .enumerate()
             .skip(index + 1)
-            .find(|(_, later)| is_tag_only_line(later) || is_rule(later))
+            .find(|(at, later)| !is_code(*at) && (is_tag_only_line(later) || is_rule(later)))
             .map_or(text.len(), |(at, _)| starts[at]);
 
         found.push(Block {
@@ -166,6 +181,44 @@ pub fn without_blocks(text: &str, tag: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    /*
+     * The bug these were written for: a `#deprecated` comment alone on a line
+     * inside a pasted script was read as a block head, so deleting that tag
+     * took the prose under the code — and the editor, which knew it was code,
+     * had drawn no tag there to warn anyone.
+     */
+    #[test]
+    fn a_tag_inside_a_fence_heads_nothing() {
+        let text = "```sh\n#ephemeral\nrm -rf ./cache\n```\n\nCheck with Sam first.\n";
+        assert_eq!(super::blocks_for(text, "ephemeral"), []);
+        assert_eq!(super::without_blocks(text, "ephemeral"), text);
+    }
+
+    #[test]
+    fn a_tag_inside_indented_code_heads_nothing() {
+        let text = "Before.\n\n    #ephemeral\n    rm -rf ./cache\n\nAfter.\n";
+        assert_eq!(super::blocks_for(text, "ephemeral"), []);
+        assert_eq!(super::without_blocks(text, "ephemeral"), text);
+    }
+
+    /// A rule inside a fence is a line of code, so it does not end a block.
+    #[test]
+    fn a_rule_inside_a_fence_ends_nothing() {
+        let text = "#ephemeral\n\n```\n---\n```\n\nStill the block.\n\n---\n\nFree.\n";
+        let blocks = super::blocks_for(text, "ephemeral");
+        assert_eq!(blocks.len(), 1);
+        assert!(text[blocks[0].from..blocks[0].to].contains("Still the block."));
+        assert_eq!(super::without_blocks(text, "ephemeral"), "---\n\nFree.\n");
+    }
+
+    /// The indentation inside a list is list content, not a code block — so a
+    /// tag written in a nested item still heads its block.
+    #[test]
+    fn a_tag_in_a_nested_list_item_is_still_a_tag() {
+        let text = "- item\n\n    #ephemeral\n\nUnder it.\n";
+        assert_eq!(super::blocks_for(text, "ephemeral").len(), 1);
+    }
+
     use super::*;
 
     /// The text a block covers, which is what a reader would lose.

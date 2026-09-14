@@ -1,3 +1,5 @@
+import { codeRanges, inCode } from "./markdownCode"
+
 export interface TagMatch {
   tag: string
   from: number
@@ -30,7 +32,14 @@ export function findTags(text: string): TagMatch[] {
  * asked for.
  */
 export function allTags(manual: readonly string[], body: string): string[] {
-  return unique([...manual, ...findTags(body).map((match) => match.tag)])
+  // A `#deprecated` in a pasted script is a comment, not a tag. Listing one
+  // would put a tag in the sidebar that the editor draws nowhere in the note.
+  const code = codeRanges(body)
+  const prose = findTags(body)
+    .filter((match) => !inCode(code, match.from))
+    .map((match) => match.tag)
+
+  return unique([...manual, ...prose])
 }
 
 /** Unique tag names in first-seen order, deduped case-insensitively. */
