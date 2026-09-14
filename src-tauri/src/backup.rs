@@ -167,6 +167,15 @@ pub fn read_version(note_id: &str, version: &str) -> Result<String, String> {
  * test that got the root from the environment would be one bad default away
  * from doing that to somebody's real Documents folder.
  */
+/// Where snapshots are kept. A temporary directory under test, for the reason
+/// given on `default_vault_root`: a test run must not be able to write into,
+/// or prune, the reader's real backup history.
+#[cfg(test)]
+pub fn backup_root() -> PathBuf {
+    std::env::temp_dir().join("tova-tests-backups")
+}
+
+#[cfg(not(test))]
 pub fn backup_root() -> PathBuf {
     PathBuf::from(std::env::var("HOME").unwrap_or_default())
         .join("Documents")

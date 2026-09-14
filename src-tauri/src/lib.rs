@@ -883,19 +883,19 @@ fn prefs_avatar_sources() -> AvatarSources {
 
 #[tauri::command]
 fn settings_reset() -> Result<(), String> {
-    settings::reset_preferences(&data_dir())
+    settings::reset_preferences(&data_dir(), &vault::default_vault_root())
 }
 
 #[tauri::command]
 fn settings_nuke_targets() -> Vec<String> {
-    settings::nuke_targets(&data_dir())
+    settings::nuke_targets(&data_dir(), &vault::default_vault_root())
 }
 
 /// The app restarts rather than carrying on: every path it holds open has just
 /// been deleted underneath it, and a fresh start is the honest next state.
 #[tauri::command]
 fn settings_nuke(app: tauri::AppHandle) {
-    settings::nuke_everything(&data_dir());
+    settings::nuke_everything(&data_dir(), &vault::default_vault_root());
     app.restart();
 }
 

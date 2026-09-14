@@ -12,7 +12,7 @@ reader chose, and some of them choose badly.
 use std::path::{Path, PathBuf};
 
 use crate::preferences;
-use crate::vault::{default_vault_root, ensure_vault, set_active_vault};
+use crate::vault::{ensure_vault, set_active_vault};
 
 /*
  * Everything Tova keeps about a reader, by name. Enumerated rather than the
@@ -38,14 +38,14 @@ const APP_FOLDERS: [&str; 2] = ["fonts", "backgrounds"];
 /// Preferences back to what a fresh install has, and the default vault back in
 /// use. The notes are not touched — a vault that is forgotten here is still a
 /// folder full of files, and adding it again brings it back.
-pub fn reset_preferences(data_dir: &Path) -> Result<(), String> {
+pub fn reset_preferences(data_dir: &Path, default_root: &Path) -> Result<(), String> {
     let defaults =
         serde_json::to_value(preferences::Preferences::default()).map_err(|e| e.to_string())?;
     let stored = preferences::write_value(data_dir, &defaults);
 
     set_active_vault(None);
     let sections: Vec<String> = stored.sections.iter().map(|s| s.id.clone()).collect();
-    let _ = ensure_vault(&default_vault_root(), &sections);
+    let _ = ensure_vault(default_root, &sections);
     Ok(())
 }
 
@@ -99,9 +99,19 @@ mod guard {
 }
 
 /// Every vault Tova knows of, the default one included.
-fn vault_roots(data_dir: &Path) -> Vec<PathBuf> {
+/*
+ * Every vault a nuke would reach: the default one, then any that were added.
+ *
+ * `default_root` is passed rather than read from the environment, and that is
+ * not ceremony. It used to call `default_vault_root()` here, which ignored the
+ * `data_dir` it had been handed — so a test nuking a scratch directory deleted
+ * the developer's own `~/Documents/Tova` as well, and passed, because it only
+ * ever asserted about the scratch one. It did that twice before anyone noticed,
+ * and would have gone on doing it.
+ */
+fn vault_roots(data_dir: &Path, default_root: &Path) -> Vec<PathBuf> {
     let stored = preferences::read(data_dir);
-    let mut roots = vec![default_vault_root()];
+    let mut roots = vec![default_root.to_path_buf()];
     for path in stored.vaults.iter().map(PathBuf::from) {
         if !roots.contains(&path) {
             roots.push(path);
@@ -111,8 +121,8 @@ fn vault_roots(data_dir: &Path) -> Vec<PathBuf> {
 }
 
 /// What a nuke would delete, so the confirm can name it rather than gesture.
-pub fn nuke_targets(data_dir: &Path) -> Vec<String> {
-    vault_roots(data_dir)
+pub fn nuke_targets(data_dir: &Path, default_root: &Path) -> Vec<String> {
+    vault_roots(data_dir, default_root)
         .into_iter()
         .filter(|root| safe_to_delete(root))
         .chain([data_dir.to_path_buf()])
@@ -123,8 +133,8 @@ pub fn nuke_targets(data_dir: &Path) -> Vec<String> {
 /// Every note in every vault, and everything Tova stores about the reader —
 /// settings, session, the pictures and faces they added, and the blog tokens,
 /// which are ciphertext inside blogs.json and go with it.
-pub fn nuke_everything(data_dir: &Path) {
-    for root in vault_roots(data_dir) {
+pub fn nuke_everything(data_dir: &Path, default_root: &Path) {
+    for root in vault_roots(data_dir, default_root) {
         if safe_to_delete(&root) {
             let _ = std::fs::remove_dir_all(&root);
         }
@@ -145,6 +155,9 @@ mod tests {
 
     struct Scratch {
         data: PathBuf,
+        /// Stands in for `~/Documents/Tova`. A test that let the real one
+        /// through here deleted the notes of whoever ran `cargo test`.
+        default_root: PathBuf,
         _held: std::sync::MutexGuard<'static, ()>,
     }
 
@@ -154,8 +167,14 @@ mod tests {
             let data = std::env::temp_dir().join(format!("tova-settings-{name}"));
             let _ = std::fs::remove_dir_all(&data);
             std::fs::create_dir_all(&data).unwrap();
+            let default_root = data.join("default-vault");
+            std::fs::create_dir_all(&default_root).unwrap();
             set_active_vault(None);
-            Self { data, _held: held }
+            Self {
+                data,
+                default_root,
+                _held: held,
+            }
         }
 
         fn with_vaults(&self, vaults: &[&str]) {
@@ -185,9 +204,9 @@ mod tests {
         s.with_vaults(&[]);
 
         assert_eq!(
-            nuke_targets(&s.data),
+            nuke_targets(&s.data, &s.default_root),
             [
-                default_vault_root().to_string_lossy().into_owned(),
+                s.default_root.to_string_lossy().into_owned(),
                 s.data.to_string_lossy().into_owned()
             ]
         );
@@ -199,7 +218,8 @@ mod tests {
         let elsewhere = s.data.join("another-vault");
         s.with_vaults(&[elsewhere.to_str().unwrap()]);
 
-        assert!(nuke_targets(&s.data).contains(&elsewhere.to_string_lossy().into_owned()));
+        assert!(nuke_targets(&s.data, &s.default_root)
+            .contains(&elsewhere.to_string_lossy().into_owned()));
     }
 
     #[test]
@@ -212,7 +232,9 @@ mod tests {
         let home = home();
         s.with_vaults(&[home.to_str().unwrap()]);
 
-        assert!(!nuke_targets(&s.data).contains(&home.to_string_lossy().into_owned()));
+        assert!(
+            !nuke_targets(&s.data, &s.default_root).contains(&home.to_string_lossy().into_owned())
+        );
     }
 
     #[test]
@@ -221,7 +243,7 @@ mod tests {
         let documents = home().join("..").to_string_lossy().into_owned();
         s.with_vaults(&["/", "/Users", &documents]);
 
-        let targets = nuke_targets(&s.data);
+        let targets = nuke_targets(&s.data, &s.default_root);
 
         assert!(!targets.contains(&"/".to_string()));
         assert!(!targets.contains(&"/Users".to_string()));
@@ -231,9 +253,9 @@ mod tests {
     #[test]
     fn a_nuke_says_nothing_twice_when_a_vault_is_the_default_one() {
         let s = Scratch::new("dedupe");
-        s.with_vaults(&[default_vault_root().to_str().unwrap()]);
+        s.with_vaults(&[s.default_root.to_str().unwrap()]);
 
-        assert_eq!(nuke_targets(&s.data).len(), 2);
+        assert_eq!(nuke_targets(&s.data, &s.default_root).len(), 2);
     }
 
     #[test]
@@ -247,11 +269,54 @@ mod tests {
         std::fs::write(untouched.join("kept.md"), "Still here.").unwrap();
         s.with_vaults(&[vault.to_str().unwrap()]);
 
-        nuke_everything(&s.data);
+        nuke_everything(&s.data, &s.default_root);
 
         assert!(!vault.exists());
         assert!(untouched.join("kept.md").is_file());
         assert!(!s.data.join("preferences.json").exists());
+    }
+
+    /*
+     * The assertion this file was missing.
+     *
+     * `vault_roots` used to ignore the directory it was handed and reach for
+     * `~/Documents/Tova`, so running the suite deleted the notes of whoever ran
+     * it. The test above did not notice, because it only ever looked at the
+     * scratch vault it had made — which was deleted exactly as intended.
+     *
+     * This one puts something in a vault the nuke was not told about and
+     * insists it is still there afterwards.
+     */
+    #[test]
+    fn a_nuke_leaves_a_vault_it_was_not_told_about_alone() {
+        let s = Scratch::new("bystander");
+        let bystander = std::env::temp_dir().join("tova-settings-bystander-vault");
+        let _ = std::fs::remove_dir_all(&bystander);
+        std::fs::create_dir_all(bystander.join("notes")).unwrap();
+        std::fs::write(bystander.join("notes/precious.md"), "Years of writing.").unwrap();
+        s.with_vaults(&[]);
+
+        nuke_everything(&s.data, &s.default_root);
+
+        assert!(
+            bystander.join("notes/precious.md").is_file(),
+            "a nuke reached a vault nobody named"
+        );
+        let _ = std::fs::remove_dir_all(&bystander);
+    }
+
+    /// The real vault is never named by a test, so it is never deleted by one.
+    #[test]
+    fn nothing_here_can_name_the_readers_own_vault() {
+        let s = Scratch::new("never-real");
+        s.with_vaults(&[]);
+
+        for target in nuke_targets(&s.data, &s.default_root) {
+            assert!(
+                PathBuf::from(&target).starts_with(std::env::temp_dir()),
+                "a test would have deleted {target}"
+            );
+        }
     }
 
     #[test]
@@ -265,7 +330,7 @@ mod tests {
         };
         preferences::write_value(&s.data, &serde_json::to_value(&stored).unwrap());
 
-        reset_preferences(&s.data).unwrap();
+        reset_preferences(&s.data, &s.default_root).unwrap();
 
         let after = preferences::read(&s.data);
         assert_eq!(
