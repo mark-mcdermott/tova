@@ -32,6 +32,7 @@ mod notes;
  * main thread and libtest runs every test on a thread it spawned. Nothing else
  * consumes this crate, so the wider surface costs nothing.
  */
+mod markdown_code;
 pub mod markdown_html;
 pub mod pdf;
 #[cfg(test)]
@@ -54,6 +55,7 @@ mod sync_plan;
 mod tag_blocks;
 mod tag_purge;
 mod tags;
+mod updates;
 mod vault;
 mod vault_file;
 mod vault_keys;
@@ -951,6 +953,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         /*
          * Pictures a note holds, and backgrounds the reader added.
          *
@@ -1058,6 +1061,9 @@ pub fn run() {
             // The launch backup runs before the cleanup, so anything the sweep
             // removes is already captured in a restorable snapshot.
             schedule::on_launch(&data_dir());
+
+            // Off on its own thread: the window should not wait on a server.
+            updates::look(app.handle(), stored.updates);
 
             /*
              * Today's note, and the vault's backups, from here on. The handle

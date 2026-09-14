@@ -51,6 +51,8 @@ pub struct Preferences {
     pub backup_limit: i64,
     pub spellcheck: bool,
     pub tooltips: bool,
+    /// Whether the app looks for a newer version when it opens.
+    pub updates: bool,
     pub grammar: bool,
     pub theme: String,
     pub vaults: Vec<String>,
@@ -76,6 +78,7 @@ impl Default for Preferences {
             backup_limit: 30,
             spellcheck: true,
             tooltips: true,
+            updates: true,
             grammar: false,
             theme: "system".into(),
             vaults: Vec::new(),
@@ -195,6 +198,7 @@ pub fn normalize(value: &Value) -> Preferences {
             .and_then(Value::as_bool)
             .unwrap_or(true),
         tooltips: raw.get("tooltips").and_then(Value::as_bool).unwrap_or(true),
+        updates: raw.get("updates").and_then(Value::as_bool).unwrap_or(true),
         grammar: raw.get("grammar") == Some(&Value::Bool(true)),
         theme: one_of(raw, "theme", &THEMES).unwrap_or(fallback.theme),
         vaults: raw

@@ -107,6 +107,9 @@
     {
       "grammar": "yes",
       "tooltips": false
+    },
+    {
+      "updates": false
     }
   ],
   "expected": [
@@ -166,7 +169,8 @@
       "backgroundLight": "shuffle",
       "backgroundDark": "milky-way.jpg",
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayNameSource": "none",
@@ -224,7 +228,8 @@
       "backgroundLight": "shuffle",
       "backgroundDark": "milky-way.jpg",
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -282,7 +287,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "Mark",
@@ -340,7 +346,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -398,7 +405,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -456,7 +464,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -514,7 +523,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -572,7 +582,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -630,7 +641,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -688,7 +700,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -746,7 +759,8 @@
       "backgroundLight": "milky-way.jpg",
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -804,7 +818,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -862,7 +877,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -920,7 +936,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "my-script.otf",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -978,7 +995,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1036,7 +1054,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1094,7 +1113,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1152,7 +1172,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1210,7 +1231,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "Mark",
@@ -1268,7 +1290,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1326,7 +1349,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1384,7 +1408,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1445,7 +1470,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1503,7 +1529,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1568,7 +1595,8 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
     },
     {
       "displayName": "",
@@ -1626,7 +1654,67 @@
       "backgroundLight": null,
       "backgroundDark": null,
       "titleFont": "vibur",
-      "proseWidth": "narrow"
+      "proseWidth": "narrow",
+      "updates": true
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": false
     }
   ]
 }

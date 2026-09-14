@@ -42,6 +42,23 @@ export function GeneralTab() {
           right-click one — nothing is changed for you.
         </p>
 
+        {/* The one thing Tova sends anywhere on its own, so it says so. */}
+        <Field
+          id="updates"
+          label="Check for updates"
+          hint="Once, when Tova opens. A new version installs quietly and you get it next time. Turn this off and Tova opens no connection at all."
+        >
+          <label className="switch">
+            <input
+              id="updates"
+              type="checkbox"
+              checked={preferences.updates}
+              onChange={(event) => void update({ updates: event.target.checked })}
+            />
+            <span>{preferences.updates ? "On" : "Off"}</span>
+          </label>
+        </Field>
+
         <Field
           id="tooltips"
           label="Hover hints"

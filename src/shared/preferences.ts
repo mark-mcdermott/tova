@@ -138,6 +138,8 @@ export interface Preferences {
   spellcheck: boolean
   /** Hover hints on the app's controls. Labels are unaffected. */
   tooltips: boolean
+  /** Whether the app looks for a newer version when it opens. */
+  updates: boolean
   /** Grammar checking. Off to begin with: the checker is 15.6MB and loads on demand. */
   grammar: boolean
   theme: ThemeChoice
@@ -167,6 +169,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backupLimit: 30,
   spellcheck: true,
   tooltips: true,
+  updates: true,
   grammar: false,
   theme: "system",
   vaults: [],
@@ -236,6 +239,7 @@ export function normalizePreferences(value: unknown): Preferences {
     ),
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
     tooltips: typeof raw.tooltips === "boolean" ? raw.tooltips : true,
+    updates: typeof raw.updates === "boolean" ? raw.updates : true,
     grammar: raw.grammar === true,
     vaults: Array.isArray(raw.vaults)
       ? raw.vaults.filter((path): path is string => typeof path === "string")

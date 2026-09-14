@@ -29,23 +29,37 @@ fn is_tag_body(c: char) -> bool {
     c.is_ascii_alphanumeric() || c == '_' || c == '-'
 }
 
-fn find_tags(text: &str) -> Vec<String> {
-    let chars: Vec<char> = text.chars().collect();
+/// A tag and the byte offset of its `#` — `findTags` in `src/shared/tags.ts`,
+/// which returns the offsets for the same reason: whether a tag counts depends
+/// on where it sits.
+fn find_tags(text: &str) -> Vec<(usize, String)> {
+    // Byte offsets alongside the chars: the scan is by character, and every
+    // question asked of the answer is by byte.
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
     let mut found = Vec::new();
     let mut at = 0;
 
     while at < chars.len() {
-        if chars[at] != '#' || !chars.get(at + 1).is_some_and(char::is_ascii_alphabetic) {
+        if chars[at].1 != '#'
+            || !chars
+                .get(at + 1)
+                .is_some_and(|(_, c)| c.is_ascii_alphabetic())
+        {
             at += 1;
             continue;
         }
 
         let start = at + 1;
         let mut end = start;
-        while end < chars.len() && is_tag_body(chars[end]) {
+        while end < chars.len() && is_tag_body(chars[end].1) {
             end += 1;
         }
-        found.push(chars[start..end].iter().collect::<String>());
+
+        let tag = chars[start..end]
+            .iter()
+            .map(|(_, c)| *c)
+            .collect::<String>();
+        found.push((chars[at].0, tag));
         at = end;
     }
 
@@ -65,7 +79,15 @@ fn unique(tags: impl IntoIterator<Item = String>) -> Vec<String> {
 /// were asked for rather than picked up, and a tag in both is the one that was
 /// asked for.
 pub fn all_tags(manual: &[String], body: &str) -> Vec<String> {
-    unique(manual.iter().cloned().chain(find_tags(body)))
+    // A `#deprecated` in a pasted script is a comment, not a tag. Listing one
+    // would put a tag in the sidebar that the editor draws nowhere in the note.
+    let code = crate::markdown_code::code_ranges(body);
+    let prose = find_tags(body)
+        .into_iter()
+        .filter(|(at, _)| !crate::markdown_code::in_code(&code, *at))
+        .map(|(_, tag)| tag);
+
+    unique(manual.iter().cloned().chain(prose))
 }
 
 /*
