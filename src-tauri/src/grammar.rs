@@ -195,10 +195,36 @@ pub fn serve(data_dir: &Path, uri: &http::Uri) -> http::Response<std::borrow::Co
         return refused(409);
     }
 
+    wasm(bytes)
+}
+
+/*
+ * The headers the dictionary is handed over with.
+ *
+ * Its own function so the headers can be checked without conjuring 15MB of
+ * valid dictionary to get at the success path.
+ */
+fn wasm(bytes: Vec<u8>) -> http::Response<std::borrow::Cow<'static, [u8]>> {
     http::Response::builder()
         .header("content-type", "application/wasm")
+        /*
+         * Harper reaches this with `fetch`, not with a tag.
+         *
+         * That is the difference between this scheme and the two that serve
+         * pictures: an `<img src>` on a custom scheme is not gated on CORS,
+         * and a `fetch` is. Without this header the request is refused by the
+         * webview, every test still passes, and grammar reads as on while
+         * underlining nothing — which is the failure this whole feature was
+         * careful to avoid everywhere else.
+         */
+        .header("access-control-allow-origin", "*")
         .body(std::borrow::Cow::Owned(bytes))
-        .unwrap_or_else(|_| refused(500))
+        .unwrap_or_else(|_| {
+            http::Response::builder()
+                .status(500)
+                .body(std::borrow::Cow::Borrowed(&[][..]))
+                .expect("an empty response")
+        })
 }
 
 #[cfg(test)]
@@ -319,6 +345,31 @@ mod tests {
             let response = serve(&s.data, &path.parse().unwrap());
             assert_eq!(response.status(), 404, "for {path}");
         }
+    }
+
+    /*
+     * Harper fetches this rather than pointing a tag at it, and a fetch on a
+     * custom scheme is refused without the allow-origin header. Nothing else
+     * in the suite would notice: the bytes would be right, the status 200, and
+     * the webview would drop it on the floor.
+     */
+    #[test]
+    fn what_it_serves_can_be_fetched_rather_than_only_linked_to() {
+        let response = wasm(b"\0asm".to_vec());
+
+        assert_eq!(response.status(), 200);
+        assert_eq!(
+            response.headers().get("content-type").unwrap(),
+            "application/wasm"
+        );
+        assert_eq!(
+            response
+                .headers()
+                .get("access-control-allow-origin")
+                .unwrap(),
+            "*",
+            "a fetch on a custom scheme is refused without this"
+        );
     }
 
     #[test]
