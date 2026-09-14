@@ -16,6 +16,27 @@ use crate::note_location::{parse_note_id, to_note_id, NoteLocation};
 const ALWAYS: [&str; 1] = ["posts"];
 
 /// Where a vault lives unless the reader has chosen another.
+/*
+ * Where a vault lives when nobody has chosen one.
+ *
+ * Under test this is a temporary directory, and that is a safety property
+ * rather than a convenience. Every path that deletes — a nuke, a restore, a
+ * sweep — reaches the vault through here or through `vault_root`, so a test
+ * that resolves the real `~/Documents/Tova` is one mistake away from deleting
+ * the notes of whoever ran `cargo test`. It happened twice, to a real vault,
+ * before anyone noticed: the tests all passed both times, because none of them
+ * was looking at the folder being destroyed.
+ *
+ * Fixing the one route that did it would leave the next one open. This closes
+ * the shape of the mistake: in a test the real path is not returned at all, so
+ * there is nothing to reach.
+ */
+#[cfg(test)]
+pub fn default_vault_root() -> PathBuf {
+    std::env::temp_dir().join("tova-tests-default-vault")
+}
+
+#[cfg(not(test))]
 pub fn default_vault_root() -> PathBuf {
     PathBuf::from(std::env::var("HOME").unwrap_or_default())
         .join("Documents")
@@ -197,6 +218,22 @@ pub fn ensure_vault(root: &Path, sections: &[String]) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /*
+     * The guard that keeps the rest of the suite from costing somebody their
+     * writing. If this fails, a test run can reach the real vault again, and
+     * the next mistake in a delete path is somebody's notes rather than a red
+     * line in CI.
+     */
+    #[test]
+    fn a_test_can_never_resolve_the_readers_own_vault() {
+        assert!(
+            default_vault_root().starts_with(std::env::temp_dir()),
+            "a test build resolved {:?}",
+            default_vault_root()
+        );
+        assert!(crate::backup::backup_root().starts_with(std::env::temp_dir()));
+    }
 
     /*
      * Every vault gets a name the first time the app opens it, which is what
