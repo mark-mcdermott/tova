@@ -4,6 +4,7 @@ import { Editor } from "./components/Editor/Editor"
 import { Settings } from "./components/Settings/Settings"
 import { IndexPage } from "./components/Index/IndexPage"
 import { VaultWarning } from "./components/VaultWarning"
+import { Welcome, type WelcomeChoice } from "./components/Welcome"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
 import { current as currentEntry } from "./stores/history"
@@ -20,6 +21,7 @@ import "./styles/editor.css"
 import "./styles/sidebar.css"
 import "./styles/settings.css"
 import "./styles/home.css"
+import "./styles/welcome.css"
 
 export default function App() {
   const load = useNotesStore((state) => state.load)
@@ -42,6 +44,8 @@ export default function App() {
   const proseWidth = usePreferencesStore((state) => state.preferences.proseWidth)
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
   const userBackgrounds = usePreferencesStore((state) => state.userBackgrounds)
+  const greeted = usePreferencesStore((state) => state.preferences.greeted)
+  const updatePreferences = usePreferencesStore((state) => state.update)
 
   /*
    * Written on every move rather than on quit. The window remembers its frame
@@ -132,11 +136,28 @@ export default function App() {
 
   const needsRecovery = vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 
+  /*
+   * Only once the preferences are actually here. They default to ungreeted, so
+   * rendering this on the default would flash the first-run question at
+   * somebody who answered it months ago, every time they opened the app.
+   */
+  const asking = preferencesLoaded && !greeted
+
+  async function answer(choice: WelcomeChoice) {
+    await updatePreferences({ ...choice, greeted: true })
+
+    // Not awaited: 15MB is a long time to hold somebody on a dialog they have
+    // already finished with. It lands when it lands, and grammar starts
+    // working when it does.
+    if (choice.grammar) void window.tova.grammar.fetch().catch(() => {})
+  }
+
   return (
     <div className={`app${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
       {/* One of these for the whole app: a tooltip is drawn against the
           viewport, so it has nothing to do with where its control sits. */}
       <Tooltip />
+      {asking && <Welcome onChoose={(choice) => void answer(choice)} />}
       <div className="shell">
         {sidebarCollapsed ? (
           <button

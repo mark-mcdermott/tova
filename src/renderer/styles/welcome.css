@@ -1,0 +1,110 @@
+/*
+ * The first run's question.
+ *
+ * Drawn on the brand's night rather than over the app, because there is no app
+ * behind it yet worth showing through: a reader who has just opened Tova for
+ * the first time has an empty vault and no reason to look past this.
+ */
+.welcome {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  inset: 0;
+  background: linear-gradient(160deg, #1e1b2e 0%, #2a2540 55%, #4f5d7a 100%);
+}
+
+.welcome-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: flex-start;
+  width: min(34rem, 100%);
+  color: #ffffff;
+}
+
+.welcome-wordmark {
+  width: 7rem;
+  margin: 0;
+  color: #ffffff;
+}
+
+.welcome-wordmark .wordmark {
+  width: 100%;
+  height: auto;
+}
+
+.welcome-lead {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.welcome-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Glass on the night, like the app's own panels. Left-aligned and full width:
+ * these are three paragraphs to read, not three buttons to aim at.
+ */
+.welcome-choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 6%);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+.welcome-choice:hover {
+  border-color: rgb(255 255 255 / 28%);
+  background: rgb(255 255 255 / 12%);
+}
+
+.welcome-choice:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.welcome-choice-label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.welcome-choice-body {
+  color: rgb(255 255 255 / 78%);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.welcome-footnote {
+  margin: 0;
+  color: rgb(255 255 255 / 62%);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-choice {
+    transition: none;
+  }
+}

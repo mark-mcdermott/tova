@@ -220,6 +220,25 @@ export interface SpellingSpan {
   to: number
 }
 
+export interface GrammarStatus {
+  /** Whether the dictionary is on this machine and the right size. */
+  ready: boolean
+  /** What a download would cost, so the question can say so before asking. */
+  bytes: number
+  version: string
+}
+
+export interface GrammarApi {
+  /**
+   * Whether grammar can run. Harper's dictionary is 15MB and is fetched rather
+   * than shipped, so the answer is no on a fresh install until somebody says
+   * yes — and stays no, for good, on a machine kept offline.
+   */
+  status: () => Promise<GrammarStatus>
+  /** Fetches the dictionary if it is not already here. Safe to call twice. */
+  fetch: () => Promise<GrammarStatus>
+}
+
 export interface SpellcheckApi {
   /**
    * Every misspelling in a note, for the underlines the editor draws. The

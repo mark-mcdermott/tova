@@ -67,6 +67,12 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       listWords: vi.fn(async () => []),
       setEnabled: vi.fn()
     },
+    grammar: {
+      // Here by default: a test about something else should not have to know
+      // that grammar's dictionary is fetched.
+      status: vi.fn(async () => ({ ready: true, bytes: 15_634_488, version: "2.7.0" })),
+      fetch: vi.fn(async () => ({ ready: true, bytes: 15_634_488, version: "2.7.0" }))
+    },
     session: {
       read: vi.fn(async () => null),
       write: vi.fn(async () => undefined)
