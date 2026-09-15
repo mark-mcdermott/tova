@@ -52,6 +52,34 @@ This is a serious writing tool.
 
 ---
 
+# What Ships On, and What Asks
+
+Most work costs the reader nothing and should not announce itself. A better
+editor behaviour, a fixed bug, a construct that now renders — those ship on,
+with no switch and no prompt.
+
+A feature that costs something the reader should consent to — a download, a
+network connection, their writing leaving the machine, real disk — ships
+**off**, in Settings, discoverable. Off is the answer, not a prompt.
+
+Tova asks **one** question, once, on the first run: what kind of install this
+is. It earns its place by gathering the two costs that already exist — the
+grammar dictionary's 15MB and the update check's connection — into a single
+moment, rather than ambushing somebody the first time they open Settings.
+`greeted` records the answer, lives in Application Support, survives every
+update, and is never asked again.
+
+Adding a second first-run question is the thing to resist. Each one keys on a
+new preference defaulting to false, so it shows to _everybody_ on the update
+that introduces it. Two or three over a year and Tova interrupts you every time
+it updates, which is the noisy productivity UX at the top of this file.
+
+Spelling is the case on the other side, and worth keeping in mind: always on,
+no question, no switch to find, because it is the system's own checker and
+costs nothing to include.
+
+---
+
 # Working Mode
 
 Build it. Write the code directly — no tutorials, no step-by-step walkthroughs,
