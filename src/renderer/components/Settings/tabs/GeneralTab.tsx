@@ -130,8 +130,8 @@ export function GeneralTab() {
               : dictionary === "fetching"
                 ? "Fetching the dictionary — 15.6MB. You can carry on writing; grammar starts when it lands."
                 : dictionary === "missing"
-                  ? "Runs on this machine — nothing is sent anywhere. The dictionary is 15.6MB and is fetched once, the first time you turn this on."
-                  : "Runs on this machine — nothing is sent anywhere."
+                  ? "Catches roughly half of common mistakes — confusable words, repeated words, capitalisation. It reads words rather than sentences, so subject-verb errors get through. Runs here; nothing is sent anywhere. The dictionary is 15.6MB and is fetched once."
+                  : "Catches roughly half of common mistakes — confusable words, repeated words, capitalisation. It reads words rather than sentences, so subject-verb errors get through. Runs here; nothing is sent anywhere."
           }
         >
           <label className="switch">

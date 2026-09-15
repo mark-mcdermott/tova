@@ -52,6 +52,19 @@ describe("the first run's question", () => {
     expect(onChoose).toHaveBeenLastCalledWith({ grammar: false, updates: false })
   })
 
+  /*
+   * Harper catches roughly half of common mistakes and nothing that needs the
+   * sentence parsed. Saying so where the choice is made is the difference
+   * between a limitation and a nasty surprise, and it is easy to soften this
+   * copy later without noticing what was lost.
+   */
+  it("says what grammar checking will and will not catch", () => {
+    ask()
+    const everything = screen.getByRole("button", { name: /Everything/ }).textContent ?? ""
+    expect(everything).toMatch(/roughly half/)
+    expect(everything).toMatch(/words rather than sentences/)
+  })
+
   it("says what the download costs before anyone agrees to it", () => {
     ask()
     expect(screen.getByRole("button", { name: /Everything/ }).textContent).toMatch(/15MB/)

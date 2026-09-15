@@ -24,7 +24,7 @@ const CHOICES: Choice[] = [
   {
     id: "everything",
     label: "Everything",
-    body: "Grammar checking, and a look for a newer Tova when it opens. The grammar dictionary is 15MB and arrives in the background — you can carry on writing while it does.",
+    body: "Grammar checking, and a look for a newer Tova when it opens. The grammar checker catches roughly half of common mistakes — it reads words rather than sentences, so it finds confusable words and misses things like subject-verb agreement. Its dictionary is 15MB and arrives in the background.",
     choice: { grammar: true, updates: true }
   },
   {
