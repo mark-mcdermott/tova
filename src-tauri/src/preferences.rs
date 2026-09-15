@@ -54,6 +54,8 @@ pub struct Preferences {
     /// Whether the app looks for a newer version when it opens.
     pub updates: bool,
     pub grammar: bool,
+    /// Whether Tova has asked what kind of install the reader wants.
+    pub greeted: bool,
     pub theme: String,
     pub vaults: Vec<String>,
     pub active_vault: Option<String>,
@@ -79,6 +81,7 @@ impl Default for Preferences {
             spellcheck: true,
             tooltips: true,
             updates: true,
+            greeted: false,
             grammar: false,
             theme: "system".into(),
             vaults: Vec::new(),
@@ -199,6 +202,7 @@ pub fn normalize(value: &Value) -> Preferences {
             .unwrap_or(true),
         tooltips: raw.get("tooltips").and_then(Value::as_bool).unwrap_or(true),
         updates: raw.get("updates").and_then(Value::as_bool).unwrap_or(true),
+        greeted: raw.get("greeted") == Some(&Value::Bool(true)),
         grammar: raw.get("grammar") == Some(&Value::Bool(true)),
         theme: one_of(raw, "theme", &THEMES).unwrap_or(fallback.theme),
         vaults: raw

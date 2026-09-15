@@ -89,3 +89,95 @@ describe("checking for updates", () => {
     expect(write).toHaveBeenCalledWith(expect.objectContaining({ updates: false }))
   })
 })
+
+/*
+ * Grammar's dictionary is 15MB and is not in the download, so the switch has
+ * work to do behind it. The cases that matter are the ones where that work
+ * does not go to plan: a switch reading On while nothing is ever underlined is
+ * the failure this has to avoid.
+ */
+describe("turning grammar on", () => {
+  const status = vi.fn()
+  const fetchDictionary = vi.fn()
+  const update = vi.fn(async () => undefined)
+
+  beforeEach(() => {
+    status.mockResolvedValue({ ready: false, bytes: 15_634_488, version: "2.7.0" })
+    fetchDictionary.mockResolvedValue({ ready: true, bytes: 15_634_488, version: "2.7.0" })
+    window.tova = stubBridge({
+      preferences: { reset, nuke, nukeTargets },
+      grammar: { status, fetch: fetchDictionary }
+    })
+    usePreferencesStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES },
+      load: vi.fn(async () => undefined),
+      update
+    })
+  })
+
+  it("fetches the dictionary when it is not already here", async () => {
+    render(<GeneralTab />)
+    await waitFor(() => expect(status).toHaveBeenCalled())
+
+    await userEvent.click(screen.getByLabelText("Check grammar"))
+
+    await waitFor(() => expect(fetchDictionary).toHaveBeenCalled())
+    expect(update).toHaveBeenCalledWith({ grammar: true })
+  })
+
+  it("does not fetch it twice when it is already here", async () => {
+    status.mockResolvedValue({ ready: true, bytes: 15_634_488, version: "2.7.0" })
+    render(<GeneralTab />)
+    await waitFor(() => expect(status).toHaveBeenCalled())
+
+    await userEvent.click(screen.getByLabelText("Check grammar"))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ grammar: true }))
+    expect(fetchDictionary).not.toHaveBeenCalled()
+  })
+
+  it("says what it is waiting for rather than sitting there", async () => {
+    let finish: (value: unknown) => void = () => undefined
+    fetchDictionary.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+
+    render(<GeneralTab />)
+    await waitFor(() => expect(status).toHaveBeenCalled())
+    await userEvent.click(screen.getByLabelText("Check grammar"))
+
+    await waitFor(() => expect(screen.getByText("Fetching…")).toBeTruthy())
+    expect(screen.getByLabelText("Check grammar")).toHaveProperty("disabled", true)
+
+    finish({ ready: true, bytes: 15_634_488, version: "2.7.0" })
+  })
+
+  /*
+   * The one that matters. A download that fails leaves the preference off,
+   * because a reader who is told grammar is on and never sees an underline has
+   * no way to find out which of the two is lying.
+   */
+  it("turns itself back off when the dictionary cannot be fetched", async () => {
+    fetchDictionary.mockRejectedValue(new Error("offline"))
+
+    render(<GeneralTab />)
+    await waitFor(() => expect(status).toHaveBeenCalled())
+    await userEvent.click(screen.getByLabelText("Check grammar"))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ grammar: false }))
+    expect(screen.getByText(/could not be fetched/)).toBeTruthy()
+  })
+
+  it("never asks for it at all when grammar is switched off", async () => {
+    usePreferencesStore.setState({
+      preferences: { ...DEFAULT_PREFERENCES, grammar: true },
+      load: vi.fn(async () => undefined),
+      update
+    })
+    render(<GeneralTab />)
+    await waitFor(() => expect(status).toHaveBeenCalled())
+
+    await userEvent.click(screen.getByLabelText("Check grammar"))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ grammar: false }))
+    expect(fetchDictionary).not.toHaveBeenCalled()
+  })
+})

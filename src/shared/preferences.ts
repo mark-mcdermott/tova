@@ -140,8 +140,18 @@ export interface Preferences {
   tooltips: boolean
   /** Whether the app looks for a newer version when it opens. */
   updates: boolean
-  /** Grammar checking. Off to begin with: the checker is 15.6MB and loads on demand. */
+  /**
+   * Grammar checking. Off to begin with, and its dictionary is not in the
+   * download: 15.6MB is fetched once, if the reader says they want it.
+   */
   grammar: boolean
+  /**
+   * Whether Tova has asked the reader what kind of install they want. False on
+   * a fresh machine and true forever after — the question is asked once, and a
+   * reader who wants to change their mind does it in Settings like everything
+   * else.
+   */
+  greeted: boolean
   theme: ThemeChoice
   /** Extra vaults the reader has added; the default is never stored. */
   vaults: string[]
@@ -170,6 +180,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   spellcheck: true,
   tooltips: true,
   updates: true,
+  greeted: false,
   grammar: false,
   theme: "system",
   vaults: [],
@@ -240,6 +251,7 @@ export function normalizePreferences(value: unknown): Preferences {
     spellcheck: typeof raw.spellcheck === "boolean" ? raw.spellcheck : true,
     tooltips: typeof raw.tooltips === "boolean" ? raw.tooltips : true,
     updates: typeof raw.updates === "boolean" ? raw.updates : true,
+    greeted: raw.greeted === true,
     grammar: raw.grammar === true,
     vaults: Array.isArray(raw.vaults)
       ? raw.vaults.filter((path): path is string => typeof path === "string")

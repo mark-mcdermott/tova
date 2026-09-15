@@ -4,6 +4,7 @@ import type {
   BackupApi,
   BlogApi,
   EventsApi,
+  GrammarApi,
   ImageApi,
   PreferencesApi,
   PublishApi,
@@ -20,6 +21,7 @@ declare global {
       blogs: BlogApi
       publish: PublishApi
       spellcheck: SpellcheckApi
+      grammar: GrammarApi
       preferences: PreferencesApi
       session: SessionApi
       app: AppApi

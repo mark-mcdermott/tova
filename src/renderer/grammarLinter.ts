@@ -1,14 +1,20 @@
 import type { GrammarNote } from "./components/Editor/grammar"
 
 /**
- * Harper, loaded on demand. It is 15.6MB of WebAssembly, so nothing about it is
- * fetched until the reader actually turns grammar on — which is also why the
- * preference is off to begin with.
+ * Harper, loaded from the copy on this machine.
+ *
+ * The 15.6MB of WebAssembly is no longer in the download. It is fetched once,
+ * if the reader wants grammar at all, and served back over the `tova-grammar`
+ * scheme — which is also where its bytes are checked against the hash this
+ * build expects, so what reaches `WebAssembly.instantiate` is the dictionary
+ * and not whatever a proxy felt like returning.
  *
  * It runs here rather than in main because it is a renderer-shaped library, and
- * because nothing leaves the machine either way: that is the whole reason for
- * choosing an on-device checker over a hosted one.
+ * because nothing leaves the machine once it is here: that is the whole reason
+ * for choosing an on-device checker over a hosted one.
  */
+const BINARY_URL = "tova-grammar://local/harper.wasm"
+
 type Linter = {
   lint: (text: string, options?: { language?: string }) => Promise<unknown[]>
 }
@@ -16,21 +22,33 @@ type Linter = {
 let linter: Promise<Linter> | null = null
 
 async function load(): Promise<Linter> {
-  const [{ LocalLinter }, { slimBinary }] = await Promise.all([
-    import("harper.js"),
-    import("harper.js/slimBinary")
-  ])
+  // `harper.js/slimBinary` is deliberately not imported: importing it is what
+  // put the WebAssembly into the bundle. The URL is handed over instead, and
+  // the file behind it arrives only if somebody asked for grammar.
+  const { LocalLinter, createBinaryModuleFromUrl } = await import("harper.js")
 
-  // The slim binary: a smaller dictionary for the same rules, which is the
-  // right side of the trade when the alternative is another megabyte.
-  const made = new LocalLinter({ binary: slimBinary })
+  // "slim" — a smaller dictionary for the same rules, which is the right side
+  // of the trade when the alternative is another megabyte. It has to match the
+  // binary being pointed at: the glue and the dictionary are a pair.
+  const binary = createBinaryModuleFromUrl(BINARY_URL, "slim")
+  const made = new LocalLinter({ binary })
   await made.setup()
   return made as unknown as Linter
 }
 
-/** Kept between calls: setup parses a dictionary and is not cheap to repeat. */
+/*
+ * Kept between calls: setup parses a dictionary and is not cheap to repeat.
+ *
+ * A failure is not kept, which matters now that the dictionary can arrive
+ * while Tova is open. A rejected promise stays rejected, so caching one would
+ * mean grammar never worked again this session — the reader would turn it on,
+ * watch the download finish, and see nothing underlined until they restarted.
+ */
 function ready(): Promise<Linter> {
-  linter ??= load()
+  linter ??= load().catch((why: unknown) => {
+    linter = null
+    throw why
+  })
   return linter
 }
 

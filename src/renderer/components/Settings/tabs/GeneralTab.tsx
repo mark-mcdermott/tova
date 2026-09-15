@@ -13,8 +13,42 @@ export function GeneralTab() {
   const load = usePreferencesStore((state) => state.load)
 
   const [words, setWords] = useState<string[]>([])
+  /*
+   * Whether the grammar dictionary is on this machine. It is not in the
+   * download, so turning grammar on for the first time has 15MB to fetch, and
+   * a switch that silently does nothing for a minute is worse than one that
+   * says what it is waiting for.
+   */
+  const [dictionary, setDictionary] = useState<"unknown" | "missing" | "fetching" | "here">(
+    "unknown"
+  )
+  const [dictionaryFailed, setDictionaryFailed] = useState(false)
   const [asking, setAsking] = useState<"reset" | "nuke" | null>(null)
   const [targets, setTargets] = useState<string[]>([])
+
+  useEffect(() => {
+    void window.tova.grammar
+      .status()
+      .then((status) => setDictionary(status.ready ? "here" : "missing"))
+  }, [])
+
+  async function setGrammar(wanted: boolean) {
+    await update({ grammar: wanted })
+    if (!wanted || dictionary === "here" || dictionary === "fetching") return
+
+    setDictionaryFailed(false)
+    setDictionary("fetching")
+    try {
+      const status = await window.tova.grammar.fetch()
+      setDictionary(status.ready ? "here" : "missing")
+    } catch {
+      // Left off rather than on-but-broken: a switch that says On while
+      // nothing is underlined is the worse of the two lies.
+      setDictionary("missing")
+      setDictionaryFailed(true)
+      await update({ grammar: false })
+    }
+  }
 
   useEffect(() => {
     void window.tova.spellcheck.listWords().then(setWords)
@@ -90,16 +124,27 @@ export function GeneralTab() {
         <Field
           id="grammar"
           label="Check grammar"
-          hint="Runs on this machine — nothing is sent anywhere. The checker is 15.6MB and is only fetched once you turn this on."
+          hint={
+            dictionaryFailed
+              ? "The dictionary could not be fetched. Check the connection and try again — nothing else about Tova depends on it."
+              : dictionary === "fetching"
+                ? "Fetching the dictionary — 15.6MB. You can carry on writing; grammar starts when it lands."
+                : dictionary === "missing"
+                  ? "Catches roughly half of common mistakes — confusable words, repeated words, capitalisation. It reads words rather than sentences, so subject-verb errors get through. Runs here; nothing is sent anywhere. The dictionary is 15.6MB and is fetched once."
+                  : "Catches roughly half of common mistakes — confusable words, repeated words, capitalisation. It reads words rather than sentences, so subject-verb errors get through. Runs here; nothing is sent anywhere."
+          }
         >
           <label className="switch">
             <input
               id="grammar"
               type="checkbox"
               checked={preferences.grammar}
-              onChange={(event) => void update({ grammar: event.target.checked })}
+              disabled={dictionary === "fetching"}
+              onChange={(event) => void setGrammar(event.target.checked)}
             />
-            <span>{preferences.grammar ? "On" : "Off"}</span>
+            <span>
+              {dictionary === "fetching" ? "Fetching…" : preferences.grammar ? "On" : "Off"}
+            </span>
           </label>
         </Field>
 

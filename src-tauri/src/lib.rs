@@ -20,6 +20,7 @@ mod date;
 mod deploys;
 mod front_matter;
 mod github;
+mod grammar;
 mod images;
 mod js;
 mod media;
@@ -121,6 +122,26 @@ fn preferences_read() -> preferences::Preferences {
 #[tauri::command]
 fn preferences_write(value: Value) -> preferences::Preferences {
     preferences::write_value(&data_dir(), &value)
+}
+
+/*
+ * Grammar's dictionary is fetched rather than shipped, so the renderer has to
+ * be able to ask whether it is here and to ask for it. Both answer the same
+ * `Status`, so a caller that fetches does not then have to go and check.
+ */
+#[tauri::command]
+fn grammar_status() -> grammar::Status {
+    grammar::status(&data_dir())
+}
+
+#[tauri::command]
+async fn grammar_fetch() -> Result<grammar::Status, String> {
+    // 15MB over somebody's line: off the thread that draws, or the window
+    // stops answering for the length of the download.
+    let data_dir = data_dir();
+    tauri::async_runtime::spawn_blocking(move || grammar::fetch(&data_dir))
+        .await
+        .map_err(|why| why.to_string())?
 }
 
 #[tauri::command]
@@ -967,10 +988,20 @@ pub fn run() {
         .register_uri_scheme_protocol("tova-bg", |_ctx, request| {
             images::serve_background(&data_dir(), request.uri())
         })
+        /*
+         * Harper's WebAssembly, once it has been fetched. Its own scheme for
+         * the same reason the two above are separate: a handler that can only
+         * serve one file cannot be talked into serving another.
+         */
+        .register_uri_scheme_protocol("tova-grammar", |_ctx, request| {
+            grammar::serve(&data_dir(), request.uri())
+        })
         .invoke_handler(tauri::generate_handler![
             app_info,
             preferences_read,
             preferences_write,
+            grammar_status,
+            grammar_fetch,
             account_name,
             session_read,
             session_write,
