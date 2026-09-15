@@ -1472,6 +1472,42 @@
       ]
     },
     {
+      "name": "an angled autolink on a scheme bare text ignores",
+      "text": "<ftp://x.com/#work>\n",
+      "tags": [
+        {
+          "tag": "#work",
+          "at": 13,
+          "code": false,
+          "excluded": true
+        }
+      ]
+    },
+    {
+      "name": "an angled mailto",
+      "text": "<mailto:a@b.com#work>\n",
+      "tags": [
+        {
+          "tag": "#work",
+          "at": 15,
+          "code": false,
+          "excluded": true
+        }
+      ]
+    },
+    {
+      "name": "an angled autolink on an invented scheme",
+      "text": "<x-custom:thing#work>\n",
+      "tags": [
+        {
+          "tag": "#work",
+          "at": 15,
+          "code": false,
+          "excluded": true
+        }
+      ]
+    },
+    {
       "name": "a mailto link",
       "text": "mailto:a@b.com#work\n",
       "tags": [

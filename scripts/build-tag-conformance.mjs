@@ -162,6 +162,12 @@ const cases = [
   ["a bare URL inside an unclosed link", "[a] https://x.com/b#work [c]\n"],
   ["a bare URL inside a closed link", "[see https://x.com/a#work](y)\n"],
   ["an angled autolink", "text <https://x.com/#work> more\n"],
+  // Angle brackets autolink schemes a bare URL never would, so these are the
+  // cases that fail if the angled path stops working. Without them the whole
+  // of `angle_autolink_end` could be removed and every case still passed.
+  ["an angled autolink on a scheme bare text ignores", "<ftp://x.com/#work>\n"],
+  ["an angled mailto", "<mailto:a@b.com#work>\n"],
+  ["an angled autolink on an invented scheme", "<x-custom:thing#work>\n"],
   ["a mailto link", "mailto:a@b.com#work\n"],
   ["an xmpp link", "xmpp:a@b.com/#work\n"],
   ["a bare email address", "a@b.com/#work\n"],
