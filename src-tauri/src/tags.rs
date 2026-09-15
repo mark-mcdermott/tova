@@ -79,12 +79,13 @@ fn unique(tags: impl IntoIterator<Item = String>) -> Vec<String> {
 /// were asked for rather than picked up, and a tag in both is the one that was
 /// asked for.
 pub fn all_tags(manual: &[String], body: &str) -> Vec<String> {
-    // A `#deprecated` in a pasted script is a comment, not a tag. Listing one
-    // would put a tag in the sidebar that the editor draws nowhere in the note.
-    let code = crate::markdown_code::code_ranges(body);
+    // A `#deprecated` in a pasted script is a comment and a `#work` at the end
+    // of a URL is a fragment. Listing either would put a tag in the sidebar
+    // that the editor draws nowhere in the note.
+    let excluded = crate::markdown_spans::spans(body).excluded;
     let prose = find_tags(body)
         .into_iter()
-        .filter(|(at, _)| !crate::markdown_code::in_code(&code, *at))
+        .filter(|(at, _)| !crate::markdown_spans::covers(&excluded, *at))
         .map(|(_, tag)| tag);
 
     unique(manual.iter().cloned().chain(prose))
