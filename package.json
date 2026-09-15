@@ -8,7 +8,9 @@
     "test": "vitest run",
     "tauri:dev": "cargo tauri dev",
     "tauri:build": "cargo tauri build --target universal-apple-darwin",
-    "seed": "node scripts/seed-vault.mjs"
+    "seed": "node scripts/seed-vault.mjs",
+    "release": "node scripts/release.mjs",
+    "release:grammar": "node scripts/publish-grammar.mjs"
   },
   "keywords": [],
   "author": "Mark McDermott <mark@markmcdermott.io>",
