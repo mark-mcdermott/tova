@@ -102,8 +102,15 @@ pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
      *
      * It applies to what ends a block as well as what starts one: a `---`
      * inside a fence is a line of code, not a rule.
+     *
+     * Code alone, and not the wider set of places a `#` is not a tag, because
+     * of that second use. A `---` under a paragraph is a setext underline, and
+     * the editor draws a heading rather than a divider there — but a block that
+     * stopped treating it as a terminator would run on past text the writer had
+     * visibly separated off, and take it. Ending sooner is the side to err on
+     * for something that deletes what it finds.
      */
-    let code = crate::markdown_code::code_ranges(text);
+    let code = crate::markdown_spans::spans(text).code;
 
     // Offsets alongside the lines, so a block can be cut out of the original
     // text rather than rebuilt from pieces.
@@ -115,7 +122,7 @@ pub fn blocks_for(text: &str, tag: &str) -> Vec<Block> {
         at += line.len() + 1;
     }
 
-    let is_code = |index: usize| crate::markdown_code::in_code(&code, starts[index]);
+    let is_code = |index: usize| crate::markdown_spans::covers(&code, starts[index]);
 
     for (index, line) in lines.iter().enumerate() {
         if !is_tag_only_line(line) || !line_names(line, tag) || is_code(index) {

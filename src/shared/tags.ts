@@ -1,4 +1,4 @@
-import { codeRanges, inCode } from "./markdownCode"
+import { covers, spans } from "./markdownSpans"
 
 export interface TagMatch {
   tag: string
@@ -32,11 +32,12 @@ export function findTags(text: string): TagMatch[] {
  * asked for.
  */
 export function allTags(manual: readonly string[], body: string): string[] {
-  // A `#deprecated` in a pasted script is a comment, not a tag. Listing one
-  // would put a tag in the sidebar that the editor draws nowhere in the note.
-  const code = codeRanges(body)
+  // A `#deprecated` in a pasted script is a comment and a `#work` in a URL is
+  // a fragment. Listing either would put a tag in the sidebar that the editor
+  // draws nowhere in the note.
+  const excluded = spans(body).excluded
   const prose = findTags(body)
-    .filter((match) => !inCode(code, match.from))
+    .filter((match) => !covers(excluded, match.from))
     .map((match) => match.tag)
 
   return unique([...manual, ...prose])
