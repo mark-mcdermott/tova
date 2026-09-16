@@ -165,9 +165,8 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               isDropActive={drop?.isDropActive}
             >
               {/* Folders live under Notes and fold away with it. Each is still
-                  a destination in its own right — the caret hides them,
-                  clicking Notes opens its index — so this is a drawer around
-                  the destinations rather than instead of them.
+                  a destination in its own right: clicking Notes shows them and
+                  opens its index, clicking it again puts them away.
 
                   Undefined rather than an empty fragment when there is nothing
                   to hold: a drawer with nothing in it should have no caret, and
