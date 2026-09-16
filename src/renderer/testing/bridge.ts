@@ -110,7 +110,18 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       decryptVault: vi.fn(async () => []),
       unlockVault: vi.fn(async () => true)
     },
-    app: { info: vi.fn(), reveal: vi.fn(), openExternal: vi.fn() },
+    app: {
+      // Resolving rather than bare: About reads this on mount, and a test about
+      // something else should not have to know that.
+      info: vi.fn(async () => ({
+        version: "1.0.0",
+        tauri: "2.11.5",
+        webview: "605.1.15",
+        backupPath: "/Users/someone/Documents/Tova Backups"
+      })),
+      reveal: vi.fn(),
+      openExternal: vi.fn()
+    },
     events: { onNotesChanged: vi.fn(() => () => undefined) }
   } as unknown as Bridge
 

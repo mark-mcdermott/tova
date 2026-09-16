@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, screen, cleanup, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { GeneralTab } from "./GeneralTab"
+
+/** What the stub bridge answers `app.info()` with. */
+const APP_INFO = { version: "1.0.0", tauri: "2.11.5", webview: "605.1.15" }
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { stubBridge } from "../../../testing/bridge"
 import { DEFAULT_PREFERENCES } from "../../../../shared/preferences"
@@ -179,5 +182,29 @@ describe("turning grammar on", () => {
 
     await waitFor(() => expect(update).toHaveBeenCalledWith({ grammar: false }))
     expect(fetchDictionary).not.toHaveBeenCalled()
+  })
+})
+
+/*
+ * About moved here from the Vault tab. It is about the app rather than about a
+ * vault, and it sits at the bottom of the first tab somebody opens.
+ */
+describe("About", () => {
+  /*
+   * The About panel named Electron and Chromium, which is what used to be
+   * drawing this. One of those rows went blank at the cutover and the other
+   * was labelling a WebKit version.
+   */
+  it("names what is actually running the app", async () => {
+    render(<GeneralTab />)
+
+    for (const [label, value] of [
+      ["Tova", APP_INFO.version],
+      ["Tauri", APP_INFO.tauri],
+      ["WebKit", APP_INFO.webview]
+    ]) {
+      const term = await screen.findByText(label)
+      expect(term.nextElementSibling?.textContent, `${label} row`).toBe(value)
+    }
   })
 })
