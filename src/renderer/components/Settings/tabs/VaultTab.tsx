@@ -371,36 +371,6 @@ export function VaultTab() {
         )}
       </section>
 
-      <section className="settings-section">
-        <h2 className="settings-section-title">About</h2>
-        <dl className="settings-facts">
-          <div>
-            <dt>Tova</dt>
-            <dd>{info?.version ?? "…"}</dd>
-          </div>
-          <div>
-            <dt>Tauri</dt>
-            <dd>{info?.tauri ?? "…"}</dd>
-          </div>
-          <div>
-            <dt>WebKit</dt>
-            <dd>{info?.webview ?? "…"}</dd>
-          </div>
-        </dl>
-
-        <div className="settings-row">
-          <button
-            type="button"
-            className="settings-button"
-            onClick={() =>
-              void window.tova.app.openExternal("https://github.com/mark-mcdermott/tova/issues")
-            }
-          >
-            Report a problem
-          </button>
-        </div>
-      </section>
-
       {sealing !== null && (
         <ConfirmDialog
           title="Encrypt this vault?"

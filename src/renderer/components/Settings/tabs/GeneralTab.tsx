@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { AppInfo } from "../../../../shared/types"
 import { PREFERENCE_LIMITS } from "../../../../shared/preferences"
 import { usePreferencesStore } from "../../../stores/preferencesStore"
 import { ConfirmDialog } from "../../Popup/ConfirmDialog"
@@ -19,12 +20,19 @@ export function GeneralTab() {
    * a switch that silently does nothing for a minute is worse than one that
    * says what it is waiting for.
    */
+  /* About lives at the bottom of this tab; the version is the only thing it
+     needs from the backend. */
+  const [info, setInfo] = useState<AppInfo | null>(null)
   const [dictionary, setDictionary] = useState<"unknown" | "missing" | "fetching" | "here">(
     "unknown"
   )
   const [dictionaryFailed, setDictionaryFailed] = useState(false)
   const [asking, setAsking] = useState<"reset" | "nuke" | null>(null)
   const [targets, setTargets] = useState<string[]>([])
+
+  useEffect(() => {
+    void window.tova.app.info().then(setInfo)
+  }, [])
 
   useEffect(() => {
     void window.tova.grammar
@@ -259,6 +267,36 @@ export function GeneralTab() {
           onCancel={() => setAsking(null)}
         />
       )}
+
+      <section className="settings-section">
+        <h2 className="settings-section-title">About</h2>
+        <dl className="settings-facts">
+          <div>
+            <dt>Tova</dt>
+            <dd>{info?.version ?? "…"}</dd>
+          </div>
+          <div>
+            <dt>Tauri</dt>
+            <dd>{info?.tauri ?? "…"}</dd>
+          </div>
+          <div>
+            <dt>WebKit</dt>
+            <dd>{info?.webview ?? "…"}</dd>
+          </div>
+        </dl>
+
+        <div className="settings-row">
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() =>
+              void window.tova.app.openExternal("https://github.com/mark-mcdermott/tova/issues")
+            }
+          >
+            Report a problem
+          </button>
+        </div>
+      </section>
 
       {asking === "nuke" && (
         <ConfirmDialog
