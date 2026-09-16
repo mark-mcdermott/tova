@@ -85,6 +85,7 @@ export function Disclosure({
     <div className={`disclosure disclosure-${variant}`}>
       <button
         type="button"
+        data-rail-row=""
         className={`disclosure-header disclosure-header-${variant}${
           isDropActive ? " is-drop-active" : ""
         }${empty && onActivate === undefined ? " is-empty" : ""}${isActive ? " is-active" : ""}`}

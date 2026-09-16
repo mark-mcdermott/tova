@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Sidebar } from "./components/Sidebar/Sidebar"
 import { Editor } from "./components/Editor/Editor"
 import { Settings } from "./components/Settings/Settings"
 import { IndexPage } from "./components/Index/IndexPage"
 import { VaultWarning } from "./components/VaultWarning"
 import { Welcome, type WelcomeChoice } from "./components/Welcome"
+import { focusRail, railHasFocus } from "./rail"
 import { ChevronIcon } from "./components/Sidebar/icons"
 import { useNotesStore } from "./stores/notesStore"
 import { current as currentEntry } from "./stores/history"
@@ -30,6 +31,13 @@ export default function App() {
   const vaultStatus = useNotesStore((state) => state.vaultStatus)
   const view = useNotesStore((state) => state.view)
   const sidebarCollapsed = useNotesStore((state) => state.sidebarCollapsed)
+  /*
+   * The key handler is installed once, so it would capture whichever value was
+   * current at mount and answer with that for ever. Read live through a ref —
+   * the same reason the editor's own handlers do.
+   */
+  const sidebarCollapsedRef = useRef(sidebarCollapsed)
+  sidebarCollapsedRef.current = sidebarCollapsed
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
   const tip = useTooltip()
   const loadBlogs = useBlogsStore((state) => state.load)
@@ -125,11 +133,32 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    /*
+     * Cmd+S takes you to the rail, and puts it away when you are done with it.
+     *
+     * Three states rather than a plain toggle, because "toggle and focus" has
+     * no sensible answer for an open sidebar: shutting it and focusing it are
+     * different wishes. Shut, it opens and the keyboard lands on the row you
+     * are already on; open but not focused, it takes the keyboard; open with
+     * the keyboard already in it, it shuts and hands focus back.
+     */
     function onKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
-        event.preventDefault()
+      if (!(event.metaKey || event.ctrlKey) || event.key !== "s") return
+      event.preventDefault()
+
+      if (sidebarCollapsedRef.current) {
         toggleSidebar()
+        // After the rail has been drawn, or there is nothing to focus yet.
+        requestAnimationFrame(() => focusRail())
+        return
       }
+
+      if (railHasFocus()) {
+        toggleSidebar()
+        return
+      }
+
+      focusRail()
     }
 
     window.addEventListener("keydown", onKeyDown)
@@ -175,7 +204,7 @@ export default function App() {
           <button
             type="button"
             className="sidebar-reveal"
-            {...tip("Show sidebar (Cmd+\\)")}
+            {...tip("Show sidebar (Cmd+S)")}
             aria-label="Show sidebar"
             onClick={toggleSidebar}
           >

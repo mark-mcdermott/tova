@@ -34,6 +34,7 @@ export function TagList({ notes }: TagListProps) {
         ) : (
           tags.map(({ tag, count }) => (
             <button
+              data-rail-row=""
               key={tag}
               type="button"
               className={`tag-row${showing(tag) ? " is-active" : ""}`}

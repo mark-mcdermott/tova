@@ -9,6 +9,7 @@ import { NoteSummary } from "../../../shared/types"
 import { Preferences } from "../../../shared/preferences"
 import { emptyHistory } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
+import { focusRail, railHasFocus } from "../../rail"
 import { usePreferencesStore } from "../../stores/preferencesStore"
 import { useBlogsStore } from "../../stores/blogsStore"
 import { DEFAULT_PREFERENCES } from "../../../shared/preferences"
@@ -884,5 +885,111 @@ describe("folding Notes", () => {
     await userEvent.click(screen.getByRole("button", { name: /^Daily/ }))
 
     expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "daily" })
+  })
+})
+
+/*
+ * The rail, from the keyboard.
+ *
+ * Moving does not open anything: the highlight marks where the reader is, and
+ * focus marks where they are about to go. Those are different questions and the
+ * arrows only answer the second one.
+ */
+describe("walking the rail", () => {
+  const rows = () => [...document.querySelectorAll<HTMLElement>(".sidebar [data-rail-row]")]
+
+  beforeEach(() => {
+    useNotesStore.setState({ expanded: { notes: true } })
+  })
+
+  it("steps down through what is on screen", async () => {
+    render(<Sidebar />)
+    const all = rows()
+    all[0].focus()
+
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}")
+
+    expect(document.activeElement).toBe(all[1])
+  })
+
+  it("steps back up", async () => {
+    render(<Sidebar />)
+    const all = rows()
+    all[2].focus()
+
+    await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}")
+
+    expect(document.activeElement).toBe(all[1])
+  })
+
+  /* Folders are not a special case: a collapsed section's are simply not there
+     to step on, and an open one's are the rows after it. */
+  it("steps over the folders of a section that is shut", () => {
+    render(<Sidebar />)
+    const whenOpen = rows().length
+    cleanup()
+
+    useNotesStore.setState({ expanded: { notes: false } })
+    render(<Sidebar />)
+
+    expect(rows().length).toBeLessThan(whenOpen)
+    expect(rows().some((row) => /^ideas/.test(row.textContent ?? ""))).toBe(false)
+  })
+
+  /* Holding the key should not carry somebody from the last tag to the first
+     section without their noticing they left. */
+  it("stops at the ends rather than looping", async () => {
+    render(<Sidebar />)
+    const all = rows()
+    all[0].focus()
+
+    await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}")
+    expect(document.activeElement).toBe(all[0])
+
+    all[all.length - 1].focus()
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}")
+    expect(document.activeElement).toBe(all[all.length - 1])
+  })
+
+  it("opens nothing on the way past", async () => {
+    const openListing = vi.fn()
+    useNotesStore.setState({ expanded: { notes: true }, openListing })
+    render(<Sidebar />)
+    rows()[0].focus()
+
+    await userEvent.keyboard("{Alt>}{ArrowDown}{ArrowDown}{/Alt}")
+
+    expect(openListing).not.toHaveBeenCalled()
+  })
+
+  /* Arriving by keyboard should start where arriving by eye does, not at the
+     top of a list the reader then has to walk back down. */
+  it("starts the keyboard on the row marking where you are", () => {
+    useNotesStore.setState({
+      expanded: { notes: true },
+      view: "index",
+      indexTarget: { kind: "section", section: "ideas" }
+    })
+    render(<Sidebar />)
+
+    focusRail()
+
+    expect(document.activeElement?.textContent).toMatch(/^Ideas/)
+  })
+
+  it("says whether the keyboard is in the rail", () => {
+    render(<Sidebar />)
+    expect(railHasFocus()).toBe(false)
+
+    focusRail()
+    expect(railHasFocus()).toBe(true)
+  })
+
+  /* Every row is a button, so Return already activates it and Tab already
+     reaches it. That is the reason for using real focus rather than a
+     remembered index. */
+  it("leaves Return to open the row it is on", () => {
+    render(<Sidebar />)
+    for (const row of rows()) expect(row.tagName).toBe("BUTTON")
   })
 })
