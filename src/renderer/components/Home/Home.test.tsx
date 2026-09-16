@@ -10,10 +10,24 @@ import { Home } from "./Home"
 afterEach(cleanup)
 
 describe("the home page", () => {
-  it("carries the name, once", () => {
+  /*
+   * The name is in the rail, a few inches left and on every screen. Printing
+   * it here again said nothing the reader did not know, so the line that says
+   * what Tova is for leads instead — and is the page's heading, because a page
+   * still needs one.
+   */
+  it("leads with what the app is for rather than its own name", () => {
     render(<Home />)
 
-    expect(screen.getByRole("heading", { name: "Tova" })).toBeDefined()
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading.textContent).toContain("A quieter place")
+    expect(screen.queryByRole("heading", { name: "Tova" })).toBeNull()
+  })
+
+  it("has exactly one heading", () => {
+    render(<Home />)
+
+    expect(screen.getAllByRole("heading")).toHaveLength(1)
   })
 
   /* Set over two lines, as the brand sheet has them, so the text is checked
