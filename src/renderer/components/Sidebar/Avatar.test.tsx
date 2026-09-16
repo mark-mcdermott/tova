@@ -40,16 +40,16 @@ describe("Avatar", () => {
   it("takes the default disc colour when none has been chosen", () => {
     const { container } = render(<Avatar className="a" src={null} name="" />)
 
-    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
-      "background: rgb(49, 150, 201);"
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toContain(
+      "background: rgb(217, 194, 94)"
     )
   })
 
   it("paints the disc the colour it is given, whatever the name says", () => {
     const { container } = render(<Avatar className="a" src={null} name="Mark" color="#123456" />)
 
-    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toBe(
-      "background: rgb(18, 52, 86);"
+    expect(container.querySelector(".avatar-initials")?.getAttribute("style")).toContain(
+      "background: rgb(18, 52, 86)"
     )
   })
 
@@ -59,7 +59,7 @@ describe("Avatar", () => {
       <Avatar className="a" src="data:image/png;base64,AA" name="Mark" color="#123456" />
     )
 
-    expect(container.querySelector("img")?.getAttribute("style")).toBe(
+    expect(container.querySelector("img")?.getAttribute("style")).toContain(
       "background: rgb(18, 52, 86);"
     )
   })

@@ -1,4 +1,4 @@
-import { discColor, initialsOf } from "../../avatar"
+import { discColor, discInk, initialsOf } from "../../avatar"
 
 interface AvatarProps {
   /** Data URL of the stored picture, or null to fall back to initials. */
@@ -20,22 +20,32 @@ interface AvatarProps {
  */
 export function Avatar({ src, name, className, color = null }: AvatarProps) {
   const background = discColor(color)
+  const ink = discInk(color)
 
-  if (src !== null) return <img className={className} src={src} alt="" style={{ background }} />
+  if (src !== null)
+    return <img className={className} src={src} alt="" style={{ background, color: ink }} />
 
   const initials = initialsOf(name)
 
   // No name to take a letter from, so Tova signs it with its own t.
   if (initials === "") {
     return (
-      <span className={`${className} avatar-initials`} aria-hidden="true" style={{ background }}>
+      <span
+        className={`${className} avatar-initials`}
+        aria-hidden="true"
+        style={{ background, color: ink }}
+      >
         <span className="avatar-wordmark" />
       </span>
     )
   }
 
   return (
-    <span className={`${className} avatar-initials`} aria-hidden="true" style={{ background }}>
+    <span
+      className={`${className} avatar-initials`}
+      aria-hidden="true"
+      style={{ background, color: ink }}
+    >
       {initials}
     </span>
   )
