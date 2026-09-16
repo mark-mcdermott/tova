@@ -96,8 +96,21 @@
   /* The scroll area's own inset. Header and footer add the depth-1 row indent
      on top, so the wordmark, the row labels and the avatar all start on one
      vertical line. */
-  --sidebar-edge: var(--space-6);
-  --sidebar-gutter: calc(var(--sidebar-edge) + var(--space-3));
+  /*
+   * The column everything in the rail lines up on: the rows and their
+   * highlight, the rules above the tags and the footer, and the search field.
+   *
+   * It was two columns. The search sat at `--space-4` and everything else half
+   * a rem further in, so the highlight on the open section stopped short of the
+   * field above it and the two right edges missed each other by 8px.
+   */
+  --sidebar-edge: var(--space-4);
+  /*
+   * The header keeps the inset it had. It clears the traffic lights rather than
+   * lining up with anything, so it is stated rather than derived — moving the
+   * column should not move the wordmark.
+   */
+  --sidebar-gutter: calc(var(--space-6) + var(--space-3));
   /* The sidebar footer sits lower and looser than the toolbar it used to be
      paired with; see PROGRESS.md on the centreline that trade gives up. */
   --sidebar-avatar: 2rem;
