@@ -283,8 +283,25 @@ export const useNotesStore = create<NotesState>((set, get) => ({
    * through `showIndex`, and none of them should add a note to the vault.
    */
   openListing: async (target) => {
+    const inside = held(get().notes, target)
+
+    /*
+     * A listing of one is a page whose only job is to be clicked through.
+     * Going straight to the note saves the click and the second page, and the
+     * breadcrumb still says where it came from.
+     *
+     * Only for the rail's own gesture. `showIndex` — breadcrumbs, back and
+     * forward, the session reopening — must still be able to land on a listing
+     * of one, or going up a level from the only note in a folder would drop
+     * the reader straight back into it.
+     */
+    if (inside.length === 1) {
+      await get().open(inside[0].id)
+      return
+    }
+
     const place = placeForNewNote(target)
-    if (place === null || held(get().notes, target).length > 0) {
+    if (place === null || inside.length > 0) {
       get().showIndex(target)
       return
     }
