@@ -123,3 +123,27 @@
     transition: none;
   }
 }
+
+/*
+ * The version, under the rule at the bottom right.
+ *
+ * Mono at `--text-sm`, which is how the About panel sets a version — the same
+ * kind of fact should look the same wherever it is read. The colour is this
+ * page's, not that panel's: everything here is white on a photograph.
+ */
+.home-trail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-end;
+  position: relative;
+  z-index: 1;
+}
+
+.home-version {
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-shadow: 0 1px 12px rgb(0 0 0 / 55%);
+}

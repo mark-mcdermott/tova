@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { AppInfo } from "../../../shared/types"
 
 /*
  * The picture, when there is one.
@@ -27,6 +28,11 @@ const artwork = Object.values(
  */
 export function Home() {
   const [loaded, setLoaded] = useState(false)
+  const [info, setInfo] = useState<AppInfo | null>(null)
+
+  useEffect(() => {
+    void window.tova.app.info().then(setInfo)
+  }, [])
 
   return (
     <section className={`home${artwork === undefined ? " is-unillustrated" : ""}`}>
@@ -54,11 +60,18 @@ export function Home() {
         for your thoughts.
       </h1>
 
-      <p className="home-line home-line-trail">
-        Same thoughts.
-        <br />
-        Brighter tomorrows.
-      </p>
+      <div className="home-trail">
+        <p className="home-line home-line-trail">
+          Same thoughts.
+          <br />
+          Brighter tomorrows.
+        </p>
+
+        {/* Set as the About panel sets it — the same mono at the same size, so
+            a version number reads as a version number wherever it appears —
+            but in the page's own white rather than the panel's grey. */}
+        {info !== null && <p className="home-version">v{info.version}</p>}
+      </div>
     </section>
   )
 }

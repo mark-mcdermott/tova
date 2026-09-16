@@ -1,12 +1,18 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, afterEach, beforeEach } from "vitest"
 import { render, screen, cleanup } from "@testing-library/react"
 import { Home } from "./Home"
+import { stubBridge } from "../../testing/bridge"
 
 /*
  * The one screen that is not a list of work or a piece of work. It holds
  * nothing and does nothing, so what there is to check is that it says what it
  * says and does not fall over waiting for its picture.
  */
+beforeEach(() => {
+  // The page asks for the version now, so it needs a bridge to ask.
+  window.tova = stubBridge()
+})
+
 afterEach(cleanup)
 
 describe("the home page", () => {
@@ -65,5 +71,35 @@ describe("the home page", () => {
     const art = container.querySelector(".home-art")
 
     if (art !== null) expect(art.getAttribute("alt")).toBe("")
+  })
+})
+
+/*
+ * "v1.0.0" rather than "1.0.0": the `v` is how a version is written on a
+ * release page, in a tag and in a changelog, so it is what somebody reading it
+ * here expects to see.
+ */
+describe("the version", () => {
+  it("names the version that is running", async () => {
+    render(<Home />)
+
+    expect(await screen.findByText("v1.0.0")).toBeDefined()
+  })
+
+  /* It is a fact about the app, set the way the About panel sets one, so the
+     same kind of thing reads the same wherever it appears. */
+  it("is set in mono, like every other version in the app", async () => {
+    render(<Home />)
+
+    const version = await screen.findByText("v1.0.0")
+    expect(version.className).toContain("home-version")
+  })
+
+  /* Nothing on this page should wait on the backend to be readable. */
+  it("leaves the page standing before the version arrives", () => {
+    render(<Home />)
+
+    expect(screen.getByRole("heading", { level: 1 })).toBeDefined()
+    expect(screen.queryByText(/^v\d/)).toBeNull()
   })
 })
