@@ -12,6 +12,8 @@ export type IconName =
   | "cog"
   | "compose"
   | "back"
+  | "restore"
+  | "close"
   | "star"
   | "more"
   | "search"
@@ -73,6 +75,21 @@ const PATHS: Record<IconName, ReactElement> = {
   ),
   star: <path d="m8 2.2 1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4-2.9-2.8 4-.6z" />,
   back: <path d="M12.8 8H3.6M7.2 4.2 3.4 8l3.8 3.8" />,
+  /*
+   * Putting something back: an arrow round to the left, the way undo goes.
+   *
+   * It was `⤺` before, a character the interface font does not carry, so it
+   * arrived as whatever the fallback had — a small angular mark that read as
+   * nothing at all. A drawn path renders the same everywhere and takes the
+   * size it is given.
+   */
+  restore: (
+    <>
+      <polyline points="1.9 3.3 1.9 7.3 5.9 7.3" />
+      <path d="M3.5 10.6a6 6 0 1 0 1.4-6.2L1.9 7.3" />
+    </>
+  ),
+  close: <path d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5" />,
   more: (
     <>
       <circle cx="8" cy="8" r="6.1" />

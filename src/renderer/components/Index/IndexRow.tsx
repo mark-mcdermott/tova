@@ -120,7 +120,7 @@ export function IndexRow({ note, match, selected = false, onPick }: IndexRowProp
               aria-label={`Restore ${label}`}
               onClick={() => void restore(note.id)}
             >
-              ⤺
+              <Icon name="restore" className="row-action-icon" />
             </button>
             <button
               type="button"
@@ -129,7 +129,7 @@ export function IndexRow({ note, match, selected = false, onPick }: IndexRowProp
               aria-label={`Permanently delete ${label}`}
               onClick={() => setAsking("destroy")}
             >
-              ✕
+              <Icon name="close" className="row-action-icon" />
             </button>
           </>
         ) : (
