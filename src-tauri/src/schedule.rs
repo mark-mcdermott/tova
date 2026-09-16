@@ -107,6 +107,24 @@ fn ensure_today(schedule: &Schedule) -> bool {
                 .ensured_for
                 .lock()
                 .unwrap_or_else(|e| e.into_inner()) = Some(today);
+
+            /*
+             * The day turning is the moment to sweep, and this is where it
+             * turns. An app left open over midnight used to gather a blank note
+             * for every day it stayed open, because the sweep ran at startup
+             * and startup was days ago.
+             *
+             * Only when today's note is new — opening it again later in the
+             * same day is not a new day and has nothing to sweep. And it is
+             * here rather than inside `ensure_daily_note`, which is a getter:
+             * asking for today's note should not delete yesterday's.
+             */
+            if !existed {
+                if let Err(error) = crate::daily::cleanup_blank_daily_notes(&today) {
+                    eprintln!("Daily note cleanup failed: {error}");
+                }
+            }
+
             !existed
         }
         Err(error) => {
@@ -209,6 +227,56 @@ mod tests {
             set_active_vault(None);
             let _ = std::fs::remove_dir_all(&self.vault);
         }
+    }
+
+    /*
+     * An app left open over midnight gathered a blank note for every day it
+     * stayed open: the sweep ran at startup, and startup was days ago.
+     */
+    #[test]
+    fn the_day_turning_sweeps_the_blank_day_before_it() {
+        let _s = Scratch::new("rollover");
+        let schedule = Schedule::default();
+        let yesterday = crate::date::today() - chrono::Duration::days(1);
+        crate::daily::ensure_daily_note(&yesterday).unwrap();
+        let stale = format!("daily/{}.md", crate::date::to_daily_note_name(&yesterday));
+        assert!(
+            crate::notes::read(&stale).is_ok(),
+            "the blank note was made"
+        );
+
+        ensure_today(&schedule);
+
+        assert!(
+            crate::notes::read(&stale).is_err(),
+            "yesterday's blank note is still there"
+        );
+    }
+
+    /*
+     * Opening on a day that has already turned sweeps nothing.
+     *
+     * Two fresh `Schedule`s on purpose. The same one returns early on its own
+     * "already done today" guard and never reaches the question this is about,
+     * which is whether today's note was *new* — so a test reusing it passes
+     * whatever the code does. Reopening the app on a day whose note already
+     * exists is exactly the case that reaches it.
+     */
+    #[test]
+    fn a_day_that_already_turned_sweeps_nothing() {
+        let _s = Scratch::new("sameday");
+        ensure_today(&Schedule::default());
+
+        let yesterday = crate::date::today() - chrono::Duration::days(1);
+        crate::daily::ensure_daily_note(&yesterday).unwrap();
+        let blank = format!("daily/{}.md", crate::date::to_daily_note_name(&yesterday));
+
+        ensure_today(&Schedule::default());
+
+        assert!(
+            crate::notes::read(&blank).is_ok(),
+            "it swept on a day that had not turned"
+        );
     }
 
     #[test]
