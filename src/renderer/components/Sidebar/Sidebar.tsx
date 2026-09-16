@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, type KeyboardEvent } from "react"
 import { useNotesStore } from "../../stores/notesStore"
+import { moveRailFocus } from "../../rail"
 import { FolderTree } from "./FolderTree"
 import { TagList } from "./TagList"
 import { Menu } from "../Popup/Menu"
@@ -53,8 +54,21 @@ export function Sidebar() {
     await createNote(target.section, target.folder)
   }
 
+  /*
+   * Option and an arrow steps through the rail. Only while the keyboard is in
+   * it: Option-Up and Option-Down move a line in the editor, and taking that
+   * everywhere would cost the shortcut where it is actually used.
+   */
+  function onKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!event.altKey || event.metaKey || event.ctrlKey) return
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
+
+    event.preventDefault()
+    moveRailFocus(event.key === "ArrowDown" ? 1 : -1)
+  }
+
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" onKeyDown={onKeyDown}>
       <header className="sidebar-header">
         {/* The mark is the way home: it opens whatever section sits at the top
             of the rail, which the reader chooses. */}
