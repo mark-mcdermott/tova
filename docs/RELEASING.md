@@ -44,6 +44,15 @@ Most of it is already set up and `--check` will tell you which parts are not.
 
   It is not read from a file on disk, and no step writes it anywhere.
 
+## The release notes
+
+`docs/releases/<version>.md` is what the release page says. Without it the page
+says its own version number back to whoever opened it, and `--check` says so
+before you start rather than after the wait for Apple.
+
+They live in the repository rather than being typed at the prompt: the notes are
+part of what shipped, and worth reviewing with everything else.
+
 ## What it checks before building
 
 On main, clean, up to date; the version is not already released; the signing

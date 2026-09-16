@@ -46,6 +46,19 @@ function check(what, ok, detail = "") {
   return ok
 }
 
+/*
+ * What this version's release page should say, if anybody has written it.
+ *
+ * A release with no notes says its own version number back to whoever opened
+ * it, which is the least a release page could do. Kept in the repository
+ * rather than typed at the prompt: the notes are part of what shipped, and
+ * worth reviewing before they are published rather than after.
+ */
+function notesFor(version) {
+  const path = `${root}docs/releases/${version}.md`
+  return existsSync(path) ? readFileSync(path, "utf-8").trim() : null
+}
+
 function conf() {
   return JSON.parse(readFileSync(`${root}src-tauri/tauri.conf.json`, "utf-8"))
 }
@@ -98,6 +111,17 @@ function preflight() {
   )
 
   check("gh is signed in", quiet("gh", ["auth", "status"]) !== null)
+
+  /*
+   * A warning rather than a failure: a release with no notes is a poor release
+   * page, not a broken build. Said here so it can be fixed before the wait for
+   * Apple rather than after.
+   */
+  if (notesFor(version) === null) {
+    console.log(
+      `  note docs/releases/${version}.md is missing — the page will say only "Tova ${version}"`
+    )
+  }
 
   const pubkey = conf().plugins?.updater?.pubkey ?? ""
   check("updater public key is set", pubkey.length > 40 && !pubkey.includes("GOES_HERE"))
@@ -265,6 +289,9 @@ if (!ok) {
 
   const manifest = join(tmpdir(), "latest.json")
   writeFileSync(manifest, latestJson(version, tag, tarball))
+
+  const notes = notesFor(version)
+  const notesPath = `${root}docs/releases/${version}.md`
 
   console.log("\nDrafting the release.")
   execFileSync(
