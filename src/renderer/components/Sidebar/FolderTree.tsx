@@ -163,42 +163,51 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               onContextMenu={section.id === "daily" ? dailyMenu.open : undefined}
               dropHandlers={drop?.dropHandlers}
               isDropActive={drop?.isDropActive}
-            />
+            >
+              {/* Folders live under Notes and fold away with it. Each is still
+                  a destination in its own right — the caret hides them,
+                  clicking Notes opens its index — so this is a drawer around
+                  the destinations rather than instead of them.
 
-            {/* Folders live under Notes and are always shown rather than
-                unfolded: each is a destination beside it, not a drawer in it. */}
-            {section.id === "notes" &&
-              folders.map((folder) =>
-                renaming === folder ? (
-                  <FolderNameInput
-                    key={folder}
-                    initialValue={folder}
-                    onSubmit={(name) => {
-                      setRenaming(null)
-                      if (name !== folder) renameFolder(folder, name)
-                    }}
-                    onCancel={() => setRenaming(null)}
-                  />
-                ) : (
-                  <FolderRow
-                    key={folder}
-                    folder={folder}
-                    notes={notesSection.filter((note) => note.folder === folder)}
-                    onContextMenu={openFolderMenu(folder)}
-                    onMove={(note, destination) => moveNote(note.id, "notes", destination)}
-                  />
-                )
-              )}
+                  Undefined rather than an empty fragment when there is nothing
+                  to hold: a drawer with nothing in it should have no caret, and
+                  `children` being defined at all is what draws one. */}
+              {section.id === "notes" && (folders.length > 0 || creatingFolder) ? (
+                <>
+                  {folders.map((folder) =>
+                    renaming === folder ? (
+                      <FolderNameInput
+                        key={folder}
+                        initialValue={folder}
+                        onSubmit={(name) => {
+                          setRenaming(null)
+                          if (name !== folder) renameFolder(folder, name)
+                        }}
+                        onCancel={() => setRenaming(null)}
+                      />
+                    ) : (
+                      <FolderRow
+                        key={folder}
+                        folder={folder}
+                        notes={notesSection.filter((note) => note.folder === folder)}
+                        onContextMenu={openFolderMenu(folder)}
+                        onMove={(note, destination) => moveNote(note.id, "notes", destination)}
+                      />
+                    )
+                  )}
 
-            {section.id === "notes" && creatingFolder && (
-              <FolderNameInput
-                onSubmit={(name) => {
-                  setCreatingFolder(false)
-                  createFolder(name)
-                }}
-                onCancel={() => setCreatingFolder(false)}
-              />
-            )}
+                  {creatingFolder && (
+                    <FolderNameInput
+                      onSubmit={(name) => {
+                        setCreatingFolder(false)
+                        createFolder(name)
+                      }}
+                      onCancel={() => setCreatingFolder(false)}
+                    />
+                  )}
+                </>
+              ) : undefined}
+            </Disclosure>
           </Fragment>
         )
       })}

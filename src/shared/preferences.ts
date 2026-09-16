@@ -165,7 +165,20 @@ export interface Preferences {
   backgroundDark: string | null
   titleFont: TitleFont
   proseWidth: ProseWidth
+  /**
+   * Which sidebar rows are folded open, by the key the row is drawn under.
+   * Absent means shut, so a row nobody has touched takes the default its own
+   * component asks for rather than one recorded here.
+   */
+  expanded: Record<string, boolean>
 }
+
+/*
+ * Notes starts open because that is what the sidebar did before it could fold
+ * at all: somebody updating into this should find their folders where they
+ * left them, not hidden behind a row they have never had to click.
+ */
+export const DEFAULT_EXPANDED: Record<string, boolean> = { notes: true, tags: true }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   displayNameSource: "none",
@@ -191,7 +204,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   backgroundLight: "shuffle",
   backgroundDark: "milky-way.jpg",
   titleFont: "vibur",
-  proseWidth: "narrow"
+  proseWidth: "narrow",
+  expanded: DEFAULT_EXPANDED
 }
 
 const LIMITS = {
@@ -279,8 +293,26 @@ export function normalizePreferences(value: unknown): Preferences {
       raw.titleFont !== "alagambe"
         ? raw.titleFont
         : DEFAULT_PREFERENCES.titleFont,
-    proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth
+    proseWidth: raw.proseWidth === "full" ? "full" : DEFAULT_PREFERENCES.proseWidth,
+    expanded: readExpanded(raw.expanded)
   }
+}
+
+/*
+ * Only the booleans, and only under keys a row could be drawn under.
+ *
+ * What is on disk here is a map somebody could have hand-edited, and it is read
+ * straight into what the sidebar folds — so anything that is not a plain
+ * true-or-false under a plain key is dropped rather than carried.
+ */
+function readExpanded(raw: unknown): Record<string, boolean> {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return { ...DEFAULT_EXPANDED }
+
+  const found: Record<string, boolean> = {}
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (key !== "" && typeof value === "boolean") found[key] = value
+  }
+  return found
 }
 
 export const PREFERENCE_LIMITS = LIMITS

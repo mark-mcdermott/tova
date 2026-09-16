@@ -113,6 +113,36 @@
     },
     {
       "greeted": true
+    },
+    {
+      "expanded": {
+        "notes": false,
+        "work": true
+      }
+    },
+    {
+      "expanded": {
+        "notes": true,
+        "bad": "yes",
+        "worse": 1
+      }
+    },
+    {
+      "expanded": {
+        "": true,
+        "notes": true
+      }
+    },
+    {
+      "expanded": {}
+    },
+    {
+      "expanded": [
+        "notes"
+      ]
+    },
+    {
+      "expanded": "notes"
     }
   ],
   "expected": [
@@ -174,7 +204,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayNameSource": "none",
@@ -234,7 +268,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -294,7 +332,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "Mark",
@@ -354,7 +396,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -414,7 +460,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -474,7 +524,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -534,7 +588,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -594,7 +652,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -654,7 +716,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -714,7 +780,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -774,7 +844,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -834,7 +908,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -894,7 +972,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -954,7 +1036,11 @@
       "titleFont": "my-script.otf",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1014,7 +1100,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1074,7 +1164,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1134,7 +1228,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1194,7 +1292,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1254,7 +1356,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "Mark",
@@ -1314,7 +1420,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1374,7 +1484,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1434,7 +1548,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1497,7 +1615,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1557,7 +1679,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1624,7 +1750,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1684,7 +1814,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1744,7 +1878,11 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": false,
-      "greeted": false
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     },
     {
       "displayName": "",
@@ -1804,7 +1942,390 @@
       "titleFont": "vibur",
       "proseWidth": "narrow",
       "updates": true,
-      "greeted": true
+      "greeted": true,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {
+        "notes": false,
+        "work": true
+      }
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {
+        "notes": true
+      }
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {
+        "notes": true
+      }
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {}
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
+    },
+    {
+      "displayName": "",
+      "displayNameSource": "none",
+      "avatar": "initials",
+      "avatarFile": null,
+      "avatarColor": null,
+      "fontSize": 18,
+      "tabSize": 2,
+      "backupIntervalMinutes": 60,
+      "backupLimit": 30,
+      "spellcheck": true,
+      "tooltips": true,
+      "grammar": false,
+      "vaults": [],
+      "activeVault": null,
+      "sections": [
+        {
+          "id": "daily",
+          "kind": "section",
+          "label": "Daily",
+          "icon": "daily",
+          "enabled": true
+        },
+        {
+          "id": "notes",
+          "kind": "section",
+          "label": "Notes",
+          "icon": "notes",
+          "enabled": true
+        },
+        {
+          "id": "ideas",
+          "kind": "section",
+          "label": "Ideas",
+          "icon": "ideas",
+          "enabled": true
+        },
+        {
+          "id": "journal",
+          "kind": "section",
+          "label": "Journal",
+          "icon": "journal",
+          "enabled": true
+        },
+        {
+          "id": "trash",
+          "kind": "section",
+          "label": "Trash",
+          "icon": "trash",
+          "enabled": true
+        }
+      ],
+      "theme": "system",
+      "backgroundLight": null,
+      "backgroundDark": null,
+      "titleFont": "vibur",
+      "proseWidth": "narrow",
+      "updates": true,
+      "greeted": false,
+      "expanded": {
+        "notes": true,
+        "tags": true
+      }
     }
   ]
 }

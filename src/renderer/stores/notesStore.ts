@@ -1,4 +1,6 @@
 import { create } from "zustand"
+import { DEFAULT_EXPANDED } from "../../shared/preferences"
+import { usePreferencesStore } from "./preferencesStore"
 import { Note, NoteSummary, Section, VaultStatus } from "../../shared/types"
 import { sortNotes } from "../../shared/noteLocation"
 import { flushPendingSave } from "./pendingSave"
@@ -74,6 +76,8 @@ interface NotesState {
   toggleSidebar: () => void
   showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
+  /** Applied once at launch, from what preferences remembered. */
+  setExpanded: (expanded: Record<string, boolean>) => void
   showIndex: (target: IndexTarget) => void
   /** The page behind the wordmark. */
   showHome: () => void
@@ -146,7 +150,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   searching: false,
   // Everything but Tags starts collapsed, as the mockup shows it. Nothing is
   // persisted, so this is the state on every launch.
-  expanded: { tags: true },
+  expanded: { ...DEFAULT_EXPANDED },
 
   load: async () => {
     try {
@@ -307,12 +311,28 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
+  /*
+   * Folding is written down, so the rail a reader arranged is the rail they
+   * come back to. It goes to preferences rather than the session because it is
+   * a choice about the app rather than a note of where they were — the session
+   * is restored, and this is remembered.
+   */
   toggleSection: (key) => {
-    set((state) => ({ expanded: { ...state.expanded, [key]: !state.expanded[key] } }))
+    const expanded = { ...get().expanded, [key]: !get().expanded[key] }
+    set({ expanded })
+    void usePreferencesStore.getState().update({ expanded })
   },
 
   expandSection: (key) => {
-    set((state) => ({ expanded: { ...state.expanded, [key]: true } }))
+    if (get().expanded[key] === true) return
+
+    const expanded = { ...get().expanded, [key]: true }
+    set({ expanded })
+    void usePreferencesStore.getState().update({ expanded })
+  },
+
+  setExpanded: (expanded) => {
+    set({ expanded })
   },
 
   checkVault: async () => {
@@ -481,7 +501,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     // Creating a folder is only visible with Notes open.
     set((state) => ({
       creatingFolder: value,
-      expanded: value ? { ...state.expanded, folders: true, notes: true } : state.expanded
+      // Opening Notes to show the new folder is worth remembering like any
+      // other fold, so it goes through the same door.
+      expanded: value ? { ...state.expanded, notes: true } : state.expanded
     }))
   },
 

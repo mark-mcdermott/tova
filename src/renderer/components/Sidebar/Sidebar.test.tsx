@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event"
 import { Sidebar } from "./Sidebar"
 import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
+import { Preferences } from "../../../shared/preferences"
 import { emptyHistory } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
 import { usePreferencesStore } from "../../stores/preferencesStore"
@@ -770,5 +771,69 @@ describe("what moves when the rail is scrolled", () => {
       expect(document.querySelector(fixed)).not.toBeNull()
       expect(scroller?.querySelector(fixed)).toBeNull()
     }
+  })
+})
+
+/*
+ * Notes holds folders and used to hold them open: there were five rows under
+ * it and no way to put them away. It is also a destination — clicking it opens
+ * its index — so the caret has to be its own control, or folding would have
+ * cost the only route to that index.
+ */
+describe("folding Notes", () => {
+  // Typed, so the assertion on what it was called with compiles: an untyped
+  // `vi.fn(async () => undefined)` records calls as an empty tuple and
+  // `calls.at(-1)?.[0]` is then an error the test run never sees.
+  const update = vi.fn(async (_patch: Partial<Preferences>) => undefined)
+
+  beforeEach(() => {
+    usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, update })
+    useNotesStore.setState({ expanded: { notes: true } })
+  })
+
+  it("shows its folders, with a caret to put them away", async () => {
+    render(<Sidebar />)
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: "Collapse Notes" }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+    expect(screen.getByRole("button", { name: "Expand Notes" })).toBeDefined()
+  })
+
+  /** The whole reason the caret exists rather than the row toggling. */
+  it("still opens the Notes index when the row itself is clicked", async () => {
+    const openListing = vi.fn()
+    useNotesStore.setState({ expanded: { notes: true }, openListing })
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "notes" })
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+  })
+
+  it("writes the fold down, so it survives a restart", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: "Collapse Notes" }))
+
+    await waitFor(() => expect(update).toHaveBeenCalled())
+    expect(update.mock.calls.at(-1)?.[0]).toEqual({ expanded: { notes: false } })
+  })
+
+  it("comes back folded when preferences say so", () => {
+    useNotesStore.setState({ expanded: { notes: false } })
+    render(<Sidebar />)
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+  })
+
+  /* A section with nothing under it has nothing to fold, and says so by not
+     offering a caret rather than by offering one that does nothing. */
+  it("gives no caret to a section that holds no folders", () => {
+    render(<Sidebar />)
+
+    expect(screen.queryByRole("button", { name: /Collapse Daily/ })).toBeNull()
+    expect(screen.queryByRole("button", { name: /Expand Daily/ })).toBeNull()
   })
 })

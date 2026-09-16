@@ -1,6 +1,6 @@
 import { DragEvent, MouseEvent, ReactNode } from "react"
 import { useNotesStore } from "../../stores/notesStore"
-import { Icon } from "./icons"
+import { ChevronIcon, Icon } from "./icons"
 import { containerKeyOf } from "./sectionKey"
 import { indexKey } from "../../../shared/indexTarget"
 import { SectionIcon } from "../../../shared/sections"
@@ -32,9 +32,16 @@ interface DisclosureProps {
 }
 
 /**
- * The one collapsible primitive the sidebar uses. Open state lives in the store
- * rather than the component so breadcrumbs can reveal a section, and so folders
- * start collapsed on every launch with nothing persisted.
+ * The one collapsible primitive the sidebar uses.
+ *
+ * A row can be a destination, a fold, or both. Notes is both: clicking it opens
+ * its index, and the caret beside it hides the folders underneath — which is
+ * why the caret is its own control rather than the row's click. Making the row
+ * itself toggle would have cost the only way to reach the Notes index.
+ *
+ * Open state lives in the store rather than the component, so breadcrumbs can
+ * reveal a section and so the whole map can be written to preferences in one
+ * piece and read back at launch.
  */
 export function Disclosure({
   sectionKey,
@@ -64,35 +71,58 @@ export function Disclosure({
   // Notes still arrive through the compose control or the editor's Move menu.
   const empty = count === 0
 
+  /*
+   * Whether there is a drawer, which is whether anything was put in it — not
+   * whether the section holds notes. Notes with folders and no loose notes
+   * counts nought and still has five rows to hide.
+   */
+  const folds = children !== undefined
+
   return (
     <div className={`disclosure disclosure-${variant}`}>
-      <button
-        type="button"
-        className={`disclosure-header disclosure-header-${variant}${
-          isDropActive ? " is-drop-active" : ""
-        }${empty && onActivate === undefined ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
-        data-depth={depth}
-        {...dropHandlers}
-        aria-expanded={onActivate !== undefined || empty ? undefined : open}
-        aria-disabled={onActivate === undefined && empty ? true : undefined}
-        onContextMenu={onContextMenu}
-        onClick={() => {
-          if (onActivate !== undefined) {
-            onActivate()
-            return
-          }
-          if (!empty) toggleSection(sectionKey)
-        }}
-      >
-        {icon !== undefined && <Icon name={icon} />}
-        <span className="disclosure-label">{label}</span>
-        {/* An empty section says so by being empty; a nought adds nothing. */}
-        {count !== undefined && count > 0 && <span className="disclosure-count">{count}</span>}
-      </button>
+      <div className={`disclosure-row${folds ? " has-fold" : ""}`}>
+        {/* The slot is there whether or not it holds a caret: it is exactly the
+            padding the header used to carry, so a row that folds and a row
+            that cannot keep their labels in the same place. */}
+        {folds ? (
+          <button
+            type="button"
+            className={`disclosure-fold${open ? " is-open" : ""}`}
+            data-depth={depth}
+            aria-expanded={open}
+            aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
+            onClick={() => toggleSection(sectionKey)}
+          >
+            <ChevronIcon direction="right" />
+          </button>
+        ) : (
+          <span className="disclosure-fold is-empty" data-depth={depth} aria-hidden="true" />
+        )}
+        <button
+          type="button"
+          className={`disclosure-header disclosure-header-${variant}${
+            isDropActive ? " is-drop-active" : ""
+          }${empty && onActivate === undefined ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
+          data-depth={depth}
+          {...dropHandlers}
+          aria-disabled={onActivate === undefined && empty ? true : undefined}
+          onContextMenu={onContextMenu}
+          onClick={() => {
+            if (onActivate !== undefined) {
+              onActivate()
+              return
+            }
+            if (folds) toggleSection(sectionKey)
+          }}
+        >
+          {icon !== undefined && <Icon name={icon} />}
+          <span className="disclosure-label">{label}</span>
+          {/* An empty section says so by being empty; a nought adds nothing. */}
+          {count !== undefined && count > 0 && <span className="disclosure-count">{count}</span>}
+        </button>
+      </div>
 
-      {onActivate === undefined && open && !empty && (
-        <div className="disclosure-body">{children}</div>
-      )}
+      {folds && open && <div className="disclosure-body">{children}</div>}
     </div>
   )
 }
