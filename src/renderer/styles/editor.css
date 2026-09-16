@@ -1464,10 +1464,12 @@
 }
 
 /* Larger than the sidebar's, which is why it is scoped here: a row on an index
-   page has room the rail does not, and the trash is the row's real verb. */
+   page has room the rail does not, and these are the row's real verbs. Trash
+   rows carry two of them — put it back, or destroy it — and they were drawn as
+   text characters at a fraction of this until they were given paths. */
 .index-actions .row-action-icon {
-  width: 1.235rem;
-  height: 1.235rem;
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 /* A body hit shows the line it matched on, under the title it belongs to. */
