@@ -8,6 +8,8 @@ not produce. That is the same contract the TypeScript has, and the tests below
 are the same cases.
 */
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -64,6 +66,10 @@ pub struct Preferences {
     pub background_dark: Option<String>,
     pub title_font: String,
     pub prose_width: String,
+    /// Which sidebar rows are folded open, by the key the row is drawn under.
+    /// A `BTreeMap` so what is written out is in a stable order rather than
+    /// whichever order the reader happened to click things in.
+    pub expanded: BTreeMap<String, bool>,
 }
 
 impl Default for Preferences {
@@ -93,8 +99,31 @@ impl Default for Preferences {
             background_dark: Some("milky-way.jpg".into()),
             title_font: "vibur".into(),
             prose_width: "narrow".into(),
+            // Notes starts open because that is what the sidebar did before it
+            // could fold at all.
+            expanded: BTreeMap::from([("notes".into(), true)]),
         }
     }
+}
+
+/*
+ * Only the booleans, and only under keys a row could be drawn under.
+ *
+ * What is on disk is a map somebody could have hand-edited, and it is read
+ * straight into what the sidebar folds — so anything that is not a plain
+ * true-or-false under a plain key is dropped rather than carried. A value that
+ * is not an object at all falls back to the defaults, which is what the
+ * TypeScript does with the same input.
+ */
+fn read_expanded(raw: Option<&Value>, fallback: BTreeMap<String, bool>) -> BTreeMap<String, bool> {
+    let Some(Value::Object(map)) = raw else {
+        return fallback;
+    };
+
+    map.iter()
+        .filter(|(key, _)| !key.is_empty())
+        .filter_map(|(key, value)| value.as_bool().map(|value| (key.clone(), value)))
+        .collect()
 }
 
 /// What `Number(value)` would make of it, for the cases preferences can hold.
@@ -228,6 +257,7 @@ pub fn normalize(value: &Value) -> Preferences {
         title_font: string_at(raw, "titleFont")
             .filter(|f| !f.trim().is_empty() && f != "alagambe")
             .unwrap_or(fallback.title_font),
+        expanded: read_expanded(raw.get("expanded"), fallback.expanded),
         prose_width: match string_at(raw, "proseWidth").as_deref() {
             Some("full") => "full".into(),
             _ => fallback.prose_width,

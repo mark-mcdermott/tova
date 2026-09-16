@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event"
 import { Sidebar } from "./Sidebar"
 import { useNotesStore } from "../../stores/notesStore"
 import { NoteSummary } from "../../../shared/types"
+import { Preferences } from "../../../shared/preferences"
 import { emptyHistory } from "../../stores/history"
 import { stubBridge } from "../../testing/bridge"
 import { usePreferencesStore } from "../../stores/preferencesStore"
@@ -150,6 +151,8 @@ describe("Sidebar", () => {
 
   /* Home is a place, so back returns to it rather than stepping over it. */
   it("can be left and come back to", async () => {
+    // Shut, so that clicking Notes means "show me Notes" rather than "hide it".
+    useNotesStore.setState({ expanded: { notes: false } })
     render(<Sidebar />)
     await userEvent.click(screen.getByRole("button", { name: "Tova" }))
     await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
@@ -489,7 +492,13 @@ describe("Sidebar", () => {
     expect(screen.getByText("Vault unreachable")).toBeDefined()
   })
 
-  it("opens a section's index instead of unfolding it", async () => {
+  /*
+   * Opening a section shows its index. It also unfolds it, which it did not
+   * before — but what unfolds is its folders, not its notes: those are on the
+   * index, which is the part this has always been about.
+   */
+  it("opens a section's index, and does not spill its notes into the rail", async () => {
+    useNotesStore.setState({ expanded: { notes: false } })
     render(<Sidebar />)
 
     await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
@@ -497,7 +506,6 @@ describe("Sidebar", () => {
     const state = useNotesStore.getState()
     expect(state.view).toBe("index")
     expect(state.indexTarget).toEqual({ kind: "section", section: "notes" })
-    // Nothing unfolded: the notes are on the index now, not in the rail.
     expect(screen.queryByText("loose note")).toBeNull()
   })
 
@@ -539,6 +547,7 @@ describe("Sidebar", () => {
 
   /* A section that already holds something opens its listing, as before. */
   it("opens a section that holds notes rather than adding to it", async () => {
+    useNotesStore.setState({ expanded: { notes: false } })
     render(<Sidebar />)
     await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
 
@@ -770,5 +779,110 @@ describe("what moves when the rail is scrolled", () => {
       expect(document.querySelector(fixed)).not.toBeNull()
       expect(scroller?.querySelector(fixed)).toBeNull()
     }
+  })
+})
+
+/*
+ * Notes holds folders and used to hold them open: there were five rows under it
+ * and no way to put them away. One click now does both jobs — shut, it opens
+ * and shows what is inside; open, it shuts.
+ *
+ * Opening the index on the way open and not on the way shut is the part worth
+ * pinning. A toggle that navigated both ways would move the reader somewhere
+ * every time they tidied the rail.
+ */
+describe("folding Notes", () => {
+  // Typed, so the assertion on what it was called with compiles: an untyped
+  // `vi.fn(async () => undefined)` records calls as an empty tuple and
+  // `calls.at(-1)?.[0]` is then an error the test run never sees.
+  const update = vi.fn(async (_patch: Partial<Preferences>) => undefined)
+  const openListing = vi.fn()
+
+  beforeEach(() => {
+    usePreferencesStore.setState({ preferences: { ...DEFAULT_PREFERENCES }, update })
+    useNotesStore.setState({ expanded: { notes: true }, openListing })
+  })
+
+  it("puts its folders away when it is open", async () => {
+    render(<Sidebar />)
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+  })
+
+  /* Tidying the rail is not a reason to move the reader somewhere. */
+  it("does not navigate on the way shut", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    expect(openListing).not.toHaveBeenCalled()
+  })
+
+  it("shows its folders and opens its index on the way open", async () => {
+    useNotesStore.setState({ expanded: { notes: false }, openListing })
+    render(<Sidebar />)
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+    expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "notes" })
+  })
+
+  it("writes the fold down, so it survives a restart", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Notes/ }))
+
+    await waitFor(() => expect(update).toHaveBeenCalled())
+    expect(update.mock.calls.at(-1)?.[0]).toEqual({ expanded: { notes: false } })
+  })
+
+  it("comes back folded when preferences say so", () => {
+    useNotesStore.setState({ expanded: { notes: false }, openListing })
+    render(<Sidebar />)
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+  })
+
+  /*
+   * The rail holds one drawer open. Going somewhere else puts away what you
+   * left, so Notes does not sit open behind a tag listing for the rest of the
+   * session.
+   */
+  it("shuts when another section is opened", async () => {
+    render(<Sidebar />)
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: /^Daily/ }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+    expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "daily" })
+  })
+
+  it("shuts when a tag is opened", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^#?work/ }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+  })
+
+  /* A folder lives in Notes, so going to one must not put Notes away under it. */
+  it("stays open when one of its own folders is opened", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
+
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+    expect(useNotesStore.getState().expanded.notes).toBe(true)
+  })
+
+  /* A section with nothing under it still just opens its index. */
+  it("leaves a section with no folders as a plain destination", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^Daily/ }))
+
+    expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "daily" })
   })
 })

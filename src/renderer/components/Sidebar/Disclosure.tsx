@@ -32,9 +32,19 @@ interface DisclosureProps {
 }
 
 /**
- * The one collapsible primitive the sidebar uses. Open state lives in the store
- * rather than the component so breadcrumbs can reveal a section, and so folders
- * start collapsed on every launch with nothing persisted.
+ * The one collapsible primitive the sidebar uses.
+ *
+ * A row can be a destination, a fold, or both. Notes is both, and one click
+ * does both jobs: shut, it opens and shows what is inside; open, it shuts.
+ *
+ * The index is opened on the way open and not on the way shut, which is what
+ * keeps the click meaning one thing — "show me Notes" or "hide Notes" — rather
+ * than navigating as a side effect of tidying the rail. The cost, taken
+ * deliberately, is that reaching the index again means shutting it first.
+ *
+ * Open state lives in the store rather than the component, so breadcrumbs can
+ * reveal a section and so the whole map can be written to preferences in one
+ * piece and read back at launch.
  */
 export function Disclosure({
   sectionKey,
@@ -64,6 +74,13 @@ export function Disclosure({
   // Notes still arrive through the compose control or the editor's Move menu.
   const empty = count === 0
 
+  /*
+   * Whether there is a drawer, which is whether anything was put in it — not
+   * whether the section holds notes. Notes with folders and no loose notes
+   * counts nought and still has five rows to hide.
+   */
+  const folds = children !== undefined
+
   return (
     <div className={`disclosure disclosure-${variant}`}>
       <button
@@ -73,15 +90,19 @@ export function Disclosure({
         }${empty && onActivate === undefined ? " is-empty" : ""}${isActive ? " is-active" : ""}`}
         data-depth={depth}
         {...dropHandlers}
-        aria-expanded={onActivate !== undefined || empty ? undefined : open}
+        aria-expanded={folds ? open : undefined}
         aria-disabled={onActivate === undefined && empty ? true : undefined}
         onContextMenu={onContextMenu}
         onClick={() => {
-          if (onActivate !== undefined) {
-            onActivate()
+          if (!folds) {
+            onActivate?.()
             return
           }
-          if (!empty) toggleSection(sectionKey)
+
+          // Opened on the way open and not on the way shut, so the click reads
+          // as one thing: show me Notes, or hide Notes.
+          toggleSection(sectionKey)
+          if (!open) onActivate?.()
         }}
       >
         {icon !== undefined && <Icon name={icon} />}
@@ -90,9 +111,7 @@ export function Disclosure({
         {count !== undefined && count > 0 && <span className="disclosure-count">{count}</span>}
       </button>
 
-      {onActivate === undefined && open && !empty && (
-        <div className="disclosure-body">{children}</div>
-      )}
+      {folds && open && <div className="disclosure-body">{children}</div>}
     </div>
   )
 }

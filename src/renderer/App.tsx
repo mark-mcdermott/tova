@@ -45,6 +45,8 @@ export default function App() {
   const preferencesLoaded = usePreferencesStore((state) => state.loaded)
   const userBackgrounds = usePreferencesStore((state) => state.userBackgrounds)
   const greeted = usePreferencesStore((state) => state.preferences.greeted)
+  const rememberedFolds = usePreferencesStore((state) => state.preferences.expanded)
+  const setExpanded = useNotesStore((state) => state.setExpanded)
   const updatePreferences = usePreferencesStore((state) => state.update)
 
   /*
@@ -133,6 +135,16 @@ export default function App() {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [toggleSidebar])
+
+  /*
+   * Applied once, when the preferences arrive rather than on every change to
+   * them: folding writes back here, so watching the value would hand the rail
+   * its own answer back and fight anything set in between.
+   */
+  useEffect(() => {
+    if (preferencesLoaded) setExpanded(rememberedFolds)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferencesLoaded, setExpanded])
 
   const needsRecovery = vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 

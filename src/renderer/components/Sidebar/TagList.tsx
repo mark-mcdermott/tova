@@ -17,6 +17,7 @@ interface TagListProps {
 export function TagList({ notes }: TagListProps) {
   const tags = tagCounts(notes)
   const showIndex = useNotesStore((state) => state.showIndex)
+  const foldOthers = useNotesStore((state) => state.foldOthers)
   const target = useNotesStore((state) => state.indexTarget)
   const onIndex = useNotesStore((state) => state.view === "index")
 
@@ -36,7 +37,11 @@ export function TagList({ notes }: TagListProps) {
               key={tag}
               type="button"
               className={`tag-row${showing(tag) ? " is-active" : ""}`}
-              onClick={() => showIndex({ kind: "tag", tag })}
+              onClick={() => {
+                // A tag is nobody's drawer, so every one of them shuts.
+                foldOthers(null)
+                showIndex({ kind: "tag", tag })
+              }}
             >
               <span className="tag-row-name">
                 <span className="tag-row-hash">#</span>
