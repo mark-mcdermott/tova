@@ -87,3 +87,41 @@ describe("Settings", () => {
     await waitFor(() => expect(useNotesStore.getState().view).toBe("editor"))
   })
 })
+
+/*
+ * Going off to read something and coming back to Settings should land where
+ * you were. Reaching for the cog is how you return to what you were doing, and
+ * being dropped on Profile every time means navigating back to it every time.
+ */
+describe("the tab you were last on", () => {
+  it("is where the cog puts you", async () => {
+    useNotesStore.setState({ settingsTab: "profile" })
+    const { showSettings, open } = useNotesStore.getState()
+
+    showSettings("appearance")
+    expect(useNotesStore.getState().settingsTab).toBe("appearance")
+
+    // Off to a note and back again, the way the sidebar takes you.
+    await open("daily/2026-09-07.md")
+    expect(useNotesStore.getState().view).toBe("editor")
+
+    showSettings()
+
+    expect(useNotesStore.getState().view).toBe("settings")
+    expect(useNotesStore.getState().settingsTab).toBe("appearance")
+  })
+
+  /* The Profile control is not the cog: it names a tab and should go there. */
+  it("is overridden by a control that names one", () => {
+    useNotesStore.setState({ settingsTab: "vault" })
+
+    useNotesStore.getState().showSettings("profile")
+
+    expect(useNotesStore.getState().settingsTab).toBe("profile")
+  })
+
+  /* It is where you were, not a preference — a fresh launch starts over. */
+  it("starts on Profile in a fresh store", () => {
+    expect(useNotesStore.getInitialState().settingsTab).toBe("profile")
+  })
+})

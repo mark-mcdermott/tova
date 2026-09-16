@@ -214,7 +214,6 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.today()
       set((state) => ({
         view: "editor",
-        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -243,8 +242,17 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }))
   },
 
-  showSettings: (tab = "profile") => {
-    set({ view: "settings", settingsTab: tab })
+  /*
+   * Opened without a tab, it opens on the one it was left on.
+   *
+   * Reaching for the cog after going off to read something is how you come
+   * back to what you were doing — dropping the reader on Profile each time
+   * makes them navigate to it again, every time. The tab is remembered for as
+   * long as the app is open and no longer: it is where you were, not a
+   * preference about how Tova should behave.
+   */
+  showSettings: (tab) => {
+    set((state) => ({ view: "settings", settingsTab: tab ?? state.settingsTab }))
   },
 
   showHome: () => {
@@ -384,7 +392,6 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.read(id)
       set((state) => ({
         view: "editor",
-        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -419,7 +426,6 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const note = await window.tova.notes.create({ section, folder, title: "" })
       set((state) => ({
         view: "editor",
-        settingsTab: "profile",
         activeId: note.id,
         active: note,
         openSeq: state.openSeq + 1,
@@ -601,7 +607,6 @@ async function travel(
     const note = await window.tova.notes.read(screen.noteId)
     set({
       view: "editor",
-      settingsTab: "profile",
       history: next,
       activeId: note.id,
       active: note,
