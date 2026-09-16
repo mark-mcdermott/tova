@@ -14,7 +14,7 @@
  *   node scripts/seed-vault.mjs --vault "~/Documents/Tova QA"
  *   node scripts/seed-vault.mjs --force
  */
-import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, readdirSync, utimesSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -33,6 +33,61 @@ const SECTIONS = ["daily", "ideas", "journal", "notes", "posts", "trash"]
  */
 const EMPTY_FOLDERS = ["notes/empty-folder"]
 
+/*
+ * Every note this seed is responsible for, as vault-relative paths.
+ *
+ * Used by --redate, which must not touch a note it did not write. Working from
+ * what the template holds and what the generators are named, rather than from
+ * "every .md in the vault", is what keeps somebody's own writing out of it.
+ */
+function ours(vault) {
+  const found = new Set()
+
+  const walk = (directory, prefix) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const next = join(directory, entry.name)
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name
+      if (entry.isDirectory()) walk(next, relative)
+      else if (entry.name.endsWith(".md")) found.add(relative)
+    }
+  }
+  walk(TEMPLATE, "")
+
+  for (const name of ODDITIES) found.add(`notes/markdown/${name}`)
+  if (existsSync(join(vault, "daily"))) {
+    for (const entry of readdirSync(join(vault, "daily"))) {
+      if (/^\d{4}-\d{2}-\d{2}\.md$/.test(entry)) found.add(`daily/${entry}`)
+    }
+  }
+
+  return found
+}
+
+/** Puts dates back on a seeded vault, for when the dating itself has changed. */
+function redate(vault, now) {
+  let touched = 0
+
+  for (const relative of ours(vault)) {
+    const path = join(vault, relative)
+    if (!existsSync(path)) continue
+
+    if (relative.startsWith("daily/")) {
+      const name = relative.slice("daily/".length, -3)
+      const seed = scatter(name)
+      const created = new Date(`${name}T00:00:00`)
+      created.setHours(7 + (seed % 4), seed % 60, 0, 0)
+      const edited = new Date(created.getTime() + ((seed >> 7) % 9) * 3_600_000)
+      stamp(path, created, edited > now ? now : edited)
+    } else {
+      const dates = datesFor(relative, now)
+      stamp(path, dates.created, dates.edited)
+    }
+    touched++
+  }
+
+  return touched
+}
+
 function usage() {
   console.log(
     [
@@ -40,6 +95,7 @@ function usage() {
       "",
       "  --vault <path>   Which vault to fill. Default: $TOVA_VAULT, or ~/Documents/Tova",
       "  --force          Write even though the vault already holds notes",
+      "  --redate         Only put dates back on the notes this seed wrote",
       "  --help           This",
       "",
       "Only ever creates files. Never deletes or truncates one."
@@ -51,7 +107,8 @@ function options(argv) {
   const chosen = {
     vault: process.env.TOVA_VAULT ?? join(homedir(), "Documents", "Tova"),
     force: false,
-    help: false
+    help: false,
+    redate: false
   }
 
   for (let at = 0; at < argv.length; at++) {
@@ -59,6 +116,7 @@ function options(argv) {
     if (argv[at] === "--") continue
     else if (argv[at] === "--force") chosen.force = true
     else if (argv[at] === "--help") chosen.help = true
+    else if (argv[at] === "--redate") chosen.redate = true
     else if (argv[at] === "--vault") {
       chosen.vault = argv[++at]
       if (chosen.vault === undefined) throw new Error("--vault needs a path")
@@ -88,18 +146,86 @@ function notesUnder(root) {
  * one the app has already opened and put a daily note in, keeps what it has —
  * so "only ever creates" is true of every file and not just most of them.
  */
+/*
+ * When a note was written and when it was last touched.
+ *
+ * Tova reads both off the filesystem — `created` is the birth time and
+ * `edited` the modified time — so a seeded vault where every file was written
+ * in the same second sorts by nothing and tests nothing. Sorting by date,
+ * "edited 3 months ago", grouping a list by when things were written: none of
+ * it shows its shape against 46 notes that share a timestamp.
+ *
+ * Derived from the path rather than from a counter, so a note keeps its dates
+ * across runs and two people seeding the same corpus get the same vault.
+ */
+function scatter(path) {
+  let hash = 2166136261
+  for (let at = 0; at < path.length; at++) {
+    hash ^= path.charCodeAt(at)
+    hash = Math.imul(hash, 16777619) >>> 0
+  }
+  return hash
+}
+
+const DAY = 86_400_000
+
+function datesFor(relative, now) {
+  const seed = scatter(relative)
+  const age = 3 + (seed % 600)
+  const created = new Date(now.getTime() - age * DAY)
+  created.setHours(7 + ((seed >> 9) % 14), (seed >> 17) % 60, 0, 0)
+
+  // Roughly a fifth were written and never touched again, which is what a
+  // real vault looks like — a list where everything has been edited since it
+  // was made is its own kind of unrealistic.
+  const untouched = (seed >> 5) % 5 === 0
+  const since = untouched ? 0 : (seed >> 13) % age
+  const edited = new Date(created.getTime() + since * DAY)
+  if (since > 0) edited.setHours(8 + ((seed >> 21) % 12), (seed >> 3) % 60, 0, 0)
+
+  return { created, edited: edited > now ? now : edited }
+}
+
+/*
+ * Birth time cannot be set directly, but APFS drags it back when the modified
+ * time is moved earlier than it. So: the older stamp first, which takes both,
+ * then the newer one, which moves only the modified time.
+ */
+function stamp(path, created, edited) {
+  utimesSync(path, created, created)
+  if (edited.getTime() !== created.getTime()) utimesSync(path, edited, edited)
+}
+
+/** `create`, for the calls whose contents span several lines. */
+function createDated(path, relative, now, contents) {
+  return create(path, contents, datesFor(relative, now))
+}
+
 const kept = []
 
-function create(path, contents) {
+function create(path, contents, dates) {
   if (existsSync(path)) {
     kept.push(path)
     return false
   }
   writeFileSync(path, contents)
+  if (dates) stamp(path, dates.created, dates.edited)
   return true
 }
 
-const iso = (date) => date.toISOString().slice(0, 10)
+/*
+ * The date as this machine sees it, not as UTC does.
+ *
+ * `toISOString` was here, and west of UTC it names the evening's note after
+ * tomorrow — so a run after dinner produced a daily note dated a day that had
+ * not happened, and today's was missing. Everything else about a daily note is
+ * local: the day it is for, the hours stamped on it, the reader's idea of when
+ * "today" is.
+ */
+function iso(date) {
+  const pad = (value) => String(value).padStart(2, "0")
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
 
 function daysBefore(today, days) {
   const date = new Date(today)
@@ -148,13 +274,29 @@ const dailyBodies = [
 ]
 
 function writeDailies(vault, today) {
+  const now = today
   const dates = dailyDates(today)
 
   dates.forEach((date, index) => {
     const name = iso(date)
     const body = dailyBodies[index % dailyBodies.length]
     const front = ["---", `title: ${name}`, "section: daily", "tags: [daily]", "---", "", ""]
-    create(join(vault, "daily", `${name}.md`), front.join("\n") + body)
+
+    /*
+     * A daily note is dated its own day rather than scattered: an entry for
+     * the 4th written in July is not what a daily note is, and a list sorted
+     * by date that disagrees with the names on it is a confusing thing to QA
+     * against.
+     */
+    const seed = scatter(name)
+    const created = new Date(date)
+    created.setHours(7 + (seed % 4), seed % 60, 0, 0)
+    const edited = new Date(created.getTime() + ((seed >> 7) % 9) * 3_600_000)
+
+    create(join(vault, "daily", `${name}.md`), front.join("\n") + body, {
+      created,
+      edited: edited > now ? now : edited
+    })
   })
 
   return dates.length
@@ -168,7 +310,15 @@ const front = (title, section, tags, extra = "") =>
  * template because git normalises line endings and editors strip final
  * newlines — the very things being checked.
  */
-function writeOddities(vault) {
+const ODDITIES = [
+  "crlf-line-endings.md",
+  "byte-order-mark.md",
+  "no-trailing-newline.md",
+  "very-long-lines.md",
+  "a-very-large-note.md"
+]
+
+function writeOddities(vault, now) {
   const markdown = join(vault, "notes", "markdown")
   const written = []
   let made = false
@@ -179,10 +329,19 @@ function writeOddities(vault) {
     "way a file written on Windows does.\n\n#ephemeral\n\nA block tag in a CRLF\n" +
     "file. The rule below has a carriage return on it too.\n\n---\n\nAfter the rule.\n"
   ).replace(/\n/g, "\r\n")
-  if (create(join(markdown, "crlf-line-endings.md"), crlf)) written.push("crlf-line-endings.md")
+  if (
+    create(
+      join(markdown, "crlf-line-endings.md"),
+      crlf,
+      datesFor("notes/markdown/crlf-line-endings.md", now)
+    )
+  )
+    written.push("crlf-line-endings.md")
 
-  made = create(
+  made = createDated(
     join(markdown, "byte-order-mark.md"),
+    "notes/markdown/byte-order-mark.md",
+    now,
     "﻿" +
       front("Byte order mark", "notes", ["edge"]) +
       "This file opens with a U+FEFF byte order mark, before the front matter\n" +
@@ -190,16 +349,20 @@ function writeOddities(vault) {
   )
   if (made) written.push("byte-order-mark.md")
 
-  made = create(
+  made = createDated(
     join(markdown, "no-trailing-newline.md"),
+    "notes/markdown/no-trailing-newline.md",
+    now,
     front("No trailing newline", "notes", ["edge"]) +
       "The last byte of this file is the full stop at the end of this sentence."
   )
   if (made) written.push("no-trailing-newline.md")
 
   const long = "supercalifragilisticexpialidocious".repeat(30)
-  made = create(
+  made = createDated(
     join(markdown, "very-long-lines.md"),
+    "notes/markdown/very-long-lines.md",
+    now,
     front("Very long lines", "notes", ["layout"]) +
       "One paragraph, one line, no spaces to wrap at:\n\n" +
       `${long}\n\n` +
@@ -220,7 +383,13 @@ function writeOddities(vault) {
     big += heading(at) + paragraph.repeat(6)
     if (at % 5 === 0) big += "```js\nconst at = " + at + "\n```\n\n"
   }
-  if (create(join(markdown, "a-very-large-note.md"), big)) {
+  if (
+    create(
+      join(markdown, "a-very-large-note.md"),
+      big,
+      datesFor("notes/markdown/a-very-large-note.md", now)
+    )
+  ) {
     written.push(`a-very-large-note.md (${Math.round(big.length / 1024)}KB)`)
   }
 
@@ -241,6 +410,15 @@ function main() {
   if (chosen.help) return usage()
 
   const vault = chosen.vault.replace(/^~(?=$|\/)/, homedir())
+  const now = new Date()
+
+  // Before the guard below: redating writes no notes, so "this vault already
+  // holds notes" is not a reason to refuse it — it is the reason to do it.
+  if (chosen.redate) {
+    console.log(`Redated ${redate(vault, now)} notes in ${vault}`)
+    return
+  }
+
   const already = notesUnder(vault)
 
   if (already.length > 0 && !chosen.force) {
@@ -257,14 +435,24 @@ function main() {
   const identity = join(vault, ".tova-vault")
   if (!existsSync(identity)) writeFileSync(identity, crypto.randomUUID())
 
+  // cpSync does not go through `create`, so the files it brings over are
+  // stamped afterwards — and only the ones that were not already there, so a
+  // note somebody has edited keeps the date that says they edited it.
+  const before = new Set(notesUnder(vault))
   cpSync(TEMPLATE, vault, { recursive: true, force: false, errorOnExist: false })
+  for (const path of notesUnder(vault)) {
+    if (before.has(path)) continue
+    const relative = path.slice(vault.length + 1)
+    const dates = datesFor(relative, now)
+    stamp(path, dates.created, dates.edited)
+  }
 
   const assets = join(vault, "assets")
   mkdirSync(assets, { recursive: true })
   const images = writeImages(assets)
 
-  const dailies = writeDailies(vault, new Date())
-  const oddities = writeOddities(vault)
+  const dailies = writeDailies(vault, now)
+  const oddities = writeOddities(vault, now)
 
   console.log(`Seeded ${vault}`)
   console.log(`  ${notesUnder(vault).length} notes, including ${dailies} daily entries`)
