@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Wordmark } from "../Sidebar/Wordmark"
 
 /*
  * The picture, when there is one.
@@ -40,19 +39,20 @@ export function Home() {
         />
       )}
 
-      <div className="home-plate">
-        {/* The mark is aria-hidden, as it is in the rail; the heading around
-            it carries the name, so it is announced once. */}
-        <h1 className="home-wordmark" aria-label="Tova">
-          <Wordmark />
-        </h1>
+      {/*
+        No wordmark. The name is already in the rail, a few inches to the left
+        and on every screen — printing it again here says nothing the reader
+        did not know, and the words underneath were the better thing to lead
+        with anyway.
 
-        <p className="home-line home-line-lead">
-          A quieter place
-          <br />
-          for your thoughts.
-        </p>
-      </div>
+        The heading comes with it: this page has to have one, and the line that
+        says what Tova is for is a truer heading than its own name.
+      */}
+      <h1 className="home-line home-line-lead">
+        A quieter place
+        <br />
+        for your thoughts.
+      </h1>
 
       <p className="home-line home-line-trail">
         Same thoughts.

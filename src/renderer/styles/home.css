@@ -66,30 +66,11 @@
  * them carries its own shadow rather than relying on the art being dark in
  * the right corner.
  */
-.home-plate,
 .home-line {
   position: relative;
   z-index: 1;
   color: #ffffff;
   text-shadow: 0 1px 12px rgb(0 0 0 / 55%);
-}
-
-.home-plate {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  align-items: flex-start;
-}
-
-.home-wordmark {
-  width: clamp(7rem, 14vw, 11rem);
-  margin: 0;
-  color: #ffffff;
-}
-
-.home-wordmark .wordmark {
-  width: 100%;
-  height: auto;
 }
 
 /*
@@ -105,6 +86,16 @@
   line-height: 1.9;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+/*
+ * The lead is the page's heading now that the wordmark has gone. `.home-line`
+ * above already sets the margin, size and weight for both lines, so becoming
+ * an `h1` changes nothing about how it is drawn — the two are still set the
+ * same, which is the point of them.
+ */
+.home-line-lead {
+  align-self: flex-start;
 }
 
 .home-line-trail {
