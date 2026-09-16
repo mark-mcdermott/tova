@@ -667,14 +667,14 @@
 
 .sidebar-search {
   position: relative;
-  padding: 0 var(--space-4) var(--space-3);
+  padding: 0 var(--sidebar-edge) var(--space-3);
 }
 
 /* Inside the field rather than beside it, so the row stays one object. */
 .sidebar-search-icon {
   position: absolute;
   top: 50%;
-  left: calc(var(--space-4) + var(--space-3));
+  left: calc(var(--sidebar-edge) + var(--space-3));
   width: 0.85rem;
   height: 0.85rem;
   /* The padding below the field is not part of the field, so centring on the
