@@ -1,8 +1,17 @@
 import { AvatarChoice, AvatarSources } from "../shared/preferences"
 import tovaAvatar from "./assets/avatars/tova.png"
 
-/** What a disc is painted until someone says otherwise. */
-export const DEFAULT_DISC = "#3196c9"
+/**
+ * What a disc is painted until someone says otherwise: the yellow out of the
+ * middle of a bokeh circle in the light background, at the foot of the
+ * right-hand mountain. Sampled from the picture rather than chosen beside it,
+ * so the two belong to each other rather than merely coexisting.
+ */
+export const DEFAULT_DISC = "#d9c25e"
+
+/** Ink dark enough to read on a light disc; the disc's own opposite otherwise. */
+const DARK_INK = "#2b2733"
+const LIGHT_INK = "#ffffff"
 
 /** Two letters at most: more stops reading as a mark and starts reading as text. */
 export function initialsOf(name: string): string {
@@ -27,6 +36,33 @@ export function initialsOf(name: string): string {
  */
 export function discColor(color: string | null): string {
   return color ?? DEFAULT_DISC
+}
+
+/*
+ * Which ink the initials take, decided by the disc rather than fixed.
+ *
+ * White was written into the stylesheet, which was fine for one blue and for
+ * nothing else — and the colour has been the reader's to choose for a while.
+ * Pick any pale colour today and your initials go with it. The default being a
+ * yellow makes that immediate: white on it is 1.78:1, which is not far off the
+ * 1.74:1 that made every popup row look disabled.
+ */
+export function discInk(color: string | null): string {
+  const hex = discColor(color).replace("#", "")
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return LIGHT_INK
+
+  const channel = (at: number) => {
+    const value = parseInt(hex.slice(at, at + 2), 16) / 255
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  }
+  const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4)
+
+  const against = (ink: number) => {
+    const [hi, lo] = luminance > ink ? [luminance, ink] : [ink, luminance]
+    return (hi + 0.05) / (lo + 0.05)
+  }
+  // 1.0 is white's luminance; DARK_INK's, worked out the same way, is 0.0243.
+  return against(1) >= against(0.0243) ? LIGHT_INK : DARK_INK
 }
 
 /** Tova's robot, drawn for this and no other purpose. */

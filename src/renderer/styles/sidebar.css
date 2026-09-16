@@ -639,10 +639,11 @@
 
 /* The stand-in when no picture is set: initials on a hue taken from the name,
    so the same person keeps the same colour without anything being stored. */
+/* The ink is set on the element, by the disc it sits on — see discInk. A single
+   colour here was fine for one blue and for nothing the reader might pick. */
 .avatar-initials {
   display: grid;
   place-items: center;
-  color: #ffffff;
   font-family: var(--font-sans);
   font-size: 0.8em;
   font-weight: 600;
