@@ -510,7 +510,11 @@ describe("Sidebar", () => {
     expect(screen.queryByText("loose note")).toBeNull()
   })
 
+  /* Two notes, because a folder holding one opens straight through to it. */
   it("shows folders as destinations rather than drawers", async () => {
+    useNotesStore.setState({
+      notes: [...notes, { ...notes[0], id: "notes/ideas/second.md", title: "Second" }]
+    })
     render(<Sidebar />)
 
     await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
@@ -581,11 +585,25 @@ describe("Sidebar", () => {
 
   /* A folder that already holds something opens its listing, as before. */
   it("opens a folder that holds notes rather than adding to it", async () => {
+    useNotesStore.setState({
+      notes: [...notes, { ...notes[0], id: "notes/ideas/second.md", title: "Second" }]
+    })
     render(<Sidebar />)
     await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
 
     expect(bridge.create).not.toHaveBeenCalled()
     expect(useNotesStore.getState().indexTarget).toEqual({ kind: "folder", folder: "ideas" })
+  })
+
+  /* The case this is the other half of: one note and no listing to click past. */
+  it("goes straight to the note when a folder holds only one", async () => {
+    bridge.read.mockResolvedValue({ ...notes[0], body: "Coffee." })
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
+
+    await waitFor(() => expect(useNotesStore.getState().view).toBe("editor"))
+    expect(useNotesStore.getState().activeId).toBe("notes/ideas/river.md")
+    expect(bridge.create).not.toHaveBeenCalled()
   })
 
   /*
