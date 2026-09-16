@@ -382,6 +382,26 @@ describe("skipping the confirm with Shift", () => {
     expect(screen.getByRole("alertdialog")).toBeDefined()
   })
 
+  /*
+   * Both were written as characters — `⤺` and `✕` — and `⤺` is not in the
+   * interface font, so it arrived as whatever the fallback had: a small
+   * angular mark that read as nothing. A character also ignores the icon size
+   * the rest of the row is drawn at.
+   */
+  it("draws its two actions rather than typing them", async () => {
+    useNotesStore.setState({
+      notes: [{ ...notes[0], id: "trash/beta.md", section: "trash", deletedAt: 1 }],
+      indexTarget: { kind: "section", section: "trash" }
+    })
+    render(<IndexPage />)
+
+    for (const name of [/Restore Beta/, /Permanently delete Beta/]) {
+      const button = screen.getByRole("button", { name })
+      expect(button.querySelector("svg"), `${name} has no icon`).not.toBeNull()
+      expect(button.textContent, `${name} still uses a character`).toBe("")
+    }
+  })
+
   it("asks before a permanent delete however Shift is held", async () => {
     // Trash can be undone by restoring. This cannot be undone at all, so the
     // confirm is the whole safeguard and a stray Shift must not lift it.
