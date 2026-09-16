@@ -101,7 +101,7 @@ impl Default for Preferences {
             prose_width: "narrow".into(),
             // Notes starts open because that is what the sidebar did before it
             // could fold at all.
-            expanded: BTreeMap::from([("notes".into(), true), ("tags".into(), true)]),
+            expanded: BTreeMap::from([("notes".into(), true)]),
         }
     }
 }

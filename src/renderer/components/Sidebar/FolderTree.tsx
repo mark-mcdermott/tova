@@ -42,6 +42,7 @@ function FolderRow({
   onMove: (note: NoteSummary, folder: string) => void
 }) {
   const openListing = useNotesStore((state) => state.openListing)
+  const foldOthers = useNotesStore((state) => state.foldOthers)
   const { isDropActive, dropHandlers } = useDropTarget({ kind: "folder", folder }, (note) =>
     onMove(note, folder)
   )
@@ -53,7 +54,10 @@ function FolderRow({
       count={notes.length}
       icon="folder"
       depth={2}
-      onActivate={() => void openListing({ kind: "folder", folder })}
+      onActivate={() => {
+        foldOthers("notes")
+        void openListing({ kind: "folder", folder })
+      }}
       onContextMenu={onContextMenu}
       dropHandlers={dropHandlers}
       isDropActive={isDropActive}
@@ -73,6 +77,7 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
   const setCreatingFolder = useNotesStore((state) => state.setCreatingFolder)
 
   const moveNote = useNotesStore((state) => state.moveNote)
+  const foldOthers = useNotesStore((state) => state.foldOthers)
   const trash = useNotesStore((state) => state.trash)
 
   const dailyMenu = useContextMenu()
@@ -143,7 +148,10 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               count={posts.filter((note) => note.folder === section.id).length}
               icon={section.icon}
               depth={1}
-              onActivate={() => showIndex({ kind: "blog", blog: section.id })}
+              onActivate={() => {
+                foldOthers(key)
+                showIndex({ kind: "blog", blog: section.id })
+              }}
             />
           )
         }
@@ -159,7 +167,10 @@ export function FolderTree({ notes, folders }: FolderTreeProps) {
               count={held.length}
               icon={section.icon}
               depth={1}
-              onActivate={() => void openListing({ kind: "section", section: section.id })}
+              onActivate={() => {
+                foldOthers(section.id)
+                void openListing({ kind: "section", section: section.id })
+              }}
               onContextMenu={section.id === "daily" ? dailyMenu.open : undefined}
               dropHandlers={drop?.dropHandlers}
               isDropActive={drop?.isDropActive}

@@ -846,6 +846,38 @@ describe("folding Notes", () => {
     expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
   })
 
+  /*
+   * The rail holds one drawer open. Going somewhere else puts away what you
+   * left, so Notes does not sit open behind a tag listing for the rest of the
+   * session.
+   */
+  it("shuts when another section is opened", async () => {
+    render(<Sidebar />)
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+
+    await userEvent.click(screen.getByRole("button", { name: /^Daily/ }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+    expect(openListing).toHaveBeenCalledWith({ kind: "section", section: "daily" })
+  })
+
+  it("shuts when a tag is opened", async () => {
+    render(<Sidebar />)
+    await userEvent.click(screen.getByRole("button", { name: /^#?work/ }))
+
+    expect(screen.queryByRole("button", { name: /^ideas/ })).toBeNull()
+  })
+
+  /* A folder lives in Notes, so going to one must not put Notes away under it. */
+  it("stays open when one of its own folders is opened", async () => {
+    render(<Sidebar />)
+
+    await userEvent.click(screen.getByRole("button", { name: /^ideas/ }))
+
+    expect(screen.getByRole("button", { name: /^ideas/ })).toBeDefined()
+    expect(useNotesStore.getState().expanded.notes).toBe(true)
+  })
+
   /* A section with nothing under it still just opens its index. */
   it("leaves a section with no folders as a plain destination", async () => {
     render(<Sidebar />)

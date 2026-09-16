@@ -206,8 +206,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -270,8 +269,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -334,8 +332,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -398,8 +395,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -462,8 +458,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -526,8 +521,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -590,8 +584,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -654,8 +647,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -718,8 +710,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -782,8 +773,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -846,8 +836,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -910,8 +899,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -974,8 +962,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1038,8 +1025,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1102,8 +1088,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1166,8 +1151,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1230,8 +1214,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1294,8 +1277,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1358,8 +1340,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1422,8 +1403,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1486,8 +1466,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1550,8 +1529,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1617,8 +1595,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1681,8 +1658,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1752,8 +1728,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1816,8 +1791,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1880,8 +1854,7 @@
       "updates": false,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -1944,8 +1917,7 @@
       "updates": true,
       "greeted": true,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -2259,8 +2231,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     },
     {
@@ -2323,8 +2294,7 @@
       "updates": true,
       "greeted": false,
       "expanded": {
-        "notes": true,
-        "tags": true
+        "notes": true
       }
     }
   ]

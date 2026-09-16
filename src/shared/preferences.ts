@@ -178,7 +178,7 @@ export interface Preferences {
  * at all: somebody updating into this should find their folders where they
  * left them, not hidden behind a row they have never had to click.
  */
-export const DEFAULT_EXPANDED: Record<string, boolean> = { notes: true, tags: true }
+export const DEFAULT_EXPANDED: Record<string, boolean> = { notes: true }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   displayNameSource: "none",

@@ -78,6 +78,11 @@ interface NotesState {
   toggleSection: (key: string) => void
   /** Applied once at launch, from what preferences remembered. */
   setExpanded: (expanded: Record<string, boolean>) => void
+  /**
+   * Shuts every drawer but the one named, or all of them for `null`. The rail
+   * holds one open at a time: going somewhere else puts away what you left.
+   */
+  foldOthers: (keep: string | null) => void
   showIndex: (target: IndexTarget) => void
   /** The page behind the wordmark. */
   showHome: () => void
@@ -333,6 +338,26 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   setExpanded: (expanded) => {
     set({ expanded })
+  },
+
+  /*
+   * Called by the rail's own rows rather than by the navigation they cause.
+   *
+   * Every listing opens through `showIndex` — breadcrumbs going up a level,
+   * back and forward, the session reopening where it was left — and none of
+   * those is somebody reaching for the sidebar. Putting this there would have
+   * shut the rail every time a reader pressed back.
+   */
+  foldOthers: (keep) => {
+    const open = Object.keys(get().expanded).filter(
+      (key) => get().expanded[key] === true && key !== keep
+    )
+    if (open.length === 0) return
+
+    const expanded = { ...get().expanded }
+    for (const key of open) expanded[key] = false
+    set({ expanded })
+    void usePreferencesStore.getState().update({ expanded })
   },
 
   checkVault: async () => {
