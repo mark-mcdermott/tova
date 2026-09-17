@@ -4617,7 +4617,7 @@ version = "1.0.0"
 dependencies = [
  "aes",
  "aes-gcm",
- "base64 0.22.1",
+ "base64 0.23.1",
  "block2",
  "cbc",
  "chrono",
