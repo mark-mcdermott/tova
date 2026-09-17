@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Daily, so the badge means "still green today" rather than "was green on
+    # the last push". Offset off the hour — GitHub delays on-the-hour crons.
+    - cron: "17 6 * * *"
 
 # A new push to the same branch supersedes the run in flight.
 concurrency:
@@ -11,39 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Shared verify loop — definition lives in mm-claude-starter so a fix there
+  # lands in every repo. Node 25 matches local development.
   verify:
-    name: check · test · build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # Must precede setup-node, which needs pnpm on PATH to resolve its cache.
-      # The version comes from the packageManager field, so it lives in one place.
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: package.json
-
-      - uses: actions/setup-node@v4
-        with:
-          # Matches local development; CI should reproduce the dev environment
-          # rather than a version nobody builds on.
-          node-version: 25
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      # Each step is separate so a red run names which gate failed.
-      - name: Typecheck
-        run: pnpm run check
-
-      - name: Test
-        run: pnpm run test
-
-      - name: Build
-        run: pnpm run build
+    uses: mark-mcdermott/mm-claude-starter/.github/workflows/node-verify.yml@main
+    with:
+      node-version: "25"
 
   # The backend being ported into. Its own job: it shares no toolchain with the
   # one above, and a red run should name which side of the port broke.

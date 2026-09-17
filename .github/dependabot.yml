@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Grouped on purpose: ungrouped, the first run opens a dozen PRs and you
+    # stop reading them. Majors stay out of the groups because they need reading.
+    groups:
+      dev-dependencies:
+        patterns: ["*"]
+        dependency-type: development
+        update-types: [minor, patch]
+      production-patch:
+        patterns: ["*"]
+        dependency-type: production
+        update-types: [patch]
+
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      cargo:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
