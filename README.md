@@ -1,5 +1,7 @@
 # Tova
 
+[![CI](https://github.com/mark-mcdermott/tova/actions/workflows/ci.yml/badge.svg)](https://github.com/mark-mcdermott/tova/actions/workflows/ci.yml)
+
 A calm, local-first writing app for macOS. Markdown notes that stay markdown,
 a daily note that writes itself, and a way to put a post on your blog without
 leaving the window.
