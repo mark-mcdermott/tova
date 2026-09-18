@@ -133,13 +133,13 @@ Write Vitest tests: navigation history push/pop/forward.
 - [x] Alagambe script font for note title
 - [x] Acumin Pro for wordmark — only Regular is licensed, so tracking and size carry the weight
 - [x] Monospace body font in editor
-- [ ] Dark / light / system theme — deferred to the roadmap
+- [x] Dark / light / system theme — deferred, then built, with a background for each
 - [x] Focus mode — dropped, not deferred: Tova is one light view over a photograph
 - [x] Window state persistence
 - [x] macOS title bar / traffic lights (hiddenInset, with drag regions declared)
 - [x] User avatar + display name at sidebar bottom (click → Settings)
 - [x] Tooltips on all icons
-- [ ] Search icon in sidebar header — with search, deferred to the roadmap
+- [x] Search icon in sidebar header — deferred, then built, alongside search itself
 - [x] Images: drag-in/paste → vault assets → CM6 inline render
 
 **Deliverable:** App looks like the mockup. Portfolio-worthy.
@@ -234,7 +234,7 @@ Write Playwright test: publish request sent, progress bar appears.
 
 - [x] Settings with tabs: Profile | Appearance | Vault | Blogs | General | Docs
 - [x] Profile: avatar upload + display name
-- [x] Appearance: background picker — the tooltips toggle is on the roadmap; a theme picker is not planned
+- [x] Appearance: background picker — the tooltips toggle and the theme picker followed
 - [ ] Vaults: the one vault is shown and revealed; several vaults is unbuilt
 - [x] General: font size, tab size, backup config, personal dictionary — grammar with the check above
 - [x] Docs tab: seven sections, read-only and searchable
