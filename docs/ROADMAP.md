@@ -132,5 +132,9 @@ working.
 ## Not on this list
 
 Dropped rather than deferred, and listed here so they are not proposed again:
-focus mode, folder reordering and a theme picker chosen per-note. `SPEC.md` has
-the full "What's Cut vs Xin" table.
+focus mode and folder reordering. `SPEC.md` has the full "What's Cut vs Xin"
+table.
+
+`PROGRESS.md` also records a theme picker as dropped. It was built afterwards —
+light, dark and system, each with its own background — so that line is history
+rather than a decision still standing.
