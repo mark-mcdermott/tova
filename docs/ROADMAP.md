@@ -71,8 +71,27 @@ Small, known, and each one found in passing rather than reported.
   Half of those are seed fixtures under `scripts/seed/vault/`, and they must be
   left alone — `kitchen-sink.md`, `setext-trap.md` and
   `things-that-are-not-tags.md` are deliberately awkward markdown that exists to
-  be parsed wrongly. Formatting them would quietly rewrite what they test. The
-  step needs a `.prettierignore` entry for that directory before it is added.
+  be parsed wrongly. Formatting them would quietly rewrite what they test.
+
+  `.prettierignore` already makes exactly this argument about `conformance/`:
+  "Letting a formatter reshape one of these would be a fixture changing to meet
+  a tool." The seed vault wants the same entry, for the same reason, before the
+  step is added.
+
+- **ESLint is configured but never runs.** The repository carries
+  `.eslintrc.json`; ESLint 9 reads flat config only and ignores it, so every
+  invocation exits with "couldn't find an eslint.config.(js|mjs|cjs) file".
+  There is no `lint` script in `package.json` and no lint step in CI, which is
+  why nobody noticed.
+
+  It is the worst of both states — `CLAUDE.md` lists ESLint in the stack, six
+  ESLint packages are installed and kept updated by dependabot, and none of it
+  is load-bearing. The repository looks covered and is not.
+
+  Two honest ways out: migrate the config to flat, add a `lint` script and put
+  it in the verify loop; or drop ESLint from the stack, the dependencies and
+  `CLAUDE.md`. The first is the better answer for a codebase this size. Either
+  beats the present state.
 
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
