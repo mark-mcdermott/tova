@@ -65,8 +65,14 @@ Small, known, and each one found in passing rather than reported.
   because `✕` happens to be in the font, unlike the `⤺` that was not.
 
 - **Nothing checks Prettier in CI.** `cargo fmt` is checked; its TypeScript
-  counterpart is not. Two files on `main` are already unformatted, so adding the
-  step goes red on the first run and the formatting commit has to come with it.
+  counterpart is not. Twelve files on `main` are already unformatted, so the
+  step goes red on its first run and the formatting commit has to come with it.
+
+  Half of those are seed fixtures under `scripts/seed/vault/`, and they must be
+  left alone — `kitchen-sink.md`, `setext-trap.md` and
+  `things-that-are-not-tags.md` are deliberately awkward markdown that exists to
+  be parsed wrongly. Formatting them would quietly rewrite what they test. The
+  step needs a `.prettierignore` entry for that directory before it is added.
 
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
@@ -92,7 +98,7 @@ The large one. Desktop, web and mobile, sharing notes. Three platforms without
 sync is three places the notes are not.
 
 The local-only constraint is lifted: plain markdown files in a folder stay a
-reader's *option* rather than the foundation, which means the canonical store
+reader's _option_ rather than the foundation, which means the canonical store
 can be a database and sync no longer has to reconcile a server against files
 being edited underneath it.
 
