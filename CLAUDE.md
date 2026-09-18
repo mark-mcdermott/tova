@@ -17,7 +17,9 @@ Original project:
 
 This repository is the app. Planning docs live in `docs/SPEC.md` (what to build)
 and `docs/BUILD_PHASES.md` (the order it was built in). `PROGRESS.md` is the
-running record of what is built, what was deliberately left out, and why.
+running record of what is built, what was deliberately left out, and why, and
+`docs/ROADMAP.md` is the only forward-looking one — what is agreed and not yet
+built. Add to it rather than letting an agreed feature live in a chat thread.
 
 Branding sources — mockups, logo drafts, licensed faces — are kept outside the
 repository in the parent directory, deliberately. Nothing here should reach for

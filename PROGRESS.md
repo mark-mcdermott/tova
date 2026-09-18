@@ -608,9 +608,10 @@ a suggestion about a sentence is a softer claim than a misspelt word.
   `correspondence` truncated. The value is `--sidebar-width`; it sits in a flex
   basis rather than a `width`, which is why it is worth having a name.
 
-- **The roadmap is empty.** The proprietary script face is replaced and the
-  repository carries nothing licensed. Focus mode, folder reordering and a
-  theme picker were dropped rather than deferred.
+- **The roadmap lives in `docs/ROADMAP.md`.** It was empty when this was
+  written, and is not any more. The proprietary script face is replaced and the
+  repository carries nothing licensed. Focus mode and folder reordering were
+  dropped rather than deferred; the theme picker was too, and then built.
 
 - **Prose wraps at a measure again**, and it is a preference. "Narrow" holds
   the column to 45 characters — measured off the mockup — and is the default;
