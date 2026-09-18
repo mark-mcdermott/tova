@@ -4621,7 +4621,7 @@ dependencies = [
  "block2",
  "cbc",
  "chrono",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "hmac",
  "http",
  "objc2",
