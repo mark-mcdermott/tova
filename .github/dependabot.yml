@@ -6,6 +6,14 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # @lezer/markdown 1.7.x changes how an empty list item over an indented
+    # line is parsed, failing two cases in markdownSpans.conformance.test.ts.
+    # package.json pins ~1.6.x; without this, Dependabot reopens the 1.7 bump
+    # every week and it is red every time. Revisit by rerunning that suite
+    # against 1.7 and deciding whether the fixture moves or the pin does.
+    ignore:
+      - dependency-name: "@lezer/markdown"
+        update-types: [version-update:semver-minor, version-update:semver-major]
     # Grouped on purpose: ungrouped, the first run opens a dozen PRs and you
     # stop reading them. Majors stay out of the groups because they need reading.
     groups:
