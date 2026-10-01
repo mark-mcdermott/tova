@@ -64,20 +64,6 @@ Small, known, and each one found in passing rather than reported.
   toast. Same class as the trash-row bug that was fixed: they only ever rendered
   because `✕` happens to be in the font, unlike the `⤺` that was not.
 
-- **Nothing checks Prettier in CI.** `cargo fmt` is checked; its TypeScript
-  counterpart is not. Twelve files on `main` are already unformatted, so the
-  step goes red on its first run and the formatting commit has to come with it.
-
-  Half of those are seed fixtures under `scripts/seed/vault/`, and they must be
-  left alone — `kitchen-sink.md`, `setext-trap.md` and
-  `things-that-are-not-tags.md` are deliberately awkward markdown that exists to
-  be parsed wrongly. Formatting them would quietly rewrite what they test.
-
-  `.prettierignore` already makes exactly this argument about `conformance/`:
-  "Letting a formatter reshape one of these would be a fixture changing to meet
-  a tool." The seed vault wants the same entry, for the same reason, before the
-  step is added.
-
 - **Eighteen react-hooks warnings are parked, not resolved.** ESLint runs now,
   and the first thing it had to say was about the editor. react-hooks v7 is the
   React Compiler's lint suite, and `recommended` carries fourteen rules beyond
