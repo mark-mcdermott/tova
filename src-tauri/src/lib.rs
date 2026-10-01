@@ -51,6 +51,7 @@ mod sections;
 mod session;
 mod settings;
 mod spellcheck;
+mod substitutions;
 mod sync;
 mod sync_plan;
 mod tag_blocks;
@@ -1088,6 +1089,12 @@ pub fn run() {
             // editor's own marks out of a different dictionary.
             let _ = stored.spellcheck;
             spellcheck::quiet_the_system();
+
+            // Same moment and the same reason, but a worse failure: those two
+            // draw marks, these rewrite the text. `---` became an em dash on
+            // the next space, which is a horizontal rule and a table delimiter
+            // gone.
+            substitutions::leave_the_text_alone();
 
             // The launch backup runs before the cleanup, so anything the sweep
             // removes is already captured in a restorable snapshot.
