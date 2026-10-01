@@ -9,4 +9,10 @@ src-tauri/gen/
 # a formatter reshape one of these would be a fixture changing to meet a tool.
 conformance/
 
+# The same argument. These are deliberately awkward markdown — a file with no
+# body, one that opens with a byte-order mark, one that ends every tag block a
+# different way — and the seeder writes them so the parser can be caught
+# mishandling them. Formatting them would quietly rewrite the question.
+scripts/seed/vault/
+
 pnpm-lock.yaml
