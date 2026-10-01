@@ -11,30 +11,16 @@ priority; the sections themselves are not ranked against each other.
 
 ## Next
 
-### Live markdown: tables are the one still missing
+### Live markdown is done
 
-The audit is done. Checkboxes were the reported gap and now render as boxes you
-can click; thematic breaks were already handled. **Tables are parsed and never
-decorated**, so they sit in the editor as raw pipes while everything around them
-renders.
+Checkboxes render as boxes you can click. Thematic breaks were already handled.
+Tables lay their own cells out and draw a rule under the header, which was the
+last of it.
 
-The tree is all there — `Table`, `TableHeader`, `TableRow`, `TableCell`,
-`TableDelimiter` — because the editor parses with `base: markdownLanguage`
-rather than the CommonMark default. Nothing in `markdownDecorations.ts` looks at
-any of it.
-
-It is also the hardest of the constructs, and worth saying why before anyone
-picks it up expecting an afternoon. Every other decoration here changes how a
-run of text is painted. A table wants a grid: cells aligned into columns whose
-widths depend on the longest cell in each, across lines that CodeMirror draws
-independently of one another. Decorations cannot restructure lines into a grid,
-so the real choices are a widget that replaces the whole block — which takes the
-text out from under the cursor and ends live editing inside it — or padding the
-cells so the pipes line up as a monospace grid, which keeps editing intact and
-looks much plainer.
-
-The second is the one that fits this editor. Worth settling deliberately rather
-than discovering halfway in.
+One thing the audit turned up and did not fix: **the blog export does not
+render tables either.** `markdownToHtml.ts` has no case for them, so a note with
+a table publishes with its pipes intact. The editor and the export are separate
+paths and only one of them has been through.
 
 ---
 

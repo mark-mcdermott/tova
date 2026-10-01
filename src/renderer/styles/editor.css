@@ -423,6 +423,48 @@
   transform: translate(-50%, -65%) rotate(-45deg);
 }
 
+/*
+ * A table, which is the one construct laid out in the text rather than over it
+ * — the cells are padded with real spaces and the body font is monospace, so
+ * the columns line up on their own. What is left for CSS is the quiet part.
+ */
+
+/* The pipes are structure, not words, and read as a grid rather than as
+   punctuation once they step back. */
+.cm-table-pipe {
+  color: var(--text-faint);
+}
+
+.cm-line.cm-table-head {
+  font-weight: 600;
+}
+
+/*
+ * The delimiter row, wearing the rule it stands for.
+ *
+ * It keeps its place in the document and gives up only its ink — the bullet's
+ * trick, and the task box's. Hiding the line instead would take a row out of
+ * the middle of the table and move everything below it, which is the one thing
+ * a construct here must never do under the cursor.
+ *
+ * A strike rather than a drawn box: it spans exactly the text, and the text is
+ * exactly as wide as the table, so the rule matches the columns at whatever
+ * width they end up — where an absolutely positioned rule ran the full width
+ * of the line and out past the table's right edge.
+ */
+.cm-line.cm-table-rule {
+  color: transparent;
+  text-decoration: line-through;
+  text-decoration-color: var(--frame-border);
+  text-decoration-thickness: 1px;
+}
+
+/* The pipes too: .cm-table-pipe sets its own colour, which outranks the line's
+   and left them poking through the rule as ticks. */
+.cm-line.cm-table-rule .cm-table-pipe {
+  color: transparent;
+}
+
 /* ── Code blocks ──────────────────────────────────────────────────────── */
 
 /* Fence lines collapse entirely once the cursor leaves the block. The doubled
