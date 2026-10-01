@@ -51,37 +51,106 @@
   position: relative;
 }
 
-.title-input {
+/*
+ * The title grows down the page instead of scrolling sideways, because a tall
+ * multi-line title looks like a book cover — which is what SPEC.md asks for.
+ *
+ * A textarea cannot size itself to its text, so the wrapper does it: both sit
+ * in one grid cell, and the ::after carries the same string through
+ * `data-title`. The mirror sets the row's height; the textarea stretches to it.
+ * The trailing space is what gives an empty title, and a title ending in a
+ * newline, a line to stand on.
+ */
+.title-grow {
+  display: grid;
+  margin-top: var(--space-title-above);
+
   /*
-   * Room for a glyph that reaches left of where its text begins. An input
-   * clips ink at its content edge, and a script capital overhangs it — Vibur's
-   * A by 3.13px at this size, which is why the corner of an A came off flat.
+   * The same column the prose gets, so the title wraps where the body wraps —
+   * including when Appearance narrows the line width, since --prose-max is
+   * what that setting moves.
    *
-   * Indenting the text and pulling the padding back by the same amount leaves
-   * the origin exactly where it was, so nothing moves; it only puts the clip
-   * edge behind the origin, where the overhang can land. In em because the
-   * overhang scales with the type, and generous because the title face is
-   * whatever the reader uploads.
+   * The font declarations are load-bearing rather than cosmetic: --prose-max is
+   * `45ch`, and `ch` is relative to the element's own font. Measured against
+   * this box's inherited UI font it came to roughly 540px against the body's
+   * ~700, and against the title's own 66px script face it would be far wider
+   * than the pane. Both of those are wrong in different directions, so the box
+   * that carries the max-width carries the body's font to resolve it in.
+   * .index-body already records this trap one way round.
+   *
+   * The inset is a margin here rather than padding on the text, so the
+   * max-width measures the text column itself and not the column plus its
+   * inset. Where the text starts is unchanged — --title-inset, the same inset
+   * the Settings and index headings use, so a title sits on one line down the
+   * app whichever page you are on.
+   */
+  margin-left: var(--title-inset);
+  /*
+   * On "Full" the prose has no max at all and its width is whatever its two
+   * insets leave, so matching it there is a matter of margins rather than of
+   * --prose-max. This is the body's pair of insets less the title's own, which
+   * leaves both columns the same width from left edges that differ.
+   */
+  margin-right: calc(var(--editor-inset) * 2 + var(--space-1) - var(--title-inset));
+  max-width: var(--prose-max);
+  font-family: var(--font-mono);
+  font-size: var(--editor-font-size, var(--text-base));
+}
+
+.title-grow::after {
+  content: attr(data-title) " ";
+  visibility: hidden;
+  white-space: pre-wrap;
+}
+
+.title-grow::after,
+.title-input {
+  grid-area: 1 / 1 / 2 / 2;
+
+  /*
+   * Room for a glyph that reaches left of where its text begins. A script
+   * capital overhangs its origin — Vibur's A by 3.13px at this size, which is
+   * why the corner of an A came off flat.
+   *
+   * Padding, where an input needed padding pulled back and the text indented
+   * to match. `text-indent` only ever applied to the first line; with the
+   * title wrapping, every line after the first would have started 3px to the
+   * left of the one above it. Overflow clips at the padding box, so padding is
+   * already room the ink can reach into — on every line.
+   *
+   * And a negative margin of the same amount, so that room sits outside the
+   * column rather than eating into it. Without it the text would wrap a few
+   * pixels before the prose does, which is the whole thing this is matching.
    */
   --title-overhang: 0.08em;
 
-  width: 100%;
-  margin-top: var(--space-title-above);
-  padding-left: calc(var(--title-inset) - var(--title-overhang));
-  text-indent: var(--title-overhang);
-  /* Held to the same measure as the prose; the nav row above is not, so the
-     edited time and its controls can sit against the panel's right edge. */
-  max-width: var(--measure);
+  /*
+   * Top and bottom are set as surely as the sides, because the mirror only
+   * sizes the row while both boxes measure the same. A textarea carries 2px of
+   * top and bottom padding from the UA sheet that a ::after does not, which
+   * sized the row 4px short and clipped the descenders off the last line of
+   * any title that wrapped. Vibur's `g` losing its tail, again.
+   */
+  margin-inline: calc(-1 * var(--title-overhang));
+  padding-block: 0;
+  padding-inline: var(--title-overhang);
   border: none;
   background: transparent;
   color: var(--text-primary);
   font-family: var(--font-script);
   font-size: var(--text-title);
-  /* The font's own metrics, not a number. An input clips to its line box, and
-     1.15 cut 13px off Vibur's descenders — the tail of a `g` simply vanished.
-     A larger constant would only move the problem to the next face, and the
-     title font is now anything the reader uploads. */
+  /* The font's own metrics, not a number. A text box clips to its line box,
+     and 1.15 cut 13px off Vibur's descenders — the tail of a `g` simply
+     vanished. A larger constant would only move the problem to the next face,
+     and the title font is now anything the reader uploads. */
   line-height: normal;
+}
+
+.title-input {
+  /* The mirror owns the height. Left to itself a textarea would scroll, and a
+     drag handle on a note title is a control that should not exist. */
+  overflow: hidden;
+  resize: none;
 }
 
 .title-input::placeholder {
