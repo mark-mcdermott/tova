@@ -33,13 +33,17 @@ const move = vi.fn()
 const remove = vi.fn()
 const setFavorite = vi.fn()
 
-function renderHeader(active: Note = note(), find?: ReactNode) {
+function renderHeader(
+  active: Note = note(),
+  find?: ReactNode,
+  title: Partial<{ onTitleChange: (value: string) => void; onTitleCommit: () => void }> = {}
+) {
   return render(
     <EditorHeader
       note={active}
       title={active.title}
-      onTitleChange={() => undefined}
-      onTitleCommit={() => undefined}
+      onTitleChange={title.onTitleChange ?? (() => undefined)}
+      onTitleCommit={title.onTitleCommit ?? (() => undefined)}
       onAddTag={() => undefined}
       onRemoveTag={() => undefined}
       onOpenTag={() => undefined}
@@ -127,7 +131,9 @@ describe("EditorHeader breadcrumb", () => {
   it("renders section and title", () => {
     renderHeader()
     expect(screen.getByRole("button", { name: "Notes" })).toBeDefined()
-    expect(screen.getByText("Project River")).toBeDefined()
+    // Scoped to the trail: the title box is a textarea, whose value is DOM
+    // text rather than an attribute, so an unscoped query finds both.
+    expect(document.querySelector(".breadcrumb-current")?.textContent).toBe("Project River")
   })
 
   it("includes the folder for a nested note", () => {
@@ -438,5 +444,89 @@ describe("finding in the note", () => {
   it("draws nothing there when the bar is closed", () => {
     renderHeader()
     expect(screen.queryByTestId("find-bar")).toBeNull()
+  })
+})
+
+/*
+ * The title wraps rather than scrolling, which SPEC.md asks for on the grounds
+ * that a tall multi-line title looks like a book cover. That makes it a
+ * textarea, and a textarea brings back three things an input handled for free:
+ * Enter inserting a newline, a paste carrying its own, and a height that does
+ * not follow its content.
+ */
+describe("a title that wraps", () => {
+  function titleBox(): HTMLTextAreaElement {
+    return screen.getByLabelText("Note title") as HTMLTextAreaElement
+  }
+
+  it("is a textarea, which is what lets it wrap at all", () => {
+    renderHeader()
+    expect(titleBox().tagName).toBe("TEXTAREA")
+  })
+
+  it("commits on Enter instead of taking a newline", async () => {
+    const onTitleCommit = vi.fn()
+    const onTitleChange = vi.fn()
+    renderHeader(note(), undefined, { onTitleCommit, onTitleChange })
+
+    const user = userEvent.setup()
+    await user.click(titleBox())
+    await user.keyboard("{Enter}")
+
+    expect(onTitleCommit).toHaveBeenCalled()
+    // An unprevented Enter in a textarea is a change, not just a keypress.
+    expect(onTitleChange).not.toHaveBeenCalled()
+  })
+
+  /*
+   * A title becomes a filename. An input drops newlines out of a paste on its
+   * own and a textarea keeps every one, so this is a guard the old element was
+   * providing silently.
+   */
+  it("flattens a pasted newline rather than storing it", async () => {
+    const onTitleChange = vi.fn()
+    renderHeader(note({ title: "" }), undefined, { onTitleChange })
+
+    const user = userEvent.setup()
+    await user.click(titleBox())
+    await user.paste("Dear reader\nand welcome")
+
+    expect(onTitleChange).toHaveBeenCalledWith("Dear reader and welcome")
+  })
+
+  /*
+   * The ref passed in is claimed by EditorTags for its own button, so the
+   * destination is the rendered one rather than anything a test can supply.
+   * And it has to be `keyboard("{Tab}")`: `user.tab()` moves focus itself
+   * without honouring the handler's preventDefault, so it would pass on the
+   * browser's tab order whether this handler existed or not.
+   */
+  it("still hands Tab on to the tag row", async () => {
+    renderHeader()
+
+    const user = userEvent.setup()
+    await user.click(titleBox())
+    await user.keyboard("{Tab}")
+
+    expect(document.activeElement).toBe(screen.getByLabelText("Add tag"))
+  })
+
+  /*
+   * The height comes from a mirror element sized by the same text, so the box
+   * grows with its content in CSS alone. If the mirror stops carrying the
+   * title, the title stops being able to grow — silently, since nothing about
+   * a one-line title would look wrong.
+   */
+  it("mirrors the title so the box can size itself to it", () => {
+    renderHeader(note({ title: "A rather long title that will want two lines" }))
+    const mirror = document.querySelector(".title-grow")
+
+    expect(mirror?.getAttribute("data-title")).toBe("A rather long title that will want two lines")
+  })
+
+  it("keeps mirroring once the title is empty, so the placeholder has a line", () => {
+    renderHeader(note({ title: "" }))
+
+    expect(document.querySelector(".title-grow")?.getAttribute("data-title")).toBe("")
   })
 })

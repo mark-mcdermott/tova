@@ -53,7 +53,7 @@ export function EditorHeader({
     const timer = setInterval(tick, 30_000)
     return () => clearInterval(timer)
   }, [])
-  const titleRef = useRef<HTMLInputElement>(null)
+  const titleRef = useRef<HTMLTextAreaElement>(null)
   const tip = useTooltip()
   const crumbs = breadcrumbFor(note, rail)
 
@@ -109,27 +109,46 @@ export function EditorHeader({
 
       {find}
 
-      <input
-        ref={titleRef}
-        className="title-input"
-        placeholder="Untitled"
-        aria-label="Note title"
-        value={title}
-        onChange={(event) => onTitleChange(event.target.value)}
-        onKeyDown={(event) => {
-          // Enter is done with the title; Tab is the next thing along, which is
-          // the tag row rather than the prose.
-          if (event.key === "Enter") {
-            event.preventDefault()
-            onTitleCommit()
-            return
-          }
-          if (event.key === "Tab" && !event.shiftKey) {
-            event.preventDefault()
-            tagAddRef.current?.focus()
-          }
-        }}
-      />
+      {/*
+        The box grows with its text, and the growing is the wrapper's doing.
+        Both sit in one grid cell; the wrapper's ::after carries the same string
+        and sets the row's height, which the textarea then stretches to fill.
+
+        A textarea cannot size itself in CSS — `rows` is a fixed count and
+        `field-sizing: content` is too new to lean on in a webview. The
+        alternative is measuring `scrollHeight` and writing `style.height`,
+        which is a layout read on every keystroke and an inline style besides.
+      */}
+      <div className="title-grow" data-title={title}>
+        <textarea
+          ref={titleRef}
+          className="title-input"
+          placeholder="Untitled"
+          aria-label="Note title"
+          rows={1}
+          value={title}
+          /*
+            A title becomes a filename, so it stays one line of text however it
+            is drawn. An input dropped newlines out of a paste by itself; a
+            textarea keeps every one, so they are flattened here instead.
+          */
+          onChange={(event) => onTitleChange(event.target.value.replace(/\s*\n\s*/g, " "))}
+          onKeyDown={(event) => {
+            // Enter is done with the title — and in a textarea it would
+            // otherwise put a newline in a string that becomes a filename.
+            // Tab is the next thing along, which is the tag row, not the prose.
+            if (event.key === "Enter") {
+              event.preventDefault()
+              onTitleCommit()
+              return
+            }
+            if (event.key === "Tab" && !event.shiftKey) {
+              event.preventDefault()
+              tagAddRef.current?.focus()
+            }
+          }}
+        />
+      </div>
 
       <EditorTags
         tags={note.tags}
