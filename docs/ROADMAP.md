@@ -11,16 +11,6 @@ priority; the sections themselves are not ranked against each other.
 
 ## Next
 
-### Tip jar
-
-The stated next feature. The app-side work is small — a link, a place to put it,
-and some restraint about how loudly it asks. The real decision is in-app versus
-site-only: outside the App Store a link to an existing account is all it takes;
-inside it, the same thing becomes an in-app purchase with Apple's cut and a
-review process attached.
-
-Account setup is not a code task and is blocked on that being dug out.
-
 ### Live markdown: tables are the one still missing
 
 The audit is done. Checkboxes were the reported gap and now render as boxes you
