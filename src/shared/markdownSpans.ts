@@ -257,7 +257,11 @@ function listMarker(content: string, indent: number, quote: number): Container |
  * sentence that wraps onto "10. Not bad." from turning into a list. Neither
  * rule applies once a list of that kind is already open.
  */
-function canInterrupt(content: string, ordered: boolean, containers: readonly Container[]): boolean {
+function canInterrupt(
+  content: string,
+  ordered: boolean,
+  containers: readonly Container[]
+): boolean {
   if (containers.some((container) => container.ordered === ordered)) return true
 
   if (!ordered) return skipSpace(content, 2) < content.length
@@ -283,6 +287,10 @@ type HtmlBlock = "script" | "comment" | "instruction" | "declaration" | "blank"
 const VERBATIM_TAGS = new Set(["script", "pre", "style"])
 
 /** The tags that open an HTML block just by being at the start of a line. */
+// CommonMark's fixed list, packed so it reads as one block. One tag per line is
+// sixty lines of noise in the middle of the scanner. The directive below has to
+// be exactly `prettier-ignore` — trailing text on that line silently voids it.
+// prettier-ignore
 const BLOCK_TAGS = new Set([
   "address", "article", "aside", "base", "basefont", "blockquote", "body",
   "caption", "center", "col", "colgroup", "dd", "details", "dialog", "dir",

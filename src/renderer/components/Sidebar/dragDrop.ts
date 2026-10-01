@@ -1,10 +1,7 @@
 import { NoteSummary } from "../../../shared/types"
 
 export type DropTarget =
-  | { kind: "folder"; folder: string }
-  | { kind: "notesRoot" }
-  | { kind: "trash" }
-  | { kind: "daily" }
+  { kind: "folder"; folder: string } | { kind: "notesRoot" } | { kind: "trash" } | { kind: "daily" }
 
 /** The MIME type the sidebar uses to carry a note id between rows. */
 export const NOTE_MIME = "application/x-tova-note"

@@ -31,7 +31,7 @@ enlarged 4.7× from its real pixels once the display doubles it.
 - **Bright corners are fine.** The page lays a scrim over the top-left and
   bottom-right, so the words hold up over sky as well as over shadow. The
   strength was measured against a picture whose lead lines came in at 2.77:1
-  before it and 4.9:1 after — but a picture that is bright *everywhere* the
+  before it and 4.9:1 after — but a picture that is bright _everywhere_ the
   words go is still worth re-cropping rather than leaning on it.
 
 JPEG at quality 80 lands around 300–600KB at that size, which is nothing beside
