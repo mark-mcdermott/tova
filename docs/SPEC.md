@@ -241,11 +241,12 @@ Hide sidebar, center column. Cmd+Shift+F + View menu.
 - Tab → next cell. Shift+Tab → prev cell. Enter on last cell → new row.
 
 **Enter / Shift+Enter:**
-| Key | File content | Rendered output |
-|-----|-------------|-----------------|
-| Enter | `\n` | Soft break → same paragraph |
-| Enter+Enter | `\n\n` | New paragraph |
-| Shift+Enter | `\\\n` | Hard line break (`<br>`) |
+
+| Key         | File content | Rendered output             |
+| ----------- | ------------ | --------------------------- |
+| Enter       | `\n`         | Soft break → same paragraph |
+| Enter+Enter | `\n\n`       | New paragraph               |
+| Shift+Enter | `\\\n`       | Hard line break (`<br>`)    |
 
 **Lists:**
 

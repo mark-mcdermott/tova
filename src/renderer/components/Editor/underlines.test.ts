@@ -111,7 +111,12 @@ describe("a layer that yields to another", () => {
 describe("an underline layer", () => {
   it("draws what the checker found", () => {
     const view = editor("teh quick bwron fox")
-    view.dispatch({ effects: layer.set.of([{ from: 0, to: 3 }, { from: 10, to: 15 }]) })
+    view.dispatch({
+      effects: layer.set.of([
+        { from: 0, to: 3 },
+        { from: 10, to: 15 }
+      ])
+    })
 
     expect(marks(view)).toEqual(["teh", "bwron"])
   })

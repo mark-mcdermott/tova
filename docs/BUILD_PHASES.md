@@ -10,7 +10,6 @@ reasoning. Three places where the answer later changed are marked **↳ since**.
 The **Verification** list at the end is the exception: it is an instruction
 rather than a record, so it says what to run today.
 
-
 ## Phase 0 — Project Scaffold
 
 **Goal:** Electron + Vite + React + TypeScript dev environment, blank window.
@@ -171,7 +170,7 @@ Write Vitest tests: navigation history push/pop/forward.
 - [x] Grammar toggle in Settings
 
 **↳ since:** both of the first two lines are now the opposite of what happens.
-Spelling *is* a CM6 decoration layer, drawn from `NSSpellChecker`, because
+Spelling _is_ a CM6 decoration layer, drawn from `NSSpellChecker`, because
 WebKit only marks a word as it is typed — a note written yesterday opened with
 nothing underlined in it. "Correct by construction" was Chromium's timing, and
 it did not survive the engine change.

@@ -5,7 +5,7 @@ import type { SyntaxNode } from "@lezer/common"
 
 /** The item the cursor is in, or null if it is not in a list at all. */
 function listItemAt(state: EditorState, pos: number): SyntaxNode | null {
-  for (let node: SyntaxNode | null = syntaxTree(state).resolveInner(pos, -1); node; ) {
+  for (let node: SyntaxNode | null = syntaxTree(state).resolveInner(pos, -1); node;) {
     if (node.name === "ListItem") return node
     node = node.parent
   }
