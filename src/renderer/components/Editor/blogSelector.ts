@@ -32,7 +32,7 @@ export function blogSelector(onAnchor: (anchor: SelectorAnchor | null) => void) 
 
     // Measuring needs the position to be laid out, and throws when it is not.
     // A popup that cannot be placed simply is not offered.
-    let coords: { left: number; bottom: number } | null = null
+    let coords: { left: number; bottom: number } | null
     try {
       coords = update.view.coordsAtPos(range.head)
     } catch {

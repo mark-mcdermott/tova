@@ -177,7 +177,7 @@ export function SectionManager() {
 
       <p className="settings-note">
         Daily and Trash can be renamed, moved and hidden like the rest — they only cannot be
-        removed, because today's note has to be written somewhere and a deleted note has to go
+        removed, because today&apos;s note has to be written somewhere and a deleted note has to go
         somewhere. A blog arranges the same way; deleting one stays in the Blogs tab, where its
         tokens and its synced posts are accounted for. Hiding any of them takes it out of this rail
         and changes nothing else.
