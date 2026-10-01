@@ -21,30 +21,6 @@ review process attached.
 
 Account setup is not a code task and is blocked on that being dug out.
 
-### A note title should shrink rather than overflow
-
-A title that outgrows its width should step its font size down a little at a
-time so the whole of it stays visible, with a floor past which it stops.
-
-Today it does neither. `.title-input` is an `<input>`, so there is no wrapping
-to fall back on: it scrolls, and the beginning of a long title slides out of
-sight to the left while you are still typing it.
-
-Two things shape the work:
-
-- The edge that bites is not the window. The title is held to
-  `max-width: var(--measure)` — the same measure as the prose — which is
-  narrower than the pane it sits in.
-- The title face is whatever the reader uploads, so the fit has to be measured
-  against the computed font rather than guessed from a character count.
-  `--title-overhang` is already in `em` and scales down on its own.
-
-Worth settling first: `SPEC.md` answers this question differently. It asks for a
-title that **wraps to multiple lines**, on the grounds that a tall multi-line
-title looks like a book cover. Wrapping and shrinking are two answers to the
-same problem and only one of them can be built; wrapping also means the title
-stops being an `<input>`, which is a larger change than a font size that steps.
-
 ### Live markdown: tables are the one still missing
 
 The audit is done. Checkboxes were the reported gap and now render as boxes you
