@@ -697,6 +697,13 @@
   cursor: pointer;
 }
 
+/* The drawn close mark, at the size of the text it replaced. */
+.publish-toast-close-icon {
+  display: block;
+  width: var(--text-sm);
+  height: var(--text-sm);
+}
+
 .publish-toast-close:hover {
   color: #241f2e;
 }
