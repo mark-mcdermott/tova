@@ -56,10 +56,12 @@ Small, known, and each one found in passing rather than reported.
   because `gtk 0.18.2` requires `glib ^0.18` and `tauri 2.12.1` pins that gtk.
   It closes when Tauri moves to gtk 0.19 or later, and not before.
 
-  Worth a look again if Linux ever becomes a target Tova ships. Until then the
-  decision to make is whether to dismiss the alert as not-affected or leave it
-  standing as a reminder — the one thing not worth doing is treating it as
-  actionable work.
+  Dismissed as "not used" on 2026-10-01, which silences this advisory and no
+  other — a different one against `glib` would still open an alert. The fix
+  arrives on its own either way: Dependabot's version updates are a separate
+  system from its alerts, so the weekly cargo group PR carries the new `glib`
+  whenever Tauri moves. Worth a look again if Linux ever becomes a target Tova
+  ships; until then it is not work.
 
 - **Eighteen react-hooks warnings are parked, not resolved.** ESLint runs now,
   and the first thing it had to say was about the editor. react-hooks v7 is the
