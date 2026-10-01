@@ -42,10 +42,6 @@ than discovering halfway in.
 
 Small, known, and each one found in passing rather than reported.
 
-- **Two literal `✕` characters** remain, in the note search and the publish
-  toast. Same class as the trash-row bug that was fixed: they only ever rendered
-  because `✕` happens to be in the font, unlike the `⤺` that was not.
-
 - **A Dependabot alert on `glib` that cannot be closed from here, and does not
   reach the product.** Alert 36, moderate: unsoundness in the `Iterator` and
   `DoubleEndedIterator` impls for `glib::VariantStrIter`, wanting `glib >= 0.20`
@@ -85,9 +81,6 @@ Small, known, and each one found in passing rather than reported.
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
   and the expected size and hash are already pinned in `grammar.rs`.
-
-- **`SPEC.md` still says Electron.** It describes the stack Tova was specified
-  against, not the one it runs on.
 
 ---
 
