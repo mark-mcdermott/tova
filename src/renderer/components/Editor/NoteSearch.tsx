@@ -128,7 +128,7 @@ export function NoteSearch({ viewRef, onClose, openSeq }: NoteSearchProps) {
         aria-label="Close find"
         onClick={onClose}
       >
-        ✕
+        <Icon name="close" className="nav-icon" />
       </button>
     </div>
   )

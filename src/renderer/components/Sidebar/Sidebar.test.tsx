@@ -692,6 +692,52 @@ describe("Sidebar", () => {
     expect(state.indexTarget).toEqual({ kind: "search", query: "loose" })
   })
 
+  /*
+   * The clear control is ours rather than WebKit's.
+   *
+   * `type="search"` comes with ::-webkit-search-cancel-button for free — a
+   * filled dark disc with a white mark through it, at whatever weight and
+   * wherever the engine likes. It sat in from the right edge by a different
+   * amount than the magnifier sits in from the left, and read far heavier than
+   * every other icon in the rail. None of that is reachable from CSS beyond
+   * replacing it outright, so it is replaced outright.
+   */
+  it("offers a clear control once there is something to clear", async () => {
+    render(<Sidebar />)
+    expect(screen.queryByLabelText("Clear search")).toBeNull()
+
+    await userEvent.type(screen.getByLabelText("Search notes"), "wer")
+
+    expect(screen.getByLabelText("Clear search")).toBeDefined()
+  })
+
+  it("empties the field when the clear is pressed", async () => {
+    render(<Sidebar />)
+    const field = screen.getByLabelText("Search notes") as HTMLInputElement
+    await userEvent.type(field, "wer")
+
+    await userEvent.click(screen.getByLabelText("Clear search"))
+
+    expect(field.value).toBe("")
+    expect(screen.queryByLabelText("Clear search")).toBeNull()
+  })
+
+  /*
+   * Clearing is not a navigation, the same way typing nothing is not — the
+   * last index stays up. And the caret goes back to the field, because the
+   * reason to clear is almost always to type something else.
+   */
+  it("leaves the listing alone and hands the caret back", async () => {
+    render(<Sidebar />)
+    const field = screen.getByLabelText("Search notes")
+    await userEvent.type(field, "wer")
+
+    await userEvent.click(screen.getByLabelText("Clear search"))
+
+    expect(useNotesStore.getState().indexTarget).toEqual({ kind: "search", query: "wer" })
+    expect(document.activeElement).toBe(field)
+  })
+
   it("stays put while the field is empty", async () => {
     render(<Sidebar />)
     const field = screen.getByLabelText("Search notes")

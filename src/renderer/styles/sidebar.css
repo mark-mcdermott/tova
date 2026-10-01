@@ -706,6 +706,46 @@
     background-color 120ms ease;
 }
 
+/*
+ * WebKit draws its own cancel button inside a type="search" field: a filled
+ * dark disc with a white mark through it, inset from the right by an amount of
+ * its own choosing. It read far heavier than every other icon in the rail and
+ * did not line up with the magnifier opposite. Off, and replaced below.
+ */
+.sidebar-search-input::-webkit-search-cancel-button {
+  /* Both spellings: the unprefixed one is the standard, and the prefixed one
+     is what the engine Tova actually ships on answers to. */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* The mirror of .sidebar-search-icon: same inset from its edge, same size,
+   same colour at rest, so the field sits between two equal marks. */
+.sidebar-search-clear {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--sidebar-edge) + var(--space-3));
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+  /* The padding below the field is not part of the field, so centring on the
+     box would sit the mark low. */
+  transform: translateY(calc(-50% - var(--space-3) / 2));
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.sidebar-search-clear:hover {
+  color: var(--text-primary);
+}
+
+.sidebar-search-clear-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 .sidebar-search-input::placeholder {
   color: var(--text-faint);
 }

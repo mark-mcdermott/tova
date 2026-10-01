@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react"
+import { useRef, useState, type KeyboardEvent } from "react"
 import { useNotesStore } from "../../stores/notesStore"
 import { moveRailFocus } from "../../rail"
 import { FolderTree } from "./FolderTree"
@@ -38,6 +38,7 @@ export function Sidebar() {
   const showHome = useNotesStore((state) => state.showHome)
   const runSearch = useNotesStore((state) => state.runSearch)
   const [query, setQuery] = useState("")
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const menu = useContextMenu()
   const tip = useTooltip()
@@ -102,6 +103,7 @@ export function Sidebar() {
           className="sidebar-search-input"
           placeholder="Search notes…"
           aria-label="Search notes"
+          ref={searchRef}
           value={query}
           onChange={(event) => {
             const next = event.target.value
@@ -111,6 +113,32 @@ export function Sidebar() {
             void runSearch(next)
           }}
         />
+
+        {/*
+          Ours, not WebKit's. `type="search"` draws its own cancel button — a
+          filled dark disc at whatever weight the engine likes, inset from the
+          right by a different amount than the magnifier is from the left. None
+          of that is reachable from CSS beyond replacing it, so the native one
+          is turned off in the stylesheet and this stands in: the same drawn
+          mark, the same colour and the same inset as the glyph opposite it.
+
+          Clearing is not a navigation, so the last listing stays up — the same
+          rule typing an empty field follows. The caret goes back to the field,
+          because the reason to clear is almost always to type something else.
+        */}
+        {query !== "" && (
+          <button
+            type="button"
+            className="sidebar-search-clear"
+            aria-label="Clear search"
+            onClick={() => {
+              setQuery("")
+              searchRef.current?.focus()
+            }}
+          >
+            <Icon name="close" className="sidebar-search-clear-icon" />
+          </button>
+        )}
       </div>
 
       {/* The rail's places stay put; only the tags move. The list of tags is

@@ -1,12 +1,22 @@
 # Tova — Specification
 
+What Tova is meant to be. Written before it was built, and still the reference
+for the design system, the feature behaviour and the "What's Cut vs Xin" table
+at the bottom — all of which held.
+
+The backend did not. It was specified against Electron and runs on Tauri 2, and
+that change reached the stack, the test plan and the file tree. Those are
+corrected here rather than left as a record of the original guess; `PROGRESS.md`
+is where the history lives.
+
 ## Stack & Architecture
 
-**Stack:** Electron + React 19 + TypeScript strict + CodeMirror 6 + Zustand + Vite
+**Stack:** Tauri 2 (Rust, WKWebView on macOS) + React 19 + TypeScript strict +
+CodeMirror 6 + Zustand + Vite
 
 **Architecture principles:**
 
-- Zero inline styles — Electron is Chromium, same rules as web. All styling lives in
+- Zero inline styles — a webview is a browser, same rules as web. All styling lives in
   `.css` files driven by CSS variables. No utility-class framework and no component
   library: the design here is specific enough that a generic one would be fought more
   than used, and hand-written CSS keeps the dependency count low.
@@ -604,14 +614,25 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 - React components: accordion open/close, sidebar counts, tag pill render, title→body Tab/Enter focus, `@` popup trigger
 - CodeMirror state: transactions, decorations (Node.js, no browser needed)
 
-**Slow — Playwright + Electron** (`ppnpm run test:e2e`, critical paths only)
+**Rust — `cargo test`** (the backend, where the filesystem work lives)
 
-- App launches → today's daily note opens
+Everything that touches the vault is a `#[tauri::command]` in `src-tauri/src/`,
+so the cases this plan originally gave to a browser driver are reachable
+without one. They are covered in Rust:
+
+- Today's daily note is created when the date turns
 - Create note → `.md` file on disk
 - Delete note → Trash
-- Blank past daily note → auto-deleted on next launch
-- Publish post → HTTP request sent, progress bar appears
-- Backup → dated folder exists after launch
+- Blank past daily note → swept when the day turns
+- Publish post → the request the blog backend builds
+- Backup → a dated folder after launch
+
+**No end-to-end suite.** The original plan was Playwright driving Electron; the
+port moved every one of those paths into Rust, where they are cheaper to test
+and do not need a window. What a driver would still catch and nothing else does
+is the wiring between the two — a command the capabilities file does not name
+reaches only the webview's console. `surface.conformance` and
+`capabilities.conformance` are what stand in for that.
 
 ### Regression tests — live markdown
 
@@ -653,19 +674,19 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 
 ## What's Cut vs Xin
 
-| Feature                          | Xin               | Tova    | Reason                           |
-| -------------------------------- | ----------------- | ------- | -------------------------------- |
-| Browser-style tabs               | Yes (buggy)       | No      | Cut entirely                     |
-| `---` YAML front-matter shortcut | Yes               | No      | Replaced by `@` popup            |
-| Deep folder nesting              | Yes               | 1 level | Simpler, less bug-prone          |
-| Inline styles                    | Yes (everywhere)  | Never   | Antipattern in Electron/web      |
-| Title/body split inside CM       | Yes (cursor bugs) | No      | Title is separate `<input>`      |
-| No backups                       | Yes (data loss!)  | No      | First-class feature              |
-| Blank daily note accumulation    | Yes               | No      | Auto-cleanup on launch           |
-| One-way blog sync                | —                 | No      | Bidirectional                    |
-| Orphaned remote files on rename  | Yes               | No      | `lastPublishedFilename` tracking |
-| Hot pink accent                  | Yes               | No      | Replaced with Tova purple        |
-| Separate docs panel/icon         | Yes               | No      | Lives in Settings Docs tab       |
+| Feature                          | Xin               | Tova    | Reason                                  |
+| -------------------------------- | ----------------- | ------- | --------------------------------------- |
+| Browser-style tabs               | Yes (buggy)       | No      | Cut entirely                            |
+| `---` YAML front-matter shortcut | Yes               | No      | Replaced by `@` popup                   |
+| Deep folder nesting              | Yes               | 1 level | Simpler, less bug-prone                 |
+| Inline styles                    | Yes (everywhere)  | Never   | Antipattern in a webview, as on the web |
+| Title/body split inside CM       | Yes (cursor bugs) | No      | Title is its own box, outside CM        |
+| No backups                       | Yes (data loss!)  | No      | First-class feature                     |
+| Blank daily note accumulation    | Yes               | No      | Auto-cleanup on launch                  |
+| One-way blog sync                | —                 | No      | Bidirectional                           |
+| Orphaned remote files on rename  | Yes               | No      | `lastPublishedFilename` tracking        |
+| Hot pink accent                  | Yes               | No      | Replaced with Tova purple               |
+| Separate docs panel/icon         | Yes               | No      | Lives in Settings Docs tab              |
 
 ---
 
@@ -675,37 +696,40 @@ Settings opens in main content area. Sidebar stays visible. Tabs at top. Back ar
 tova/
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
-├── electron-builder.yml
-├── .eslintrc.json
+├── vite.renderer.config.ts
+├── eslint.config.mjs
 ├── .prettierrc
+├── src-tauri/                 ← the Rust backend
+│   ├── Cargo.toml
+│   ├── tauri.conf.json
+│   ├── bridge.js              ← builds window.tova out of the commands
+│   ├── capabilities/          ← a command is refused unless named here
+│   └── src/                   ← one module per concern, ~47 of them
 ├── src/
-│   ├── main/
-│   │   ├── index.ts
-│   │   └── ipc/
-│   │       ├── notes.ts
-│   │       ├── backup.ts
-│   │       └── blog.ts
-│   ├── preload/
-│   │   └── index.ts
-│   └── renderer/
-│       ├── index.html
-│       ├── main.tsx
-│       ├── App.tsx
-│       ├── components/
-│       │   ├── Sidebar/
-│       │   ├── Editor/
-│       │   ├── Popup/        ← one shared component, reused everywhere
-│       │   ├── Settings/
-│       │   └── Docs/
-│       ├── stores/           ← Zustand
-│       ├── styles/
-│       └── utils/
-├── assets/
-│   ├── bg-dark.jpg
-│   └── bg-light.jpg
-└── TUTORIAL.md
+│   ├── renderer/
+│   │   ├── index.html
+│   │   ├── main.tsx
+│   │   ├── App.tsx
+│   │   ├── tova.d.ts          ← what the renderer knows of the backend
+│   │   ├── components/
+│   │   │   ├── Sidebar/
+│   │   │   ├── Editor/
+│   │   │   ├── Index/
+│   │   │   ├── Home/
+│   │   │   ├── Popup/         ← one shared component, reused everywhere
+│   │   │   └── Settings/
+│   │   ├── stores/            ← Zustand
+│   │   └── styles/
+│   └── shared/                ← parsing and rules, used by both sides
+├── conformance/               ← fixtures holding Rust and TypeScript to one answer
+├── docs/
+└── scripts/
 ```
+
+There is no `src/main/` or `src/preload/`. Electron's main process became
+`src-tauri/src/`, and the preload became `src-tauri/bridge.js` — the one place
+`window.tova` is assembled. Filesystem access stays in Rust and never reaches
+the renderer.
 
 ---
 

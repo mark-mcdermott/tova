@@ -11,16 +11,6 @@ priority; the sections themselves are not ranked against each other.
 
 ## Next
 
-### Tip jar
-
-The stated next feature. The app-side work is small — a link, a place to put it,
-and some restraint about how loudly it asks. The real decision is in-app versus
-site-only: outside the App Store a link to an existing account is all it takes;
-inside it, the same thing becomes an in-app purchase with Apple's cut and a
-review process attached.
-
-Account setup is not a code task and is blocked on that being dug out.
-
 ### Live markdown: tables are the one still missing
 
 The audit is done. Checkboxes were the reported gap and now render as boxes you
@@ -52,10 +42,6 @@ than discovering halfway in.
 
 Small, known, and each one found in passing rather than reported.
 
-- **Two literal `✕` characters** remain, in the note search and the publish
-  toast. Same class as the trash-row bug that was fixed: they only ever rendered
-  because `✕` happens to be in the font, unlike the `⤺` that was not.
-
 - **A Dependabot alert on `glib` that cannot be closed from here, and does not
   reach the product.** Alert 36, moderate: unsoundness in the `Iterator` and
   `DoubleEndedIterator` impls for `glib::VariantStrIter`, wanting `glib >= 0.20`
@@ -70,10 +56,12 @@ Small, known, and each one found in passing rather than reported.
   because `gtk 0.18.2` requires `glib ^0.18` and `tauri 2.12.1` pins that gtk.
   It closes when Tauri moves to gtk 0.19 or later, and not before.
 
-  Worth a look again if Linux ever becomes a target Tova ships. Until then the
-  decision to make is whether to dismiss the alert as not-affected or leave it
-  standing as a reminder — the one thing not worth doing is treating it as
-  actionable work.
+  Dismissed as "not used" on 2026-10-01, which silences this advisory and no
+  other — a different one against `glib` would still open an alert. The fix
+  arrives on its own either way: Dependabot's version updates are a separate
+  system from its alerts, so the weekly cargo group PR carries the new `glib`
+  whenever Tauri moves. Worth a look again if Linux ever becomes a target Tova
+  ships; until then it is not work.
 
 - **Eighteen react-hooks warnings are parked, not resolved.** ESLint runs now,
   and the first thing it had to say was about the editor. react-hooks v7 is the
@@ -95,9 +83,6 @@ Small, known, and each one found in passing rather than reported.
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
   and the expected size and hash are already pinned in `grammar.rs`.
-
-- **`SPEC.md` still says Electron.** It describes the stack Tova was specified
-  against, not the one it runs on.
 
 ---
 

@@ -295,6 +295,26 @@ export function GeneralTab() {
           >
             Report a problem
           </button>
+
+          {/*
+            A link, because Tova ships outside the App Store — inside it the
+            same thing becomes an in-app purchase with Apple's cut and a review
+            attached.
+
+            Here and nowhere else. Nothing on the way to writing a note passes
+            it, there is no banner and no first-run question, and it is worded
+            as plainly as the button beside it. A writing tool that asks is the
+            noisy productivity UX this app is a reaction to.
+          */}
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() =>
+              void window.tova.app.openExternal("https://ko-fi.com/markmcdermott/donate")
+            }
+          >
+            Tip jar
+          </button>
         </div>
       </section>
 

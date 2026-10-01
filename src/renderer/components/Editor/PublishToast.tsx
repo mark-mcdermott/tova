@@ -2,6 +2,7 @@ import { useEffect, useReducer } from "react"
 import { createPortal } from "react-dom"
 import { PublishUpdate } from "../../../shared/types"
 import { usePublishStore } from "../../stores/publishStore"
+import { Icon } from "../Sidebar/icons"
 
 const TITLES: Record<PublishUpdate["phase"], string> = {
   preparing: "Publishing…",
@@ -34,7 +35,7 @@ function Toast({ update, startedAt }: { update: PublishUpdate; startedAt: number
           aria-label="Dismiss"
           onClick={() => dismiss(update.id)}
         >
-          ✕
+          <Icon name="close" className="publish-toast-close-icon" />
         </button>
       </div>
 
