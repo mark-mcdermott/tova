@@ -45,14 +45,30 @@ title looks like a book cover. Wrapping and shrinking are two answers to the
 same problem and only one of them can be built; wrapping also means the title
 stops being an `<input>`, which is a larger change than a font size that steps.
 
-### Live markdown, everywhere it should be
+### Live markdown: tables are the one still missing
 
-Markup renders when the cursor is elsewhere and returns to raw text when the
-cursor is on it. That holds for bullets, headings, bold, italic, strikethrough
-and code — and not for checkboxes, which stay as `- [ ]` wherever the cursor is.
+The audit is done. Checkboxes were the reported gap and now render as boxes you
+can click; thematic breaks were already handled. **Tables are parsed and never
+decorated**, so they sit in the editor as raw pipes while everything around them
+renders.
 
-Audit the rest against the same rule. Tables and thematic breaks are the two
-most likely to have been missed.
+The tree is all there — `Table`, `TableHeader`, `TableRow`, `TableCell`,
+`TableDelimiter` — because the editor parses with `base: markdownLanguage`
+rather than the CommonMark default. Nothing in `markdownDecorations.ts` looks at
+any of it.
+
+It is also the hardest of the constructs, and worth saying why before anyone
+picks it up expecting an afternoon. Every other decoration here changes how a
+run of text is painted. A table wants a grid: cells aligned into columns whose
+widths depend on the longest cell in each, across lines that CodeMirror draws
+independently of one another. Decorations cannot restructure lines into a grid,
+so the real choices are a widget that replaces the whole block — which takes the
+text out from under the cursor and ends live editing inside it — or padding the
+cells so the pipes line up as a monospace grid, which keeps editing intact and
+looks much plainer.
+
+The second is the one that fits this editor. Worth settling deliberately rather
+than discovering halfway in.
 
 ---
 
