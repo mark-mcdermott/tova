@@ -64,19 +64,24 @@ Small, known, and each one found in passing rather than reported.
   toast. Same class as the trash-row bug that was fixed: they only ever rendered
   because `✕` happens to be in the font, unlike the `⤺` that was not.
 
-- **Nothing checks Prettier in CI.** `cargo fmt` is checked; its TypeScript
-  counterpart is not. Twelve files on `main` are already unformatted, so the
-  step goes red on its first run and the formatting commit has to come with it.
+- **A Dependabot alert on `glib` that cannot be closed from here, and does not
+  reach the product.** Alert 36, moderate: unsoundness in the `Iterator` and
+  `DoubleEndedIterator` impls for `glib::VariantStrIter`, wanting `glib >= 0.20`
+  against the 0.18.5 in `Cargo.lock`.
 
-  Half of those are seed fixtures under `scripts/seed/vault/`, and they must be
-  left alone — `kitchen-sink.md`, `setext-trap.md` and
-  `things-that-are-not-tags.md` are deliberately awkward markdown that exists to
-  be parsed wrongly. Formatting them would quietly rewrite what they test.
+  It arrives through `atk` → `gtk` → `muda`/`tao` → `tauri`, which is the Linux
+  windowing stack. `cargo tree -i glib` finds no dependents at all on macOS and
+  only finds that chain under `--target all`, so the shipped app — Cocoa, not
+  GTK — never contains the crate. CI compiles it, because CI is the Linux job.
 
-  `.prettierignore` already makes exactly this argument about `conformance/`:
-  "Letting a formatter reshape one of these would be a fixture changing to meet
-  a tool." The seed vault wants the same entry, for the same reason, before the
-  step is added.
+  It is also not movable: `cargo update -p glib --precise 0.20.0` is refused
+  because `gtk 0.18.2` requires `glib ^0.18` and `tauri 2.12.1` pins that gtk.
+  It closes when Tauri moves to gtk 0.19 or later, and not before.
+
+  Worth a look again if Linux ever becomes a target Tova ships. Until then the
+  decision to make is whether to dismiss the alert as not-affected or leave it
+  standing as a reminder — the one thing not worth doing is treating it as
+  actionable work.
 
 - **Eighteen react-hooks warnings are parked, not resolved.** ESLint runs now,
   and the first thing it had to say was about the editor. react-hooks v7 is the
