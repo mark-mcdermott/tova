@@ -220,10 +220,11 @@ deliberately dropped and why. Consult it before re-adding anything.
 
 After each meaningful change:
 
+- `pnpm run lint` — ESLint clean (warnings are allowed; errors are not)
 - `pnpm run check` — TypeScript strict passes
 - `pnpm run test` — suite green
 - `pnpm run build` — the renderer builds without errors
 - `cargo test --manifest-path src-tauri/Cargo.toml` — the Rust suite is green
 - `pnpm run tauri:dev` — opens, feature works manually
 
-Keep all four green. Update `PROGRESS.md` when a phase completes.
+Keep all five green. Update `PROGRESS.md` when a phase completes.

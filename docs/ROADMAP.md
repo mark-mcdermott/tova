@@ -78,20 +78,22 @@ Small, known, and each one found in passing rather than reported.
   a tool." The seed vault wants the same entry, for the same reason, before the
   step is added.
 
-- **ESLint is configured but never runs.** The repository carries
-  `.eslintrc.json`; ESLint 9 reads flat config only and ignores it, so every
-  invocation exits with "couldn't find an eslint.config.(js|mjs|cjs) file".
-  There is no `lint` script in `package.json` and no lint step in CI, which is
-  why nobody noticed.
+- **Eighteen react-hooks warnings are parked, not resolved.** ESLint runs now,
+  and the first thing it had to say was about the editor. react-hooks v7 is the
+  React Compiler's lint suite, and `recommended` carries fourteen rules beyond
+  the two it used to mean.
 
-  It is the worst of both states — `CLAUDE.md` lists ESLint in the stack, six
-  ESLint packages are installed and kept updated by dependabot, and none of it
-  is load-bearing. The repository looks covered and is not.
+  Fifteen of the eighteen are one pattern, almost all in `useCodeMirror`: the
+  view is built once, so every handler reaches the latest props through a ref
+  that is written during render. The compiler reads that write as impure. It is
+  the documented way to hold a non-React library, and the file says so where it
+  does it — but `useEffectEvent` is the answer React now gives, and it is worth
+  taking deliberately rather than under a linter's deadline. The other three are
+  `set-state-in-effect` twice and one `purity`.
 
-  Two honest ways out: migrate the config to flat, add a `lint` script and put
-  it in the verify loop; or drop ESLint from the stack, the dependencies and
-  `CLAUDE.md`. The first is the better answer for a codebase this size. Either
-  beats the present state.
+  They are set to `warn` in `eslint.config.mjs`, named individually rather than
+  blanket-disabled, so they stay visible and stay off the failing path. Going
+  through them is editor work, not tooling work.
 
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
