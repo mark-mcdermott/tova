@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest"
 import { parseTable, alignTable, isDelimiterRow } from "./tables"
 
 /** A table as lines, written the way someone types it. */
-const RAGGED = ["| Note | Words | Blog |", "| --- | --- | --- |", "| Avalanche season | 1840 | yes |"]
+const RAGGED = [
+  "| Note | Words | Blog |",
+  "| --- | --- | --- |",
+  "| Avalanche season | 1840 | yes |"
+]
 
 describe("reading a table", () => {
   it("takes the header, the alignments and the rows", () => {
@@ -16,7 +20,11 @@ describe("reading a table", () => {
   })
 
   it("reads the three alignment markers", () => {
-    const table = parseTable(["| a | b | c | d |", "| :-- | --: | :-: | --- |", "| 1 | 2 | 3 | 4 |"])
+    const table = parseTable([
+      "| a | b | c | d |",
+      "| :-- | --: | :-: | --- |",
+      "| 1 | 2 | 3 | 4 |"
+    ])
 
     expect(table?.alignments).toEqual(["left", "right", "center", null])
   })
