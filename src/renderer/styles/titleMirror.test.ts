@@ -65,21 +65,64 @@ describe("the title's mirror", () => {
   })
 
   /*
-   * Shorthand, not `padding-left`. The longhand leaves the textarea wearing
-   * the UA's 2px top and bottom and the mirror wearing none, and the title
-   * loses the bottom of its last line once it wraps.
+   * Top and bottom have to be said, not left to the UA. A textarea carries 2px
+   * there and a ::after carries none, so leaving it unsaid sizes the row 4px
+   * short and the title loses the bottom of its last line once it wraps.
    */
-  it("sets padding on all four sides, so both boxes measure the same", () => {
+  it("sets block padding on both boxes, so they measure the same", () => {
     const shared = declarations(sharedBlock())
-    const padding = shared.get("padding")
+    const hasBlock = shared.has("padding-block") || shared.has("padding")
 
-    expect(padding).toBeDefined()
-    expect(padding?.split(/\s+/)).toHaveLength(4)
+    expect(hasBlock).toBe(true)
+  })
+
+  /*
+   * The overhang room sits outside the column: a negative margin of the same
+   * amount as the padding. Without it the title wraps a few pixels before the
+   * prose does, which is the thing the column matching exists to prevent.
+   */
+  it("keeps the overhang room out of the measured column", () => {
+    const shared = declarations(sharedBlock())
+
+    expect(shared.get("padding-inline")).toBe("var(--title-overhang)")
+    expect(shared.get("margin-inline")).toBe("calc(-1 * var(--title-overhang))")
   })
 
   it("gives both boxes the same line box", () => {
     // A number here would cut Vibur's descenders; the font's own metrics do not.
     expect(declarations(sharedBlock()).get("line-height")).toBe("normal")
+  })
+
+  /*
+   * The subtle one, and the reason the title wrapped at roughly 540px against
+   * the body's 700 after it first became a textarea.
+   *
+   * --prose-max is `45ch`, and `ch` is relative to the element's own font. The
+   * box carrying the max-width therefore has to carry the body's font to
+   * resolve it in — not the inherited UI font, and not the title's own 66px
+   * script face. Nothing about a wrongly sized column looks broken, so there
+   * is no second signal that it has drifted.
+   */
+  it("resolves the prose column in the font the prose is set in", () => {
+    const column = declarations(blockFor(".title-grow"))
+
+    expect(column.get("max-width")).toBe("var(--prose-max)")
+    expect(column.get("font-family")).toBe("var(--font-mono)")
+    expect(column.get("font-size")).toBe("var(--editor-font-size, var(--text-base))")
+  })
+
+  /*
+   * On "Full" the prose has no max at all, so the two columns match only if
+   * the title's right margin accounts for the body's pair of insets. Measured
+   * in a harness at 900px: both columns 800px wide on Full, both 405px on
+   * Narrow.
+   */
+  it("matches the prose on Full, where --prose-max does not apply", () => {
+    const column = declarations(blockFor(".title-grow"))
+
+    expect(column.get("margin-right")).toBe(
+      "calc(var(--editor-inset) * 2 + var(--space-1) - var(--title-inset))"
+    )
   })
 
   it("lets the mirror carry the title, and hides it", () => {

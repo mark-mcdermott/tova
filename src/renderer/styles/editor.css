@@ -64,9 +64,37 @@
 .title-grow {
   display: grid;
   margin-top: var(--space-title-above);
-  /* Held to the same measure as the prose; the nav row above is not, so the
-     edited time and its controls can sit against the panel's right edge. */
-  max-width: var(--measure);
+
+  /*
+   * The same column the prose gets, so the title wraps where the body wraps —
+   * including when Appearance narrows the line width, since --prose-max is
+   * what that setting moves.
+   *
+   * The font declarations are load-bearing rather than cosmetic: --prose-max is
+   * `45ch`, and `ch` is relative to the element's own font. Measured against
+   * this box's inherited UI font it came to roughly 540px against the body's
+   * ~700, and against the title's own 66px script face it would be far wider
+   * than the pane. Both of those are wrong in different directions, so the box
+   * that carries the max-width carries the body's font to resolve it in.
+   * .index-body already records this trap one way round.
+   *
+   * The inset is a margin here rather than padding on the text, so the
+   * max-width measures the text column itself and not the column plus its
+   * inset. Where the text starts is unchanged — --title-inset, the same inset
+   * the Settings and index headings use, so a title sits on one line down the
+   * app whichever page you are on.
+   */
+  margin-left: var(--title-inset);
+  /*
+   * On "Full" the prose has no max at all and its width is whatever its two
+   * insets leave, so matching it there is a matter of margins rather than of
+   * --prose-max. This is the body's pair of insets less the title's own, which
+   * leaves both columns the same width from left edges that differ.
+   */
+  margin-right: calc(var(--editor-inset) * 2 + var(--space-1) - var(--title-inset));
+  max-width: var(--prose-max);
+  font-family: var(--font-mono);
+  font-size: var(--editor-font-size, var(--text-base));
 }
 
 .title-grow::after {
@@ -84,22 +112,28 @@
    * capital overhangs its origin — Vibur's A by 3.13px at this size, which is
    * why the corner of an A came off flat.
    *
-   * Padding alone, where an input needed padding pulled back and the text
-   * indented to match. `text-indent` only ever applied to the first line; with
-   * the title wrapping, every line after the first would have started 3px to
-   * the left of the one above it. Overflow clips at the padding box, so the
-   * padding is already room the ink can reach into — on every line.
+   * Padding, where an input needed padding pulled back and the text indented
+   * to match. `text-indent` only ever applied to the first line; with the
+   * title wrapping, every line after the first would have started 3px to the
+   * left of the one above it. Overflow clips at the padding box, so padding is
+   * already room the ink can reach into — on every line.
+   *
+   * And a negative margin of the same amount, so that room sits outside the
+   * column rather than eating into it. Without it the text would wrap a few
+   * pixels before the prose does, which is the whole thing this is matching.
    */
   --title-overhang: 0.08em;
 
   /*
-   * All four sides, not just the two that matter — the mirror only sizes the
-   * row correctly if both boxes measure the same. A textarea carries 2px of
+   * Top and bottom are set as surely as the sides, because the mirror only
+   * sizes the row while both boxes measure the same. A textarea carries 2px of
    * top and bottom padding from the UA sheet that a ::after does not, which
    * sized the row 4px short and clipped the descenders off the last line of
    * any title that wrapped. Vibur's `g` losing its tail, again.
    */
-  padding: 0 var(--title-overhang) 0 var(--title-inset);
+  margin-inline: calc(-1 * var(--title-overhang));
+  padding-block: 0;
+  padding-inline: var(--title-overhang);
   border: none;
   background: transparent;
   color: var(--text-primary);
