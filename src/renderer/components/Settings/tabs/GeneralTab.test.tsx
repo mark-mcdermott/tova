@@ -12,11 +12,12 @@ import { DEFAULT_PREFERENCES } from "../../../../shared/preferences"
 const reset = vi.fn()
 const nuke = vi.fn()
 const nukeTargets = vi.fn()
+const openExternal = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
   nukeTargets.mockResolvedValue(["/Users/someone/Documents/Tova", "/Users/someone/Library/tova"])
-  window.tova = stubBridge({ preferences: { reset, nuke, nukeTargets } })
+  window.tova = stubBridge({ preferences: { reset, nuke, nukeTargets }, app: { openExternal } })
   usePreferencesStore.setState({
     preferences: { ...DEFAULT_PREFERENCES },
     load: vi.fn(async () => undefined)
@@ -206,5 +207,44 @@ describe("About", () => {
       const term = await screen.findByText(label)
       expect(term.nextElementSibling?.textContent, `${label} row`).toBe(value)
     }
+  })
+})
+
+/*
+ * Tova ships outside the App Store, so this is a link to an account rather
+ * than an in-app purchase with a cut and a review attached. That is the whole
+ * of the decision, and it is why the tip jar is five lines of markup.
+ */
+describe("the tip jar", () => {
+  it("opens the Ko-fi page", async () => {
+    render(<GeneralTab />)
+    await userEvent.click(screen.getByRole("button", { name: "Tip jar" }))
+
+    expect(openExternal).toHaveBeenCalledWith("https://ko-fi.com/markmcdermott/donate")
+  })
+
+  /*
+   * It goes out through the bridge, never an anchor. A webview that followed a
+   * link in place would navigate the app away from itself with no way back —
+   * and app_open_external is also where the http/https check lives.
+   */
+  it("hands the link to the system rather than following it", () => {
+    render(<GeneralTab />)
+    const tip = screen.getByRole("button", { name: "Tip jar" })
+
+    expect(tip.tagName).toBe("BUTTON")
+    expect(tip.closest("a")).toBeNull()
+  })
+
+  /*
+   * In About, next to the version and the problem report — the place that is
+   * already about the app rather than about the writing. Nothing on the way to
+   * a note passes it, which is the point: a writing tool should not ask.
+   */
+  it("sits in About, so nothing on the way to a note has to pass it", () => {
+    render(<GeneralTab />)
+    const section = screen.getByRole("button", { name: "Tip jar" }).closest(".settings-section")
+
+    expect(section?.querySelector(".settings-section-title")?.textContent).toBe("About")
   })
 })
