@@ -321,7 +321,7 @@ const ODDITIES = [
 function writeOddities(vault, now) {
   const markdown = join(vault, "notes", "markdown")
   const written = []
-  let made = false
+  let made
 
   const crlf = (
     front("CRLF line endings", "notes", ["edge"]) +

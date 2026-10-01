@@ -51,7 +51,6 @@ export function loadTauriBridge(): TauriStub {
     }
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
   new Function(bridgeSource)()
   return stub
 }

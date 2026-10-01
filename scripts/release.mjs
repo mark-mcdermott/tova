@@ -290,9 +290,6 @@ if (!ok) {
   const manifest = join(tmpdir(), "latest.json")
   writeFileSync(manifest, latestJson(version, tag, tarball))
 
-  const notes = notesFor(version)
-  const notesPath = `${root}docs/releases/${version}.md`
-
   console.log("\nDrafting the release.")
   execFileSync(
     "gh",

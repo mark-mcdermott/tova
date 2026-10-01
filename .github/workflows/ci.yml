@@ -21,6 +21,7 @@ jobs:
     uses: mark-mcdermott/mm-claude-starter/.github/workflows/node-verify.yml@main
     with:
       node-version: "25"
+      lint-script: lint
 
   # The backend being ported into. Its own job: it shares no toolchain with the
   # one above, and a red run should name which side of the port broke.
