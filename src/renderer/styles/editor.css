@@ -297,6 +297,63 @@
   background: var(--text-secondary);
 }
 
+/* A task item, which carries six characters of syntax before its words — the
+   dash, the brackets and two spaces. Same hanging indent as a bullet, measured
+   to where the text actually begins. */
+.cm-line.cm-task-line {
+  padding-left: 6.5ch;
+  text-indent: -6ch;
+}
+
+/* Once there is a box, the dash is syntax. It gives up its ink and keeps its
+   cell, as the bullet's does. */
+.cm-task-dash {
+  color: transparent;
+}
+
+/* The brackets, wearing the box they stand for. Three cells kept, ink given
+   up — so the caret arriving hands back `[ ]` without moving a word. */
+.cm-task-box {
+  position: relative;
+  color: transparent;
+  cursor: pointer;
+}
+
+.cm-task-box::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: 0.82em;
+  height: 0.82em;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 3px;
+}
+
+.cm-task-box.is-done::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* The tick: two borders of a box, rotated. --accent-ink rather than white
+   because the accent is dark in one theme and pale in the other. */
+.cm-task-box.is-done::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: 0.4em;
+  height: 0.22em;
+  border-left: 1.5px solid var(--accent-ink);
+  border-bottom: 1.5px solid var(--accent-ink);
+  /* Lifted a touch above centre: a tick rotated about its own middle sits low
+     in the box, because its ink is all in the lower-left corner. */
+  transform: translate(-50%, -65%) rotate(-45deg);
+}
+
 /* ── Code blocks ──────────────────────────────────────────────────────── */
 
 /* Fence lines collapse entirely once the cursor leaves the block. The doubled

@@ -102,6 +102,22 @@ const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
 const bulletMark = Decoration.mark({ class: "cm-list-bullet" })
 const listLine = Decoration.line({ class: "cm-list-line" })
 
+/*
+ * A task's box, and the dash in front of it.
+ *
+ * Marks for the same reason the bullet is one: `[ ]` keeps its three cells and
+ * gives up only its ink, so bringing the cursor back changes nothing but
+ * colour. A replacing widget would be three cells narrower than the text it
+ * stood for and would reflow the line under the caret as it arrived.
+ *
+ * The dash goes transparent rather than away — once there is a box, the `-` is
+ * syntax, and the box is the marker the line wears.
+ */
+const taskBox = Decoration.mark({ class: "cm-task-box" })
+const taskBoxDone = Decoration.mark({ class: "cm-task-box is-done" })
+const taskDash = Decoration.mark({ class: "cm-task-dash" })
+const taskLine = Decoration.line({ class: "cm-task-line" })
+
 const codeBlockLine = Decoration.line({ class: "cm-code-block" })
 const codeBlockFirstLine = Decoration.line({ class: "cm-code-block-first" })
 const codeBlockLastLine = Decoration.line({ class: "cm-code-block-last" })
@@ -213,6 +229,38 @@ function tagClicks(options: MarkdownDecorationOptions) {
 
       event.preventDefault()
       open(match.tag)
+      return true
+    }
+  })
+}
+
+/**
+ * Ticking a box by clicking it.
+ *
+ * `preventDefault` is the point as much as the edit is: the box is drawn over
+ * text the caret can sit in, and letting the mousedown through would land it
+ * between the brackets it just toggled — handing the raw `[x]` straight back,
+ * so the box vanishes under the pointer that asked for it.
+ */
+function taskClicks() {
+  return EditorView.domEventHandlers({
+    mousedown(event, view) {
+      if (event.button !== 0) return false
+
+      const box = (event.target as HTMLElement | null)?.closest(".cm-task-box")
+      if (box === null || box === undefined) return false
+
+      // The box's own position rather than the pointer's, as the tag handler
+      // does: posAtCoords needs layout, and this way a test and a screen agree.
+      const pos = view.posAtDOM(box)
+      const marker = syntaxTree(view.state).resolveInner(pos, 1)
+      if (marker.name !== "TaskMarker") return false
+
+      const ticked = TICKED.test(view.state.sliceDoc(marker.from, marker.to))
+      event.preventDefault()
+      view.dispatch({
+        changes: { from: marker.from, to: marker.to, insert: ticked ? "[ ]" : "[x]" }
+      })
       return true
     }
   })
@@ -338,6 +386,7 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
         }
 
         if (name === "ListItem") {
+          decorateTask(state, node, decorations, cursorTouches)
           decorateBullet(state, node, decorations, cursorTouches)
           return
         }
@@ -367,6 +416,47 @@ function buildDecorations(view: EditorView, options: MarkdownDecorationOptions):
 
 /** The markers a bullet list may be written with; `1.` is not one of them. */
 const BULLET_MARK = /^[-*+]$/
+
+/** A ticked box, in either of the two spellings GFM allows. */
+const TICKED = /^\[[xX]\]$/
+
+/** The `[ ]` of a task item, or null if this item is not one. */
+function taskMarker(item: SyntaxNode): SyntaxNode | null {
+  return item.getChild("Task")?.getChild("TaskMarker") ?? null
+}
+
+/**
+ * Draws a task's `[ ]` as the box it stands for.
+ *
+ * Only reachable at all because the editor parses with `base: markdownLanguage`
+ * rather than the CommonMark default — without GFM there is no `Task` node and
+ * `[x]` parses as a link, which is what `taskBoxes.test.ts` pins.
+ */
+function decorateTask(
+  state: EditorState,
+  item: SyntaxNode,
+  decorations: Range<Decoration>[],
+  cursorTouches: (from: number, to: number) => boolean
+): void {
+  const marker = taskMarker(item)
+  if (marker === null) return
+
+  const dash = item.getChild("ListMark")
+  const line = state.doc.lineAt(marker.from)
+  decorations.push(taskLine.range(line.from))
+
+  // The whole line, not the marker alone: a box that reappeared only once the
+  // caret left the three bracket cells would flicker while writing the item.
+  if (cursorTouches(line.from, line.to)) {
+    if (dash !== null) decorations.push(syntaxMarker.range(dash.from, dash.to))
+    decorations.push(syntaxMarker.range(marker.from, marker.to))
+    return
+  }
+
+  if (dash !== null) decorations.push(taskDash.range(dash.from, dash.to))
+  const ticked = TICKED.test(state.sliceDoc(marker.from, marker.to))
+  decorations.push((ticked ? taskBoxDone : taskBox).range(marker.from, marker.to))
+}
 
 /**
  * Draws a list item's dash as the filled circle it stands for.
@@ -495,7 +585,7 @@ function collectTagDecorations(
 }
 
 export function markdownDecorations(options: MarkdownDecorationOptions = {}) {
-  return [decorationPlugin(options), tagClicks(options)]
+  return [decorationPlugin(options), tagClicks(options), taskClicks()]
 }
 
 function decorationPlugin(options: MarkdownDecorationOptions) {
