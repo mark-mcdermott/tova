@@ -50,6 +50,11 @@
   --accent: #5646c9;
   --accent-bright: #4436a8;
   --accent-tint: color-mix(in oklab, var(--accent) 22%, transparent);
+  /* What reads on top of a filled --accent. It has to flip with the theme: the
+     accent is dark here and light there, so one colour cannot serve both. White
+     on this accent measures 6.74:1; the dark ink the other theme uses would be
+     2.16:1, under the 3:1 a drawn mark needs. */
+  --accent-ink: #ffffff;
   /* The caret and a note's own tags. --accent-bright is darker than either
      wants — at two pixels wide it reads as black rather than as purple. */
   --caret: #5359c7;
@@ -307,6 +312,8 @@
   --accent: #a396ee;
   --accent-bright: #c3b8ff;
   --accent-tint: color-mix(in oklab, var(--accent) 26%, transparent);
+  /* 5.66:1 on this accent, where white would be 2.58:1. */
+  --accent-ink: #2b2733;
   --accent-tint-strong: color-mix(in oklab, var(--accent) 72%, transparent);
   --caret: #b4a9ff;
   --tag-ink: #bcb2ff;
