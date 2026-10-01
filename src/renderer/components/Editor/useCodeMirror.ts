@@ -12,6 +12,7 @@ import {
 import { languages } from "@codemirror/language-data"
 import { indentUnit } from "@codemirror/language"
 import { markdownDecorations } from "./markdownDecorations"
+import { tableSupport } from "./tables"
 import { codeHighlight } from "./codeHighlight"
 import { searchHighlighting } from "./searchHighlight"
 import { grammarChecking } from "./grammar"
@@ -139,6 +140,10 @@ export function useCodeMirror({
             resolveImage: (url) => resolveImageRef.current?.(url) ?? null,
             onOpenTag: (tag) => onOpenTagRef.current?.(tag)
           }),
+          // Its own extension rather than another branch in markdownDecorations:
+          // a table is the one construct that lays its own text out, so it
+          // carries an edit as well as a set of decorations.
+          tableSupport(),
           blogDecorations((blog, headerLine) => onPublishRef.current?.(blog, headerLine)),
           blogSelector((anchor) => onSelectBlogRef.current?.(anchor)),
           imageDrop(
