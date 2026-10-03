@@ -171,6 +171,18 @@ problem one person with two devices mostly does not have. So:
 4. If the merge genuinely conflicts, both survive — one as a copy — and the
    reader is told.
 
+`src/shared/merge.ts` is step 3, and it answers in two ways rather than three:
+the merged text, or nothing. **No conflict markers.** Step 4 is what a real
+disagreement gets, and a marker left in a file would be a note that silently
+stopped being prose — in an editor that renders markdown live, it would not even
+look like a warning.
+
+Each side's changes are worked out as stretches of the base they replaced, and
+stretches that do not touch are both applied. Two insertions at the same point
+do conflict, since neither covers a line and nothing says which goes first; an
+insertion at the _edge_ of somebody else's replacement does not, because it sits
+beside the change rather than inside it.
+
 `src/shared/lineDiff.ts` already exists and is the companion to a line merge.
 Version history is the floor underneath all of it: a bad merge is recoverable
 because every version is kept.
