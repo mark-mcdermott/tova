@@ -239,10 +239,16 @@ edits and pushes them when it can.
 
 ## Where the code goes
 
-The renderer talks to exactly one interface — `window.tova`, 79 methods, with
-no Tauri import anywhere in `src/renderer`. **That seam is what makes a web
-client cheap**: implement those methods over HTTP instead of over Tauri's
-`invoke`, and the entire UI comes along unchanged.
+The renderer talks to exactly one interface — `window.tova`, with no Tauri
+import anywhere in `src/renderer`. **That seam is what makes a web client
+cheap**: implement those methods over HTTP instead of over Tauri's `invoke`,
+and the entire UI comes along unchanged.
+
+That was an argument until it was tried. Served by plain Vite, opened in an
+ordinary browser with no Tauri, and handed a `window.tova` of stubs, the
+renderer compiles, mounts and renders its first-run screen. It calls **74**
+distinct methods anywhere in the app and **13** to boot. `docs/ROADMAP.md` has
+the breakdown.
 
 The Rust stays desktop-side, where the filesystem and the keychain are. The
 server is TypeScript — Neon, Drizzle, Zod, Better Auth — because what it does
