@@ -55,6 +55,37 @@ export function looksEncrypted(text: string): boolean {
   return text.startsWith(MAGIC)
 }
 
+/*
+ * The alphabet a recovery key is written in, and its shape.
+ *
+ * Matches `crypto.rs` exactly, because a key generated here has to be one the
+ * Mac accepts and vice versa. I, O, 0 and 1 are absent: a key gets copied onto
+ * paper and read back, and those four are the pairs that get misread.
+ *
+ * 256 divides evenly by 32, so folding a random byte into the alphabet is
+ * unbiased. It would not be for an alphabet of any other size, and the bias
+ * would be silent.
+ */
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+const GROUPS = 6
+const GROUP_SIZE = 4
+
+/**
+ * A new recovery key: six groups of four, dash separated.
+ *
+ * 24 characters of key out of a 32-letter alphabet is 120 bits, which is not a
+ * thing anybody guesses. The dashes are for reading it back off paper and are
+ * stripped before use, so it can be typed however it looks.
+ */
+export function newRecoveryKey(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(GROUPS * GROUP_SIZE))
+  const letters = [...bytes].map((byte) => ALPHABET[byte % ALPHABET.length])
+
+  return Array.from({ length: GROUPS }, (_, group) =>
+    letters.slice(group * GROUP_SIZE, (group + 1) * GROUP_SIZE).join("")
+  ).join("-")
+}
+
 /**
  * What was written down, as the bytes it stands for.
  *

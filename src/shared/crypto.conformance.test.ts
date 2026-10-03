@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs"
 import {
   MAGIC,
   looksEncrypted,
+  newRecoveryKey,
   normalizeRecoveryKey,
   recoveryKeyToCipherKey,
   seal,
@@ -134,5 +135,42 @@ describe("reading a recovery key as it was written", () => {
 describe("recognising one of our files", () => {
   it.each(fixture.looksEncrypted)("says $is for $text", (row) => {
     expect(looksEncrypted(row.text)).toBe(row.is)
+  })
+})
+
+describe("minting a recovery key", () => {
+  /*
+   * The format is a contract with the Rust, not a presentation choice: a key
+   * made here has to be one a Mac accepts, and vice versa. `crypto.rs` is the
+   * other half.
+   */
+  it("is six groups of four, dash separated", () => {
+    expect(newRecoveryKey()).toMatch(/^[A-Z2-9]{4}(-[A-Z2-9]{4}){5}$/)
+    expect(newRecoveryKey()).toHaveLength(29)
+  })
+
+  /*
+   * I, O, 0 and 1 are absent because a key gets written on paper and read back,
+   * and those four are the pairs that get misread.
+   */
+  it("uses no letter that could be mistaken for another", () => {
+    const made = Array.from({ length: 200 }, newRecoveryKey).join("").replace(/-/g, "")
+
+    expect(made).not.toMatch(/[IO01]/)
+    expect(new Set(made).size).toBe(32)
+  })
+
+  it("is a different key every time", () => {
+    const many = new Set(Array.from({ length: 50 }, newRecoveryKey))
+
+    expect(many.size).toBe(50)
+  })
+
+  it("survives being read back in any shape", () => {
+    const key = newRecoveryKey()
+
+    expect(normalizeRecoveryKey(key.toLowerCase().replace(/-/g, " "))).toBe(
+      normalizeRecoveryKey(key)
+    )
   })
 })
