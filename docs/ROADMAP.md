@@ -92,35 +92,24 @@ is not an option.
 
 ### Multi-platform, with sync
 
-The large one. Desktop, web and mobile, sharing notes. Three platforms without
-sync is three places the notes are not.
+Decided: desktop, web and mobile, with sync, accounts, and notes the server
+cannot read. `docs/SYNC.md` is the model — what the server stores, what that
+costs, and the decisions still open.
 
-The local-only constraint is lifted: plain markdown files in a folder stay a
-reader's _option_ rather than the foundation, which means the canonical store
-can be a database and sync no longer has to reconcile a server against files
-being edited underneath it.
+The stack is the one every other project here uses: Neon, Drizzle, Zod, Better
+Auth, Astro on Vercel, Tailwind. The Rust stays desktop-side, where the
+filesystem and the keychain are.
 
-Keep React, CodeMirror and the hand-written CSS. `src/shared/` already holds the
-logic that matters, so another client needs a storage layer and OS integration
-rather than a rewrite. Capacitor is the likely answer for iOS and Android.
+**Done:** every note now carries a `uid` that survives a rename and a move.
 
-**The first piece, and it can ship before any of the rest exists: a note needs
-an id that does not change.** Identity today is the vault-relative path, which
-moves when a note is renamed — `notes.rs` says so in a comment. That is fine on
-one machine and fatal across two, because a rename becomes a delete and a create
-and no client can tell which note is which. A ULID assigned at creation and
-written into front matter leaves every file exactly where it is and makes the
-path cosmetic.
+**Next, in order:** all notes get one, at first sync rather than in a sweep; the
+schema and the two protocol calls against the desktop client alone; the web
+client, which is `window.tova`'s 79 methods over HTTP and no UI work at all;
+then mobile, which is the web client as a PWA.
 
-The rest of the model, in short: the body stays one markdown string rather than
-being decomposed into blocks, because blocks would break the editor, the parsing
-in `src/shared/` and the blog publishing while making conflicts harder to
-resolve, not easier; `createdAt` and `updatedAt` become fields rather than
-filesystem metadata, which does not survive sync; and conflicts are last-write-
-wins on metadata with a three-way line merge on the body, falling back to
-keeping both copies. Not a CRDT — the real concurrency is one person on two
-devices, rarely at once, and version history is already the floor beneath a bad
-merge.
+Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
+would have been the answer if web were not happening — but once a web client
+exists, mobile rides on it for nearly nothing.
 
 ---
 
