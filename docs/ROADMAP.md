@@ -125,8 +125,10 @@ server-side so somebody not signed in never receives the page.
 **Done since:** `notePlan.ts`, which decides what a sync does with each note
 — the step before the merge, and pure enough to test without a key.
 
-**Next, in order:** the three-way merge a conflict needs, over `lineDiff.ts`;
-the store the plan runs against, which is files on the desktop and IndexedDB on
+**Done since:** `merge.ts`, the three-way merge a conflict needs — merged text
+or nothing, never a marker.
+
+**Next, in order:** the store the plan runs against, which is files on the desktop and IndexedDB on
 the web; deleting an account, which is the one screen in this set
 that is not built and the one that needs the most care. With end-to-end
 encryption, removing the envelopes removes every way of reading the notes — by
