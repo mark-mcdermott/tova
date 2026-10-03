@@ -47,16 +47,23 @@ export interface DesktopSync {
 }
 
 /**
- * Starts one, or does not.
+ * Starts one, or does not. Never throws.
  *
- * Both of its conditions are ordinary states rather than failures: no account,
- * and no key on this device. Either way Tova is what it has always been — a
- * folder of markdown on one Mac — and that is what it stays until somebody
- * signs in. Nothing is reported, because there is nothing wrong.
+ * The key is asked for first, and it is the only question asked before a
+ * decision: it is answered from this Mac's keychain, with no connection
+ * opened. A Mac nobody has signed in on reaches the network **not once** at
+ * launch, which is what "Tova opens no connection at all" has to mean to stay
+ * true.
+ *
+ * Having a key is enough to start. Whether the server is reachable is not
+ * worth asking — the runner finds out, backs off, and tries again, which is
+ * what being on a train is. Asking first would turn a laptop opened offline
+ * into an error at launch, and an unhandled one: this is called without being
+ * awaited, because a vault opens at the speed of a folder.
  */
 export async function startDesktopSync(): Promise<DesktopSync | null> {
-  const [account, key] = await Promise.all([window.tova.sync.account(), window.tova.sync.key()])
-  if (account === null || key === null) return null
+  const key = await window.tova.sync.key().catch(() => null)
+  if (key === null) return null
 
   const store = bridgeNoteStore(window.tova)
   const transport = bridgeTransport()

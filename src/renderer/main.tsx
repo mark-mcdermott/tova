@@ -23,4 +23,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
  * opens at the speed of a folder, and a network call is not something to hold
  * it up for.
  */
-void startDesktopSync()
+void startDesktopSync().catch(() => {
+  // It does not throw, and an unhandled rejection at launch would be a
+  // console full of red over a feature nobody has turned on. Belt and braces.
+})
