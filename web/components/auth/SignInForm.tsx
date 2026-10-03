@@ -2,9 +2,11 @@ import { useState } from "react"
 import {
   makeVaultClient,
   type NewVaultResult,
+  type OpenVault,
   type VaultClient
 } from "../../../src/shared/vaultClient"
 import { credentials } from "../../lib/credentials"
+import { forget, keepIfPossible } from "../../lib/keyStore"
 import { Field } from "./Field"
 import { Problem } from "./Problem"
 import { Ready } from "./Ready"
@@ -31,7 +33,14 @@ const live = makeVaultClient(credentials, globalThis.fetch.bind(globalThis))
  */
 type Asking = "credentials" | "locked" | "no vault"
 
-export function SignInForm({ client = live }: { client?: VaultClient } = {}) {
+type Props = {
+  client?: VaultClient
+  /** Injected for the same reason the client is: this one touches IndexedDB. */
+  keep?: (vault: OpenVault) => Promise<boolean>
+  drop?: () => Promise<void>
+}
+
+export function SignInForm({ client = live, keep = keepIfPossible, drop = forget }: Props = {}) {
   const [asking, setAsking] = useState<Asking>("credentials")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -40,6 +49,8 @@ export function SignInForm({ client = live }: { client?: VaultClient } = {}) {
   const [working, setWorking] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const [keeping, setKeeping] = useState(false)
+  const [remembered, setRemembered] = useState(false)
   const [minted, setMinted] = useState<NewVaultResult | null>(null)
 
   /** Runs one step, and puts whatever it throws where the reader is looking. */
@@ -55,20 +66,28 @@ export function SignInForm({ client = live }: { client?: VaultClient } = {}) {
     }
   }
 
+  /** Every path that ends with an open vault ends here. */
+  async function opened(vault: OpenVault): Promise<void> {
+    if (keeping) setRemembered(await keep(vault))
+    setOpen(true)
+  }
+
   const signIn = (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
     return attempt(async () => {
       const result = await client.signIn(email, password)
-      if (result.state === "unlocked") setOpen(true)
-      else setAsking(result.state)
+      // The vault out of the result, not the result: `state` is how this file
+      // decided what to do and has no business travelling any further.
+      if (result.state === "unlocked") {
+        await opened({ contentKey: result.contentKey, epoch: result.epoch })
+      } else setAsking(result.state)
     })
   }
 
   const recover = (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
     return attempt(async () => {
-      await client.recoverAfterReset(email, password, recoveryKey)
-      setOpen(true)
+      await opened(await client.recoverAfterReset(email, password, recoveryKey))
     })
   }
 
@@ -79,14 +98,25 @@ export function SignInForm({ client = live }: { client?: VaultClient } = {}) {
       // The change that stopped halfway, finished. Only the envelope moves:
       // the credential is already the password that just signed in.
       await client.reWrapPassword(email, password, vault)
-      setOpen(true)
+      await opened(vault)
     })
   }
 
   const mint = (): Promise<void> =>
     attempt(async () => setMinted(await client.mintVault(email, password)))
 
-  if (open) return <Ready heading="You are in" />
+  if (open) {
+    return (
+      <Ready
+        heading="You are in"
+        remembered={remembered}
+        onForget={() => {
+          setRemembered(false)
+          void drop()
+        }}
+      />
+    )
+  }
   if (minted !== null) {
     return (
       <RecoveryKey recoveryKey={minted.recoveryKey} done="Finish" onDone={() => setOpen(true)} />
@@ -197,6 +227,26 @@ export function SignInForm({ client = live }: { client?: VaultClient } = {}) {
         onChange={setPassword}
         autoComplete="current-password"
       />
+
+      {/*
+        Unticked, and it stays that way unless somebody says otherwise. The key
+        this keeps is what decrypts every note, so putting it on disk is a cost
+        to consent to rather than a convenience to assume.
+      */}
+      <label className="flex cursor-pointer items-start gap-2.5 text-[15px]">
+        <input
+          type="checkbox"
+          checked={keeping}
+          onChange={(event) => setKeeping(event.target.checked)}
+          className="accent-accent mt-0.5 size-4"
+        />
+        <span>
+          Keep this device unlocked
+          <span className="text-ink-faint block text-sm">
+            Stores your key in this browser so it does not ask again. Only on a device you trust.
+          </span>
+        </span>
+      </label>
 
       <Submit working={working} busy="Unlocking…">
         Sign in
