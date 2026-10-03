@@ -1,4 +1,33 @@
 import { describe, it, expect } from "vitest"
+import { seal } from "./crypto"
+
+/*
+ * The schema measured against the cipher rather than against a description of
+ * it. The nonce rule said `{15}=`, which is an eleven-byte nonce; `seal` has
+ * only ever made twelve-byte ones, so the endpoint would have refused every
+ * real push. A hand-written nonce passed the old rule and a sealed one did not.
+ */
+describe("the shapes, against what the cipher actually produces", () => {
+  it("accepts a nonce and a ciphertext that came out of seal", async () => {
+    const key = crypto.getRandomValues(new Uint8Array(32)) as Uint8Array<ArrayBuffer>
+    const body = new TextEncoder().encode("a note") as Uint8Array<ArrayBuffer>
+    const [, nonce, ciphertext] = (await seal(body, key)).split("\n")
+
+    expect(
+      pushRequest.safeParse({
+        notes: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            ciphertext,
+            nonce,
+            deletedAt: null,
+            baseVersion: null
+          }
+        ]
+      }).success
+    ).toBe(true)
+  })
+})
 import {
   pullRequest,
   pullResponse,
@@ -13,8 +42,15 @@ import {
 } from "./sync"
 
 const ID = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
-/** Base64 of twelve bytes, which is what a GCM nonce is. */
-const NONCE = "AAAAAAAAAAAAAAA="
+/**
+ * Base64 of twelve bytes, which is what a GCM nonce is: sixteen characters and
+ * no padding, because twelve divides into four groups of three exactly.
+ *
+ * This was `AAAAAAAAAAAAAAA=` — fifteen characters and a pad, which is eleven
+ * bytes. It agreed with a rule that was wrong in the same direction, so the two
+ * confirmed each other and neither had ever met the cipher.
+ */
+const NONCE = "AAAAAAAAAAAAAAAA"
 const BLOB = "Zm9vYmFy"
 
 function note(over: Record<string, unknown> = {}) {
@@ -48,6 +84,8 @@ describe("a note on the wire", () => {
    */
   it("refuses a nonce that is not twelve bytes", () => {
     expect(syncedNote.safeParse(note({ nonce: "AAAA" })).success).toBe(false)
+    // Eleven bytes, which is what the rule used to describe and accept.
+    expect(syncedNote.safeParse(note({ nonce: "AAAAAAAAAAAAAAA=" })).success).toBe(false)
     expect(syncedNote.safeParse(note({ nonce: NONCE })).success).toBe(true)
   })
 

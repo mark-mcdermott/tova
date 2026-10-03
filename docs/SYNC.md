@@ -184,8 +184,21 @@ insertion at the _edge_ of somebody else's replacement does not, because it sits
 beside the change rather than inside it.
 
 `src/shared/lineDiff.ts` already exists and is the companion to a line merge.
-Version history is the floor underneath all of it: a bad merge is recoverable
-because every version is kept.
+
+**Version history is the floor underneath all of it — on the desktop.** A bad
+merge is recoverable there because `backup.rs` and `src/shared/backup.ts` keep
+the last ten versions of every note in `.versions`, beside the vault.
+
+The server keeps none. `notes` holds one row per note and updates it in place,
+so a version that is overwritten is gone. The web client has no `.versions`
+either. So the sentence that used to sit here — that every version is kept —
+was true of one backend and not of the other two, and a conflict strategy that
+leans on recoverability should say which.
+
+Two ways to close it, and neither is done: the web store keeps its own
+versions, the way the desktop does; or the server grows a history table and
+version history becomes a product feature rather than a local safety net. The
+second is the one a reader would notice, and it is the larger of the two.
 
 `src/shared/notePlan.ts` is the step before any of that: given what the server
 sent, what is on disk, and what was last agreed, it says what to do about each
