@@ -1,0 +1,8 @@
+---
+import Auth from "../layouts/Auth.astro"
+import { SignUpForm } from "../components/auth/SignUpForm"
+---
+
+<Auth title="Make an account — Tova" description="Create a Tova account. Your notes are encrypted on your device before they are stored.">
+  <SignUpForm client:load />
+</Auth>

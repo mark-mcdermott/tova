@@ -107,10 +107,18 @@ filesystem and the keychain are.
 
 **Done:** every note now carries a `uid` that survives a rename and a move.
 
-**Next, in order:** all notes get one, at first sync rather than in a sweep; the
-schema and the two protocol calls against the desktop client alone; the web
-client, which is `window.tova`'s 79 methods over HTTP and no UI work at all;
-then mobile, which is the web client as a PWA.
+**Done since:** the schema in Neon, Better Auth over it, the envelope
+endpoints, the two sync calls, the browser-side flows, and the screens they
+drive — sign up, sign in, recover after a reset, finish an interrupted password
+change, and the honest dead end when a recovery key is gone.
+
+**Next, in order:** somewhere for the content key to live between page loads —
+a non-extractable `CryptoKey` in IndexedDB, per `SYNC.md`, since every flow
+currently ends holding it in memory and nothing persists it; the account screen,
+which is a password change and a new recovery key over flows that already exist;
+all notes getting a `uid` at first sync rather than in a sweep; the web client,
+which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
+which is the web client as a PWA.
 
 Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
 would have been the answer if web were not happening — but once a web client

@@ -1,0 +1,8 @@
+---
+import Auth from "../layouts/Auth.astro"
+import { StartFreshForm } from "../components/auth/StartFreshForm"
+---
+
+<Auth title="No recovery key — Tova" description="What can and cannot be done when a recovery key is gone.">
+  <StartFreshForm client:load />
+</Auth>
