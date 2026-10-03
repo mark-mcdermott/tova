@@ -1,0 +1,23 @@
+---
+import Auth from "../layouts/Auth.astro"
+import { AccountForm } from "../components/auth/AccountForm"
+import { callerOf } from "../../src/server/session"
+
+export const prerender = false
+
+/*
+ * The session is checked here rather than in the island.
+ *
+ * Server-side, so somebody who is not signed in never receives the page at all
+ * — no flash of a form they cannot use, and no moment where the browser holds
+ * markup for an account screen it has no right to. The email comes from the
+ * verified session for the same reason, and is the one thing the island is
+ * trusted with.
+ */
+const caller = await callerOf(Astro.request)
+if (caller === null) return Astro.redirect("/signin")
+---
+
+<Auth title="Encryption and recovery — Tova" description="Manage your Tova keys.">
+  <AccountForm email={caller.email} client:load />
+</Auth>

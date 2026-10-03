@@ -116,7 +116,15 @@ change, and the honest dead end when a recovery key is gone.
 non-extractable `CryptoKey` in IndexedDB, behind an unticked box, with "forget
 this device" to end it.
 
-**Next, in order:** the account screen,
+**Done since:** the account screen — change a password, replace a recovery key,
+forget this device, sign out — behind a password, with the session checked
+server-side so somebody not signed in never receives the page.
+
+**Next, in order:** deleting an account, which is the one screen in this set
+that is not built and the one that needs the most care. With end-to-end
+encryption, removing the envelopes removes every way of reading the notes — by
+the reader and by Tova, permanently — so export has to come first and there is
+no export on the web yet. That ordering is the work, not the delete button;
 which is a password change and a new recovery key over flows that already exist;
 all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
