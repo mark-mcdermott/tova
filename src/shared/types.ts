@@ -92,6 +92,29 @@ export interface AppInfo {
 }
 
 /**
+ * An account on Tova's own server, and the two calls a sync is made of.
+ *
+ * Both backends answer these, by routes that have nothing in common. The web
+ * uses Better Auth's browser client and `fetch`, because it is already on the
+ * right origin. The desktop goes out through Rust — a webview asking
+ * `tova.so` from `tauri://localhost` would need the server to trust that
+ * origin, and that origin is not this app's, it is every Tauri app's.
+ *
+ * `pull` and `push` hand back the server's JSON untouched. `src/shared/sync.ts`
+ * is what gives it a shape, on both backends, and parsing it in two places is
+ * how the two would come to disagree.
+ */
+export interface SyncApi {
+  /** The email this device is signed in as, or null. */
+  account: () => Promise<string | null>
+  /** `secret` is the auth secret, never a password. */
+  signIn: (email: string, secret: string) => Promise<void>
+  signOut: () => Promise<void>
+  pull: (cursor: string, limit?: number) => Promise<unknown>
+  push: (notes: unknown[]) => Promise<unknown>
+}
+
+/**
  * The whole bridge, as one name.
  *
  * `src/renderer/tova.d.ts` declares `window.tova` as this, and the web client
@@ -112,6 +135,7 @@ export interface TovaBridge {
   session: SessionApi
   app: AppApi
   events: EventsApi
+  sync: SyncApi
 }
 
 export interface AppApi {

@@ -110,7 +110,8 @@
       "unlockVault"
     ],
     app: ["info", "reveal", "openExternal"],
-    events: ["onNotesChanged"]
+    events: ["onNotesChanged"],
+    sync: ["account", "signIn", "signOut", "pull", "push"]
   }
 
   const tova = {}
@@ -121,6 +122,15 @@
 
   // Ported so far. One line per slice, and the list is the progress bar.
   tova.app.info = () => invoke("app_info")
+  tova.sync.account = () => invoke("sync_account")
+  tova.sync.signIn = (email, secret) => invoke("sync_sign_in", { email, secret })
+  tova.sync.signOut = () => invoke("sync_sign_out")
+  // The server's JSON, as text. `src/shared/sync.ts` parses it; doing that here
+  // as well is how the two backends would come to disagree about a version.
+  tova.sync.pull = (cursor, limit) =>
+    invoke("sync_pull", { cursor, limit }).then((text) => JSON.parse(text))
+  tova.sync.push = (notes) =>
+    invoke("sync_push", { notes: JSON.stringify(notes) }).then((text) => JSON.parse(text))
   tova.preferences.read = () => invoke("preferences_read")
   tova.preferences.write = (value) => invoke("preferences_write", { value })
   tova.preferences.accountName = () => invoke("account_name")

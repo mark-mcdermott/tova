@@ -7,6 +7,7 @@ replaces, so both backends stay runnable against one conformance suite and a
 slice can land without the renderer knowing which one it is talking to.
 */
 
+mod account;
 mod backup;
 mod blog_post;
 mod blogs;
@@ -149,6 +150,39 @@ async fn grammar_fetch() -> Result<grammar::Status, String> {
 #[tauri::command]
 fn account_name() -> String {
     preferences::account_name()
+}
+
+/*
+ * An account on Tova's own server, which is a different thing from the macOS
+ * account above. Every one of these goes out from here rather than from the
+ * webview: `account.rs` says why, and the short version is that a browser
+ * would need the server to trust `tauri://localhost`, which is not this app's
+ * origin but every Tauri app's.
+ */
+
+#[tauri::command]
+fn sync_sign_in(email: String, secret: String) -> Result<(), String> {
+    account::sign_in(&data_dir(), &email, &secret)
+}
+
+#[tauri::command]
+fn sync_sign_out() -> Result<(), String> {
+    account::sign_out(&data_dir())
+}
+
+#[tauri::command]
+fn sync_account() -> Result<Option<String>, String> {
+    account::status(&data_dir())
+}
+
+#[tauri::command]
+fn sync_pull(cursor: String, limit: Option<u32>) -> Result<String, String> {
+    account::pull(&data_dir(), &cursor, limit)
+}
+
+#[tauri::command]
+fn sync_push(notes: String) -> Result<String, String> {
+    account::push(&data_dir(), &notes)
 }
 
 #[tauri::command]
@@ -1005,6 +1039,11 @@ pub fn run() {
             grammar_status,
             grammar_fetch,
             account_name,
+            sync_sign_in,
+            sync_sign_out,
+            sync_account,
+            sync_pull,
+            sync_push,
             session_read,
             session_write,
             vault_list,

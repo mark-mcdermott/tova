@@ -250,7 +250,20 @@ renderer compiles, mounts and renders its first-run screen. It calls **74**
 distinct methods anywhere in the app and **13** to boot. `docs/ROADMAP.md` has
 the breakdown.
 
-The Rust stays desktop-side, where the filesystem and the keychain are. The
+The Rust stays desktop-side, where the filesystem and the keychain are — **and
+where the desktop's HTTP goes too.**
+
+A webview asking `tova.so` from `tauri://localhost` is a cross-origin request,
+so the server would have to answer it with `Access-Control-Allow-Origin:
+tauri://localhost`. That origin is not this app's. It is _every_ Tauri app's,
+and opening it would let anything built with Tauri on that Mac call the server
+with the reader's session attached.
+
+From Rust there is no CORS, because CORS is a rule browsers apply to
+themselves, and no `SameSite` either — so the session cookie is simply stored
+and sent back the way `curl` would, encrypted by the keychain on the way to
+disk. The session never enters the webview, which is where an injected script
+would be. The
 server is TypeScript — Neon, Drizzle, Zod, Better Auth — because what it does
 is store, authenticate and reconcile, and none of that wants the 18,000 lines
 of macOS integration the desktop app carries.
