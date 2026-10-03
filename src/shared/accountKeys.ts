@@ -61,7 +61,13 @@ function saltFor(email: string): Uint8Array<ArrayBuffer> {
   return new TextEncoder().encode(email.trim().toLowerCase())
 }
 
-async function expand(master: Uint8Array, info: string): Promise<Uint8Array<ArrayBuffer>> {
+// `Uint8Array<ArrayBuffer>` for the same reason crypto.ts uses it: the bare
+// type is generic over ArrayBufferLike, which admits SharedArrayBuffer, and
+// WebCrypto will not take one.
+async function expand(
+  master: Uint8Array<ArrayBuffer>,
+  info: string
+): Promise<Uint8Array<ArrayBuffer>> {
   const key = await crypto.subtle.importKey("raw", master, "HKDF", false, ["deriveBits"])
   const bits = await crypto.subtle.deriveBits(
     {
@@ -85,7 +91,9 @@ async function expand(master: Uint8Array, info: string): Promise<Uint8Array<Arra
  * scrypt twice, and the second caller would be the one tempted to skip it.
  */
 export async function deriveAccountKeys(email: string, password: string): Promise<AccountKeys> {
-  const master = scrypt(new TextEncoder().encode(password), saltFor(email), SCRYPT)
+  // Copied into an ArrayBuffer-backed view: @noble returns the bare generic
+  // form, and WebCrypto below needs the narrower one.
+  const master = new Uint8Array(scrypt(new TextEncoder().encode(password), saltFor(email), SCRYPT))
   const [auth, wrap] = await Promise.all([expand(master, AUTH_INFO), expand(master, WRAP_INFO)])
 
   return { authSecret: btoa(String.fromCharCode(...auth)), wrappingKey: wrap }
