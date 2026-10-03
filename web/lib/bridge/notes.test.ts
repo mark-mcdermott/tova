@@ -208,7 +208,162 @@ describe("the trash", () => {
   })
 })
 
+describe("today's note", () => {
+  /*
+   * Found by the path a daily note takes, which is its date rather than a slug
+   * of its title — so this is the same note the desktop would find, for the
+   * same day.
+   */
+  it("is made once and then found", async () => {
+    const store = fakeStore()
+    const notes = webNotes(store)
+
+    const first = await notes.today()
+    const second = await notes.today()
+
+    expect(second.uid).toBe(first.uid)
+    expect(store.held.size).toBe(1)
+  })
+
+  it("is named by its date and titled the way the desktop titles it", async () => {
+    const notes = webNotes(fakeStore())
+    const today = new Date()
+    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+
+    const made = await notes.today()
+
+    expect(made.id).toBe(`daily/${iso}.md`)
+    expect(made.title).toMatch(/^\d{1,2}\/\d{1,2}\/\d{2}$/)
+  })
+
+  /*
+   * The one honest limit of deriving a path from a title. On the desktop the
+   * filename holds a daily note to its day; here the title does, so retitling
+   * it makes it an ordinary note in Daily — and `today` makes a new one.
+   */
+  it("stops being that day's note if it is retitled", async () => {
+    const store = fakeStore()
+    const notes = webNotes(store)
+    const made = await notes.today()
+
+    await notes.rename(made.id, "Grocery list")
+    const again = await notes.today()
+
+    expect(again.uid).not.toBe(made.uid)
+    expect(store.held.size).toBe(2)
+  })
+})
+
+describe("searching", () => {
+  it("finds a note by its body and says where it matched", async () => {
+    const notes = webNotes(
+      fakeStore([asDesktopWrote(A, "title: River\nsection: notes", "Water everywhere.")])
+    )
+
+    const [hit] = await notes.search("water")
+
+    expect(hit.note.title).toBe("River")
+    expect(hit.match.where).toBe("body")
+  })
+
+  /*
+   * The Trash is not somewhere to find things. A hit there sends somebody to a
+   * note they had already thrown away.
+   */
+  it("does not find what was thrown away", async () => {
+    const notes = webNotes(fakeStore())
+    const made = await notes.create({ section: "notes", title: "River", body: "Water." })
+
+    expect(await notes.search("water")).toHaveLength(1)
+    await notes.remove(made.id)
+    expect(await notes.search("water")).toEqual([])
+  })
+})
+
+describe("moving a note", () => {
+  it("takes it to another section, and its path with it", async () => {
+    const notes = webNotes(fakeStore())
+    const made = await notes.create({ section: "notes", title: "River" })
+
+    const moved = await notes.move(made.id, { section: "journal" })
+
+    expect(moved.id).toBe("journal/river.md")
+    expect(moved.uid).toBe(made.uid)
+  })
+
+  it("brings one out of the trash when it is moved somewhere real", async () => {
+    const notes = webNotes(fakeStore())
+    const made = await notes.create({ section: "notes", title: "River" })
+    const gone = await notes.remove(made.id)
+
+    const moved = await notes.move(gone.id, { section: "notes", folder: "ideas" })
+
+    expect(moved.section).toBe("notes")
+    expect(moved.folder).toBe("ideas")
+  })
+})
+
+describe("deleting for good", () => {
+  /*
+   * The row stays or the deletion stops travelling: a note absent from a pull
+   * is indistinguishable from one that never existed, and the other device
+   * pushes it straight back. What goes is the writing, which is the part
+   * somebody asked to be rid of.
+   */
+  it("empties the note and keeps the tombstone", async () => {
+    const store = fakeStore()
+    const notes = webNotes(store)
+    const made = await notes.create({ section: "notes", title: "River", body: "Water." })
+    const gone = await notes.remove(made.id)
+
+    await notes.permanentDelete(gone.id)
+
+    const row = store.held.get(made.uid as string)
+    expect(row?.deleted).toBe(true)
+    expect(row?.text).toBe("")
+  })
+})
+
 describe("folders", () => {
+  /*
+   * A folder on the web is derived from the notes in it, so an empty one has
+   * nowhere to exist. It is remembered until a note lands in it.
+   */
+  it("remembers one made before there is anything to put in it", async () => {
+    const notes = webNotes(fakeStore())
+
+    await notes.createFolder("ideas")
+
+    expect(await notes.listFolders()).toEqual(["ideas"])
+  })
+
+  it("refuses a name a folder could not have", async () => {
+    const notes = webNotes(fakeStore())
+
+    await expect(notes.createFolder("ideas/river")).rejects.toThrow()
+    await expect(notes.createFolder("  ")).rejects.toThrow()
+  })
+
+  it("renames one, and every note in it comes along", async () => {
+    const notes = webNotes(
+      fakeStore([asDesktopWrote(A, "title: River\nsection: notes\nfolder: ideas", "")])
+    )
+
+    await notes.renameFolder("ideas", "thoughts")
+
+    expect((await notes.list())[0].id).toBe("notes/thoughts/river.md")
+    expect(await notes.listFolders()).toEqual(["thoughts"])
+  })
+
+  it("sends a deleted folder's notes to the trash, and says where they went", async () => {
+    const notes = webNotes(
+      fakeStore([asDesktopWrote(A, "title: River\nsection: notes\nfolder: ideas", "")])
+    )
+
+    expect(await notes.deleteFolder("ideas")).toEqual(["trash/river.md"])
+    expect(await notes.listFolders()).toEqual([])
+  })
+
   it("lists the ones notes are actually in, once each", async () => {
     const notes = webNotes(
       fakeStore([

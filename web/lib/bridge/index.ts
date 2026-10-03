@@ -35,6 +35,8 @@ export type SettingsStore = {
 
 const PREFERENCES = "preferences"
 const SESSION = "session"
+/** Folders somebody made before there was anything to put in them. */
+const FOLDERS = "emptyFolders"
 
 /**
  * Backgrounds and title faces the reader added.
@@ -51,7 +53,10 @@ export function webBridge(
   notes: NoteStore = webNoteStore()
 ): TovaBridge {
   return {
-    notes: webNotes(notes),
+    notes: webNotes(notes, {
+      read: async () => (await settings.read<string[]>(FOLDERS)) ?? [],
+      write: (folders) => settings.write(FOLDERS, folders)
+    }),
 
     backups: {
       /*

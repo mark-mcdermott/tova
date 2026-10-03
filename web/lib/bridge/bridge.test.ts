@@ -109,10 +109,10 @@ describe("what a browser will not do", () => {
    * opposite things to whoever decides what to build next.
    */
   it("says a thing is not built yet", async () => {
-    await expect(tova.notes.today()).rejects.toMatchObject({
+    await expect(tova.images.save("a.png", new Uint8Array())).rejects.toMatchObject({
       name: "NotOnTheWeb",
       because: "not yet",
-      method: "notes.today"
+      method: "images.save"
     })
   })
 
@@ -125,7 +125,7 @@ describe("what a browser will not do", () => {
   })
 
   it("explains itself differently for each", async () => {
-    const notYet = await tova.notes.today().catch((error: NotOnTheWeb) => error.message)
+    const notYet = await tova.backups.run().catch((error: NotOnTheWeb) => error.message)
     const never = await tova.app.reveal("vault").catch((error: NotOnTheWeb) => error.message)
 
     expect(notYet).toContain("not built on the web yet")

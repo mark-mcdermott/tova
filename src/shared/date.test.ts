@@ -1,13 +1,15 @@
 import { describe, it, expect } from "vitest"
 import {
   formatDailyTitle,
-  isBlankDailyBody,
-  toDailyNoteName,
-  parseDailyNoteName,
-  isDailyNoteName,
   formatDisplayDate,
+  formatEditedAgo,
+  isBlankDailyBody,
+  isDailyNoteName,
   msUntilNextMidnight,
-  formatEditedAgo
+  parseDailyNoteName,
+  parseDailyTitle,
+  toDailyNoteName,
+  toIsoDate
 } from "./date"
 
 describe("toDailyNoteName", () => {
@@ -172,5 +174,36 @@ describe("formatEditedAgo", () => {
 
   it("does not run backwards if the clock disagrees with the file", () => {
     expect(formatEditedAgo(now + 5_000, now)).toBe("Edited just now")
+  })
+})
+
+describe("reading a date back out of a daily note's title", () => {
+  /*
+   * The web has no filenames — a path there is derived from the title — so the
+   * title is the only way back to the date. On the desktop the filename holds
+   * it and this is never needed.
+   */
+  it("is the inverse of formatDailyTitle", () => {
+    for (const date of [new Date(2026, 9, 3), new Date(2026, 0, 1), new Date(2099, 11, 31)]) {
+      const read = parseDailyTitle(formatDailyTitle(date))
+
+      expect(read).not.toBeNull()
+      expect(toIsoDate(read as Date)).toBe(toIsoDate(date))
+    }
+  })
+
+  it("refuses a title that is not one", () => {
+    expect(parseDailyTitle("Grocery list")).toBeNull()
+    expect(parseDailyTitle("2026-10-03")).toBeNull()
+    expect(parseDailyTitle("")).toBeNull()
+  })
+
+  /*
+   * `new Date(2026, 12, 40)` is a date in 2027. A title nobody could have
+   * written must not parse into one somebody did.
+   */
+  it("refuses a date that rolled over rather than existing", () => {
+    expect(parseDailyTitle("13/3/26")).toBeNull()
+    expect(parseDailyTitle("2/30/26")).toBeNull()
   })
 })

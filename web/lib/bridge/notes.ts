@@ -26,12 +26,26 @@ import {
   serializeFrontMatter,
   type FrontMatterValue
 } from "../../../src/shared/frontMatter"
+import { formatDailyTitle, parseDailyTitle, toDailyNoteName } from "../../../src/shared/date"
 import { slugify, uniqueSlug } from "../../../src/shared/noteName"
-import { restoreLocation, sortNotes, toNoteId } from "../../../src/shared/noteLocation"
+import { matchNote } from "../../../src/shared/search"
+import {
+  isValidFolderName,
+  restoreLocation,
+  sortNotes,
+  toNoteId
+} from "../../../src/shared/noteLocation"
 import { allTags, normalizeManualTags } from "../../../src/shared/tags"
 import type { NoteStore, StoredNote } from "../../../src/shared/noteStore"
-import type { CreateNoteInput, Note, NoteApi, NoteSummary } from "../../../src/shared/types"
-import { notYet, unavailable } from "./refuse"
+import type {
+  CreateNoteInput,
+  MoveNoteInput,
+  Note,
+  NoteApi,
+  NoteSummary,
+  SearchHit
+} from "../../../src/shared/types"
+import { unavailable } from "./refuse"
 
 /** What this device keeps about a note beyond what the sync carries. */
 export interface WebNote extends StoredNote {
@@ -40,6 +54,7 @@ export interface WebNote extends StoredNote {
 }
 
 const TRASH = "trash"
+const DAILY = "daily"
 
 const times = (note: StoredNote): { createdAt: number; updatedAt: number } => {
   const web = note as Partial<WebNote>
@@ -83,11 +98,20 @@ function index(stored: StoredNote[]): Indexed[] {
       const section = note.deleted ? TRASH : home.section
       const folder = note.deleted ? null : home.folder
 
+      /*
+       * A daily note is named by its date. That is what makes it *that day's*
+       * note rather than a note that happens to be in Daily, and the desktop
+       * gets it from the filename — which the web does not have, so the title
+       * is read back instead.
+       */
+      const day = section === DAILY ? parseDailyTitle(title) : null
+
       // Unique within the folder it lands in, the way a filesystem would make
       // it: two notes cannot share a name in one directory.
       const where = `${section}/${folder ?? ""}`
       const used = taken.get(where) ?? new Set<string>()
-      const slug = uniqueSlug(slugify(title) || "untitled", used)
+      const slug =
+        day === null ? uniqueSlug(slugify(title) || "untitled", used) : toDailyNoteName(day)
       used.add(slug)
       taken.set(where, used)
 
@@ -145,8 +169,32 @@ function frontMatter(one: {
   return data
 }
 
-export function webNotes(store: NoteStore): NoteApi {
+/**
+ * Folders somebody made that hold nothing yet.
+ *
+ * A folder on the web is derived from the notes in it, so an empty one has
+ * nowhere to exist. The desktop makes a directory; this remembers a name until
+ * a note lands in it, and then the note carries it.
+ *
+ * Local to this device, deliberately. An empty folder is not writing, and a
+ * name travelling to another device ahead of anything to put in it would be a
+ * sidebar entry nobody there had asked for.
+ */
+export interface EmptyFolders {
+  read: () => Promise<string[]>
+  write: (folders: string[]) => Promise<void>
+}
+
+export function webNotes(store: NoteStore, empties: EmptyFolders = nowhere()): NoteApi {
   const all = async () => index(await store.all())
+
+  /** Keeps the remembered list honest when a folder is renamed or removed. */
+  const remember = async (from: string, to: string | null) => {
+    const held = await empties.read()
+    const next = held.filter((name) => name !== from)
+    if (to !== null && !next.includes(to)) next.push(to)
+    await empties.write(next)
+  }
 
   const find = async (id: string) => {
     const found = (await all()).find((one) => one.summary.id === id)
@@ -267,28 +315,196 @@ export function webNotes(store: NoteStore): NoteApi {
     },
 
     async listFolders() {
-      const folders = (await all())
+      const inUse = (await all())
         .map((one) => one.summary.folder)
         .filter((folder): folder is string => folder !== null)
-      return [...new Set(folders)].sort()
+      return [...new Set([...inUse, ...(await empties.read())])].sort()
+    },
+
+    async createFolder(name: string) {
+      const folder = name.trim()
+      if (!isValidFolderName(folder)) throw new Error(`${name} is not a folder name`)
+
+      await remember(folder, folder)
+      return folder
+    },
+
+    /**
+     * Today's note, found or made.
+     *
+     * Found by the path a daily note takes, which is its date — so this works
+     * out to the same note the desktop would find, for the same day.
+     */
+    async today(): Promise<Note> {
+      const date = new Date()
+      const id = toNoteId({
+        section: DAILY,
+        folder: null,
+        filename: `${toDailyNoteName(date)}.md`
+      })
+
+      const existing = (await all()).find((one) => one.summary.id === id)
+      if (existing !== undefined) return { ...existing.summary, body: existing.body }
+
+      return this.create({ section: DAILY, title: formatDailyTitle(date) })
+    },
+
+    async search(query: string): Promise<SearchHit[]> {
+      const hits: SearchHit[] = []
+      for (const { summary, body } of await all()) {
+        // The Trash is not somewhere to find things. The desktop's search
+        // skips it for the same reason, and a hit there would send somebody to
+        // a note they had already thrown away.
+        if (summary.section === TRASH) continue
+
+        const match = matchNote({ title: summary.title, tags: summary.tags, body }, query)
+        if (match !== null) hits.push({ note: summary, match })
+      }
+      return hits.sort((a, b) => b.match.score - a.match.score)
+    },
+
+    async move(id: string, input: MoveNoteInput) {
+      const { note, summary, body } = await find(id)
+      return put(
+        note.id,
+        frontMatter({
+          ...summary,
+          home: { section: input.section, folder: input.folder ?? null },
+          uid: note.id
+        }),
+        body,
+        false,
+        summary.createdAt
+      )
+    },
+
+    /**
+     * Permanently, which here means emptying rather than removing.
+     *
+     * The row has to stay or the deletion stops travelling: a note simply
+     * absent from a pull is indistinguishable from one that never existed, and
+     * the other device would push it straight back. So the writing goes and the
+     * tombstone remains — which is the part that actually matters, since the
+     * writing is the thing somebody asked to be rid of.
+     */
+    async permanentDelete(id: string) {
+      const { note } = await find(id)
+      await store.write({ id: note.id, text: "", deleted: true })
+    },
+
+    async renameFolder(from: string, to: string) {
+      const folder = to.trim()
+      if (!isValidFolderName(folder)) throw new Error(`${to} is not a folder name`)
+
+      for (const { note, summary, body, home } of await all()) {
+        if (home.folder !== from || note.deleted) continue
+        await put(
+          note.id,
+          frontMatter({ ...summary, home: { ...home, folder }, uid: note.id }),
+          body,
+          false,
+          summary.createdAt
+        )
+      }
+
+      await remember(from, folder)
+      return folder
+    },
+
+    /** Its notes go to the Trash, and their new ids come back. */
+    async deleteFolder(name: string) {
+      const moved: string[] = []
+      for (const { note, summary, body, home } of await all()) {
+        if (home.folder !== name || note.deleted) continue
+        moved.push(
+          (
+            await put(
+              note.id,
+              frontMatter({ ...summary, home, uid: note.id }),
+              body,
+              true,
+              summary.createdAt
+            )
+          ).id
+        )
+      }
+
+      await remember(name, null)
+      return moved
+    },
+
+    /** Its notes go to the Trash, and their new ids come back. */
+    async deleteSection(id: string) {
+      const moved: string[] = []
+      for (const { note, summary, body, home } of await all()) {
+        if (home.section !== id || note.deleted) continue
+        moved.push(
+          (
+            await put(
+              note.id,
+              frontMatter({ ...summary, home, uid: note.id }),
+              body,
+              true,
+              summary.createdAt
+            )
+          ).id
+        )
+      }
+      return moved
     },
 
     /*
-     * A tombstone, not a delete. The row still has to travel or the other
-     * device pushes the note straight back — `docs/SYNC.md`, and the reason
-     * `remove` and this one do the same thing here.
+     * A section is a directory on the desktop and nothing at all here — a note
+     * is in one because its front matter says so. There is no folder to make,
+     * so this succeeds by having nothing to do rather than by refusing.
      */
-    permanentDelete: notYet("notes.permanentDelete"),
+    createSection: () => Promise.resolve(),
 
-    today: notYet("notes.today"),
-    search: notYet("notes.search"),
-    createFolder: notYet("notes.createFolder"),
-    renameFolder: notYet("notes.renameFolder"),
-    deleteFolder: notYet("notes.deleteFolder"),
-    move: notYet("notes.move"),
-    createSection: notYet("notes.createSection"),
-    deleteSection: notYet("notes.deleteSection"),
-    exportMarkdown: notYet("notes.exportMarkdown"),
+    /**
+     * Hands the reader the file. Resolves to its name, not its path.
+     *
+     * The desktop writes to disk and can say where it went. A browser hands the
+     * file to whatever is handling downloads and never learns where that is, so
+     * the name is the most honest thing this can return.
+     */
+    async exportMarkdown(id: string) {
+      const { summary, body } = await find(id)
+      const filename = id.split("/").pop() ?? "note.md"
+
+      const file = new Blob(
+        [
+          serializeFrontMatter(
+            frontMatter({
+              ...summary,
+              home: { section: summary.section, folder: summary.folder },
+              uid: summary.uid ?? ""
+            }),
+            body
+          )
+        ],
+        {
+          type: "text/markdown"
+        }
+      )
+      const url = URL.createObjectURL(file)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      link.click()
+      URL.revokeObjectURL(url)
+
+      return filename
+    },
+
     exportPdf: unavailable("notes.exportPdf")
+  }
+}
+
+/** No memory at all, for a caller that has not given it one. */
+function nowhere(): EmptyFolders {
+  let held: string[] = []
+  return {
+    read: async () => held,
+    write: async (folders) => void (held = folders)
   }
 }
