@@ -77,6 +77,7 @@ export type VaultClient = {
   unlockWithOldPassword(oldPassword: string): Promise<OpenVault>
   recoverAfterReset(email: string, password: string, recoveryKey: string): Promise<OpenVault>
   changePassword(email: string, current: string, next: string, vault: OpenVault): Promise<void>
+  reWrapPassword(email: string, password: string, vault: OpenVault): Promise<void>
   rotateRecoveryKey(vault: OpenVault): Promise<string>
 }
 
@@ -268,6 +269,20 @@ export function makeVaultClient(credentials: Credentials, fetch: Fetch): VaultCl
 
       await credentials.changeSecret(currentSecret, resealed.authSecret)
       await replace("password", vault.epoch, resealed.factor)
+    },
+
+    /**
+     * The envelope catching up to a credential that already changed.
+     *
+     * What finishes a password change that stopped after its first write. The
+     * credential is already the new one, so there is nothing to change about
+     * it — going back through `changePassword` would ask Better Auth to replace
+     * a password with itself, which is a no-op it is under no obligation to
+     * accept. One write, and it can be retried until it lands.
+     */
+    async reWrapPassword(email, password, vault) {
+      const { factor } = await reWrapForPassword(email, password, vault.contentKey)
+      await replace("password", vault.epoch, factor)
     },
 
     /**

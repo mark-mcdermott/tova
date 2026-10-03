@@ -13,7 +13,10 @@ export default defineConfig({
     // jsdom does not implement the geometry CodeMirror measures with.
     setupFiles: ["./src/renderer/testing/setup.ts"],
     globals: true,
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // `web` as well as `src`: the auth islands live beside the pages they are
+    // mounted on, and they are the one part of the web half with branching
+    // worth holding to a test.
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "web/**/*.{test,spec}.{ts,tsx}"],
     restoreMocks: true
   }
 })

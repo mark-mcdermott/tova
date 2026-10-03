@@ -1,0 +1,8 @@
+---
+import Auth from "../layouts/Auth.astro"
+import { SignInForm } from "../components/auth/SignInForm"
+---
+
+<Auth title="Sign in — Tova" description="Sign in to Tova.">
+  <SignInForm client:load />
+</Auth>

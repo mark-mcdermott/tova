@@ -1,0 +1,40 @@
+---
+import "../styles/global.css"
+
+/*
+ * One card, centred, nothing else on the page.
+ *
+ * The landing page argues; these screens ask for something and get out of the
+ * way. No navigation, because every link is a way to leave a flow somebody is
+ * halfway through — and one of these flows shows a recovery key that cannot be
+ * shown again.
+ */
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+  </head>
+  <body class="bg-page text-ink antialiased">
+    <main class="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 px-4 py-12">
+      <a href="/" class="text-ink-faint hover:text-ink self-start text-sm transition-colors">
+        Tova
+      </a>
+      <div class="bg-card border-line rounded-2xl border p-7 shadow-sm sm:p-9">
+        <slot />
+      </div>
+    </main>
+  </body>
+</html>
