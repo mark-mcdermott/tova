@@ -11,7 +11,16 @@
  * two separate is the point rather than an accident of layout.
  */
 
-import { bigint, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core"
+import {
+  bigint,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid
+} from "drizzle-orm/pg-core"
 
 /**
  * One note, as ciphertext.
@@ -39,6 +48,21 @@ export const notes = pgTable(
     ciphertext: text("ciphertext").notNull(),
     /** 12 bytes, fresh for every write. Never reused under one key. */
     nonce: text("nonce").notNull(),
+
+    /*
+     * Which content key this row was sealed under.
+     *
+     * Only ever moves when somebody starts fresh after losing a recovery key.
+     * That mints a new content key, and without this column the old rows and
+     * the new ones would be indistinguishable — a client would pull notes it
+     * cannot decrypt and have no way to know why.
+     *
+     * The old rows are kept rather than deleted. The whole reason a recovery
+     * key exists is that people find things late, and deleting would be the
+     * one irreversible step taken on their behalf, on the screen whose entire
+     * premise is that nothing can be done for them.
+     */
+    epoch: integer("epoch").notNull().default(1),
 
     /*
      * The server's own counter, bumped on every accepted write, and what a
@@ -86,6 +110,15 @@ export const keyEnvelopes = pgTable(
     /** Which factor opens this one: a password, or the recovery key. */
     kind: text("kind", { enum: ["password", "recovery"] }).notNull(),
 
+    /*
+     * Which content key this envelope holds. Matches `notes.epoch`.
+     *
+     * Old epochs are kept, so a recovery key found in a drawer next year still
+     * opens the notes it was made for. A client takes the highest epoch it can
+     * unwrap and reads that; the rest stay sealed and harmless.
+     */
+    epoch: integer("epoch").notNull().default(1),
+
     /** Per-envelope, so two factors never derive the same wrapping key. */
     salt: text("salt").notNull(),
     /** The content key, sealed by the key derived from that factor. */
@@ -94,9 +127,10 @@ export const keyEnvelopes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (table) => [
-    // One of each kind per reader. Two password envelopes would mean two keys,
-    // and half the notes would stop opening.
-    uniqueIndex("key_envelopes_user_kind_idx").on(table.userId, table.kind)
+    // One of each kind per epoch. Two password envelopes for one epoch would
+    // mean two keys, and half that epoch's notes would stop opening — while
+    // across epochs they are meant to differ.
+    uniqueIndex("key_envelopes_user_kind_epoch_idx").on(table.userId, table.kind, table.epoch)
   ]
 )
 
