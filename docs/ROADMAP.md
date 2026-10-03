@@ -147,10 +147,35 @@ ran — a probe account against the real database, through the whole stack: a
 note pushed encrypted, a second device pulling it back decrypted, two edits on
 different lines merged, and two edits on the same line kept as both.
 
-**Next, in order:** the desktop's store, which is the same interface over
-markdown files and the `window.tova` bridge; something to call a sync from, on
-a schedule and on a change; and version history on the web, since the desktop's
-`.versions` is the floor the conflict story leans on and the web has none; which is files on the desktop and IndexedDB on
+**The web client's bet has been tested, and it holds.** `SYNC.md` has claimed
+from the start that `window.tova`'s surface is the seam that makes a web client
+cheap — implement it over HTTP and the entire UI comes along with no UI work.
+That was an argument. It is now a measurement.
+
+The renderer was served by plain Vite, opened in an ordinary browser with no
+Tauri anywhere, and given a `window.tova` of stubs. It **compiles, mounts and
+renders**: the first-run screen, logo and all, pixel for pixel.
+
+```
+74   distinct bridge methods the renderer calls anywhere
+13   it calls to boot
+14   to boot without an unanswered call (notes.today was the last)
+```
+
+The 74 break down as preferences 23, notes 20, blogs 10, spellcheck 7, backups
+4, app 3, session 2, publish 2, and one each of images, grammar and events.
+Blogs and publish are 12 of those and are deferred under the no-blog-at-first
+scope; spellcheck is the browser's own on the web and mostly answers itself;
+grammar is the opt-in dictionary. So the real work is **notes and
+preferences**, and notes is the half that already has a store, a transport and
+a sync behind it.
+
+**Next, in order:** that shim, written properly rather than as a probe — the
+thirteen first, then notes over the store and preferences over IndexedDB; the
+desktop's store, which is the same interface over markdown files; something to
+call a sync from, on a schedule and on a change; and version history on the
+web, since the desktop's `.versions` is the floor the conflict story leans on
+and the web has none; which is files on the desktop and IndexedDB on
 the web; deleting an account, which is the one screen in this set
 that is not built and the one that needs the most care. With end-to-end
 encryption, removing the envelopes removes every way of reading the notes — by
