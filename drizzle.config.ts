@@ -1,3 +1,7 @@
+// Loaded here explicitly. Astro reads `.env` into its own env layer and not
+// into process.env, so this file — which runs outside Astro — sees nothing
+// without it. The comment below said as much while the import was missing.
+import "dotenv/config"
 import { defineConfig } from "drizzle-kit"
 
 /*
