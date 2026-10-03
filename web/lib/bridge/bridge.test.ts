@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import { webBridge, type SettingsStore } from "./index"
+import { inMemoryNotes } from "../testing"
 import { NotOnTheWeb } from "./refuse"
 import { DEFAULT_PREFERENCES } from "../../../src/shared/preferences"
 
@@ -16,7 +17,7 @@ function fakeSettings(start: Record<string, unknown> = {}): SettingsStore & {
 
 describe("preferences", () => {
   it("answers with the defaults when nothing has been stored", async () => {
-    const tova = webBridge(fakeSettings())
+    const tova = webBridge(fakeSettings(), inMemoryNotes())
 
     expect(await tova.preferences.read()).toEqual(DEFAULT_PREFERENCES)
   })
@@ -45,7 +46,7 @@ describe("preferences", () => {
    */
   it("keeps 'no background chosen' apart from 'never asked'", async () => {
     const asked = await webBridge(fakeSettings({ preferences: {} })).preferences.read()
-    const never = await webBridge(fakeSettings()).preferences.read()
+    const never = await webBridge(fakeSettings(), inMemoryNotes()).preferences.read()
 
     expect(asked.backgroundLight).toBeNull()
     expect(never.backgroundLight).toBe(DEFAULT_PREFERENCES.backgroundLight)
@@ -53,7 +54,7 @@ describe("preferences", () => {
 
   it("stores what it tidied, not what it was handed", async () => {
     const settings = fakeSettings()
-    const tova = webBridge(settings)
+    const tova = webBridge(settings, inMemoryNotes())
 
     const written = await tova.preferences.write({
       ...DEFAULT_PREFERENCES,
@@ -66,7 +67,7 @@ describe("preferences", () => {
 
   it("comes back from a reset as the defaults", async () => {
     const settings = fakeSettings({ preferences: { ...DEFAULT_PREFERENCES, lineWidth: "wide" } })
-    const tova = webBridge(settings)
+    const tova = webBridge(settings, inMemoryNotes())
 
     await tova.preferences.reset()
 
@@ -77,7 +78,7 @@ describe("preferences", () => {
 describe("the last screen", () => {
   it("remembers one and gives it back", async () => {
     const settings = fakeSettings()
-    const tova = webBridge(settings)
+    const tova = webBridge(settings, inMemoryNotes())
 
     await tova.session.write({ kind: "note", noteId: "notes/slow-morning.md" })
 
@@ -96,12 +97,12 @@ describe("the last screen", () => {
   })
 
   it("has nowhere to return to when nothing was stored", async () => {
-    expect(await webBridge(fakeSettings()).session.read()).toBeNull()
+    expect(await webBridge(fakeSettings(), inMemoryNotes()).session.read()).toBeNull()
   })
 })
 
 describe("what a browser will not do", () => {
-  const tova = webBridge(fakeSettings())
+  const tova = webBridge(fakeSettings(), inMemoryNotes())
 
   /*
    * Two reasons, kept apart. They read the same to a stack trace and mean
@@ -133,7 +134,7 @@ describe("what a browser will not do", () => {
 })
 
 describe("what it answers truthfully rather than refusing", () => {
-  const tova = webBridge(fakeSettings())
+  const tova = webBridge(fakeSettings(), inMemoryNotes())
 
   /*
    * A new browser holds no notes. That is not a gap, and answering it with an
@@ -166,7 +167,7 @@ describe("opening a link", () => {
   it("hands the new page no way back to this one", async () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null)
 
-    await webBridge(fakeSettings()).app.openExternal("https://tova.so")
+    await webBridge(fakeSettings(), inMemoryNotes()).app.openExternal("https://tova.so")
 
     expect(open).toHaveBeenCalledWith("https://tova.so", "_blank", "noopener,noreferrer")
   })
