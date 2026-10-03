@@ -6,7 +6,8 @@ import {
   type VaultClient
 } from "../../../src/shared/vaultClient"
 import { credentials } from "../../lib/credentials"
-import { forget, keepIfPossible } from "../../lib/keyStore"
+import { forgetThisDevice } from "../../lib/forget"
+import { keepIfPossible } from "../../lib/keyStore"
 import { Field } from "./Field"
 import { Problem } from "./Problem"
 import { Ready } from "./Ready"
@@ -40,7 +41,11 @@ type Props = {
   drop?: () => Promise<void>
 }
 
-export function SignInForm({ client = live, keep = keepIfPossible, drop = forget }: Props = {}) {
+export function SignInForm({
+  client = live,
+  keep = keepIfPossible,
+  drop = forgetThisDevice
+}: Props = {}) {
   const [asking, setAsking] = useState<Asking>("credentials")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

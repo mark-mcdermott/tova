@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { makeVaultClient, type OpenVault, type VaultClient } from "../../../src/shared/vaultClient"
 import { credentials, signOut as endSession } from "../../lib/credentials"
-import { forget as dropKey } from "../../lib/keyStore"
+import { forgetThisDevice } from "../../lib/forget"
 import { Field } from "./Field"
 import { Problem } from "./Problem"
 import { RecoveryKey } from "./RecoveryKey"
@@ -31,7 +31,12 @@ type Props = {
  * Which also means this screen never reads from the key store. It only ever
  * clears it.
  */
-export function AccountForm({ email, client = live, drop = dropKey, leave = endSession }: Props) {
+export function AccountForm({
+  email,
+  client = live,
+  drop = forgetThisDevice,
+  leave = endSession
+}: Props) {
   const [password, setPassword] = useState("")
   const [vault, setVault] = useState<OpenVault | null>(null)
   const [next, setNext] = useState("")
