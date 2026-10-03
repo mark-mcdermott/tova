@@ -99,6 +99,49 @@ one.
 If any of those is unacceptable, the constraint at the top is the thing to
 revisit — not the design under it.
 
+## The key's life, and the screens it needs
+
+Every answer here follows from one decision: the content key is 32 random bytes
+that belong to the reader, and a factor only ever wraps it. Nothing derives it,
+so nothing re-encrypts a note when a factor changes.
+
+**Signing up** mints the content key on the device, seals it twice — once under
+the password, once under a fresh recovery key — and sends only the two
+envelopes. The recovery key is shown once, because it cannot be re-derived, and
+the screen has to say that plainly enough that somebody writes it down.
+
+**Changing a password** unwraps the envelope with the old password's key and
+seals the same content key under the new one. One row changes. No note is
+touched.
+
+**Replacing the recovery key** is the same move: unwrap with what the device
+already holds, seal again under a new recovery key, overwrite the row. Existing
+notes keep opening, and the old recovery key stops working the moment that row
+is gone — the unique index on `(user_id, kind)` is what makes it one row and so
+makes the swap atomic.
+
+Worth being exact about what "stops working" means: this is revocation by
+deletion, not by cryptography. The old recovery key still derives the old
+wrapping key, and anyone holding a copy of the old envelope could still open it.
+The envelope only ever existed on the server and on that reader's devices, which
+is what makes that acceptable — but it is not the same claim as the key being
+dead.
+
+**Resetting a forgotten password is the one that surprises people.** The server
+can issue new credentials; it cannot re-wrap an envelope, because it has never
+held the content key. So after a reset somebody signs in successfully and sees
+nothing. The recovery key is the only way back, and entering it unwraps the
+content key so the client can seal it under the new password.
+
+That is the trigger for the recovery screen — not a device that cannot unlock,
+but a password that was reset. The copy should say so, because "your password
+worked and your notes are still locked" is otherwise indistinguishable from a
+bug.
+
+**Deleting an account** removes the envelopes, and with them every way of
+reading the notes — by the reader, and by Tova, permanently. Export has to come
+first and the screen has to say why it is not a formality.
+
 ## Conflicts
 
 Last-write-wins loses writing, and a CRDT is a large, locking dependency for a
