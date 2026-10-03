@@ -20,7 +20,41 @@ describe("preferences", () => {
   it("answers with the defaults when nothing has been stored", async () => {
     const tova = webBridge(fakeSettings(), inMemoryNotes())
 
-    expect(await tova.preferences.read()).toEqual(DEFAULT_PREFERENCES)
+    expect(await tova.preferences.read()).toEqual({
+      ...DEFAULT_PREFERENCES,
+      ...{ greeted: true, grammar: false, updates: false }
+    })
+  })
+
+  /*
+   * The first-run question gathers two costs — a 15MB dictionary and an update
+   * check — and a browser has neither. A question that gathers nothing is the
+   * second first-run question CLAUDE.md says to resist, and it would ask it in
+   * copy about a Mac: "nothing leaves this machine", which is not true of a
+   * browser signed in to an account.
+   */
+  it("starts greeted, because there is nothing to ask a browser", async () => {
+    const read = await webBridge(fakeSettings(), inMemoryNotes()).preferences.read()
+
+    expect(read.greeted).toBe(true)
+    expect(read.updates).toBe(false)
+    expect(read.grammar).toBe(false)
+  })
+
+  /*
+   * A starting point, not a rule. Somebody who turns grammar on — once there
+   * is a grammar to turn on — must not be told otherwise on the next load.
+   */
+  it("lets what was stored win over where it started", async () => {
+    const tova = webBridge(
+      fakeSettings({ preferences: { ...DEFAULT_PREFERENCES, grammar: true, greeted: false } }),
+      inMemoryNotes()
+    )
+
+    const read = await tova.preferences.read()
+
+    expect(read.grammar).toBe(true)
+    expect(read.greeted).toBe(false)
   })
 
   /*
@@ -66,13 +100,20 @@ describe("preferences", () => {
     expect(settings.held.preferences).toEqual(DEFAULT_PREFERENCES)
   })
 
-  it("comes back from a reset as the defaults", async () => {
-    const settings = fakeSettings({ preferences: { ...DEFAULT_PREFERENCES, lineWidth: "wide" } })
+  /*
+   * Back to where a browser starts, which is not quite where the defaults are.
+   * A reset that made the web start asking the first-run question again would
+   * be asking it for the first time, in copy about a Mac.
+   */
+  it("comes back from a reset to where a browser starts", async () => {
+    const settings = fakeSettings({ preferences: { ...DEFAULT_PREFERENCES, greeted: false } })
     const tova = webBridge(settings, inMemoryNotes())
 
     await tova.preferences.reset()
+    const read = await tova.preferences.read()
 
-    expect(await tova.preferences.read()).toEqual(DEFAULT_PREFERENCES)
+    expect(read.greeted).toBe(true)
+    expect(read.proseWidth).toBe(DEFAULT_PREFERENCES.proseWidth)
   })
 })
 

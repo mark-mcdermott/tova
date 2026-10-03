@@ -183,11 +183,18 @@ stack trace and mean opposite things to whoever decides what to build next. The
 app renders a refusal in its own error presentation — "notes.today is not built
 on the web yet" — which is how the next piece announces itself.
 
-One thing the exercise turned up: **the first-run question is a desktop
-question.** It offers a 15MB dictionary, says "macOS's own checker", and says
-"nothing leaves this machine" — none of which is true in a browser signed in to
-an account. The web either asks a different question or asks none, and that is
-a decision rather than a port.
+**The first-run question is a desktop question, and the web does not ask it.**
+`CLAUDE.md` says what earns that question its place: it gathers the two costs
+that already exist — the grammar dictionary's 15MB and the update check's
+connection — into one moment. A browser has neither. There is no update check,
+because the page open in front of somebody _is_ the latest one, and grammar is
+not built there, so there is nothing to download.
+
+A question that gathers nothing is the second first-run question that document
+says to resist, and it would be asking it in copy about a Mac. So `greeted`
+starts true on the web: not because anybody was greeted, but because there is
+nothing left to ask. When grammar is built for the web it arrives the way
+everything that costs something does — off, in Settings, discoverable.
 
 **And the notes model turned out not to be a gap at all.** The renderer
 addresses a note by a vault path and the sync keys one by a uuid, and nothing
