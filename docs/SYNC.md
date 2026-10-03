@@ -278,6 +278,21 @@ and "forget this device" has to clear the key.
 In-memory only, with the password re-entered every session, is stricter and
 is what to fall back to if that surface ever looks shaky.
 
+**A third factor is coming: the device itself.** On a phone, typing a long
+password every time somebody picks it up is not a thing anybody will do, so the
+answer is Face ID — and it does not need native code. WebAuthn's `prf`
+extension derives a stable secret from a passkey and releases it only behind the
+platform authenticator. That secret wraps the content key exactly as a
+password-derived key does, which makes it a third envelope kind beside
+`password` and `recovery`, and the schema already allows for it.
+
+Two consequences worth stating before it is built. PRF wants iOS 18 and Safari
+18, so **the password stays the floor** — the factor every device has — rather
+than becoming optional. And because the biometric envelope wraps the content key
+rather than anything derived from the password, **an enrolled device still opens
+after a password reset.** That is a way back in that costs no recovery key, and
+it is the opposite of what a first draft of the copy claimed.
+
 **And it is off unless the reader asks.** That decision came later than the one
 above and refines it: where the key lives is IndexedDB, whether it is written
 there at all is a question. `CLAUDE.md` draws the line at anything costing the
