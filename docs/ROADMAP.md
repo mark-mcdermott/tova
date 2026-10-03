@@ -217,8 +217,33 @@ are kept beside the note on this device instead, which makes them "when this
 browser last saw it change". For sorting a list that is what a reader means
 anyway.
 
-**Next, in order:** the rest of `NoteApi` — `today`, search, folders and moves
-— then calling a sync from somewhere, on a schedule and on a change; the
+**`NoteApi` is done.** Every method: today's note, search, moves, folders,
+sections, permanent delete and export. Nothing in it refuses any more except
+`exportPdf`, which is Chromium printing to a path a browser never learns.
+
+Four of those needed a decision rather than a port:
+
+- **A daily note is named by its date**, which is what makes it _that day's_
+  rather than a note that happens to be in Daily. The desktop gets the date
+  from the filename; the web has no filenames, so `parseDailyTitle` reads it
+  back out of the title. One honest limit falls out: retitle a daily note on
+  the web and it stops being that day's, where on the desktop the filename
+  would hold it.
+- **Deleting for good empties the note and keeps the tombstone.** The row has
+  to stay or the deletion stops travelling — a note absent from a pull is
+  indistinguishable from one that never existed, and the other device pushes it
+  straight back. What goes is the writing, which is what somebody asked to be
+  rid of.
+- **An empty folder is remembered locally.** A folder here is derived from the
+  notes in it, so one with nothing in it has nowhere to exist. The name is kept
+  on this device until a note lands in it, and then the note carries it — a
+  name travelling ahead of anything to put in it would be a sidebar entry
+  nobody on the other device had asked for.
+- **Export hands over a file and returns its name, not a path.** A browser
+  never learns where a download went.
+
+**Next, in order:** calling a sync from somewhere, on a schedule and on a
+change; the
 desktop's store, which is the same interface over markdown files; something to
 call a sync from, on a schedule and on a change; and version history on the
 web, since the desktop's `.versions` is the floor the conflict story leans on

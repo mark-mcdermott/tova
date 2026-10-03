@@ -45,6 +45,31 @@ export function formatDailyTitle(date: Date): string {
  * auto-generated title alone does not count as content, whether it lives in
  * front matter or was echoed into the body as a heading.
  */
+/**
+ * The inverse of `formatDailyTitle`, for a client with no filenames.
+ *
+ * The desktop names a daily note `2026-10-03.md` and titles it `10/3/26`, and
+ * the filename is what makes it today's note. The web has no filenames — a path
+ * there is derived from the title — so the only way back to the date is through
+ * the title, and this is that way.
+ *
+ * Which carries one honest limit: retitle a daily note on the web and it stops
+ * being that day's. On the desktop the filename would hold it. Nothing else
+ * reads a title to find a date, so nothing else inherits the limit.
+ */
+export function parseDailyTitle(title: string): Date | null {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(title.trim())
+  if (match === null) return null
+
+  const [, month, day, year] = match.map(Number) as unknown as number[]
+  const date = new Date(2000 + year, month - 1, day)
+
+  // A rolled-over date — 13/40/26 — is not a date somebody wrote down.
+  const real =
+    date.getMonth() === month - 1 && date.getDate() === day && date.getFullYear() === 2000 + year
+  return real ? date : null
+}
+
 export function isBlankDailyBody(body: string, title: string): boolean {
   const stripped = body
     .split("\n")
