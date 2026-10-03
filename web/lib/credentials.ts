@@ -53,5 +53,7 @@ export const credentials: Credentials = {
   }
 }
 
-/** The session, for screens that need to know whether anybody is signed in. */
-export const session = auth.useSession
+/** Ends the session on this device. The key, if one is kept, is a separate thing. */
+export async function signOut(): Promise<void> {
+  orThrow(await auth.signOut())
+}

@@ -9,11 +9,20 @@
 
 import { getAuth } from "./auth"
 
-export type Caller = { userId: string }
+export type Caller = { userId: string; email: string }
 
 export async function callerOf(request: Request): Promise<Caller | null> {
   const session = await getAuth().api.getSession({ headers: request.headers })
-  return session === null ? null : { userId: session.user.id }
+  if (session === null) return null
+
+  /*
+   * The email comes from the verified session too, never from the page.
+   *
+   * It is the salt a password's wrapping key is derived with, so a wrong one
+   * produces a key that opens nothing — which reads to whoever typed the
+   * password as the password being wrong.
+   */
+  return { userId: session.user.id, email: session.user.email }
 }
 
 /** The one refusal, worded the same everywhere so none of them leaks a reason. */
