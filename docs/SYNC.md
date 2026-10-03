@@ -236,6 +236,19 @@ and "forget this device" has to clear the key.
 In-memory only, with the password re-entered every session, is stricter and
 is what to fall back to if that surface ever looks shaky.
 
+**And it is off unless the reader asks.** That decision came later than the one
+above and refines it: where the key lives is IndexedDB, whether it is written
+there at all is a question. `CLAUDE.md` draws the line at anything costing the
+reader something they should consent to — a download, a connection, their
+writing leaving the machine, real disk — and a key that decrypts every note
+sitting on disk is squarely on that side of it. So the sign-in form has an
+unticked box, "Keep this device unlocked", and signing in without it leaves the
+key in memory for that page and nowhere else.
+
+"Forget this device" is what ends it, and it is the only thing that does.
+Signing out does not: a session is an auth question and cannot reach back and
+lock a key a device already holds.
+
 **Local `.md` files stay the source of truth for anyone who never turns sync
 on.** Tova reads a folder today and that does not stop being true. Sync is a
 thing you opt into, not the new foundation under everyone.

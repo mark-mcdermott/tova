@@ -107,10 +107,41 @@ export function recoveryKeyToCipherKey(
   return scrypt(new TextEncoder().encode(normalizeRecoveryKey(key)), salt, SCRYPT)
 }
 
-async function cipherKey(
-  key: Uint8Array<ArrayBuffer>,
-  use: "encrypt" | "decrypt"
-): Promise<CryptoKey> {
+/**
+ * A vault key, as bytes or as a key nothing can read.
+ *
+ * Bytes are what a derivation produces and what the desktop holds. A
+ * `CryptoKey` is what the browser keeps between page loads: imported
+ * non-extractable, so script — ours or anyone else's — can decrypt with it and
+ * cannot get it out. `web/lib/keyStore.ts` is where that one comes from.
+ */
+export type VaultKey = Uint8Array<ArrayBuffer> | CryptoKey
+
+/**
+ * Which of the two a key is.
+ *
+ * `ArrayBuffer.isView` rather than `instanceof Uint8Array`. The two agree on
+ * everything this code has ever been handed; they part company on an array
+ * made in another realm, where `instanceof` is false and this branch would ask
+ * a byte array for its `usages`. A worker or an iframe is where that would come
+ * from, and neither exists here yet — so this is not a bug being fixed, it is a
+ * question not worth leaving open for the cost of a different function name.
+ */
+function isImported(key: VaultKey): key is CryptoKey {
+  return !ArrayBuffer.isView(key)
+}
+
+async function cipherKey(key: VaultKey, use: "encrypt" | "decrypt"): Promise<CryptoKey> {
+  if (isImported(key)) {
+    /*
+     * An already-imported key carries its own usages, so the capability is
+     * still checked — at use rather than at import. A stored key has to be able
+     * to do both, because a key you can only decrypt with cannot save a note.
+     */
+    if (!key.usages.includes(use)) throw new Error(`That key cannot ${use}`)
+    return key
+  }
+
   if (key.length !== KEY_BYTES) throw new Error("A vault key is 32 bytes")
   return crypto.subtle.importKey("raw", key, "AES-GCM", false, [use])
 }
@@ -122,10 +153,7 @@ async function cipherKey(
  * the fixture — only files to open. Reusing one under a single key is the
  * mistake that takes GCM apart, so it is never derived from anything.
  */
-export async function seal(
-  plain: Uint8Array<ArrayBuffer>,
-  key: Uint8Array<ArrayBuffer>
-): Promise<string> {
+export async function seal(plain: Uint8Array<ArrayBuffer>, key: VaultKey): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES))
   const sealed = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -145,10 +173,7 @@ export async function seal(
  * altered file fails rather than decrypting to something plausible, so every
  * refusal here is deliberate and the fixture has a list of them.
  */
-export async function unseal(
-  envelope: string,
-  key: Uint8Array<ArrayBuffer>
-): Promise<Uint8Array<ArrayBuffer>> {
+export async function unseal(envelope: string, key: VaultKey): Promise<Uint8Array<ArrayBuffer>> {
   const [magic, iv, payload] = envelope.split("\n")
   if (magic !== MAGIC || iv === undefined || payload === undefined) {
     throw new Error("That file is not a sealed note")

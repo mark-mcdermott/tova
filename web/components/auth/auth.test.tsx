@@ -234,6 +234,76 @@ describe("signing in", () => {
   })
 })
 
+describe("keeping the key on this device", () => {
+  const keepingForm = (keep: () => Promise<boolean>, drop = vi.fn(async () => undefined)) => {
+    render(
+      <SignInForm
+        client={fakeClient({ signIn: async () => ({ state: "unlocked", ...VAULT }) })}
+        keep={keep}
+        drop={drop}
+      />
+    )
+    return drop
+  }
+
+  const signInWith = async (tick: boolean) => {
+    await fill("Email", "mark@markmcdermott.io")
+    await fill("Password", "a long enough password")
+    if (tick) await userEvent.click(screen.getByRole("checkbox"))
+    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+  }
+
+  /*
+   * Off unless asked. The key this stores decrypts every note, so it is a cost
+   * to consent to rather than a convenience to assume — the same rule that
+   * keeps the grammar dictionary and the update check off by default.
+   */
+  it("stores nothing when the box is left alone", async () => {
+    const keep = vi.fn(async () => true)
+    keepingForm(keep)
+
+    await signInWith(false)
+
+    expect(await screen.findByText("You are in")).toBeTruthy()
+    expect(keep).not.toHaveBeenCalled()
+    expect(screen.queryByRole("button", { name: "Forget this device" })).toBeNull()
+  })
+
+  it("stores the key when the box is ticked, and says the device is holding it", async () => {
+    const keep = vi.fn(async () => true)
+    keepingForm(keep)
+
+    await signInWith(true)
+
+    expect(await screen.findByRole("button", { name: "Forget this device" })).toBeTruthy()
+    expect(keep).toHaveBeenCalledWith(VAULT)
+  })
+
+  /*
+   * A private window, blocked site data, a full quota. The vault is open either
+   * way, so the sign-in succeeds and the page simply does not claim to be
+   * holding something it is not.
+   */
+  it("signs in anyway when this browser cannot keep a key", async () => {
+    keepingForm(vi.fn(async () => false))
+
+    await signInWith(true)
+
+    expect(await screen.findByText("You are in")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Forget this device" })).toBeNull()
+  })
+
+  it("forgets on request, and stops saying it remembers", async () => {
+    const drop = keepingForm(vi.fn(async () => true))
+
+    await signInWith(true)
+    await userEvent.click(await screen.findByRole("button", { name: "Forget this device" }))
+
+    expect(drop).toHaveBeenCalled()
+    expect(screen.queryByRole("button", { name: "Forget this device" })).toBeNull()
+  })
+})
+
 describe("starting fresh", () => {
   it("mints a new key and shows the one thing to save", async () => {
     const mintVault = vi.fn(async () => ({ ...VAULT, epoch: 2, recoveryKey: KEY }))

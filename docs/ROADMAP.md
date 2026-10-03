@@ -112,9 +112,11 @@ endpoints, the two sync calls, the browser-side flows, and the screens they
 drive — sign up, sign in, recover after a reset, finish an interrupted password
 change, and the honest dead end when a recovery key is gone.
 
-**Next, in order:** somewhere for the content key to live between page loads —
-a non-extractable `CryptoKey` in IndexedDB, per `SYNC.md`, since every flow
-currently ends holding it in memory and nothing persists it; the account screen,
+**Done since:** somewhere for the content key to live between page loads — a
+non-extractable `CryptoKey` in IndexedDB, behind an unticked box, with "forget
+this device" to end it.
+
+**Next, in order:** the account screen,
 which is a password change and a new recovery key over flows that already exist;
 all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
