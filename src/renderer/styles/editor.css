@@ -345,6 +345,37 @@
   text-indent: -2ch;
 }
 
+/*
+ * A level of nesting is worth more than the two spaces the source spends on it.
+ *
+ * Markdown marks a nested item with two spaces, which at one monospace cell
+ * apiece reads as almost nothing — a second level that barely looks like one.
+ * Each level adds a further 2ch on top of whatever the source carries, so the
+ * step is visible without the text marching off to the right.
+ *
+ * A rule per level rather than arithmetic on an attribute, because CSS cannot
+ * compute from one and an inline style is the thing CLAUDE.md rules out.
+ */
+.cm-line.cm-list-line[data-depth="2"] {
+  padding-left: 4.5ch;
+}
+
+.cm-line.cm-list-line[data-depth="3"] {
+  padding-left: 6.5ch;
+}
+
+.cm-line.cm-list-line[data-depth="4"] {
+  padding-left: 8.5ch;
+}
+
+.cm-line.cm-list-line[data-depth="5"] {
+  padding-left: 10.5ch;
+}
+
+.cm-line.cm-list-line[data-depth="6"] {
+  padding-left: 12.5ch;
+}
+
 /* The dash, wearing the circle it stands for. It keeps its place in the line
    and gives up only its ink, so nothing moves when the cursor brings it back. */
 .cm-list-bullet {

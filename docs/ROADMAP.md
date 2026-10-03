@@ -28,15 +28,6 @@ paths and only one of them has been through.
 
 Small, known, and each one found in passing rather than reported.
 
-- **A nested bullet barely looks nested.** `.cm-list-line` is one flat class
-  with a fixed `padding-left: 2.5ch`, and `decorateBullet` never learns how deep
-  the item is — so the only thing setting a second level apart from the first is
-  the two literal spaces in the source. Two characters, which reads as a hair.
-
-  The depth is in the tree: a `ListItem` inside a `BulletList` inside another
-  `ListItem`. Reported from a week of real use, which is where this kind of
-  thing shows up and not before.
-
 - **A Dependabot alert on `glib` that cannot be closed from here, and does not
   reach the product.** Alert 36, moderate: unsoundness in the `Iterator` and
   `DoubleEndedIterator` impls for `glib::VariantStrIter`, wanting `glib >= 0.20`
