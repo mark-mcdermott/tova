@@ -15,6 +15,13 @@
       "when": 1791034817801,
       "tag": "0001_ancient_carlie_cooper",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791035614697,
+      "tag": "0002_brown_slapstick",
+      "breakpoints": true
     }
   ]
 }

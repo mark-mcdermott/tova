@@ -6,9 +6,14 @@
  * and the writing itself is one opaque blob. `docs/SYNC.md` is the reasoning,
  * including what that costs.
  *
- * Better Auth owns identity and is not described here. It proves who someone
- * is; it never holds anything that decrypts what they wrote, and keeping those
- * two separate is the point rather than an accident of layout.
+ * Better Auth owns identity, in `auth-schema.ts`, and is re-exported here so
+ * the adapter sees one schema. It proves who someone is; it never holds
+ * anything that decrypts what they wrote, and keeping those two separate is the
+ * point rather than an accident of layout.
+ *
+ * Every `user_id` below is `text`, not `uuid`, because Better Auth mints its
+ * own string ids — a uuid column would reject every one of them, and the first
+ * sign-up would be where anybody found out.
  */
 
 import {
@@ -21,6 +26,9 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core"
+import { user } from "./auth-schema"
+
+export * from "./auth-schema"
 
 /**
  * One note, as ciphertext.
@@ -42,7 +50,9 @@ export const notes = pgTable(
      * the first time it is seen.
      */
     id: uuid("id").primaryKey(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
 
     /** AES-256-GCM over the whole note, front matter and all. */
     ciphertext: text("ciphertext").notNull(),
@@ -105,7 +115,9 @@ export const keyEnvelopes = pgTable(
   "key_envelopes",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
 
     /** Which factor opens this one: a password, or the recovery key. */
     kind: text("kind", { enum: ["password", "recovery"] }).notNull(),
@@ -145,7 +157,9 @@ export const devices = pgTable(
   "devices",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     /** What the reader sees in a list. Theirs to set, and never trusted. */
     name: text("name").notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
