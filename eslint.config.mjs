@@ -47,7 +47,12 @@ export default tseslint.config(
       "src-tauri/target/",
       "src-tauri/gen/",
       "scripts/seed/vault/",
-      "conformance/"
+      "conformance/",
+      // Astro writes these itself on every build and they are not ours to
+      // hold to our rules — same argument as drizzle/ in .prettierignore.
+      ".astro/",
+      ".vercel/",
+      "out/"
     ]
   },
 

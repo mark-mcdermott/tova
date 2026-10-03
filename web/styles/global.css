@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/*
+ * The app's own tokens, not Tailwind's palette.
+ *
+ * Tova's colours are specified in docs/SPEC.md and implemented in
+ * src/renderer/styles/globals.css, which the desktop app owns. These are the
+ * same values, declared for the marketing pages so the two never drift into
+ * two different purples.
+ */
+@theme {
+  --color-accent: #5646c9;
+  --color-accent-bright: #4436a8;
+  --color-ink: #17141f;
+  --color-ink-soft: #2e2a3a;
+  --color-ink-faint: #6b6480;
+  --color-page: #efecf4;
+  --font-mono: "Noto Sans Mono", ui-monospace, Menlo, monospace;
+}

@@ -4,9 +4,12 @@
   "description": "A calm, local-first desktop writing app",
   "scripts": {
     "build": "vite build --config vite.renderer.config.ts",
+    "build:web": "astro build",
     "check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "check:web": "astro check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "dev:web": "astro dev",
     "format": "prettier --write .",
     "lint": "eslint . && prettier --check .",
     "release": "node scripts/release.mjs",
@@ -21,6 +24,8 @@
   "license": "UNLICENSED",
   "type": "commonjs",
   "dependencies": {
+    "@astrojs/react": "^7.0.0",
+    "@astrojs/vercel": "^11.0.11",
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-markdown": "^6.5.2",
     "@codemirror/language": "^6.12.4",
@@ -31,6 +36,7 @@
     "@lezer/highlight": "^1.2.5",
     "@lezer/markdown": "~1.6.4",
     "@noble/hashes": "^2.4.0",
+    "astro": "^7.3.5",
     "drizzle-orm": "^0.45.3",
     "harper.js": "^2.10.0",
     "react": "^19.3.0",
@@ -39,7 +45,9 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
     "@types/node": "^26.6.3",
@@ -53,6 +61,8 @@
     "globals": "^17.12.0",
     "jsdom": "^30.1.1",
     "prettier": "^3.9.9",
+    "prettier-plugin-astro": "^1.1.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.1",
