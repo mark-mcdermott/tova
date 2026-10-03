@@ -79,11 +79,25 @@ export const pushResult = z.discriminatedUnion("status", [
     status: z.literal("conflict"),
     id: z.uuid(),
     current: syncedNote.extend({ version: z.coerce.bigint() })
-  })
+  }),
+  /*
+   * Refused, and there is nothing to merge against.
+   *
+   * A base version was given for a note this vault does not have — deleted and
+   * swept, or an id belonging to somebody else. Distinct from a conflict
+   * because there is no winning row to hand back, and a client that treated it
+   * as one would be merging against nothing.
+   */
+  z.object({ status: z.literal("missing"), id: z.uuid() })
 ])
 export type PushResult = z.infer<typeof pushResult>
 
 export const pushResponse = z.object({ results: z.array(pushResult) })
+
+/** Whether a push was refused for any reason at all. */
+export function isRefused(result: PushResult): boolean {
+  return result.status !== "accepted"
+}
 
 /** Whether a push was refused because somebody else got there first. */
 export function isConflict(

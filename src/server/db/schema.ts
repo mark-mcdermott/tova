@@ -26,9 +26,24 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core"
+import { pgSequence } from "drizzle-orm/pg-core"
 import { user } from "./auth-schema"
 
 export * from "./auth-schema"
+
+/**
+ * Where a note's version comes from.
+ *
+ * A sequence rather than `max(version) + 1`, because the latter is a read and
+ * then a write, and two pushes arriving together would read the same number and
+ * write it twice — two notes sharing a version, and a pull that skips one of
+ * them forever.
+ *
+ * Global rather than per-reader. The numbers a single vault sees are then
+ * sparse, which costs nothing: a cursor only ever has to be bigger than the
+ * last one, never contiguous.
+ */
+export const noteVersion = pgSequence("note_version")
 
 /**
  * One note, as ciphertext.

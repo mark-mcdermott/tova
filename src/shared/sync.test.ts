@@ -7,6 +7,7 @@ import {
   pushedNote,
   syncedNote,
   isConflict,
+  isRefused,
   isCaughtUp,
   nextCursor
 } from "./sync"
@@ -155,6 +156,32 @@ describe("pushing", () => {
       expect(refused.current.version).toBe(9n)
       expect(refused.current.ciphertext).toBe(BLOB)
     }
+  })
+
+  /*
+   * Refused with nothing to merge against — a base version for a note this
+   * vault does not have. Distinct from a conflict because there is no winning
+   * row, and a client treating it as one would be merging against nothing.
+   */
+  it("says when there is no row to merge against at all", () => {
+    const response = pushResponse.parse({ results: [{ status: "missing", id: ID }] })
+    const [only] = response.results
+
+    expect(isRefused(only)).toBe(true)
+    expect(isConflict(only)).toBe(false)
+    expect("current" in only).toBe(false)
+  })
+
+  it("counts every refusal as refused, however it was refused", () => {
+    const response = pushResponse.parse({
+      results: [
+        { status: "accepted", id: ID, version: "8" },
+        { status: "conflict", id: ID, current: { ...note(), version: "9" } },
+        { status: "missing", id: ID }
+      ]
+    })
+
+    expect(response.results.map(isRefused)).toEqual([false, true, true])
   })
 
   it("refuses a result that is neither one thing nor the other", () => {
