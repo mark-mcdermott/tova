@@ -544,6 +544,48 @@ mod tests {
         assert_eq!(key(&scratch.dir), None);
     }
 
+    /**
+     * The handshake, against a server that is actually running.
+     *
+     * Ignored by default, because it needs one. Everything above tests this
+     * module's own decisions; this tests the two ends agreeing — whether
+     * Better Auth accepts the `Origin` a non-browser sends, whether the cookie
+     * it sets is one this can store and send back, and whether a vault call
+     * with that cookie is let through.
+     *
+     *     TOVA_SERVER=http://localhost:4321 \
+     *     TOVA_PROBE_EMAIL=… TOVA_PROBE_SECRET=… \
+     *     cargo test --manifest-path src-tauri/Cargo.toml -- --ignored signs_in_against
+     */
+    #[test]
+    #[ignore = "needs a running server and an account on it"]
+    fn signs_in_against_a_real_server() {
+        let scratch = Scratch::new("live");
+        safe_storage::stand_in(Some(b"a test key"));
+
+        let email = std::env::var("TOVA_PROBE_EMAIL").expect("TOVA_PROBE_EMAIL");
+        let secret = std::env::var("TOVA_PROBE_SECRET").expect("TOVA_PROBE_SECRET");
+
+        sign_in(&scratch.dir, &email, &secret).expect("the sign-in to be accepted");
+        assert!(held(&scratch.dir).is_some(), "no session was kept");
+
+        assert_eq!(
+            status(&scratch.dir).expect("a status"),
+            Some(email),
+            "the server did not recognise the session it had just issued"
+        );
+
+        // An authenticated vault call, which is what the session is for.
+        let pulled = pull(&scratch.dir, "0", Some(10)).expect("the pull to be let through");
+        assert!(pulled.contains("\"notes\""), "unexpected reply: {pulled}");
+
+        sign_out(&scratch.dir).expect("the sign-out to work");
+        assert!(
+            held(&scratch.dir).is_none(),
+            "the session outlived the sign-out"
+        );
+    }
+
     #[test]
     fn says_nobody_is_signed_in_when_nothing_is_held() {
         let scratch = Scratch::new("status");
