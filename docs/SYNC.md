@@ -138,6 +138,23 @@ but a password that was reset. The copy should say so, because "your password
 worked and your notes are still locked" is otherwise indistinguishable from a
 bug.
 
+**Changing a password is two writes, and neither order is safe alone.** The
+password derives both halves — the auth secret the server checks and the
+wrapping key it never sees — so changing it means a new credential _and_ a new
+envelope. If only the credential lands, the reader signs in and the notes stay
+shut. If only the envelope lands, the old password still signs in and derives a
+wrapping key that no longer fits. Both failures look identical to the reader and
+both need the recovery key to escape, so the two writes have to be one
+transaction or the envelope has to roll back.
+
+**Starting fresh after losing a recovery key** mints a new content key under a
+new epoch. The old notes stay exactly where they are, sealed, carrying the old
+epoch — a client reads the highest epoch it can unwrap and leaves the rest
+alone. They are not deleted, because the entire reason a recovery key exists is
+that people find things late, and deleting would be the one irreversible step
+taken on their behalf on the screen whose premise is that nothing can be done
+for them.
+
 **Deleting an account** removes the envelopes, and with them every way of
 reading the notes — by the reader, and by Tova, permanently. Export has to come
 first and the screen has to say why it is not a formality.
