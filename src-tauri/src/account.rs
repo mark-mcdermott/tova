@@ -76,6 +76,56 @@ pub fn cookie_pair(set_cookie: &str) -> Option<String> {
     Some(pair.to_string())
 }
 
+/// The content key, which is the one thing that opens a note.
+///
+/// Kept the way the session is — encrypted by the keychain, in Application
+/// Support — and for a stronger reason. A session expires and can be revoked
+/// from another device. This cannot: anybody holding these thirty-two bytes
+/// can read every note under this epoch, forever, with no server involved.
+fn key_path(data_dir: &Path) -> PathBuf {
+    data_dir.join("content-key.bin")
+}
+
+pub fn key(data_dir: &Path) -> Option<Vec<u8>> {
+    let sealed = std::fs::read(key_path(data_dir)).ok()?;
+    let text = safe_storage::decrypt_string(&sealed)?;
+    let bytes: Vec<u8> = text
+        .split(',')
+        .filter(|part| !part.is_empty())
+        .map(|part| part.parse::<u8>().ok())
+        .collect::<Option<_>>()?;
+
+    // Thirty-two or nothing. A short key is a corrupted file, and letting it
+    // through would be a decryption failure somewhere further away.
+    (bytes.len() == 32).then_some(bytes)
+}
+
+pub fn set_key(data_dir: &Path, bytes: Option<Vec<u8>>) -> Result<(), String> {
+    let path = key_path(data_dir);
+
+    let Some(bytes) = bytes else {
+        return match std::fs::remove_file(&path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error.to_string()),
+        };
+    };
+
+    if bytes.len() != 32 {
+        return Err("A content key is 32 bytes".to_string());
+    }
+
+    std::fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
+    let text = bytes
+        .iter()
+        .map(|byte| byte.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+    let sealed = safe_storage::encrypt_string(&text)
+        .ok_or_else(|| "This Mac would not store the key securely".to_string())?;
+    std::fs::write(&path, sealed).map_err(|e| e.to_string())
+}
+
 pub struct Response {
     pub status: u16,
     pub body: String,
@@ -165,6 +215,13 @@ pub fn sign_out(data_dir: &Path) -> Result<(), String> {
         "/api/auth/sign-out",
         Some("{}".to_string()),
     );
+    /*
+     * The key goes first. A half-done sign-out that kept the key is readable
+     * notes with no lock in front of them; one that kept the session is a
+     * session with nothing to open. Only one of those is survivable, and it is
+     * the same reasoning as the web's "forget this device".
+     */
+    set_key(data_dir, None)?;
     release(data_dir)
 }
 
@@ -419,6 +476,63 @@ mod tests {
             "sent: {request}"
         );
         std::env::remove_var("TOVA_SERVER");
+    }
+
+    /*
+     * Anybody holding these thirty-two bytes can read every note under this
+     * epoch, forever, with no server involved — which is a stronger claim than
+     * the session next to it, and the reason both are keychain-encrypted.
+     */
+    #[test]
+    fn the_content_key_is_not_in_the_clear_either() {
+        let scratch = Scratch::new("key");
+        safe_storage::stand_in(Some(b"a test key"));
+        let bytes: Vec<u8> = (0..32).collect();
+
+        set_key(&scratch.dir, Some(bytes.clone())).unwrap();
+        let raw = std::fs::read(key_path(&scratch.dir)).unwrap();
+
+        assert!(
+            !raw.windows(32).any(|window| window == bytes.as_slice()),
+            "the key is sitting in the file as written"
+        );
+        assert_eq!(key(&scratch.dir), Some(bytes));
+    }
+
+    #[test]
+    fn refuses_a_key_that_is_not_thirty_two_bytes() {
+        let scratch = Scratch::new("short");
+        safe_storage::stand_in(Some(b"a test key"));
+
+        assert!(set_key(&scratch.dir, Some(vec![1, 2, 3])).is_err());
+        assert_eq!(key(&scratch.dir), None);
+    }
+
+    /*
+     * The key goes before the session. Half a sign-out that kept the key is
+     * readable notes with no lock in front of them; one that kept the session
+     * is a session with nothing to open.
+     */
+    #[test]
+    fn signing_out_takes_the_key_with_it() {
+        let scratch = Scratch::new("signout-key");
+        safe_storage::stand_in(Some(b"a test key"));
+        std::env::set_var("TOVA_SERVER", "http://127.0.0.1:1");
+
+        hold(&scratch.dir, "a=b").unwrap();
+        set_key(&scratch.dir, Some((0..32).collect())).unwrap();
+        sign_out(&scratch.dir).unwrap();
+
+        assert_eq!(key(&scratch.dir), None);
+        assert_eq!(held(&scratch.dir), None);
+        std::env::remove_var("TOVA_SERVER");
+    }
+
+    #[test]
+    fn clearing_a_key_that_is_not_there_is_not_a_failure() {
+        let scratch = Scratch::new("clear");
+        set_key(&scratch.dir, None).unwrap();
+        assert_eq!(key(&scratch.dir), None);
     }
 
     #[test]

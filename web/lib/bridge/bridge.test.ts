@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { webBridge, type SettingsStore } from "./index"
 import { inMemoryNotes } from "../testing"
-import { signal } from "../signal"
+import { signal } from "../../../src/shared/signal"
 import { NotOnTheWeb } from "./refuse"
 import { DEFAULT_PREFERENCES } from "../../../src/shared/preferences"
 

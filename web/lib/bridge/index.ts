@@ -21,7 +21,7 @@ import { webSync } from "./sync"
 import { notYet, unavailable } from "./refuse"
 import { read, write } from "./settings"
 import { webNoteStore } from "../noteStore"
-import { signal, type Signal } from "../signal"
+import { signal, type Signal } from "../../../src/shared/signal"
 
 /**
  * Where a preference and the last screen are kept.

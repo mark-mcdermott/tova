@@ -1,3 +1,4 @@
+import type { VaultKey } from "./crypto"
 import type { Screen } from "./screen"
 
 /**
@@ -112,6 +113,27 @@ export interface SyncApi {
   signOut: () => Promise<void>
   pull: (cursor: string, limit?: number) => Promise<unknown>
   push: (notes: unknown[]) => Promise<unknown>
+  /**
+   * Where the last pull stopped, and what was last agreed about each note.
+   *
+   * Kept by the backend because the two have nowhere in common to keep it: the
+   * desktop has a file in Application Support and the web has IndexedDB. Given
+   * back as it was stored, because what is in it is `syncCycle`'s business and
+   * not the bridge's.
+   */
+  state: () => Promise<unknown>
+  setState: (value: unknown) => Promise<void>
+  /**
+   * The content key this device is holding, or null.
+   *
+   * The two backends hold it differently and both answer honestly. The web
+   * returns a `CryptoKey` that script can use and cannot read out; the desktop
+   * returns the bytes, out of the system keychain. Neither is better in the
+   * abstract — a browser has no keychain and a Mac has no non-extractable key
+   * — and `seal` and `unseal` take either.
+   */
+  key: () => Promise<VaultKey | null>
+  setKey: (key: Uint8Array | null) => Promise<void>
 }
 
 /**
