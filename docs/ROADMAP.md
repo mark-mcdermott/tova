@@ -161,38 +161,30 @@ all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
 which is the web client as a PWA.
 
-**Mobile has mocks**, redrawn 2026-10-03 after a first pass. Eight screens now,
-kept outside the repository with the rest of the branding, and the three gaps in
-the first set are closed: a lock screen, a Face ID enrolment screen, and a sync
-status screen that explains a conflict copy. The notes list carries a `Synced`
-chip and badges the copy `Conflict copy` beside its `Original`. Settings gained
-an Unlock & Security group.
+**Mobile has mocks**, at revision three. Ten screens, kept outside the
+repository with the rest of the branding, and the handoff reads as a
+specification rather than a description: the PWA and PRF, an enrolled device
+surviving a password reset, and lock-versus-forget as two different acts. Every
+correction from the first two rounds is in.
 
-The conflict screen matches what `syncCycle.ts` does, which is worth recording
-because it was drawn before the code was read: _"Both versions were saved.
-Nothing was overwritten"_, with **theirs** as the copy and the original keeping
-its id.
+The conflict screen matches `syncCycle.ts` — both notes kept, the original
+keeping its id, the incoming version becoming the copy — which is worth
+recording because it was drawn before the code was read.
 
-Three things to fix before any of it is built:
+Two things it leaves open:
 
-- **The enrolment copy says the key is "stored in this device's Keychain".**
-  A PWA cannot reach the Keychain; the web path is WebAuthn's `prf` extension
-  over storage the browser will not read back. The copy and the decision below
-  have to agree, and right now they do not — making the copy true as written is
-  choosing a Tauri build.
-- **"Face ID doesn't recover notes after a password reset" is false on an
-  enrolled device.** The biometric secret wraps the content key, which is
-  independent of the password, so a phone that already has Face ID set up opens
-  after a reset. That is a way back in rather than a caveat, and better than
-  what the copy promises. A _new_ device still needs the password or the
-  recovery key.
-- **There is no way to turn Face ID off.** Settings has "Lock Tova now", which
-  drops the key from memory so Face ID can re-open it. Nothing removes the
-  stored key, which is the web's "forget this device" and the only thing that
-  ends the risk. It belongs on the Face ID screen.
-
-Minor: "Preview reconnection" on the sync screen is a mock affordance rather
-than a control.
+- **"Forget this device" has to clear the local notes, not only the key.** The
+  handoff says it does not delete notes, which is true of the server and
+  dangerous if read as the cache: `noteStore` keeps notes in IndexedDB as
+  plaintext, because plaintext is what the reader is there to see. Dropping the
+  key alone removes the lock and leaves the contents. `forget.ts` is now that
+  one act, and it clears the notes first — a half-done forget that kept the key
+  is a key with nothing to open, and the other order is readable writing with no
+  lock in front of it.
+- **PRF should probably replace "keep this device unlocked" everywhere, not
+  only on a phone.** `SYNC.md` has the argument: a non-extractable `CryptoKey`
+  can be used by any script in this origin with no gesture, and a PRF envelope
+  cannot be opened without one.
 
 Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
 would have been the answer if web were not happening — but once a web client

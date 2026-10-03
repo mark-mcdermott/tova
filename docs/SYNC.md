@@ -293,6 +293,14 @@ rather than anything derived from the password, **an enrolled device still opens
 after a password reset.** That is a way back in that costs no recovery key, and
 it is the opposite of what a first draft of the copy claimed.
 
+**And it is stronger than the thing it sits beside.** "Keep this device
+unlocked" stores a non-extractable `CryptoKey`: script cannot read it out, and
+any script in this origin can _use_ it, with no gesture at all. That is exactly
+the residual risk named above. A PRF envelope cannot be opened without a
+biometric gesture, so the same XSS hole reaches nothing. Where PRF is available
+it is the better answer for staying unlocked, on a desk as much as on a phone,
+and the non-extractable key is what is left for everywhere else.
+
 **And it is off unless the reader asks.** That decision came later than the one
 above and refines it: where the key lives is IndexedDB, whether it is written
 there at all is a question. `CLAUDE.md` draws the line at anything costing the
