@@ -1,0 +1,26 @@
+---
+import { Shell } from "../components/app/Shell"
+
+export const prerender = false
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tova</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <!--
+      Its own document rather than the marketing layout. The renderer brings
+      its own reset, its own background and its own full-height shell, and
+      wrapping it in a page that also has opinions about those is how you get
+      two scrollbars.
+    -->
+    <div id="root">
+      <Shell client:only="react" />
+    </div>
+  </body>
+</html>

@@ -10,22 +10,22 @@ import { readFileSync } from "node:fs"
  * the bridge, or a component works in one build and throws in the other — and
  * finds out at the moment somebody clicks it.
  *
- * The source of truth is the renderer's own declaration of `window.tova` and
- * the interfaces behind it. That is a contract TypeScript already enforces
- * from the other side: a component calling a method that is not there fails
- * `pnpm run check`. This checks the bridge against the same declaration.
+ * The source of truth is `TovaBridge` and the interfaces behind it. That is a
+ * contract TypeScript already enforces from the other side: a component
+ * calling a method that is not there fails `pnpm run check`, and so does a web
+ * bridge missing one. This checks the Rust bridge against the same type.
  *
- * It used to read the Electron preload instead, which was the same list by a
- * longer route and does not outlive the cutover.
+ * It used to read the Electron preload, then the inline shape in `tova.d.ts`.
+ * Naming the type is what let a second implementation be written against it,
+ * and this reads the name.
  */
-const declaration = readFileSync("src/renderer/tova.d.ts", "utf-8")
 const types = readFileSync("src/shared/types.ts", "utf-8")
 const bridge = readFileSync("src-tauri/bridge.js", "utf-8")
 
-/** `notes: NoteApi` inside `tova: { … }` — the groups and what describes them. */
+/** `notes: NoteApi` inside `TovaBridge` — the groups and what describes them. */
 function groupInterfaces(): Map<string, string> {
-  const exposed = /tova:\s*\{([\s\S]*?)\n {4}\}/.exec(declaration)
-  if (exposed === null) throw new Error("Could not find what window.tova is declared as")
+  const exposed = /export interface TovaBridge \{([\s\S]*?)\n\}/.exec(types)
+  if (exposed === null) throw new Error("Could not find TovaBridge in types.ts")
 
   const groups = new Map<string, string>()
   for (const [, group, name] of exposed[1].matchAll(/(\w+):\s*(\w+)/g)) groups.set(group, name)
