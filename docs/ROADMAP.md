@@ -61,24 +61,26 @@ Small, known, and each one found in passing rather than reported.
   blanket-disabled, so they stay visible and stay off the failing path. Going
   through them is editor work, not tooling work.
 
-- **Eight conformance fixtures are read by the Rust alone.** Each one's readme
-  says "both read this" and for these eight only one side does, so a change on
-  the TypeScript side leaves the Rust passing against a stale answer and the two
-  backends quietly disagreeing. `markdown.json` was in this list until a
-  tampering run found it: dropping the alignment style from the HTML export
-  changed several answers and every TypeScript test still passed.
+- **Two conformance fixtures are read by the Rust alone, and both correctly.**
+  `safe-storage` is Chromium's OSCrypt format and `window` is where the window
+  was left — neither has a TypeScript counterpart to hold, because both moved
+  out of the renderer when Electron did.
 
-  Read by both: `crypto`, `markdown`, `preferences`, `rules`, `tags`.
+  The other eleven are read by both. Six of them were not: `markdown`, `screen`,
+  `blogs`, `publish`, `search`, `posts` and `text` each said "both read this"
+  while only one side did, so a change on the TypeScript side would have left
+  the Rust passing against an answer this side had stopped giving. Each new test
+  was tampered against rather than trusted for passing, and every one of them
+  caught what it was supposed to.
 
-  Read by the Rust alone: `blogs`, `posts`, `publish`, `safe-storage`, `screen`,
-  `search`, `text`, `window`.
-
-  Some of those are probably Rust-only by nature — `safe-storage` is the
-  keychain and has no TypeScript counterpart to hold — so this is eight to look
-  at rather than eight to fix. The ones with an obvious twin in `src/shared`
-  (`screen`, `search`, `blogs`, `posts`, `publish`) are the ones to start with.
-  The pattern to copy is `markdown.conformance.test.ts`, and the way to know it
-  earned its keep is to tamper the TypeScript and watch it fail.
+  Two things fell out of that worth keeping. `publish`'s `hashContent` cases
+  have no TypeScript counterpart at all — the hashing moved into the Rust — so
+  that section stays one-sided on purpose and the readme says so. And the
+  `search` and `markdown` readmes both claimed a regex class was ASCII "without
+  the u flag": JavaScript has no flag that makes `\w` or `\b` Unicode-aware, and
+  `\S` is Unicode-aware already. The difference is Rust's regex crate reading
+  its classes as Unicode by default, which is the direction it actually runs.
+  Found by a tamper that added the flag and changed nothing.
 
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists

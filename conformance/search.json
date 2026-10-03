@@ -9,8 +9,14 @@
     "off a character boundary panics rather than being merely wrong.",
     "",
     "The word-boundary cases are the other trap: JavaScript's \\b follows \\w,",
-    "which without the u flag is [A-Za-z0-9_]. So `caf` is a whole word in",
-    "`café`, which is surprising, and is what both backends have to do.",
+    "which is [A-Za-z0-9_] and stays that way whatever flags are on - the u",
+    "flag does not touch \\w or \\b. So `caf` is a whole word in `caf\u00e9`, which",
+    "is surprising, and is what both backends have to do. Rust's regex crate",
+    "reads both as Unicode by default, which is the direction the difference",
+    "actually runs, and is why the Rust side is hand-written.",
+    "",
+    "Both halves read it: search.conformance.test.ts on this side,",
+    "src-tauri/src/search_conformance.rs on the other.",
     "",
     "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
   ],
@@ -61,15 +67,15 @@
       ]
     },
     {
-      "query": "café",
+      "query": "caf\u00e9",
       "terms": [
-        "café"
+        "caf\u00e9"
       ]
     },
     {
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "terms": [
-        "😀"
+        "\ud83d\ude00"
       ]
     },
     {
@@ -93,9 +99,9 @@
       ]
     },
     {
-      "query": "émile",
+      "query": "\u00e9mile",
       "terms": [
-        "émile"
+        "\u00e9mile"
       ]
     },
     {
@@ -119,16 +125,16 @@
       "snippet": "Coffee. Empty streets."
     },
     {
-      "body": "A café — 😀 — then the word morning appears here.",
+      "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here.",
       "at": 30,
       "length": 7,
-      "snippet": "A café — 😀 — then the word morning appears here."
+      "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
     },
     {
       "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
       "at": 200,
       "length": 6,
-      "snippet": "…xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy…"
+      "snippet": "\u2026xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\u2026"
     },
     {
       "body": "short",
@@ -143,10 +149,10 @@
       "snippet": "line one line two"
     },
     {
-      "body": "😀😀😀 needle",
+      "body": "\ud83d\ude00\ud83d\ude00\ud83d\ude00 needle",
       "at": 7,
       "length": 6,
-      "snippet": "😀😀😀 needle"
+      "snippet": "\ud83d\ude00\ud83d\ude00\ud83d\ude00 needle"
     }
   ],
   "match": [
@@ -266,7 +272,7 @@
         ],
         "body": "Coffee. Empty streets."
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
@@ -277,7 +283,7 @@
         ],
         "body": "Coffee. Empty streets."
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
@@ -325,7 +331,7 @@
         ],
         "body": "Coffee. Empty streets."
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {
@@ -360,7 +366,7 @@
       "result": {
         "where": "title",
         "score": 120,
-        "snippet": "morning morning morning morning morning morning…"
+        "snippet": "morning morning morning morning morning morning\u2026"
       }
     },
     {
@@ -382,7 +388,7 @@
       "result": {
         "where": "title",
         "score": 120,
-        "snippet": "morning morning morning morning morning morning…"
+        "snippet": "morning morning morning morning morning morning\u2026"
       }
     },
     {
@@ -395,7 +401,7 @@
       "result": {
         "where": "title",
         "score": 120,
-        "snippet": "morning morning morning morning morning morning…"
+        "snippet": "morning morning morning morning morning morning\u2026"
       }
     },
     {
@@ -440,7 +446,7 @@
         "tags": [],
         "body": "morning morning morning morning morning morning morning"
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
@@ -449,7 +455,7 @@
         "tags": [],
         "body": "morning morning morning morning morning morning morning"
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
@@ -485,7 +491,7 @@
         "tags": [],
         "body": "morning morning morning morning morning morning morning"
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {
@@ -614,7 +620,7 @@
         ],
         "body": "Nothing relevant."
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
@@ -625,7 +631,7 @@
         ],
         "body": "Nothing relevant."
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
@@ -669,7 +675,7 @@
         ],
         "body": "Nothing relevant."
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {
@@ -698,20 +704,20 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "morning",
       "result": {
         "where": "body",
         "score": 10,
-        "snippet": "A café — 😀 — then the word morning appears here."
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "slow morning",
       "result": null
@@ -720,33 +726,33 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "MORNING",
       "result": {
         "where": "body",
         "score": 10,
-        "snippet": "A café — 😀 — then the word morning appears here."
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "  morning  ",
       "result": {
         "where": "body",
         "score": 10,
-        "snippet": "A café — 😀 — then the word morning appears here."
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "",
       "result": null
@@ -755,7 +761,7 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "   ",
       "result": null
@@ -764,7 +770,7 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "quiet",
       "result": null
@@ -773,46 +779,46 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "caf",
       "result": {
         "where": "body",
         "score": 10,
-        "snippet": "A café — 😀 — then the word morning appears h…"
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears h\u2026"
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": {
         "where": "body",
         "score": 4,
-        "snippet": "A café — 😀 — then the word morning appears he…"
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears he\u2026"
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": {
         "where": "body",
         "score": 4,
-        "snippet": "A café — 😀 — then the word morning appears here."
+        "snippet": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       }
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "notes writing",
       "result": null
@@ -821,7 +827,7 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "zzz",
       "result": null
@@ -830,7 +836,7 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "morning slow",
       "result": null
@@ -839,16 +845,16 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "emile",
       "result": null
@@ -857,7 +863,7 @@
       "note": {
         "title": "Untitled",
         "tags": [],
-        "body": "A café — 😀 — then the word morning appears here."
+        "body": "A caf\u00e9 \u2014 \ud83d\ude00 \u2014 then the word morning appears here."
       },
       "query": "morning_side",
       "result": null
@@ -967,7 +973,7 @@
         ],
         "body": ""
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
@@ -979,7 +985,7 @@
         ],
         "body": ""
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
@@ -1031,7 +1037,7 @@
         ],
         "body": ""
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {
@@ -1060,148 +1066,148 @@
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "morning",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "slow morning",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "MORNING",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "  morning  ",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "   ",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "quiet",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "caf",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "notes writing",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "zzz",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "morning slow",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": {
         "where": "title",
         "score": 104,
-        "snippet": "émile wrote things"
+        "snippet": "\u00e9mile wrote things"
       }
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "emile",
       "result": null
     },
     {
       "note": {
-        "title": "Émile",
+        "title": "\u00c9mile",
         "tags": [],
-        "body": "émile wrote things"
+        "body": "\u00e9mile wrote things"
       },
       "query": "morning_side",
       "result": null
@@ -1296,7 +1302,7 @@
         "tags": [],
         "body": "morningside morning morning_side #morning"
       },
-      "query": "café",
+      "query": "caf\u00e9",
       "result": null
     },
     {
@@ -1305,7 +1311,7 @@
         "tags": [],
         "body": "morningside morning morning_side #morning"
       },
-      "query": "😀",
+      "query": "\ud83d\ude00",
       "result": null
     },
     {
@@ -1341,7 +1347,7 @@
         "tags": [],
         "body": "morningside morning morning_side #morning"
       },
-      "query": "émile",
+      "query": "\u00e9mile",
       "result": null
     },
     {

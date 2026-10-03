@@ -7,6 +7,10 @@
     "or a negative one falls back to the assumed build length rather than",
     "dividing by it.",
     "",
+    "Both halves read it, except hashContent: the hashing moved out of the",
+    "renderer into the Rust, so those cases hold one side to an answer this",
+    "side no longer produces.",
+    "",
     "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
   ],
   "progress": [
@@ -2089,7 +2093,7 @@
       "hash": "f221b0e5c82b4530cd6dc76d69c227718521dba065b785d475cd4c405e77c299"
     },
     {
-      "content": "Þingvellir — naïve café 😀\n",
+      "content": "\u00deingvellir \u2014 na\u00efve caf\u00e9 \ud83d\ude00\n",
       "hash": "1bd2a6dc7c69a8fe6041395e336241b3cdda3593fef774fe2878270ecf9462f8"
     },
     {
