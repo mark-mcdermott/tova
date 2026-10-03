@@ -10,7 +10,11 @@
     "under one of them would push posts somewhere else.",
     "",
     "The repo pattern is [\\w.-]+/[\\w.-]+, and \\w without the u flag is",
-    "ASCII - so café/repo is not a repository name.",
+    "ASCII - so caf\u00e9/repo is not a repository name.",
+    "",
+    "Both halves read it: blogs.conformance.test.ts on this side,",
+    "src-tauri/src/blogs.rs on the other. The one already-saved blog the",
+    "validate cases are measured against is hardcoded identically in each.",
     "",
     "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
   ],
@@ -450,7 +454,7 @@
     {
       "blog": {
         "id": "",
-        "name": "émile",
+        "name": "\u00e9mile",
         "siteUrl": "",
         "livePostPath": "/",
         "github": {
@@ -467,7 +471,7 @@
       },
       "normalized": {
         "id": "",
-        "name": "émile",
+        "name": "\u00e9mile",
         "siteUrl": "",
         "livePostPath": "//",
         "github": {
@@ -558,11 +562,11 @@
     {
       "blog": {
         "id": "",
-        "name": "café",
+        "name": "caf\u00e9",
         "siteUrl": "",
         "livePostPath": "/",
         "github": {
-          "repo": "café/repo",
+          "repo": "caf\u00e9/repo",
           "branch": "main",
           "contentPath": "p/"
         },
@@ -575,11 +579,11 @@
       },
       "normalized": {
         "id": "",
-        "name": "café",
+        "name": "caf\u00e9",
         "siteUrl": "",
         "livePostPath": "//",
         "github": {
-          "repo": "café/repo",
+          "repo": "caf\u00e9/repo",
           "branch": "main",
           "contentPath": "p/"
         },
@@ -868,7 +872,7 @@
     {
       "blog": {
         "id": "",
-        "name": "émile",
+        "name": "\u00e9mile",
         "siteUrl": "",
         "livePostPath": "//",
         "github": {
@@ -934,11 +938,11 @@
     {
       "blog": {
         "id": "",
-        "name": "café",
+        "name": "caf\u00e9",
         "siteUrl": "",
         "livePostPath": "//",
         "github": {
-          "repo": "café/repo",
+          "repo": "caf\u00e9/repo",
           "branch": "main",
           "contentPath": "p/"
         },

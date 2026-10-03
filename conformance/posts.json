@@ -14,6 +14,9 @@
     "planSync sorts filenames, and Array.prototype.sort with no comparator",
     "orders by UTF-16 code unit - which puts A.md before a.md.",
     "",
+    "Both halves read it: posts.conformance.test.ts on this side,",
+    "src-tauri/src/posts_conformance.rs on the other.",
+    "",
     "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
   ],
   "posts": [
@@ -544,14 +547,14 @@
       ]
     },
     {
-      "doc": "@blog post\n@title Émile ☕\n@unknown Something else\n\nAccented café 😀 body.\n",
+      "doc": "@blog post\n@title \u00c9mile \u2615\n@unknown Something else\n\nAccented caf\u00e9 \ud83d\ude00 body.\n",
       "posts": [
         {
           "blog": "blog",
           "fields": [
             {
               "name": "title",
-              "value": "Émile ☕",
+              "value": "\u00c9mile \u2615",
               "line": 1
             },
             {
@@ -560,21 +563,21 @@
               "line": 2
             }
           ],
-          "body": "Accented café 😀 body.",
+          "body": "Accented caf\u00e9 \ud83d\ude00 body.",
           "headerLine": 0,
           "endLine": 6
         }
       ],
       "derived": [
         {
-          "title": "Émile ☕",
-          "TITLE": "Émile ☕",
+          "title": "\u00c9mile \u2615",
+          "TITLE": "\u00c9mile \u2615",
           "date": "2026-09-11",
           "tags": [],
           "slug": "emile",
           "filename": "26-09-11-emile.md",
           "publishedAs": null,
-          "yaml": "---\ntitle: \"Émile ☕\"\ndate: \"2026-09-11\"\nunknown: \"Something else\"\n---\n\nAccented café 😀 body.\n"
+          "yaml": "---\ntitle: \"\u00c9mile \u2615\"\ndate: \"2026-09-11\"\nunknown: \"Something else\"\n---\n\nAccented caf\u00e9 \ud83d\ude00 body.\n"
         }
       ],
       "edits": [
@@ -584,7 +587,7 @@
             "to": 49,
             "insert": "\n@published 26-09-11-new.md"
           },
-          "applied": "@blog post\n@title Émile ☕\n@unknown Something else\n@published 26-09-11-new.md\n\nAccented café 😀 body.\n"
+          "applied": "@blog post\n@title \u00c9mile \u2615\n@unknown Something else\n@published 26-09-11-new.md\n\nAccented caf\u00e9 \ud83d\ude00 body.\n"
         }
       ]
     },
