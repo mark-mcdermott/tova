@@ -167,7 +167,7 @@ describe("what a browser will not do", () => {
   })
 
   it("explains itself differently for each", async () => {
-    const notYet = await tova.backups.run().catch((error: NotOnTheWeb) => error.message)
+    const notYet = await tova.grammar.fetch().catch((error: NotOnTheWeb) => error.message)
     const never = await tova.app.reveal("vault").catch((error: NotOnTheWeb) => error.message)
 
     expect(notYet).toContain("not built on the web yet")

@@ -189,16 +189,19 @@ beside the change rather than inside it.
 merge is recoverable there because `backup.rs` and `src/shared/backup.ts` keep
 the last ten versions of every note in `.versions`, beside the vault.
 
-The server keeps none. `notes` holds one row per note and updates it in place,
-so a version that is overwritten is gone. The web client has no `.versions`
-either. So the sentence that used to sit here — that every version is kept —
-was true of one backend and not of the other two, and a conflict strategy that
-leans on recoverability should say which.
+**And now on the web too.** The store keeps the text it is about to replace,
+ten per note, five minutes apart — the same shape the desktop keeps, with the
+same names, so the screen that shows them does not need to know which backend
+it is talking to. A merge is written through that store, which is exactly where
+the text it replaced has to be caught.
 
-Two ways to close it, and neither is done: the web store keeps its own
-versions, the way the desktop does; or the server grows a history table and
-version history becomes a product feature rather than a local safety net. The
-second is the one a reader would notice, and it is the larger of the two.
+**The server still keeps none**, and that is a decision rather than a gap.
+`notes` holds one row per note and updates it in place. What the conflict story
+needs is the version a device had _before_ it merged, and the device had it —
+so a local history is the whole of what recoverability requires. A history
+table on the server would be a different thing: version history as a feature,
+readable from any device, and worth doing for that reason rather than for this
+one.
 
 `src/shared/notePlan.ts` is the step before any of that: given what the server
 sent, what is on disk, and what was last agreed, it says what to do about each

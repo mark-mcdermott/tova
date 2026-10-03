@@ -136,11 +136,12 @@ have refused every genuine push. It survived a run against the real database
 because the probe hand-wrote a nonce to match the rule instead of sealing
 anything.
 
-**Also open: version history is a desktop feature and `SYNC.md` was treating it
-as a guarantee.** The desktop keeps ten versions per note in `.versions`; the
-server keeps none and the web keeps none. A conflict strategy that leans on "a
-bad merge is recoverable" needs that to be true on every backend, and it is
-true on one.
+**Version history is on the web now**, which is what the conflict story was
+leaning on. The store keeps the text it replaces — ten per note, five minutes
+apart, named the way the desktop names them — and `backups.listVersions` and
+`readVersion` answer for real. The server still keeps none, deliberately: what
+a merge needs to be recoverable is the version the device had before it, and
+the device had it.
 
 **Done since:** the web's store and transport, and the first sync that actually
 ran — a probe account against the real database, through the whole stack: a

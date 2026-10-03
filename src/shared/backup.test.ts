@@ -2,11 +2,12 @@ import { describe, it, expect } from "vitest"
 import {
   backupFolderName,
   parseBackupFolderName,
-  sortBackups,
   selectExpiredBackups,
   selectExpiredVersions,
+  sortBackups,
+  versionFileName,
   versionKey,
-  versionFileName
+  withVersion
 } from "./backup"
 
 describe("backupFolderName", () => {
@@ -122,5 +123,64 @@ describe("selectExpiredVersions", () => {
 
   it("ignores non-markdown entries", () => {
     expect(selectExpiredVersions([".DS_Store", ...versions.slice(0, 3)])).toEqual([])
+  })
+})
+
+describe("the versions a note keeps behind it", () => {
+  const at = (minute: number) => new Date(2026, 9, 3, 12, minute, 0)
+
+  it("keeps the text that was replaced, named by when", () => {
+    const kept = withVersion({}, "before", at(1))
+
+    expect(Object.values(kept)).toEqual(["before"])
+    expect(Object.keys(kept)[0]).toMatch(/^2026-10-03_12-01-00\.md$/)
+  })
+
+  /*
+   * Ten, the same as the desktop. A note's history is a safety net rather than
+   * an archive, and an unbounded one in a browser is a quota nobody asked for.
+   */
+  it("keeps only the newest ten", () => {
+    let kept = {}
+    // Five minutes apart, which is the closest two are ever taken.
+    for (let step = 1; step <= 15; step += 1) kept = withVersion(kept, `v${step}`, at(step * 5))
+
+    expect(Object.keys(kept)).toHaveLength(10)
+    expect(Object.values(kept)).toContain("v15")
+    expect(Object.values(kept)).not.toContain("v1")
+  })
+
+  /*
+   * Autosave fires constantly. A version is named by the second it was taken,
+   * so two inside one second would be one name — and ten versions would
+   * quietly mean ten distinct seconds rather than ten points in a note's past.
+   */
+  it("keeps one version for a burst of typing, not ten", () => {
+    let kept = withVersion({}, "before the burst", at(0))
+    for (let minute = 1; minute <= 4; minute += 1)
+      kept = withVersion(kept, `v${minute}`, at(minute))
+
+    expect(Object.values(kept)).toEqual(["before the burst"])
+  })
+
+  it("takes another once the gap has passed", () => {
+    let kept = withVersion({}, "first", at(0))
+    kept = withVersion(kept, "later", at(6))
+
+    expect(Object.values(kept).sort()).toEqual(["first", "later"])
+  })
+
+  /*
+   * Nothing to recover from an empty note, and keeping one would push a real
+   * version out of a list that only holds ten.
+   */
+  it("does not keep an empty one", () => {
+    expect(withVersion({ "a.md": "something" }, "", at(1))).toEqual({ "a.md": "something" })
+  })
+
+  it("leaves the ones already held alone", () => {
+    const kept = withVersion({ "2026-10-03_12-00-00.md": "older" }, "newer", at(6))
+
+    expect(Object.values(kept).sort()).toEqual(["newer", "older"])
   })
 })

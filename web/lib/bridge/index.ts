@@ -20,7 +20,7 @@ import { webNotes } from "./notes"
 import { webSync } from "./sync"
 import { notYet, unavailable } from "./refuse"
 import { read, write } from "./settings"
-import { webNoteStore } from "../noteStore"
+import { listVersions, readVersion, webNoteStore } from "../noteStore"
 import { signal, type Signal } from "../../../src/shared/signal"
 
 /**
@@ -88,15 +88,31 @@ export function webBridge(
   localChanged: Signal = signal(),
   vaultChanged: Signal = signal()
 ): TovaBridge {
+  const api = webNotes(
+    notes,
+    {
+      read: async () => (await settings.read<string[]>(FOLDERS)) ?? [],
+      write: (folders) => settings.write(FOLDERS, folders)
+    },
+    localChanged.announce
+  )
+
+  /**
+   * A note's uid, from the path the renderer calls it by.
+   *
+   * Versions are kept against the uid, which survives a rename; the renderer
+   * addresses a note by a path, which does not. Looking it up is what keeps a
+   * note's history attached to the note rather than to the name it had when
+   * the version was taken.
+   */
+  const uidFor = async (noteId: string): Promise<string> => {
+    const found = (await api.list()).find((one) => one.id === noteId)
+    if (found?.uid === undefined) throw new Error(`There is no note at ${noteId}`)
+    return found.uid
+  }
+
   return {
-    notes: webNotes(
-      notes,
-      {
-        read: async () => (await settings.read<string[]>(FOLDERS)) ?? [],
-        write: (folders) => settings.write(FOLDERS, folders)
-      },
-      localChanged.announce
-    ),
+    notes: api,
 
     backups: {
       /*
@@ -107,10 +123,23 @@ export function webBridge(
        */
       status: () => Promise.resolve({ empty: true, backups: [] }),
       list: () => Promise.resolve([]),
-      listVersions: () => Promise.resolve([]),
-      run: notYet("backups.run"),
-      restore: notYet("backups.restore"),
-      readVersion: notYet("backups.readVersion")
+
+      /*
+       * Real, and the reason is `docs/SYNC.md` rather than a feature request:
+       * the conflict story says a bad merge is recoverable because every
+       * version is kept, and that was true of the desktop's `.versions` and of
+       * nothing else. A note's last ten live beside it now.
+       */
+      listVersions: async (noteId) => listVersions(await uidFor(noteId)),
+      readVersion: async (noteId, version) => readVersion(await uidFor(noteId), version),
+
+      /*
+       * A backup is a copy of a folder. There is no folder here, and a copy of
+       * IndexedDB inside IndexedDB would be a copy in the one place a lost
+       * browser profile takes with it. Export is what the web has instead.
+       */
+      run: unavailable("backups.run"),
+      restore: unavailable("backups.restore")
     },
 
     images: { save: notYet("images.save") },
