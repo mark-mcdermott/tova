@@ -266,6 +266,14 @@ nobody has signed in on.
 is documented as changes made elsewhere, and handing it this tab's own writes
 would reload the renderer after every keystroke it had just handled.
 
+**The desktop has an account.** `SyncApi` is a fifth thing both backends
+answer — sign in, sign out, who, pull, push — by routes with nothing in common:
+the web through Better Auth's browser client, the desktop out through Rust.
+
+What is left before it is a sync peer: a `NoteStore` over the vault's files,
+and somewhere to keep the cursor and the agreed map. The cycle, the plan and
+the merge are already written and already shared.
+
 **Next, in order:** the
 desktop's store, which is the same interface over markdown files; something to
 call a sync from, on a schedule and on a change; and version history on the

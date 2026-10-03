@@ -17,6 +17,7 @@ import { NO_AVATARS } from "../../../src/shared/preferences"
 import type { NoteStore } from "../../../src/shared/noteStore"
 import type { TovaBridge } from "../../../src/shared/types"
 import { webNotes } from "./notes"
+import { webSync } from "./sync"
 import { notYet, unavailable } from "./refuse"
 import { read, write } from "./settings"
 import { webNoteStore } from "../noteStore"
@@ -241,6 +242,8 @@ export function webBridge(
         window.open(url, "_blank", "noopener,noreferrer")
       }
     },
+
+    sync: webSync(),
 
     events: {
       /*

@@ -53,6 +53,18 @@ export const credentials: Credentials = {
   }
 }
 
+/**
+ * The email this browser is signed in as, or null.
+ *
+ * Asked of the server rather than read from a cookie, because the cookie is
+ * `HttpOnly` and because a session can end on the server while a browser still
+ * holds the crumb of one.
+ */
+export async function signedInAs(): Promise<string | null> {
+  const { data } = await auth.getSession()
+  return data?.user.email ?? null
+}
+
 /** Ends the session on this device. The key, if one is kept, is a separate thing. */
 export async function signOut(): Promise<void> {
   orThrow(await auth.signOut())
