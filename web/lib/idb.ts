@@ -33,9 +33,9 @@ export function available(): boolean {
  * `stores` is the whole list, always, whatever a given call is about to touch.
  */
 export function database(name: string, stores: readonly string[]): Database {
-  const open = (): Promise<IDBDatabase> =>
+  const openAt = (version?: number): Promise<IDBDatabase> =>
     new Promise((resolve, reject) => {
-      const request = indexedDB.open(name, 1)
+      const request = indexedDB.open(name, version)
       request.onupgradeneeded = () => {
         const db = request.result
         for (const store of stores) {
@@ -45,6 +45,28 @@ export function database(name: string, stores: readonly string[]): Database {
       request.onsuccess = () => resolve(request.result)
       request.onerror = () => reject(request.error ?? new Error("IndexedDB would not open"))
     })
+
+  /**
+   * Opens it, adding any store that is not there yet.
+   *
+   * `onupgradeneeded` fires only when the version goes up, so a database made
+   * before a store was added would never get it — not for the person who added
+   * it, and not for anybody already running the app. Opening with no version
+   * asks what the current one is; a store missing from it means reopening one
+   * higher, which is what runs the upgrade.
+   *
+   * Derived rather than a number kept by hand, because a number kept by hand
+   * is a number somebody forgets to raise, and the failure is a store that is
+   * not found — in a browser, where no test here can see it. Twice now.
+   */
+  const open = async (): Promise<IDBDatabase> => {
+    const existing = await openAt()
+    if (stores.every((store) => existing.objectStoreNames.contains(store))) return existing
+
+    const at = existing.version
+    existing.close()
+    return openAt(at + 1)
+  }
 
   return {
     /**
