@@ -139,9 +139,36 @@ all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
 which is the web client as a PWA.
 
+**Mobile has mocks**, drawn 2026-10-03 and sitting outside the repository with
+the rest of the branding. Six screens: a daily note with a week strip, the
+editor with a format bar over the keyboard, an empty state, a notes list with
+filter chips, and a settings screen that already matches the model — Export
+above Delete account, and "your recovery key can't be shown again, replace it
+while your notes are unlocked".
+
+Three things they do not have, and the first is the one that cannot be added
+later:
+
+- **No unlocked state.** Every screen shows notes already readable, and a cold
+  start holds no content key. On a phone the answer is almost certainly
+  biometrics, which means the Keychain rather than IndexedDB — and that decides
+  whether mobile is a PWA at all, since a PWA cannot reach it. A decision to
+  take before anything is built.
+- **Nothing tells the reader about sync.** `SYNC.md` promises that a genuine
+  conflict leaves both notes, one as a copy, and that the reader is told. There
+  is nowhere in these screens to tell them.
+- **No blogs tab.** Three tabs is the right restraint for a phone. It should be
+  a decision rather than an omission.
+
 Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
 would have been the answer if web were not happening — but once a web client
 exists, mobile rides on it for nearly nothing.
+
+The unlocked-state question above is the one thing that would reopen that. A
+key held behind Face ID lives in the Keychain, and a PWA cannot reach the
+Keychain — so if biometrics are the answer on a phone, a Tauri build is back on
+the table. Deciding that is cheap now and expensive after a web client has been
+written against the other assumption.
 
 ---
 
