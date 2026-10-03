@@ -347,6 +347,9 @@ fn orders_a_list_of_notes_the_same_way() {
         .iter()
         .map(|n| crate::notes::NoteSummary {
             id: text(&n["id"]).to_string(),
+            // Sorting reads the path, the title and the dates. Identity has
+            // nothing to do with order, so the fixture does not carry one.
+            uid: None,
             title: text(&n["title"]).to_string(),
             section: text(&n["section"]).to_string(),
             folder: None,
