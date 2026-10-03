@@ -22,6 +22,13 @@
       "when": 1791035614697,
       "tag": "0002_brown_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791039066247,
+      "tag": "0003_modern_stellaris",
+      "breakpoints": true
     }
   ]
 }
