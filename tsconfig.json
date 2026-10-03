@@ -13,5 +13,16 @@
       "@renderer/*": ["./src/renderer/*"]
     }
   },
-  "include": ["src/renderer", "src/shared", "src/server", "web"]
+  "include": [
+    "src/renderer",
+    "src/shared",
+    "src/server",
+    "web",
+    // Astro's generated types, which `astro sync` writes and `check` now runs
+    // first. `astro:env/server` is a virtual module built from the schema in
+    // `astro.config.mjs`, so without this the imports in `src/server/` read as
+    // missing packages — and `.astro/` is generated and ignored, which is why
+    // the sync has to happen rather than be assumed.
+    ".astro/types.d.ts"
+  ]
 }

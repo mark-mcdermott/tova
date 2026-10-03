@@ -11,6 +11,7 @@
  * socket of its own, so there is nothing here to pool or close.
  */
 
+import { DATABASE_URL } from "astro:env/server"
 import { drizzle } from "drizzle-orm/neon-http"
 import { neon } from "@neondatabase/serverless"
 import * as schema from "./schema"
@@ -22,9 +23,17 @@ let db: Db | null = null
 export function getDb(): Db {
   if (db !== null) return db
 
-  // Read here rather than at the top of the file, for the same reason the
-  // handle is made here.
-  const url = process.env.DATABASE_URL
+  /*
+   * From `astro:env/server`, not `process.env`.
+   *
+   * Astro reads `.env` into its own env layer and not into `process.env`. On
+   * Vercel the two agree, so `process.env.DATABASE_URL` worked in production
+   * and was undefined in development against a correct `.env` — the trap
+   * `astro.config.mjs` describes, and the second file in this repository to
+   * fall into it. `astro.config.mjs` declares the variable; this is the import
+   * that declaration exists for.
+   */
+  const url = DATABASE_URL
   if (url === undefined || url === "") {
     throw new Error("DATABASE_URL is not set. Copy .env.example to .env, or set it in Vercel.")
   }

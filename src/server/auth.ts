@@ -13,6 +13,8 @@
  * build before anything was actually wrong.
  */
 
+import { BETTER_AUTH_SECRET } from "astro:env/server"
+import { PUBLIC_SITE_URL } from "astro:env/client"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { getDb } from "./db"
@@ -21,7 +23,8 @@ import * as schema from "./db/schema"
 let auth: ReturnType<typeof build> | null = null
 
 function build() {
-  const secret = process.env.BETTER_AUTH_SECRET
+  // From `astro:env`, for the reason `getDb` reads its URL there.
+  const secret = BETTER_AUTH_SECRET
   if (secret === undefined || secret === "") {
     throw new Error(
       "BETTER_AUTH_SECRET is not set. Generate one with `openssl rand -base64 32`, " +
@@ -39,7 +42,7 @@ function build() {
      * and mails somebody a hostname that will not exist next week. Unset in
      * development, where deriving it is exactly right.
      */
-    baseURL: process.env.PUBLIC_SITE_URL,
+    baseURL: PUBLIC_SITE_URL,
     database: drizzleAdapter(getDb(), { provider: "pg", schema }),
 
     emailAndPassword: {
