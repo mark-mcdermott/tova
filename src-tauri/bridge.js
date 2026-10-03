@@ -111,7 +111,18 @@
     ],
     app: ["info", "reveal", "openExternal"],
     events: ["onNotesChanged"],
-    sync: ["account", "signIn", "signOut", "pull", "push", "state", "setState", "key", "setKey"]
+    sync: [
+      "account",
+      "signIn",
+      "signOut",
+      "pull",
+      "push",
+      "state",
+      "setState",
+      "key",
+      "setKey",
+      "envelopes"
+    ]
   }
 
   const tova = {}
@@ -130,6 +141,7 @@
     invoke("sync_key").then((bytes) => (bytes === null ? null : new Uint8Array(bytes)))
   tova.sync.setKey = (key) =>
     invoke("sync_key_write", { bytes: key === null ? null : Array.from(key) })
+  tova.sync.envelopes = () => invoke("sync_envelopes").then((text) => JSON.parse(text))
   tova.sync.state = () => invoke("sync_state")
   tova.sync.setState = (value) => invoke("sync_state_write", { value })
   // The server's JSON, as text. `src/shared/sync.ts` parses it; doing that here

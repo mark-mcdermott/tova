@@ -20,7 +20,15 @@ import { SearchHit } from "../../shared/types"
 
 export type View = "editor" | "settings" | "index" | "home"
 
-export const SETTINGS_TABS = ["profile", "appearance", "vault", "blogs", "general", "docs"] as const
+export const SETTINGS_TABS = [
+  "profile",
+  "appearance",
+  "vault",
+  "sync",
+  "blogs",
+  "general",
+  "docs"
+] as const
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 

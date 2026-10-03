@@ -134,6 +134,14 @@ export interface SyncApi {
    */
   key: () => Promise<VaultKey | null>
   setKey: (key: Uint8Array | null) => Promise<void>
+  /**
+   * The sealed content keys, as the server holds them.
+   *
+   * Opened wherever the password was typed, which is never the backend: what
+   * travels here is a sealed envelope and a salt, and that is all the server
+   * has either.
+   */
+  envelopes: () => Promise<unknown>
 }
 
 /**
