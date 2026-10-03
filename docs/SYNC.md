@@ -147,19 +147,39 @@ server is TypeScript — Neon, Drizzle, Zod, Better Auth — because what it doe
 is store, authenticate and reconcile, and none of that wants the 18,000 lines
 of macOS integration the desktop app carries.
 
-## Open, and worth deciding before there is code to change
+## Decided
 
-- **Does every note get an id up front, or on the way out?** Minting is lazy
-  today, which means a vault has notes without one. A sweep over somebody's
-  journals needs a reason; turning sync on is one. Doing it at first sync ties
-  the write to a thing the reader chose.
-- **One repo or two.** The desktop app is Rust and Tauri; the web app is Astro
-  on Vercel. One repo is fewer things to carry; two keeps the deploy simple.
-- **Where the key lives on the web.** There is no keychain in a browser tab.
-  IndexedDB, for a session, with the password re-entered on a new device — and
-  the honest consequence that a browser is a weaker place to hold it than a
-  Mac's keychain.
-- **What happens to local files.** The desktop reads `.md` in a folder today.
-  They can stay as a mirror, become an export, or stay the source of truth for
-  people who never turn sync on. All three are defensible; only one should be
-  built first.
+**Ids are minted at first sync, not swept.** A note written before ids existed
+gets one as it goes up. A sweep would rewrite the files of everyone who never
+turns sync on, for their trouble, and they would get nothing from it.
+
+**One repo.** `src/shared` is 4,238 lines the web client cannot do without —
+tags, markdown spans, search, tables, front matter. In one repo that is an
+import; in two it is a published package with versions and release steps,
+forever.
+
+The shape is frunk's, which already runs this way: one `package.json`, no
+workspaces, and a build script per target. `build` makes the renderer for
+Tauri; `build:web` makes the Astro site for Vercel; both read the same `src/`.
+`src-tauri` is simply not in the web build, and Vercel takes a root directory.
+
+**The key lives in IndexedDB as a non-extractable `CryptoKey`.** WebCrypto can
+import it so that script — ours or an attacker's — can use it to decrypt and
+cannot read it out, and IndexedDB stores that object as it is. It cannot be
+exfiltrated.
+
+The residual risk is exact and worth writing down: an XSS hole in the web app
+could decrypt notes _in that session_ without ever stealing the key. The
+editor renders what the reader wrote, so that surface is the one that matters,
+and "forget this device" has to clear the key.
+
+In-memory only, with the password re-entered every session, is stricter and
+is what to fall back to if that surface ever looks shaky.
+
+**Local `.md` files stay the source of truth for anyone who never turns sync
+on.** Tova reads a folder today and that does not stop being true. Sync is a
+thing you opt into, not the new foundation under everyone.
+
+## Still open
+
+- Nothing, until the schema is built and the first of it is wrong.
