@@ -26,19 +26,43 @@ export const envelope = z.object({
 })
 export type Envelope = z.infer<typeof envelope>
 
+const EPOCH = z.number().int().min(1)
+
 /**
  * Both envelopes at once, which is the only way they are ever created.
  *
  * One at a time would allow an account with a password envelope and no
  * recovery envelope — an account with exactly one way in and no way back,
  * which is the state the recovery key exists to prevent.
+ *
+ * `epoch` is an assertion rather than an address: the server works out which
+ * epoch comes next and refuses a request that names a different one. Sending
+ * it is what makes a double-submitted signup a refusal instead of a second
+ * content key, and what makes two devices starting fresh at once visible to
+ * the one that loses.
  */
 export const createEnvelopes = z.object({
+  epoch: EPOCH,
   password: envelope.omit({ kind: true }),
   recovery: envelope.omit({ kind: true })
 })
 
-export const storedEnvelope = envelope.extend({ epoch: z.number().int().min(1) })
+/**
+ * One factor's envelope, re-sealed over the same content key.
+ *
+ * What a password change, a recovery after reset and a new recovery key all
+ * come down to. The content key does not change, so no note is touched and the
+ * epoch stays exactly where it is — `kind` and `epoch` together are the address
+ * of the row being overwritten, not something the request gets to move.
+ *
+ * One factor at a time, because every flow that uses this changes one. The
+ * other envelope still opens the same content key, which is the property that
+ * makes a password change recoverable if it fails halfway.
+ */
+export const replaceEnvelope = envelope.extend({ epoch: EPOCH })
+export type ReplaceEnvelope = z.infer<typeof replaceEnvelope>
+
+export const storedEnvelope = envelope.extend({ epoch: EPOCH })
 export type StoredEnvelope = z.infer<typeof storedEnvelope>
 
 export const envelopesResponse = z.object({ envelopes: z.array(storedEnvelope) })
@@ -63,6 +87,17 @@ export function currentEpoch(envelopes: StoredEnvelope[]): number | null {
     .map(([epoch]) => epoch)
 
   return epochs.length === 0 ? null : Math.max(...epochs)
+}
+
+/**
+ * The epoch a new content key would take.
+ *
+ * Every epoch present, not only the complete ones: a half-written epoch is not
+ * a number to hand out again, and taking the maximum of the complete pairs
+ * would do exactly that.
+ */
+export function nextEpoch(envelopes: StoredEnvelope[]): number {
+  return envelopes.reduce((highest, row) => Math.max(highest, row.epoch), 0) + 1
 }
 
 /** The envelope for one factor at one epoch, or null. */

@@ -4,6 +4,8 @@ import {
   envelope,
   currentEpoch,
   envelopeFor,
+  nextEpoch,
+  replaceEnvelope,
   type StoredEnvelope
 } from "./envelopes"
 
@@ -58,9 +60,53 @@ describe("an envelope on the wire", () => {
   it("will not create one factor without the other", () => {
     const pair = { salt: SALT, envelope: SEALED }
 
-    expect(createEnvelopes.safeParse({ password: pair, recovery: pair }).success).toBe(true)
-    expect(createEnvelopes.safeParse({ password: pair }).success).toBe(false)
-    expect(createEnvelopes.safeParse({ recovery: pair }).success).toBe(false)
+    expect(createEnvelopes.safeParse({ epoch: 1, password: pair, recovery: pair }).success).toBe(
+      true
+    )
+    expect(createEnvelopes.safeParse({ epoch: 1, password: pair }).success).toBe(false)
+    expect(createEnvelopes.safeParse({ epoch: 1, recovery: pair }).success).toBe(false)
+  })
+
+  /*
+   * Without it the server has nothing to check a create against, and a
+   * double-submitted signup becomes a second content key rather than a
+   * refusal. Epochs start at one and are whole numbers.
+   */
+  it("insists on the epoch it is being created at", () => {
+    const pair = { salt: SALT, envelope: SEALED }
+    const create = (epoch: unknown) =>
+      createEnvelopes.safeParse({ epoch, password: pair, recovery: pair }).success
+
+    expect(create(1)).toBe(true)
+    expect(create(undefined)).toBe(false)
+    expect(create(0)).toBe(false)
+    expect(create(1.5)).toBe(false)
+  })
+})
+
+describe("replacing one factor", () => {
+  it("names the row it overwrites, and carries a sealed envelope", () => {
+    expect(
+      replaceEnvelope.parse({ kind: "recovery", epoch: 2, salt: SALT, envelope: SEALED })
+    ).toEqual({ kind: "recovery", epoch: 2, salt: SALT, envelope: SEALED })
+  })
+
+  /*
+   * `kind` and `epoch` are the address. A request missing either does not say
+   * which row it means, and one carrying something that is not an envelope
+   * would store a row nothing can open.
+   */
+  it("refuses a request that does not say which row, or carries no envelope", () => {
+    expect(replaceEnvelope.safeParse({ epoch: 1, salt: SALT, envelope: SEALED }).success).toBe(
+      false
+    )
+    expect(
+      replaceEnvelope.safeParse({ kind: "password", salt: SALT, envelope: SEALED }).success
+    ).toBe(false)
+    expect(
+      replaceEnvelope.safeParse({ kind: "password", epoch: 1, salt: SALT, envelope: "hello" })
+        .success
+    ).toBe(false)
   })
 })
 
@@ -105,5 +151,23 @@ describe("choosing which epoch to read", () => {
 
     expect(envelopeFor(envelopes, "recovery", 2)?.salt).toBe("b3RoZXI=")
     expect(envelopeFor(envelopes, "recovery", 1)).toBeNull()
+  })
+})
+
+describe("choosing which epoch to write", () => {
+  it("starts at one when there is nothing", () => {
+    expect(nextEpoch([])).toBe(1)
+  })
+
+  it("follows the highest epoch there is", () => {
+    expect(nextEpoch([row(), row({ kind: "recovery" })])).toBe(2)
+  })
+
+  /*
+   * Every epoch, not only the complete ones. A half-written epoch is not a
+   * number to hand out again — doing so would overwrite the half that exists.
+   */
+  it("counts a half-written epoch as taken", () => {
+    expect(nextEpoch([row(), row({ kind: "recovery" }), row({ epoch: 7 })])).toBe(8)
   })
 })
