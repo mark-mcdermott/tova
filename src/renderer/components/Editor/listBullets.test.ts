@@ -118,3 +118,49 @@ describe("what is not a bullet list", () => {
     expect(marksOn(view, 0, "cm-list-line")).toBe(0)
   })
 })
+
+/*
+ * A nested item used to be set apart only by the two spaces its source carries,
+ * which at one monospace cell apiece is almost nothing — reported from a week
+ * of real use as a second level that barely looks nested. The depth is in the
+ * tree; it just was not being read.
+ */
+describe("how deep a bullet sits", () => {
+  const nested = "- one\n  - two\n    - three\n- back\n\nAfter.\n"
+
+  function depth(view: EditorView, line: number): string | null {
+    return view.dom.querySelectorAll(".cm-line")[line].getAttribute("data-depth")
+  }
+
+  it("marks each level with the depth it is at", () => {
+    const view = mount(nested, nested.indexOf("After"))
+
+    expect(depth(view, 0)).toBe("1")
+    expect(depth(view, 1)).toBe("2")
+    expect(depth(view, 2)).toBe("3")
+  })
+
+  it("comes back out again when the list does", () => {
+    const view = mount(nested, nested.indexOf("After"))
+
+    expect(depth(view, 3)).toBe("1")
+  })
+
+  it("counts an ordered list as a level too", () => {
+    const mixed = "1. one\n   - two\n\nAfter.\n"
+    const view = mount(mixed, mixed.indexOf("After"))
+
+    expect(depth(view, 1)).toBe("2")
+  })
+
+  /*
+   * Past a handful of levels the indent would be more of a problem than the
+   * flatness was, so it stops rather than marching off the right edge.
+   */
+  it("stops counting somewhere sensible", () => {
+    const deep = Array.from({ length: 9 }, (_, i) => `${"  ".repeat(i)}- level`).join("\n")
+    const view = mount(`${deep}\n\nAfter.\n`, deep.length + 2)
+
+    expect(depth(view, 8)).toBe("6")
+  })
+})

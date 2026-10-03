@@ -100,7 +100,32 @@ const headingMarks = [1, 2, 3, 4, 5, 6].map((level) =>
  * dash came back. This way the only thing that changes is the ink.
  */
 const bulletMark = Decoration.mark({ class: "cm-list-bullet" })
-const listLine = Decoration.line({ class: "cm-list-line" })
+
+/*
+ * One line decoration per nesting depth, rather than one for all of them.
+ *
+ * A nested item used to be set apart only by the two spaces its source carries,
+ * which at one monospace cell apiece is almost nothing — reported, from a week
+ * of real use, as a second level that barely looks nested.
+ *
+ * The depth is a data attribute rather than an inline style: `editor.css` has
+ * a rule per level, and inline styles are the one thing CLAUDE.md rules out
+ * outright. Capped, because past a handful of levels the indent would be more
+ * of a problem than the flatness was.
+ */
+const DEEPEST = 6
+const listLines = Array.from({ length: DEEPEST }, (_, index) =>
+  Decoration.line({ class: "cm-list-line", attributes: { "data-depth": String(index + 1) } })
+)
+
+/** How deep an item sits, counting the lists it is inside. */
+function depthOf(item: SyntaxNode): number {
+  let depth = 0
+  for (let node: SyntaxNode | null = item.parent; node !== null; node = node.parent) {
+    if (node.name === "BulletList" || node.name === "OrderedList") depth += 1
+  }
+  return Math.min(Math.max(depth, 1), DEEPEST)
+}
 
 /*
  * A task's box, and the dash in front of it.
@@ -475,7 +500,7 @@ function decorateBullet(
   if (!BULLET_MARK.test(state.sliceDoc(mark.from, mark.to))) return
 
   const line = state.doc.lineAt(mark.from)
-  decorations.push(listLine.range(line.from))
+  decorations.push(listLines[depthOf(item) - 1].range(line.from))
   decorations.push(
     (cursorTouches(line.from, line.to) ? syntaxMarker : bulletMark).range(mark.from, mark.to)
   )
