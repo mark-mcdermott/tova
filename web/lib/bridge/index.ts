@@ -35,6 +35,31 @@ export type SettingsStore = {
 }
 
 const PREFERENCES = "preferences"
+
+/**
+ * Where a browser starts, and why it is not asked.
+ *
+ * Tova asks one question on first run, and `CLAUDE.md` is explicit about what
+ * earns it the right to: it gathers the two costs that already exist — the
+ * grammar dictionary's 15MB and the update check's connection — into one
+ * moment rather than ambushing somebody in Settings later.
+ *
+ * On the web neither cost exists. There is no update check, because the page
+ * open in front of somebody *is* the latest one; and grammar is not built
+ * here, so there is nothing to download. A question that gathers nothing is
+ * the "second first-run question" that document says to resist, and it would
+ * be asking it in copy written about a Mac: a 15MB dictionary, macOS's own
+ * spellchecker, and "nothing leaves this machine" — which is not true of a
+ * browser signed in to an account.
+ *
+ * So `greeted` starts true. Not because anybody was greeted, but because there
+ * is nothing left to ask. When grammar is built for the web it arrives the way
+ * everything else that costs something does: off, in Settings, discoverable.
+ *
+ * Only a starting point. The moment anything is stored, what is stored wins —
+ * a reader who turns grammar on is not told otherwise on the next page load.
+ */
+const FIRST_RUN = { greeted: true, grammar: false, updates: false }
 const SESSION = "session"
 /** Folders somebody made before there was anything to put in them. */
 const FOLDERS = "emptyFolders"
@@ -142,7 +167,10 @@ export function webBridge(
 
     preferences: {
       async read() {
-        return normalizePreferences(await settings.read<unknown>(PREFERENCES))
+        const stored = await settings.read<unknown>(PREFERENCES)
+        return stored === undefined
+          ? { ...normalizePreferences(undefined), ...FIRST_RUN }
+          : normalizePreferences(stored)
       },
       async write(preferences: Preferences) {
         const tidied = normalizePreferences(preferences)
