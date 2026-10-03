@@ -55,6 +55,7 @@ mod spellcheck;
 mod substitutions;
 mod sync;
 mod sync_plan;
+mod sync_state;
 mod tables;
 mod tag_blocks;
 mod tag_purge;
@@ -173,6 +174,26 @@ fn sync_sign_out() -> Result<(), String> {
 #[tauri::command]
 fn sync_account() -> Result<Option<String>, String> {
     account::status(&data_dir())
+}
+
+#[tauri::command]
+fn sync_key() -> Option<Vec<u8>> {
+    account::key(&data_dir())
+}
+
+#[tauri::command]
+fn sync_key_write(bytes: Option<Vec<u8>>) -> Result<(), String> {
+    account::set_key(&data_dir(), bytes)
+}
+
+#[tauri::command]
+fn sync_state() -> serde_json::Value {
+    sync_state::read(&data_dir())
+}
+
+#[tauri::command]
+fn sync_state_write(value: serde_json::Value) -> Result<(), String> {
+    sync_state::write(&data_dir(), &value)
 }
 
 #[tauri::command]
@@ -1042,6 +1063,10 @@ pub fn run() {
             sync_sign_in,
             sync_sign_out,
             sync_account,
+            sync_key,
+            sync_key_write,
+            sync_state,
+            sync_state_write,
             sync_pull,
             sync_push,
             session_read,

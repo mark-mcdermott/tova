@@ -270,9 +270,19 @@ would reload the renderer after every keystroke it had just handled.
 answer — sign in, sign out, who, pull, push — by routes with nothing in common:
 the web through Better Auth's browser client, the desktop out through Rust.
 
-What is left before it is a sync peer: a `NoteStore` over the vault's files,
-and somewhere to keep the cursor and the agreed map. The cycle, the plan and
-the merge are already written and already shared.
+**And now it is a peer.** `bridgeNoteStore` is a `NoteStore` over
+`window.tova.notes` — the inverse of the web, where the store is underneath the
+notes API rather than on top of it. The cursor and the agreed map live beside
+the preferences, written beside and renamed over so a crash leaves the old
+state rather than half the new one. The content key is keychain-encrypted next
+to the session, and signing out takes it first.
+
+`signal.ts` and `syncRunner.ts` moved to `src/shared`, where they belonged: the
+desktop was importing them from `web/lib`, which is backwards.
+
+What is left is a way to _sign in_ on the desktop. Everything behind it is
+wired and does nothing until somebody does — which is not a failure, it is Tova
+as it has always been, a folder of markdown on one Mac.
 
 **Next, in order:** the
 desktop's store, which is the same interface over markdown files; something to

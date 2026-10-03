@@ -20,6 +20,7 @@ const NOTES = "notes"
 const AGREED = "agreed"
 const META = "meta"
 const CURSOR = "cursor"
+const STATE = "syncState"
 
 /*
  * Every store named here, not per call. Whichever call opened the database
@@ -64,6 +65,21 @@ export function webNoteStore(): NoteStore {
       await vault.run([META], "readwrite", ([meta]) => meta.put(at, CURSOR))
     }
   }
+}
+
+/**
+ * The sync state, as `SyncApi` carries it.
+ *
+ * In this database rather than the settings one, so "forget this device"
+ * clears it with everything else. A cursor left behind would be a cursor past
+ * notes this browser no longer has, and the next sync would believe it was
+ * caught up on a vault it had never read.
+ */
+export const readSyncState = (): Promise<unknown> =>
+  vault.run<unknown>([META], "readonly", ([meta]) => meta.get(STATE))
+
+export const writeSyncState = async (value: unknown): Promise<void> => {
+  await vault.run([META], "readwrite", ([meta]) => meta.put(value, STATE))
 }
 
 /**

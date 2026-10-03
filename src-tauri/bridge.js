@@ -111,7 +111,7 @@
     ],
     app: ["info", "reveal", "openExternal"],
     events: ["onNotesChanged"],
-    sync: ["account", "signIn", "signOut", "pull", "push"]
+    sync: ["account", "signIn", "signOut", "pull", "push", "state", "setState", "key", "setKey"]
   }
 
   const tova = {}
@@ -125,6 +125,13 @@
   tova.sync.account = () => invoke("sync_account")
   tova.sync.signIn = (email, secret) => invoke("sync_sign_in", { email, secret })
   tova.sync.signOut = () => invoke("sync_sign_out")
+  // Bytes over IPC arrive as an array of numbers; `seal` wants a Uint8Array.
+  tova.sync.key = () =>
+    invoke("sync_key").then((bytes) => (bytes === null ? null : new Uint8Array(bytes)))
+  tova.sync.setKey = (key) =>
+    invoke("sync_key_write", { bytes: key === null ? null : Array.from(key) })
+  tova.sync.state = () => invoke("sync_state")
+  tova.sync.setState = (value) => invoke("sync_state_write", { value })
   // The server's JSON, as text. `src/shared/sync.ts` parses it; doing that here
   // as well is how the two backends would come to disagree about a version.
   tova.sync.pull = (cursor, limit) =>

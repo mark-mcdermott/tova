@@ -14,8 +14,8 @@ import { syncOnce } from "../../src/shared/syncCycle"
 import { available } from "./idb"
 import { recall } from "./keyStore"
 import { webNoteStore } from "./noteStore"
-import type { Signal } from "./signal"
-import { startSync, type Runner } from "./syncRunner"
+import type { Signal } from "../../src/shared/signal"
+import { startSync, type Runner } from "../../src/shared/syncRunner"
 import { webTransport } from "./transport"
 
 export type Started =
