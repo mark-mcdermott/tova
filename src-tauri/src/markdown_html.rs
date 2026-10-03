@@ -23,6 +23,7 @@ regex would read that as Unicode where JavaScript reads it as ASCII.
 #![allow(dead_code)]
 
 use crate::js;
+use crate::tables::{parse_table, Alignment, Table};
 
 pub fn escape_html(text: &str) -> String {
     // Ampersand first, or the entities the others introduce get escaped again.
@@ -232,6 +233,54 @@ fn is_rule(line: &str) -> bool {
     matches!(trimmed, "---" | "***" | "___")
 }
 
+/// A cell, aligned if its column said to be.
+///
+/// `style` rather than the `align` attribute, which HTML dropped. Inline
+/// because exported HTML has no stylesheet of Tova's to reach for — it is
+/// pasted into somebody else's blog, and an alignment that only works with a
+/// class is an alignment that does not work.
+///
+/// `\|` becomes `|`. The parser keeps the escape because it exists to re-emit
+/// markdown; here the markdown is being left behind, and a cell written
+/// `one \| two` means `one | two`.
+fn cell(tag: &str, text: &str, alignment: Option<Alignment>) -> String {
+    let style = match alignment {
+        Some(Alignment::Left) => " style=\"text-align:left\"",
+        Some(Alignment::Center) => " style=\"text-align:center\"",
+        Some(Alignment::Right) => " style=\"text-align:right\"",
+        None => "",
+    };
+    format!(
+        "<{tag}{style}>{}</{tag}>",
+        inline(&text.replace("\\|", "|"))
+    )
+}
+
+fn table_to_html(table: &Table) -> String {
+    let row = |tag: &str, cells: &[String]| -> String {
+        let inner: String = cells
+            .iter()
+            .enumerate()
+            .map(|(column, text)| cell(tag, text, table.alignments[column]))
+            .collect();
+        format!("<tr>{inner}</tr>")
+    };
+
+    let head = row("th", &table.rows[0]);
+    // No `<tbody>` at all when there are no rows, rather than an empty one.
+    let body = if table.rows.len() == 1 {
+        String::new()
+    } else {
+        let rows: String = table.rows[1..]
+            .iter()
+            .map(|cells| row("td", cells))
+            .collect();
+        format!("<tbody>{rows}</tbody>")
+    };
+
+    format!("<table><thead>{head}</thead>{body}</table>")
+}
+
 pub fn markdown_to_html(markdown: &str) -> String {
     let escaped = escape_html(markdown);
     let lines: Vec<&str> = escaped.split('\n').collect();
@@ -262,7 +311,11 @@ pub fn markdown_to_html(markdown: &str) -> String {
         };
     }
 
-    for line in &lines {
+    let mut at = 0;
+    while at < lines.len() {
+        let line = &lines[at];
+        at += 1;
+
         if is_fence(line) {
             match fence.take() {
                 None => {
@@ -297,6 +350,33 @@ pub fn markdown_to_html(markdown: &str) -> String {
             flush_paragraph!();
             flush_list!();
             out.push("<hr>".to_string());
+            continue;
+        }
+
+        /*
+         * Last of the block constructs, so a heading, a list item or a rule
+         * that happens to contain a pipe stays what it is.
+         *
+         * The run of lines from here that all contain a pipe, and `parse_table`
+         * decides. One condition does three jobs, which is why there are no
+         * others: a line with no pipe makes a run of nothing, so `a` over `---`
+         * stays a paragraph and a rule rather than becoming a one-column table;
+         * a blank line has no pipe either, so it ends a run without being
+         * checked for; and a run `parse_table` refuses falls through to the
+         * paragraph below, which is what makes a sentence containing a pipe
+         * harmless.
+         */
+        let from = at - 1;
+        let mut end = from;
+        while end < lines.len() && lines[end].contains('|') {
+            end += 1;
+        }
+
+        if let Some(table) = parse_table(&lines[from..end]) {
+            flush_paragraph!();
+            flush_list!();
+            out.push(table_to_html(&table));
+            at = end;
             continue;
         }
 
@@ -342,6 +422,12 @@ pub fn note_pdf_page(title: &str, body: &str) -> String {
   code {{ font: 0.92em ui-monospace, Menlo, monospace }}
   img {{ max-width: 100% }}
   hr {{ border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }}
+  table {{ border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }}
+  /* A table split across a page is readable; a row split in half is not. */
+  tr {{ page-break-inside: avoid }}
+  th, td {{ border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;
+           text-align: left; vertical-align: top }}
+  th {{ background: #f4f3f7; font-weight: 600 }}
 </style></head><body>
 <h1>{title_text}</h1>
 {body_html}

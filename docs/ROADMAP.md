@@ -11,16 +11,11 @@ priority; the sections themselves are not ranked against each other.
 
 ## Next
 
-### Live markdown is done
+### Live markdown is done, and so is the export
 
 Checkboxes render as boxes you can click. Thematic breaks were already handled.
-Tables lay their own cells out and draw a rule under the header, which was the
-last of it.
-
-One thing the audit turned up and did not fix: **the blog export does not
-render tables either.** `markdownToHtml.ts` has no case for them, so a note with
-a table publishes with its pipes intact. The editor and the export are separate
-paths and only one of them has been through.
+Tables lay their own cells out and draw a rule under the header. The HTML export
+and the PDF render them too, on both backends, which was the last of it.
 
 ---
 
@@ -65,6 +60,25 @@ Small, known, and each one found in passing rather than reported.
   They are set to `warn` in `eslint.config.mjs`, named individually rather than
   blanket-disabled, so they stay visible and stay off the failing path. Going
   through them is editor work, not tooling work.
+
+- **Eight conformance fixtures are read by the Rust alone.** Each one's readme
+  says "both read this" and for these eight only one side does, so a change on
+  the TypeScript side leaves the Rust passing against a stale answer and the two
+  backends quietly disagreeing. `markdown.json` was in this list until a
+  tampering run found it: dropping the alignment style from the HTML export
+  changed several answers and every TypeScript test still passed.
+
+  Read by both: `crypto`, `markdown`, `preferences`, `rules`, `tags`.
+
+  Read by the Rust alone: `blogs`, `posts`, `publish`, `safe-storage`, `screen`,
+  `search`, `text`, `window`.
+
+  Some of those are probably Rust-only by nature — `safe-storage` is the
+  keychain and has no TypeScript counterpart to hold — so this is eight to look
+  at rather than eight to fix. The ones with an obvious twin in `src/shared`
+  (`screen`, `search`, `blogs`, `posts`, `publish`) are the ones to start with.
+  The pattern to copy is `markdown.conformance.test.ts`, and the way to know it
+  earned its keep is to tamper the TypeScript and watch it fail.
 
 - **`pnpm run release:grammar` has never been run**, so Harper's dictionary is
   still fetched from jsdelivr rather than from a Tova release. The script exists
