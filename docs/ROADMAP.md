@@ -170,8 +170,28 @@ grammar is the opt-in dictionary. So the real work is **notes and
 preferences**, and notes is the half that already has a store, a transport and
 a sync behind it.
 
-**Next, in order:** that shim, written properly rather than as a probe — the
-thirteen first, then notes over the store and preferences over IndexedDB; the
+**And it is built.** `web/lib/bridge/` is the whole surface, typed as
+`TovaBridge` so the compiler says when a method is missing rather than a screen
+saying it to somebody. `/app` mounts `src/renderer/App` unchanged — no fork, no
+second copy — and the sidebar, the sections, the tags, the background and the
+editor pane all come up in a browser.
+
+Refusals carry which of two reasons applies, and the difference is the roadmap:
+**unavailable** is a thing a browser will never do (Finder, a folder picker,
+relaunching), **not yet** is a thing that will exist. They look identical in a
+stack trace and mean opposite things to whoever decides what to build next. The
+app renders a refusal in its own error presentation — "notes.today is not built
+on the web yet" — which is how the next piece announces itself.
+
+One thing the exercise turned up: **the first-run question is a desktop
+question.** It offers a 15MB dictionary, says "macOS's own checker", and says
+"nothing leaves this machine" — none of which is true in a browser signed in to
+an account. The web either asks a different question or asks none, and that is
+a decision rather than a port.
+
+**Next, in order:** the notes model, which is the one real gap — the renderer
+addresses a note by a vault path and the sync store keys by a uuid, and
+something has to hold both; the
 desktop's store, which is the same interface over markdown files; something to
 call a sync from, on a schedule and on a change; and version history on the
 web, since the desktop's `.versions` is the floor the conflict story leans on

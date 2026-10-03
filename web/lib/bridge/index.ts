@@ -1,0 +1,240 @@
+/**
+ * `window.tova`, for a browser.
+ *
+ * The desktop builds this out of Tauri commands in `src-tauri/bridge.js`. This
+ * is the same surface over HTTP, IndexedDB and the browser's own facilities,
+ * and it is typed as `TovaBridge` so the compiler — rather than a screen in
+ * front of somebody — says when a method is missing.
+ *
+ * Most of it refuses, and the refusals carry which of two reasons applies.
+ * `docs/ROADMAP.md` has the inventory: 74 methods, 13 of them called to boot,
+ * and the real work is notes and preferences.
+ */
+
+import { normalizePreferences, type Preferences } from "../../../src/shared/preferences"
+import { normalizeScreen, type Screen } from "../../../src/shared/screen"
+import { NO_AVATARS } from "../../../src/shared/preferences"
+import type { TovaBridge } from "../../../src/shared/types"
+import { notYet, unavailable } from "./refuse"
+import { read, write } from "./settings"
+
+/**
+ * Where a preference and the last screen are kept.
+ *
+ * Injected for the reason the vault client's `Credentials` is: what is worth
+ * testing here is the normalising on each side of the store, and jsdom has no
+ * IndexedDB to put anything in.
+ */
+export type SettingsStore = {
+  read: <T>(key: string) => Promise<T | undefined>
+  write: (key: string, value: unknown) => Promise<void>
+}
+
+const PREFERENCES = "preferences"
+const SESSION = "session"
+
+/**
+ * Backgrounds and title faces the reader added.
+ *
+ * Empty rather than refused: the desktop serves these off disk over its own
+ * URL scheme, and a browser simply has none of them. An empty list is the
+ * truthful answer, and the Appearance screen renders it as "none added" rather
+ * than as an error.
+ */
+const none = () => Promise.resolve<string[]>([])
+
+export function webBridge(settings: SettingsStore = { read, write }): TovaBridge {
+  return {
+    notes: {
+      /*
+       * Empty, truthfully. The notes model — a vault path, a title, a folder —
+       * is the next piece, and it is not a refusal to say a new browser holds
+       * no notes.
+       */
+      list: () => Promise.resolve([]),
+      listFolders: () => Promise.resolve([]),
+      search: () => Promise.resolve([]),
+
+      read: notYet("notes.read"),
+      write: notYet("notes.write"),
+      create: notYet("notes.create"),
+      rename: notYet("notes.rename"),
+      move: notYet("notes.move"),
+      remove: notYet("notes.remove"),
+      restore: notYet("notes.restore"),
+      permanentDelete: notYet("notes.permanentDelete"),
+      today: notYet("notes.today"),
+      createFolder: notYet("notes.createFolder"),
+      setFavorite: notYet("notes.setFavorite"),
+      setTags: notYet("notes.setTags"),
+      renameFolder: notYet("notes.renameFolder"),
+      deleteFolder: notYet("notes.deleteFolder"),
+      createSection: notYet("notes.createSection"),
+      deleteSection: notYet("notes.deleteSection"),
+
+      /*
+       * The desktop writes a file and tells you where it went. A browser hands
+       * the reader a download and never learns the path, so the honest answer
+       * to "where did it go" is one this shape cannot give.
+       */
+      exportMarkdown: notYet("notes.exportMarkdown"),
+      exportPdf: unavailable("notes.exportPdf")
+    },
+
+    backups: {
+      /*
+       * A vault is empty until the notes model exists, and there are no
+       * backups because there is no folder to copy. `.versions` is the
+       * desktop's floor under a bad merge and the web has none — on the
+       * roadmap, and said plainly rather than answered with a lie.
+       */
+      status: () => Promise.resolve({ empty: true, backups: [] }),
+      list: () => Promise.resolve([]),
+      listVersions: () => Promise.resolve([]),
+      run: notYet("backups.run"),
+      restore: notYet("backups.restore"),
+      readVersion: notYet("backups.readVersion")
+    },
+
+    images: { save: notYet("images.save") },
+
+    blogs: {
+      /*
+       * Deferred under the no-blog-at-first scope, so the lists are empty and
+       * the rest refuses. `canStoreSecrets` is false and means it: a browser
+       * has no keychain, and a token kept anywhere else would be a token in
+       * the clear.
+       */
+      list: () => Promise.resolve([]),
+      canStoreSecrets: () => Promise.resolve(false),
+      lastSynced: () => Promise.resolve({}),
+      save: notYet("blogs.save"),
+      remove: notYet("blogs.remove"),
+      postCount: () => Promise.resolve(0),
+      setSecret: unavailable("blogs.setSecret"),
+      sync: notYet("blogs.sync"),
+      conflict: notYet("blogs.conflict"),
+      resolve: notYet("blogs.resolve"),
+      deletePost: notYet("blogs.deletePost")
+    },
+
+    publish: {
+      start: notYet("publish.start"),
+      onUpdate: () => () => {}
+    },
+
+    spellcheck: {
+      /*
+       * The browser's own, which is always on and has no switch here. The
+       * desktop asks macOS the same questions through a command; a webview
+       * answers them itself through `spellcheck` on the element.
+       */
+      check: () => Promise.resolve([]),
+      onSuggest: () => () => {},
+      replace: () => Promise.resolve(),
+      addWord: () => Promise.resolve([]),
+      removeWord: () => Promise.resolve([]),
+      listWords: () => Promise.resolve([]),
+      setEnabled: () => Promise.resolve()
+    },
+
+    /*
+     * Harper's dictionary is 15MB and ships off, which is the one first-run
+     * question Tova asks. Downloading it into a browser is a different
+     * decision from downloading it onto a Mac, and not one to make by
+     * inheriting the answer.
+     */
+    grammar: {
+      status: () => Promise.resolve({ ready: false, bytes: 0, version: "" }),
+      fetch: notYet("grammar.fetch")
+    },
+
+    preferences: {
+      async read() {
+        return normalizePreferences(await settings.read<unknown>(PREFERENCES))
+      },
+      async write(preferences: Preferences) {
+        const tidied = normalizePreferences(preferences)
+        await settings.write(PREFERENCES, tidied)
+        return tidied
+      },
+
+      /*
+       * No macOS account to ask, and no picker that copies a file into a
+       * vault. An avatar on the web is initials until somebody builds an
+       * upload, which is a different thing from the one this method describes.
+       */
+      avatarSources: () => Promise.resolve(NO_AVATARS),
+      accountName: () => Promise.resolve(""),
+      chooseAvatar: unavailable("preferences.chooseAvatar"),
+
+      listBackgrounds: none,
+      listTitleFonts: none,
+      addBackground: unavailable("preferences.addBackground"),
+      addTitleFont: unavailable("preferences.addTitleFont"),
+      removeTitleFont: unavailable("preferences.removeTitleFont"),
+      titleFontUrl: () => Promise.resolve(null),
+
+      /*
+       * A vault is a directory on the desktop. Here there is one account and
+       * one set of notes, so there is nothing to list, add or switch between —
+       * and the per-vault encryption these describe is the account's envelope
+       * instead, which the auth screens own.
+       */
+      listVaults: () => Promise.resolve([]),
+      addVault: unavailable("preferences.addVault"),
+      useVault: unavailable("preferences.useVault"),
+      forgetVault: unavailable("preferences.forgetVault"),
+      encryptVault: unavailable("preferences.encryptVault"),
+      decryptVault: unavailable("preferences.decryptVault"),
+      unlockVault: unavailable("preferences.unlockVault"),
+
+      reset: () => settings.write(PREFERENCES, undefined),
+      nukeTargets: () => Promise.resolve([]),
+      nuke: unavailable("preferences.nuke"),
+      tagPurgePlan: notYet("preferences.tagPurgePlan"),
+      tagPurge: notYet("preferences.tagPurge")
+    },
+
+    session: {
+      async read(): Promise<Screen | null> {
+        return normalizeScreen(await settings.read<unknown>(SESSION))
+      },
+      async write(screen: Screen) {
+        await settings.write(SESSION, screen)
+      }
+    },
+
+    app: {
+      info: () =>
+        Promise.resolve({
+          version: "web",
+          tauri: "",
+          webview: navigator.userAgent,
+          vaultPath: "",
+          backupPath: ""
+        }),
+      /** No Finder to open, and nothing on disk to open it at. */
+      reveal: unavailable("app.reveal"),
+      async openExternal(url: string) {
+        // `noopener` because the opened page gets a handle on this one
+        // otherwise, and this one is holding a decryption key.
+        window.open(url, "_blank", "noopener,noreferrer")
+      }
+    },
+
+    events: {
+      /*
+       * Nothing changes the vault behind this tab's back yet. When a sync runs
+       * on a timer it will, and this is where it will say so — so the
+       * unsubscribe is real rather than a shrug.
+       */
+      onNotesChanged: () => () => {}
+    }
+  }
+}
+
+/** Puts it where the renderer looks. */
+export function installBridge(): void {
+  window.tova = webBridge()
+}

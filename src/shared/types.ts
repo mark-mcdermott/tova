@@ -91,6 +91,29 @@ export interface AppInfo {
   backupPath: string
 }
 
+/**
+ * The whole bridge, as one name.
+ *
+ * `src/renderer/tova.d.ts` declares `window.tova` as this, and the web client
+ * implements it. Having a name is what lets a second implementation be
+ * type-checked against the first rather than written alongside it and hoped
+ * about — a method missing from the web would otherwise be a runtime
+ * `undefined is not a function`, in a screen, in front of somebody.
+ */
+export interface TovaBridge {
+  notes: NoteApi
+  backups: BackupApi
+  images: ImageApi
+  blogs: BlogApi
+  publish: PublishApi
+  spellcheck: SpellcheckApi
+  grammar: GrammarApi
+  preferences: PreferencesApi
+  session: SessionApi
+  app: AppApi
+  events: EventsApi
+}
+
 export interface AppApi {
   info: () => Promise<AppInfo>
   /** Opens one of the vault directories in the OS file browser. */

@@ -16,6 +16,10 @@
  * looks shaky.
  */
 
+import { available, run } from "./idb"
+
+export { available }
+
 const DB = "tova"
 const STORE = "keys"
 const CONTENT = "content"
@@ -32,41 +36,6 @@ export async function unexportable(bytes: Uint8Array<ArrayBuffer>): Promise<Cryp
   return crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"])
 }
 
-/** Whether this browser can keep a key at all. Private windows sometimes cannot. */
-export function available(): boolean {
-  return typeof indexedDB !== "undefined"
-}
-
-function open(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB, 1)
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE)
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error ?? new Error("IndexedDB would not open"))
-  })
-}
-
-/** One transaction, resolved when it commits rather than when the request does. */
-async function run<T>(
-  mode: IDBTransactionMode,
-  work: (store: IDBObjectStore) => IDBRequest<T>
-): Promise<T> {
-  const db = await open()
-  try {
-    return await new Promise<T>((resolve, reject) => {
-      const transaction = db.transaction(STORE, mode)
-      const request = work(transaction.objectStore(STORE))
-      // The request's own success fires before the write is durable; the
-      // transaction's does not, which is the one worth waiting for.
-      transaction.oncomplete = () => resolve(request.result)
-      transaction.onerror = () => reject(transaction.error ?? new Error("That write failed"))
-      transaction.onabort = () => reject(transaction.error ?? new Error("That write was undone"))
-    })
-  } finally {
-    db.close()
-  }
-}
-
 /**
  * Keeps the content key on this device, in a form it cannot be read out of.
  *
@@ -76,7 +45,9 @@ async function run<T>(
  */
 export async function remember(contentKey: Uint8Array<ArrayBuffer>, epoch: number): Promise<void> {
   const key = await unexportable(contentKey)
-  await run("readwrite", (store) => store.put({ key, epoch } satisfies Stored, CONTENT))
+  await run(DB, [STORE], "readwrite", ([keys]) =>
+    keys.put({ key, epoch } satisfies Stored, CONTENT)
+  )
 }
 
 /**
@@ -105,7 +76,9 @@ export async function keepIfPossible(vault: {
 
 /** The key this device is holding, or null. */
 export async function recall(): Promise<Stored | null> {
-  const found = await run<Stored | undefined>("readonly", (store) => store.get(CONTENT))
+  const found = await run<Stored | undefined>(DB, [STORE], "readonly", ([keys]) =>
+    keys.get(CONTENT)
+  )
   return found ?? null
 }
 
@@ -117,5 +90,5 @@ export async function recall(): Promise<Stored | null> {
  * key a device already holds.
  */
 export async function forget(): Promise<void> {
-  await run("readwrite", (store) => store.delete(CONTENT))
+  await run(DB, [STORE], "readwrite", ([keys]) => keys.delete(CONTENT))
 }
