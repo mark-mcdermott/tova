@@ -139,9 +139,49 @@ all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
 which is the web client as a PWA.
 
+**Mobile has mocks**, drawn 2026-10-03 and sitting outside the repository with
+the rest of the branding. Six screens: a daily note with a week strip, the
+editor with a format bar over the keyboard, an empty state, a notes list with
+filter chips, and a settings screen that already matches the model — Export
+above Delete account, and "your recovery key can't be shown again, replace it
+while your notes are unlocked".
+
+Three things they do not have, and the first is the one that cannot be added
+later:
+
+- **No unlocked state.** Every screen shows notes already readable, and a cold
+  start holds no content key. On a phone the answer is Face ID — agreed
+  2026-10-03 — because the alternative is typing a long password every time you
+  pick the thing up.
+
+  That does **not** mean the Keychain, and so it does not mean a Tauri build.
+  WebAuthn's `prf` extension derives a stable secret from a passkey and releases
+  it only behind the platform authenticator, which is Face ID. It wraps the
+  content key the way a password-derived key does: a third envelope kind
+  alongside `password` and `recovery`, which the schema already allows for.
+
+  What it costs instead is a floor. PRF wants iOS 18 and Safari 18, so the
+  password path stays the one every device has rather than becoming optional.
+  The passkey lives in iCloud Keychain and syncs, so one enrolment covers a
+  reader's devices — and a reader who loses that account loses that envelope,
+  with the recovery key still behind it.
+
+- **Nothing tells the reader about sync.** `SYNC.md` promises that a genuine
+  conflict leaves both notes, one as a copy, and that the reader is told. There
+  is nowhere in these screens to tell them.
+- **No blogs tab.** Three tabs is the right restraint for a phone. It should be
+  a decision rather than an omission.
+
 Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
 would have been the answer if web were not happening — but once a web client
 exists, mobile rides on it for nearly nothing.
+
+Face ID looked like the thing that would reopen that, and it is not. The
+Keychain is out of a PWA's reach, but WebAuthn's `prf` extension is not, and it
+gives the same property: a secret released only behind the platform
+authenticator. A Tauri build comes back on the table only if PRF turns out to be
+too thin in practice — too few devices, or a passkey story readers cannot
+follow.
 
 ---
 
