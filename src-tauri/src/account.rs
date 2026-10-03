@@ -241,6 +241,15 @@ pub fn status(data_dir: &Path) -> Result<Option<String>, String> {
         .and_then(|json| Some(json.get("user")?.get("email")?.as_str()?.to_string())))
 }
 
+/// The sealed content keys, as the server holds them.
+///
+/// Opened in the renderer, never here: the password that unwraps one is typed
+/// there and the key it produces is only ever useful there. This carries a
+/// sealed envelope and a salt, which is all the server has.
+pub fn envelopes(data_dir: &Path) -> Result<String, String> {
+    refuse_or(send(data_dir, "GET", "/api/vault/envelopes", None)?)
+}
+
 /// The two sync calls, as the server answers them.
 ///
 /// The JSON is handed back untouched. `src/shared/sync.ts` is what gives it a

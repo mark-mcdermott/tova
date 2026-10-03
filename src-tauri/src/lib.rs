@@ -197,6 +197,11 @@ fn sync_state_write(value: serde_json::Value) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn sync_envelopes() -> Result<String, String> {
+    account::envelopes(&data_dir())
+}
+
+#[tauri::command]
 fn sync_pull(cursor: String, limit: Option<u32>) -> Result<String, String> {
     account::pull(&data_dir(), &cursor, limit)
 }
@@ -1067,6 +1072,7 @@ pub fn run() {
             sync_key_write,
             sync_state,
             sync_state_write,
+            sync_envelopes,
             sync_pull,
             sync_push,
             session_read,

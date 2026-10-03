@@ -66,6 +66,10 @@ export function webSync(fetch: typeof globalThis.fetch = globalThis.fetch): Sync
       await keepIfPossible({ contentKey: key as Uint8Array<ArrayBuffer>, epoch: 1 })
     },
 
+    async envelopes() {
+      return json(await fetch("/api/vault/envelopes", { credentials: "same-origin" }))
+    },
+
     async push(notes) {
       return json(
         await fetch(NOTES, {

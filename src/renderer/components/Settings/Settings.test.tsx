@@ -58,6 +58,7 @@ describe("Settings", () => {
       "Profile",
       "Appearance",
       "Vault",
+      "Sync",
       "Blogs",
       "General",
       "Docs"

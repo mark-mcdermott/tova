@@ -5,6 +5,7 @@ import { AppearanceTab } from "./tabs/AppearanceTab"
 import { DocsTab } from "./tabs/DocsTab"
 import { GeneralTab } from "./tabs/GeneralTab"
 import { ProfileTab } from "./tabs/ProfileTab"
+import { SyncTab } from "./tabs/SyncTab"
 import { VaultTab } from "./tabs/VaultTab"
 import { useTooltip } from "../../useTooltip"
 
@@ -12,6 +13,7 @@ const LABELS: Record<SettingsTab, string> = {
   profile: "Profile",
   appearance: "Appearance",
   vault: "Vault",
+  sync: "Sync",
   blogs: "Blogs",
   general: "General",
   docs: "Docs"
@@ -21,6 +23,7 @@ function panelFor(tab: SettingsTab) {
   if (tab === "profile") return <ProfileTab />
   if (tab === "appearance") return <AppearanceTab />
   if (tab === "vault") return <VaultTab />
+  if (tab === "sync") return <SyncTab />
   if (tab === "blogs") return <BlogSection />
   if (tab === "general") return <GeneralTab />
   return <DocsTab />
