@@ -1,0 +1,67 @@
+---
+import Page from "../layouts/Page.astro"
+
+/*
+ * The landing page, and the first one that has ever existed.
+ *
+ * Deliberately short. The app is the argument, and a page that explains at
+ * length what a calm writing tool is would be the first thing about Tova that
+ * was not calm.
+ *
+ * The download points at the GitHub release rather than a file here: releases
+ * are signed and notarised on one Mac and published as drafts, and a copy
+ * served from somewhere else is a copy that can go stale against the updater's
+ * own `latest.json`.
+ */
+const RELEASES = "https://github.com/mark-mcdermott/tova/releases/latest"
+---
+
+<Page
+  title="Tova — a quieter place for your thoughts"
+  description="A calm markdown writing app for macOS. Your notes stay plain files in a folder you own."
+>
+  <main class="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-24">
+    <h1 class="text-5xl leading-tight font-semibold tracking-tight text-balance sm:text-6xl">
+      A quieter place<br />for your thoughts.
+    </h1>
+
+    <p class="text-ink-soft mt-8 max-w-prose text-lg leading-relaxed">
+      Markdown notes that stay markdown. A daily note that writes itself. Your writing lives in a
+      folder you own, as files anything can open.
+    </p>
+
+    <div class="mt-10 flex flex-wrap items-center gap-4">
+      <a
+        href={RELEASES}
+        class="bg-accent hover:bg-accent-bright rounded-full px-6 py-3 font-medium text-white transition-colors"
+      >
+        Download for macOS
+      </a>
+      <span class="text-ink-faint font-mono text-sm">Universal · signed and notarised</span>
+    </div>
+
+    <dl class="text-ink-soft mt-20 grid gap-8 sm:grid-cols-3">
+      <div>
+        <dt class="text-ink font-medium">Files, not a database</dt>
+        <dd class="mt-2 text-sm leading-relaxed">
+          <code class="font-mono">~/Documents/Tova</code>, as <code class="font-mono">.md</code> in ordinary
+          folders. Keep them in git. Back them up however you already do.
+        </dd>
+      </div>
+      <div>
+        <dt class="text-ink font-medium">Markdown as you write it</dt>
+        <dd class="mt-2 text-sm leading-relaxed">
+          Headings, lists, tables and checkboxes render in place. The markers come back when the
+          cursor reaches them.
+        </dd>
+      </div>
+      <div>
+        <dt class="text-ink font-medium">Nothing to sign in to</dt>
+        <dd class="mt-2 text-sm leading-relaxed">
+          No account is needed to write. Sync, when you want it, is something you turn on — and the
+          server cannot read a word of it.
+        </dd>
+      </div>
+    </dl>
+  </main>
+</Page>

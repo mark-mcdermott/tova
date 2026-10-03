@@ -21,3 +21,7 @@ pnpm-lock.yaml
 # Reformatting a snapshot would change the thing the next `generate` compares
 # to, which is the fixture argument again in a different coat.
 drizzle/
+
+# Astro's own output and caches.
+out/web/
+.astro/
