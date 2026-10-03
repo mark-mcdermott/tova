@@ -185,7 +185,12 @@ export interface EmptyFolders {
   write: (folders: string[]) => Promise<void>
 }
 
-export function webNotes(store: NoteStore, empties: EmptyFolders = nowhere()): NoteApi {
+export function webNotes(
+  store: NoteStore,
+  empties: EmptyFolders = nowhere(),
+  /** Told after every write, so a sync knows there is something to push. */
+  wrote: () => void = () => {}
+): NoteApi {
   const all = async () => index(await store.all())
 
   /** Keeps the remembered list honest when a folder is renamed or removed. */
@@ -218,6 +223,7 @@ export function webNotes(store: NoteStore, empties: EmptyFolders = nowhere()): N
       updatedAt: Date.now()
     }
     await store.write(note)
+    wrote()
 
     const again = (await all()).find((one) => one.note.id === uid)
     if (again === undefined) throw new Error("That note did not come back")

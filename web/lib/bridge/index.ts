@@ -20,6 +20,7 @@ import { webNotes } from "./notes"
 import { notYet, unavailable } from "./refuse"
 import { read, write } from "./settings"
 import { webNoteStore } from "../noteStore"
+import { signal, type Signal } from "../signal"
 
 /**
  * Where a preference and the last screen are kept.
@@ -50,13 +51,26 @@ const none = () => Promise.resolve<string[]>([])
 
 export function webBridge(
   settings: SettingsStore = { read, write },
-  notes: NoteStore = webNoteStore()
+  notes: NoteStore = webNoteStore(),
+  /*
+   * Two signals, because they mean different things. `localChanged` is this
+   * tab saying it wrote; `vaultChanged` is a sync saying it took something.
+   * `EventsApi.onNotesChanged` is documented as changes made elsewhere, and
+   * handing it this tab's own writes would make the renderer reload after
+   * every keystroke it had just handled.
+   */
+  localChanged: Signal = signal(),
+  vaultChanged: Signal = signal()
 ): TovaBridge {
   return {
-    notes: webNotes(notes, {
-      read: async () => (await settings.read<string[]>(FOLDERS)) ?? [],
-      write: (folders) => settings.write(FOLDERS, folders)
-    }),
+    notes: webNotes(
+      notes,
+      {
+        read: async () => (await settings.read<string[]>(FOLDERS)) ?? [],
+        write: (folders) => settings.write(FOLDERS, folders)
+      },
+      localChanged.announce
+    ),
 
     backups: {
       /*
@@ -202,16 +216,23 @@ export function webBridge(
 
     events: {
       /*
-       * Nothing changes the vault behind this tab's back yet. When a sync runs
-       * on a timer it will, and this is where it will say so — so the
-       * unsubscribe is real rather than a shrug.
+       * A sync that pulled something, not this tab's own writes. The
+       * difference is the whole reason there are two signals.
        */
-      onNotesChanged: () => () => {}
+      onNotesChanged: (listener) => vaultChanged.listen(listener)
     }
   }
 }
 
-/** Puts it where the renderer looks. */
-export function installBridge(): void {
-  window.tova = webBridge()
+/**
+ * Puts it where the renderer looks, and hands back the two signals.
+ *
+ * The caller needs them: one to drive a sync from, one for a sync to announce
+ * on. `Shell.tsx` wires those to `startSync`.
+ */
+export function installBridge(): { localChanged: Signal; vaultChanged: Signal } {
+  const localChanged = signal()
+  const vaultChanged = signal()
+  window.tova = webBridge(undefined, undefined, localChanged, vaultChanged)
+  return { localChanged, vaultChanged }
 }

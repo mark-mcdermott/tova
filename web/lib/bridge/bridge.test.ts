@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { webBridge, type SettingsStore } from "./index"
 import { inMemoryNotes } from "../testing"
+import { signal } from "../signal"
 import { NotOnTheWeb } from "./refuse"
 import { DEFAULT_PREFERENCES } from "../../../src/shared/preferences"
 
@@ -170,5 +171,61 @@ describe("opening a link", () => {
     await webBridge(fakeSettings(), inMemoryNotes()).app.openExternal("https://tova.so")
 
     expect(open).toHaveBeenCalledWith("https://tova.so", "_blank", "noopener,noreferrer")
+  })
+})
+
+describe("the two signals", () => {
+  const wired = () => {
+    const localChanged = signal()
+    const vaultChanged = signal()
+    const tova = webBridge(fakeSettings(), inMemoryNotes(), localChanged, vaultChanged)
+    return { tova, localChanged, vaultChanged }
+  }
+
+  /*
+   * `onNotesChanged` is documented as changes made elsewhere. Handing it this
+   * tab's own writes would make the renderer reload after every keystroke it
+   * had just handled — and a reload mid-sentence is the kind of bug that is
+   * very hard to describe and very easy to notice.
+   */
+  it("does not tell the renderer about this tab's own writes", async () => {
+    const { tova } = wired()
+    const reload = vi.fn()
+    tova.events.onNotesChanged(reload)
+
+    await tova.notes.create({ section: "notes", title: "River" })
+
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("tells the renderer when a sync took something", () => {
+    const { tova, vaultChanged } = wired()
+    const reload = vi.fn()
+    tova.events.onNotesChanged(reload)
+
+    vaultChanged.announce()
+
+    expect(reload).toHaveBeenCalledOnce()
+  })
+
+  it("tells a sync there is something to push, on every write", async () => {
+    const { tova, localChanged } = wired()
+    const wrote = vi.fn()
+    localChanged.listen(wrote)
+
+    const made = await tova.notes.create({ section: "notes", title: "River" })
+    await tova.notes.write(made.id, "River", "Water.")
+
+    expect(wrote).toHaveBeenCalledTimes(2)
+  })
+
+  it("stops telling a renderer that stopped listening", () => {
+    const { tova, vaultChanged } = wired()
+    const reload = vi.fn()
+
+    tova.events.onNotesChanged(reload)()
+    vaultChanged.announce()
+
+    expect(reload).not.toHaveBeenCalled()
   })
 })

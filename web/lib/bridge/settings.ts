@@ -7,14 +7,14 @@
  * not need the same treatment.
  */
 
-import { run } from "../idb"
+import { database } from "../idb"
 
-const DB = "tova-settings"
 const STORE = "settings"
+const kept = database("tova-settings", [STORE])
 
 export const read = <T>(key: string): Promise<T | undefined> =>
-  run<T | undefined>(DB, [STORE], "readonly", ([settings]) => settings.get(key))
+  kept.run<T | undefined>([STORE], "readonly", ([settings]) => settings.get(key))
 
 export const write = async (key: string, value: unknown): Promise<void> => {
-  await run(DB, [STORE], "readwrite", ([settings]) => settings.put(value, key))
+  await kept.run([STORE], "readwrite", ([settings]) => settings.put(value, key))
 }
