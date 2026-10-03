@@ -142,8 +142,15 @@ server keeps none and the web keeps none. A conflict strategy that leans on "a
 bad merge is recoverable" needs that to be true on every backend, and it is
 true on one.
 
-**Next, in order:** the two store implementations — files on the desktop,
-IndexedDB on the web — which is the last piece before a sync can actually run; which is files on the desktop and IndexedDB on
+**Done since:** the web's store and transport, and the first sync that actually
+ran — a probe account against the real database, through the whole stack: a
+note pushed encrypted, a second device pulling it back decrypted, two edits on
+different lines merged, and two edits on the same line kept as both.
+
+**Next, in order:** the desktop's store, which is the same interface over
+markdown files and the `window.tova` bridge; something to call a sync from, on
+a schedule and on a change; and version history on the web, since the desktop's
+`.versions` is the floor the conflict story leans on and the web has none; which is files on the desktop and IndexedDB on
 the web; deleting an account, which is the one screen in this set
 that is not built and the one that needs the most care. With end-to-end
 encryption, removing the envelopes removes every way of reading the notes — by
