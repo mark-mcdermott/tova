@@ -175,6 +175,23 @@ problem one person with two devices mostly does not have. So:
 Version history is the floor underneath all of it: a bad merge is recoverable
 because every version is kept.
 
+`src/shared/notePlan.ts` is the step before any of that: given what the server
+sent, what is on disk, and what was last agreed, it says what to do about each
+note. Pure, so it is tested without a key or a network. Two of its rules are
+decisions rather than deductions, and both are there to lose as little as
+possible:
+
+**An edit beats a deletion.** Deleted on one side and written on the other, the
+writing wins and the note comes back. Undoing a deletion costs one more
+deletion; undoing a lost edit costs the writing. Deletions are tombstones
+rather than erasures, so a note returning is the cheap outcome.
+
+**A note missing locally with no tombstone is a missing file, not a deletion.**
+Tova reads a folder other things can reach, so a note can vanish to a stray
+`rm`, a half-restored backup, or a file sync that has not caught up. Reading
+absence as intent would turn any of those into a deletion on every device at
+once, so the note is taken back instead.
+
 Collaborative editing would need CRDTs. That is a different product and the
 model above does not block ever adopting one.
 
