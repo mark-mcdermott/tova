@@ -30,6 +30,7 @@
     "@lezer/common": "^1.5.3",
     "@lezer/highlight": "^1.2.5",
     "@lezer/markdown": "~1.6.4",
+    "@noble/hashes": "^2.4.0",
     "drizzle-orm": "^0.45.3",
     "harper.js": "^2.10.0",
     "react": "^19.3.0",
