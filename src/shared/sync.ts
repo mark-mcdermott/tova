@@ -12,8 +12,20 @@
 
 import { z } from "zod"
 
-/** Base64 of a 12-byte GCM nonce: 16 characters, the last of which is padding. */
-const NONCE = z.string().regex(/^[A-Za-z0-9+/]{15}=$/, "a 12-byte nonce in base64")
+/**
+ * Base64 of a 12-byte GCM nonce: 16 characters, and no padding.
+ *
+ * Twelve bytes divide into four groups of three exactly, so base64 has nothing
+ * left over to pad. This said `{15}=` and described an *eleven*-byte nonce —
+ * which `seal` has never produced, so the endpoint would have refused every
+ * genuine push with a 400.
+ *
+ * It survived a live run against the database because the probe hand-wrote a
+ * nonce to match this pattern instead of sealing anything. `sync.test.ts` now
+ * puts real `seal` output through it, which is the only version of this check
+ * that can go wrong in the same direction as the code.
+ */
+const NONCE = z.string().regex(/^[A-Za-z0-9+/]{16}$/, "a 12-byte nonce in base64")
 
 const CIPHERTEXT = z
   .string()

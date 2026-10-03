@@ -128,7 +128,22 @@ server-side so somebody not signed in never receives the page.
 **Done since:** `merge.ts`, the three-way merge a conflict needs — merged text
 or nothing, never a marker.
 
-**Next, in order:** the store the plan runs against, which is files on the desktop and IndexedDB on
+**Done since:** `syncCycle.ts`, which is one sync end to end against two ports
+— a store and a transport — and the bug that fell out of wiring the real cipher
+to the real schema for the first time. The nonce rule in `sync.ts` described an
+eleven-byte nonce; `seal` makes twelve-byte ones, so the live endpoint would
+have refused every genuine push. It survived a run against the real database
+because the probe hand-wrote a nonce to match the rule instead of sealing
+anything.
+
+**Also open: version history is a desktop feature and `SYNC.md` was treating it
+as a guarantee.** The desktop keeps ten versions per note in `.versions`; the
+server keeps none and the web keeps none. A conflict strategy that leans on "a
+bad merge is recoverable" needs that to be true on every backend, and it is
+true on one.
+
+**Next, in order:** the two store implementations — files on the desktop,
+IndexedDB on the web — which is the last piece before a sync can actually run; which is files on the desktop and IndexedDB on
 the web; deleting an account, which is the one screen in this set
 that is not built and the one that needs the most care. With end-to-end
 encryption, removing the envelopes removes every way of reading the notes — by
