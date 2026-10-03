@@ -30,6 +30,20 @@ const FOLDERED: [&str; 2] = ["notes", "posts"];
 pub struct NoteSummary {
     /// Vault-relative path, e.g. `notes/ideas/river.md`. Changes when renamed.
     pub id: String,
+    /*
+     * The note's own identity, which does not change when it is renamed or
+     * moved — `id` above does both.
+     *
+     * Optional because it is minted lazily. A note gets one the first time it
+     * is saved for any reason, and new notes get one at birth. Nothing sweeps
+     * the vault to fill them in: `list` loads every note, so minting on read
+     * would rewrite every file anybody owns the first time they opened this
+     * version.
+     *
+     * Nothing addresses a note by it yet. It is written now so that by the
+     * time something does, the ids already exist and are already old.
+     */
+    pub uid: Option<String>,
     pub title: String,
     pub section: String,
     pub folder: Option<String>,
@@ -72,6 +86,8 @@ struct Home {
 
 struct Loaded {
     location: NoteLocation,
+    /// From front matter, or None for a note written before ids existed.
+    uid: Option<String>,
     /// Where the note belongs — for a trashed note, where it came from.
     home: Home,
     title: String,
@@ -126,6 +142,7 @@ fn load(location: &NoteLocation) -> Result<Loaded, String> {
     let raw = read_vault_text(&absolute)?;
     let stats = std::fs::metadata(&absolute).map_err(|e| e.to_string())?;
     let parsed = front_matter::parse(&raw);
+    let uid = parsed.data.str("id").map(str::to_string);
 
     let home = if location.section == "trash" {
         let restored = restore_location(&parsed.data, &location.filename);
@@ -149,6 +166,7 @@ fn load(location: &NoteLocation) -> Result<Loaded, String> {
 
     Ok(Loaded {
         location: location.clone(),
+        uid,
         home,
         title,
         deleted_at: read_timestamp(parsed.data.get("deletedAt")),
@@ -160,7 +178,13 @@ fn load(location: &NoteLocation) -> Result<Loaded, String> {
     })
 }
 
-fn persist(note: &Loaded) -> Result<(), String> {
+/// A fresh identity. v4 rather than a sortable one: ordering comes from
+/// `createdAt`, and nothing should be able to read a note's age off its id.
+fn new_uid() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
+fn persist(note: &mut Loaded) -> Result<(), String> {
     let mut data = Data::default();
     data.set("title", note.title.clone());
     data.set("section", note.home.section.clone());
@@ -181,6 +205,19 @@ fn persist(note: &Loaded) -> Result<(), String> {
         data.set("tags", note.manual_tags.clone());
     }
 
+    /*
+     * Last, so what a reader sees first when they open the file in anything
+     * else is the title — these are their files, and a UUID heading every one
+     * of them is noise in service of nothing they are reading for.
+     *
+     * Minted here rather than in `load` because `list` loads every note in the
+     * vault: minting on read would rewrite every file anybody owns the first
+     * time this version opened. Here, a note gets its id the first time it is
+     * saved for any reason, and a new note gets one at birth.
+     */
+    let uid = note.uid.get_or_insert_with(new_uid);
+    data.set("id", uid.clone());
+
     write_vault_text(
         &note_path(&note.location)?,
         &front_matter::serialize(&data, &note.body),
@@ -190,6 +227,7 @@ fn persist(note: &Loaded) -> Result<(), String> {
 fn to_summary(note: &Loaded) -> NoteSummary {
     NoteSummary {
         id: to_note_id(&note.location),
+        uid: note.uid.clone(),
         title: note.title.clone(),
         section: note.location.section.clone(),
         folder: note.location.folder.clone(),
@@ -355,8 +393,11 @@ pub fn create(input: CreateNoteInput) -> Result<Note, String> {
     };
 
     let at = now_ms();
-    persist(&Loaded {
+    persist(&mut Loaded {
         location: location.clone(),
+        // persist mints it, so a new note and an old one being saved for the
+        // first time take exactly the same path to an id.
+        uid: None,
         home: Home { section, folder },
         title,
         body: input.body.unwrap_or_default(),
@@ -384,7 +425,7 @@ pub fn write(id: &str, title: &str, body: &str) -> Result<NoteSummary, String> {
 
     note.title = crate::js::trim(title).to_string();
     note.body = body.to_string();
-    persist(&note)?;
+    persist(&mut note)?;
 
     // Notes only: a synced post's filename is the blog's, and renaming it here
     // would quietly break the mapping to the file it came from.
@@ -420,7 +461,7 @@ pub fn set_favorite(id: &str, favorite: bool) -> Result<NoteSummary, String> {
     }
 
     note.favorite = favorite;
-    persist(&note)?;
+    persist(&mut note)?;
     Ok(to_summary(&load(&note.location)?))
 }
 
@@ -435,7 +476,7 @@ pub fn set_manual_tags(id: &str, tags: Vec<String>) -> Result<NoteSummary, Strin
     }
 
     note.manual_tags = next;
-    persist(&note)?;
+    persist(&mut note)?;
     Ok(to_summary(&load(&note.location)?))
 }
 
@@ -470,7 +511,7 @@ fn relocate(
     let mut moved = load(next)?;
     moved.home = home;
     moved.deleted_at = deleted_at;
-    persist(&moved)?;
+    persist(&mut moved)?;
 
     Ok(to_summary(&load(next)?))
 }
@@ -583,7 +624,7 @@ pub fn delete_note_file(id: &str) -> Result<(), String> {
 pub fn overwrite_body(id: &str, body: &str) -> Result<(), String> {
     let mut note = load(&require_location(id)?)?;
     note.body = body.to_string();
-    persist(&note)
+    persist(&mut note)
 }
 
 pub fn permanent_delete(id: &str) -> Result<(), String> {
@@ -654,7 +695,7 @@ pub fn rename_folder(from: &str, to: &str) -> Result<String, String> {
             section: "notes".to_string(),
             folder: Some(target.clone()),
         };
-        persist(&note)?;
+        persist(&mut note)?;
     }
 
     Ok(target)
@@ -814,7 +855,10 @@ mod tests {
 
         let raw = s.raw(&note.summary.id);
 
-        assert!(raw.starts_with("---\ntitle: Slow Morning\nsection: notes\n---\n\n"));
+        // The id now closes the front matter — title still leads, which is
+        // what a reader opening the file in anything else sees first.
+        assert!(raw.starts_with("---\ntitle: Slow Morning\nsection: notes\nid: "));
+        assert!(raw.contains("\n---\n\nCoffee. Empty streets.\n"));
         assert_eq!(
             read(&note.summary.id).unwrap().body,
             "Coffee. Empty streets.\n"
@@ -1297,6 +1341,7 @@ mod tests {
                 "section",
                 "tags",
                 "title",
+                "uid",
                 "updatedAt"
             ]
         );
@@ -1316,5 +1361,132 @@ mod tests {
 
         assert!(crate::backup::read_version("notes/a.md", "../../escape.md").is_err());
         assert!(crate::backup::read_version("notes/a.md", "2026-13-45_99-99-99.md").is_err());
+    }
+
+    /*
+     * A note's identity, which is the thing that has to outlive its path.
+     *
+     * `id` today is `notes/ideas/river.md` and changes the moment the note is
+     * renamed or moved — fine on one machine, and the reason two machines
+     * cannot agree which note is which. Nothing addresses a note by `uid` yet;
+     * it is written now so that by the time something does, the ids exist and
+     * are already old.
+     */
+    mod identity {
+        use super::*;
+
+        #[test]
+        fn a_new_note_is_born_with_one() {
+            let _s = Scratch::new("uid-born");
+            let note = made("notes", "River", "body");
+
+            assert!(note.summary.uid.is_some());
+        }
+
+        #[test]
+        fn it_is_written_into_the_file_and_read_back() {
+            let s = Scratch::new("uid-ondisk");
+            let note = made("notes", "River", "body");
+            let uid = note.summary.uid.clone().unwrap();
+
+            assert!(
+                s.raw(&note.summary.id).contains(&format!("id: {uid}")),
+                "the id should be in the front matter"
+            );
+            assert_eq!(read(&note.summary.id).unwrap().summary.uid, Some(uid));
+        }
+
+        #[test]
+        fn two_notes_do_not_share_one() {
+            let _s = Scratch::new("uid-distinct");
+            let a = made("notes", "One", "");
+            let b = made("notes", "Two", "");
+
+            assert_ne!(a.summary.uid, b.summary.uid);
+        }
+
+        /*
+         * The whole point. A path-shaped id cannot survive this, which is why
+         * sync cannot be built on one.
+         */
+        #[test]
+        fn it_survives_a_rename() {
+            let _s = Scratch::new("uid-rename");
+            let note = made("notes", "River", "body");
+            let before = note.summary.uid.clone();
+
+            let renamed = rename(&note.summary.id, "Estuary").unwrap();
+
+            assert_eq!(renamed.uid, before);
+            assert_ne!(renamed.id, note.summary.id, "the path did change");
+        }
+
+        #[test]
+        fn it_survives_a_move_between_sections() {
+            let _s = Scratch::new("uid-move");
+            let note = made("notes", "River", "body");
+            let before = note.summary.uid.clone();
+
+            trash_note(&note.summary.id).unwrap();
+            let found = list()
+                .into_iter()
+                .find(|row| row.uid == before)
+                .expect("still in the vault, under a different path");
+
+            assert!(found.id.starts_with("trash/"));
+        }
+
+        #[test]
+        fn editing_a_note_does_not_give_it_a_new_one() {
+            let _s = Scratch::new("uid-edit");
+            let note = made("notes", "River", "first");
+            let before = note.summary.uid.clone();
+
+            let after = write(&note.summary.id, "River", "second").unwrap();
+
+            assert_eq!(after.uid, before);
+        }
+
+        /*
+         * The safety property. `list` loads every note in the vault, so minting
+         * on read would rewrite every file anybody owns the first time they
+         * opened this version. A note written before ids existed keeps no id
+         * until something saves it.
+         */
+        #[test]
+        fn reading_an_old_note_does_not_write_to_it() {
+            let s = Scratch::new("uid-noswept");
+            let path = s.vault.join("notes/old.md");
+            std::fs::write(&path, "---\ntitle: Old\n---\n\nbody\n").unwrap();
+            let before = std::fs::metadata(&path).unwrap().modified().unwrap();
+
+            let row = list()
+                .into_iter()
+                .find(|row| row.title == "Old")
+                .expect("it is listed");
+
+            assert_eq!(row.uid, None, "listed without one rather than given one");
+            assert_eq!(
+                std::fs::metadata(&path).unwrap().modified().unwrap(),
+                before,
+                "the file was touched by being listed"
+            );
+            assert_eq!(s.raw("notes/old.md"), "---\ntitle: Old\n---\n\nbody\n");
+        }
+
+        #[test]
+        fn saving_an_old_note_mints_one() {
+            let s = Scratch::new("uid-mint");
+            std::fs::write(
+                s.vault.join("notes/old.md"),
+                "---\ntitle: Old\n---\n\nbody\n",
+            )
+            .unwrap();
+
+            let saved = write("notes/old.md", "Old", "edited").unwrap();
+
+            assert!(saved.uid.is_some(), "the first save gives it one");
+            assert_eq!(read("notes/old.md").unwrap().summary.uid, saved.uid);
+        }
     }
 }

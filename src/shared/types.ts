@@ -33,6 +33,17 @@ export interface SearchHit {
 export interface NoteSummary {
   /** Vault-relative path, e.g. `notes/ideas/river.md`. Changes when renamed. */
   id: string
+  /**
+   * The note's own identity, which survives a rename and a move — `id` above
+   * survives neither.
+   *
+   * Undefined for a note written before ids existed. They are minted on save
+   * rather than swept in: listing loads every note in the vault, so minting on
+   * read would rewrite every file anybody owns.
+   *
+   * Nothing addresses a note by it yet.
+   */
+  uid?: string
   title: string
   /** Where the note lives now — `trash` for anything soft-deleted. */
   section: Section
