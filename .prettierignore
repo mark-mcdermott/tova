@@ -16,3 +16,8 @@ conformance/
 scripts/seed/vault/
 
 pnpm-lock.yaml
+
+# Drizzle's own output: the migrations and the snapshots it diffs them against.
+# Reformatting a snapshot would change the thing the next `generate` compares
+# to, which is the fixture argument again in a different coat.
+drizzle/
