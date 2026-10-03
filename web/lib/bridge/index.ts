@@ -14,9 +14,12 @@
 import { normalizePreferences, type Preferences } from "../../../src/shared/preferences"
 import { normalizeScreen, type Screen } from "../../../src/shared/screen"
 import { NO_AVATARS } from "../../../src/shared/preferences"
+import type { NoteStore } from "../../../src/shared/noteStore"
 import type { TovaBridge } from "../../../src/shared/types"
+import { webNotes } from "./notes"
 import { notYet, unavailable } from "./refuse"
 import { read, write } from "./settings"
+import { webNoteStore } from "../noteStore"
 
 /**
  * Where a preference and the last screen are kept.
@@ -43,43 +46,12 @@ const SESSION = "session"
  */
 const none = () => Promise.resolve<string[]>([])
 
-export function webBridge(settings: SettingsStore = { read, write }): TovaBridge {
+export function webBridge(
+  settings: SettingsStore = { read, write },
+  notes: NoteStore = webNoteStore()
+): TovaBridge {
   return {
-    notes: {
-      /*
-       * Empty, truthfully. The notes model — a vault path, a title, a folder —
-       * is the next piece, and it is not a refusal to say a new browser holds
-       * no notes.
-       */
-      list: () => Promise.resolve([]),
-      listFolders: () => Promise.resolve([]),
-      search: () => Promise.resolve([]),
-
-      read: notYet("notes.read"),
-      write: notYet("notes.write"),
-      create: notYet("notes.create"),
-      rename: notYet("notes.rename"),
-      move: notYet("notes.move"),
-      remove: notYet("notes.remove"),
-      restore: notYet("notes.restore"),
-      permanentDelete: notYet("notes.permanentDelete"),
-      today: notYet("notes.today"),
-      createFolder: notYet("notes.createFolder"),
-      setFavorite: notYet("notes.setFavorite"),
-      setTags: notYet("notes.setTags"),
-      renameFolder: notYet("notes.renameFolder"),
-      deleteFolder: notYet("notes.deleteFolder"),
-      createSection: notYet("notes.createSection"),
-      deleteSection: notYet("notes.deleteSection"),
-
-      /*
-       * The desktop writes a file and tells you where it went. A browser hands
-       * the reader a download and never learns the path, so the honest answer
-       * to "where did it go" is one this shape cannot give.
-       */
-      exportMarkdown: notYet("notes.exportMarkdown"),
-      exportPdf: unavailable("notes.exportPdf")
-    },
+    notes: webNotes(notes),
 
     backups: {
       /*

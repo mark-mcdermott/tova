@@ -189,9 +189,36 @@ question.** It offers a 15MB dictionary, says "macOS's own checker", and says
 an account. The web either asks a different question or asks none, and that is
 a decision rather than a port.
 
-**Next, in order:** the notes model, which is the one real gap — the renderer
-addresses a note by a vault path and the sync store keys by a uuid, and
-something has to hold both; the
+**And the notes model turned out not to be a gap at all.** The renderer
+addresses a note by a vault path and the sync keys one by a uuid, and nothing
+had to be invented to join them: the desktop already writes `title`, `section`,
+`folder`, `tags`, `favorite` and `uid` into front matter, so everything needed
+to place a note already travels inside the ciphertext. `restoreLocation` turns
+that into a location and `toNoteId` turns that into the path. **A path on the
+web is derived, not stored** — rename a note and its id moves, exactly as it
+does on the desktop where the file is renamed under it.
+
+A note can now be written in a browser, and it lands in IndexedDB as markdown
+the desktop would read:
+
+```
+---
+title: A little room to think
+section: notes
+uid: 15b3076e-8047-44b4-9168-9d05dc07efe7
+---
+```
+
+One thing does not travel, and it is worth knowing rather than discovering.
+The desktop reads `createdAt` and `updatedAt` off the filesystem, and it
+rebuilds front matter from the keys it knows when it saves — so a key the web
+added would be dropped the next time the desktop touched that note. The times
+are kept beside the note on this device instead, which makes them "when this
+browser last saw it change". For sorting a list that is what a reader means
+anyway.
+
+**Next, in order:** the rest of `NoteApi` — `today`, search, folders and moves
+— then calling a sync from somewhere, on a schedule and on a change; the
 desktop's store, which is the same interface over markdown files; something to
 call a sync from, on a schedule and on a change; and version history on the
 web, since the desktop's `.versions` is the floor the conflict story leans on
