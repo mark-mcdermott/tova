@@ -1,9 +1,10 @@
 /**
- * Where every flow ends, for now.
+ * Where every flow ends.
  *
- * There is no web editor yet — the vault, the keys and the two sync calls are
- * built and the client that uses them is not. Saying so is better than routing
- * somebody to a page that does not exist, and better than a fake dashboard.
+ * This said there was no web editor and pointed at the desktop download, which
+ * was true when it was written and stopped being true the moment `/app`
+ * worked. Copy that describes what is not built has to be read again every
+ * time something is.
  */
 type Props = {
   heading: string
@@ -17,8 +18,8 @@ export function Ready({ heading, remembered = false, onForget }: Props) {
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
       <p className="text-ink-soft text-[15px] leading-relaxed">
-        Your notes are encrypted with a key that only your devices hold. Writing on the web is the
-        next thing being built; until then, the desktop app is where Tova lives.
+        Your notes are encrypted with a key that only your devices hold — not by us, and not by
+        anyone we could be asked to hand them to.
       </p>
       {remembered && (
         <div className="border-line bg-field flex flex-col gap-3 rounded-xl border p-4">
@@ -40,11 +41,22 @@ export function Ready({ heading, remembered = false, onForget }: Props) {
       )}
 
       <a
-        href="https://github.com/mark-mcdermott/tova/releases/latest"
+        href="/app"
         className="bg-accent hover:bg-accent-bright text-accent-ink rounded-lg px-4 py-2.5 text-center font-medium transition-colors"
       >
-        Download for macOS
+        Start writing
       </a>
+
+      <p className="text-ink-faint text-sm leading-relaxed">
+        Or{" "}
+        <a
+          href="https://github.com/mark-mcdermott/tova/releases/latest"
+          className="text-accent hover:text-accent-bright underline"
+        >
+          download Tova for macOS
+        </a>
+        , which is the same notes with a window around them.
+      </p>
     </div>
   )
 }

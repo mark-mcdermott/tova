@@ -16,12 +16,12 @@
  * looks shaky.
  */
 
-import { available, run } from "./idb"
+import { available, database } from "./idb"
 
 export { available }
 
-const DB = "tova"
 const STORE = "keys"
+const keys = database("tova", [STORE])
 const CONTENT = "content"
 
 type Stored = { key: CryptoKey; epoch: number }
@@ -45,8 +45,8 @@ export async function unexportable(bytes: Uint8Array<ArrayBuffer>): Promise<Cryp
  */
 export async function remember(contentKey: Uint8Array<ArrayBuffer>, epoch: number): Promise<void> {
   const key = await unexportable(contentKey)
-  await run(DB, [STORE], "readwrite", ([keys]) =>
-    keys.put({ key, epoch } satisfies Stored, CONTENT)
+  await keys.run([STORE], "readwrite", ([store]) =>
+    store.put({ key, epoch } satisfies Stored, CONTENT)
   )
 }
 
@@ -76,8 +76,8 @@ export async function keepIfPossible(vault: {
 
 /** The key this device is holding, or null. */
 export async function recall(): Promise<Stored | null> {
-  const found = await run<Stored | undefined>(DB, [STORE], "readonly", ([keys]) =>
-    keys.get(CONTENT)
+  const found = await keys.run<Stored | undefined>([STORE], "readonly", ([store]) =>
+    store.get(CONTENT)
   )
   return found ?? null
 }
@@ -90,5 +90,5 @@ export async function recall(): Promise<Stored | null> {
  * key a device already holds.
  */
 export async function forget(): Promise<void> {
-  await run(DB, [STORE], "readwrite", ([keys]) => keys.delete(CONTENT))
+  await keys.run([STORE], "readwrite", ([store]) => store.delete(CONTENT))
 }

@@ -242,8 +242,24 @@ Four of those needed a decision rather than a port:
 - **Export hands over a file and returns its name, not a path.** A browser
   never learns where a download went.
 
-**Next, in order:** calling a sync from somewhere, on a schedule and on a
-change; the
+**And a sync runs on its own.** `/app` signed in on a device holding its key
+pushes what was written and pulls what arrived — verified against the real
+database, where a daily note the web app made turned up encrypted at version 36
+with nothing readable in it.
+
+`syncRunner.ts` is only _when_: shortly after a write, every minute otherwise,
+never two at once, and a change arriving mid-sync sends it round again rather
+than waiting for the timer. A failure backs off by doubling, and one success
+forgets the whole history. Missing any of a session, a kept key, or storage is
+not an error — it is Tova working locally, which is what it does on a device
+nobody has signed in on.
+
+**Two signals, not one.** `localChanged` is this tab saying it wrote;
+`vaultChanged` is a sync saying it took something. `EventsApi.onNotesChanged`
+is documented as changes made elsewhere, and handing it this tab's own writes
+would reload the renderer after every keystroke it had just handled.
+
+**Next, in order:** the
 desktop's store, which is the same interface over markdown files; something to
 call a sync from, on a schedule and on a change; and version history on the
 web, since the desktop's `.versions` is the floor the conflict story leans on
