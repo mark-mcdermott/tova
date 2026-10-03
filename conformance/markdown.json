@@ -14,6 +14,15 @@
     "Everything is escaped before any markup is added, so a note containing",
     "HTML exports as the text it is. The <script> case is there to say so.",
     "",
+    "Tables are the parser in src/shared/tables.ts and src-tauri/src/tables.rs,",
+    "reached only after heading, list and rule have each declined the line - so",
+    "a heading or a list item containing a pipe stays what it is. Alignment is an",
+    "inline style because exported HTML has no stylesheet of Tova's to reach for,",
+    "and a cell written one \\| two means one | two once the markdown is left",
+    "behind. The cases cover a block parseTable refuses, which falls through to a",
+    "paragraph rather than becoming a broken table.",
+    "",
+    "",
     "Run: pnpm run test (TypeScript) and cargo test (Rust). Both read this."
   ],
   "escapeHtml": [
@@ -190,48 +199,117 @@
     {
       "body": "line one\n\n\n\nline two\n",
       "html": "<p>line one</p>\n<p>line two</p>"
+    },
+    {
+      "body": "| Name | Role |\n| --- | --- |\n| Mark | writes |\n",
+      "html": "<table><thead><tr><th>Name</th><th>Role</th></tr></thead><tbody><tr><td>Mark</td><td>writes</td></tr></tbody></table>"
+    },
+    {
+      "body": "| Left | Middle | Right | Plain |\n| :--- | :----: | ----: | ---- |\n| a | b | c | d |\n",
+      "html": "<table><thead><tr><th style=\"text-align:left\">Left</th><th style=\"text-align:center\">Middle</th><th style=\"text-align:right\">Right</th><th>Plain</th></tr></thead><tbody><tr><td style=\"text-align:left\">a</td><td style=\"text-align:center\">b</td><td style=\"text-align:right\">c</td><td>d</td></tr></tbody></table>"
+    },
+    {
+      "body": "Name | Role\n--- | ---\nMark | writes\n",
+      "html": "<table><thead><tr><th>Name</th><th>Role</th></tr></thead><tbody><tr><td>Mark</td><td>writes</td></tr></tbody></table>"
+    },
+    {
+      "body": "| Cell | Note |\n| --- | --- |\n| one \\| two | a pipe |\n",
+      "html": "<table><thead><tr><th>Cell</th><th>Note</th></tr></thead><tbody><tr><td>one | two</td><td>a pipe</td></tr></tbody></table>"
+    },
+    {
+      "body": "| a | b | c |\n| - | - | - |\n| 1 |\n| 1 | 2 | 3 | 4 |\n",
+      "html": "<table><thead><tr><th>a</th><th>b</th><th>c</th></tr></thead><tbody><tr><td>1</td><td></td><td></td></tr><tr><td>1</td><td>2</td><td>3</td></tr></tbody></table>"
+    },
+    {
+      "body": "| Header | Only |\n| --- | --- |\n",
+      "html": "<table><thead><tr><th>Header</th><th>Only</th></tr></thead></table>"
+    },
+    {
+      "body": "| a | b |\n| - | - |",
+      "html": "<table><thead><tr><th>a</th><th>b</th></tr></thead></table>"
+    },
+    {
+      "body": "| a | b | c |\n| - | - |\n",
+      "html": "<p>| a | b | c | | - | - |</p>"
+    },
+    {
+      "body": "| What | Why |\n| --- | --- |\n| **bold** and `code` | [a link](https://tova.so) |\n",
+      "html": "<table><thead><tr><th>What</th><th>Why</th></tr></thead><tbody><tr><td><strong>bold</strong> and <code>code</code></td><td><a href=\"https://tova.so\">a link</a></td></tr></tbody></table>"
+    },
+    {
+      "body": "Before it.\n| a | b |\n| - | - |\n| 1 | 2 |\nAfter it.\n",
+      "html": "<p>Before it.</p>\n<table><thead><tr><th>a</th><th>b</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>\n<p>After it.</p>"
+    },
+    {
+      "body": "A sentence with a | pipe in it.\n",
+      "html": "<p>A sentence with a | pipe in it.</p>"
+    },
+    {
+      "body": "a\n---\n",
+      "html": "<p>a</p>\n<hr>"
+    },
+    {
+      "body": "```\n| a | b |\n| - | - |\n```\n",
+      "html": "<pre><code>| a | b |\n| - | - |</code></pre>"
+    },
+    {
+      "body": "# Costs | 2026\n\ntext\n",
+      "html": "<h1>Costs | 2026</h1>\n<p>text</p>"
+    },
+    {
+      "body": "| Tag | Markup |\n| --- | --- |\n| script | <script>alert(1)</script> |\n",
+      "html": "<table><thead><tr><th>Tag</th><th>Markup</th></tr></thead><tbody><tr><td>script</td><td>&lt;script&gt;alert(1)&lt;/script&gt;</td></tr></tbody></table>"
+    },
+    {
+      "body": "- a list | item\n- another\n",
+      "html": "<ul><li>a list | item</li><li>another</li></ul>"
     }
   ],
   "notePdfPage": [
     {
       "title": "Slow Morning",
       "body": "",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Slow Morning</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>Slow Morning</h1>\n\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Slow Morning</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>Slow Morning</h1>\n\n</body></html>"
     },
     {
       "title": "Slow Morning",
       "body": "# A heading\n\nA paragraph with **bold**.\n",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Slow Morning</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>Slow Morning</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Slow Morning</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>Slow Morning</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
     },
     {
       "title": "",
       "body": "",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title></title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1></h1>\n\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title></title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1></h1>\n\n</body></html>"
     },
     {
       "title": "",
       "body": "# A heading\n\nA paragraph with **bold**.\n",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title></title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1></h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title></title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1></h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
     },
     {
       "title": "He said \"no\" & <ran>",
       "body": "",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>He said &quot;no&quot; &amp; &lt;ran&gt;</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>He said &quot;no&quot; &amp; &lt;ran&gt;</h1>\n\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>He said &quot;no&quot; &amp; &lt;ran&gt;</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>He said &quot;no&quot; &amp; &lt;ran&gt;</h1>\n\n</body></html>"
     },
     {
       "title": "He said \"no\" & <ran>",
       "body": "# A heading\n\nA paragraph with **bold**.\n",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>He said &quot;no&quot; &amp; &lt;ran&gt;</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>He said &quot;no&quot; &amp; &lt;ran&gt;</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>He said &quot;no&quot; &amp; &lt;ran&gt;</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>He said &quot;no&quot; &amp; &lt;ran&gt;</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
     },
     {
       "title": "Émile 😀",
       "body": "",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Émile 😀</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>Émile 😀</h1>\n\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Émile 😀</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>Émile 😀</h1>\n\n</body></html>"
     },
     {
       "title": "Émile 😀",
       "body": "# A heading\n\nA paragraph with **bold**.\n",
-      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Émile 😀</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n</style></head><body>\n<h1>Émile 😀</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Émile 😀</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>Émile 😀</h1>\n<h1>A heading</h1>\n<p>A paragraph with <strong>bold</strong>.</p>\n</body></html>"
+    },
+    {
+      "title": "A Table On Paper",
+      "body": "| Month | Words |\n| ----- | ----: |\n| March | 4,120 |\n",
+      "page": "<!doctype html><html><head><meta charset=\"utf-8\"><title>A Table On Paper</title>\n<style>\n  body { font: 11pt/1.7 -apple-system, system-ui, sans-serif; margin: 0; color: #17141f }\n  h1 { font-size: 22pt; margin: 0 0 1.5rem }\n  h2 { font-size: 16pt; margin: 2rem 0 0.75rem }\n  h3, h4, h5, h6 { font-size: 12pt; margin: 1.5rem 0 0.5rem }\n  /* A line stranded alone at a page break reads as a mistake. */\n  p, li { orphans: 2; widows: 2 }\n  pre { background: #f4f3f7; padding: 0.75rem 1rem; border-radius: 6px;\n        white-space: pre-wrap; overflow-wrap: anywhere;\n        font: 9.5pt/1.5 ui-monospace, Menlo, monospace }\n  code { font: 0.92em ui-monospace, Menlo, monospace }\n  img { max-width: 100% }\n  hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }\n  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }\n  /* A table split across a page is readable; a row split in half is not. */\n  tr { page-break-inside: avoid }\n  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;\n           text-align: left; vertical-align: top }\n  th { background: #f4f3f7; font-weight: 600 }\n</style></head><body>\n<h1>A Table On Paper</h1>\n<table><thead><tr><th>Month</th><th style=\"text-align:right\">Words</th></tr></thead><tbody><tr><td>March</td><td style=\"text-align:right\">4,120</td></tr></tbody></table>\n</body></html>"
     }
   ]
 }

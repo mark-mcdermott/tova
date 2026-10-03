@@ -54,6 +54,7 @@ mod spellcheck;
 mod substitutions;
 mod sync;
 mod sync_plan;
+mod tables;
 mod tag_blocks;
 mod tag_purge;
 mod tags;

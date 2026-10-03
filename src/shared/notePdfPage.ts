@@ -23,6 +23,12 @@ export function notePdfPage(title: string, body: string): string {
   code { font: 0.92em ui-monospace, Menlo, monospace }
   img { max-width: 100% }
   hr { border: none; border-top: 1px solid #d8d5e0; margin: 2rem 0 }
+  table { border-collapse: collapse; margin: 1.25rem 0; font-size: 10pt }
+  /* A table split across a page is readable; a row split in half is not. */
+  tr { page-break-inside: avoid }
+  th, td { border: 1px solid #d8d5e0; padding: 0.35rem 0.6rem;
+           text-align: left; vertical-align: top }
+  th { background: #f4f3f7; font-weight: 600 }
 </style></head><body>
 <h1>${escapeHtml(title)}</h1>
 ${markdownToHtml(body)}
