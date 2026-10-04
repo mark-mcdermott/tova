@@ -298,13 +298,17 @@ no export on the web yet. That ordering is the work, not the delete button;
 which is a password change and a new recovery key over flows that already exist;
 all notes getting a `uid` at first sync rather than in a sweep; the web client,
 which is `window.tova`'s 79 methods over HTTP and no UI work at all; then mobile,
-which is the web client as a PWA.
+which is the web client in a native shell.
 
 **Mobile has mocks**, at revision three. Ten screens, kept outside the
 repository with the rest of the branding, and the handoff reads as a
 specification rather than a description: the PWA and PRF, an enrolled device
 surviving a password reset, and lock-versus-forget as two different acts. Every
 correction from the first two rounds is in.
+
+They were drawn before the shell was decided, so the first of those three is
+out of date and the other two are not: the screens are right, and the unlock
+behind them is the platform authenticator directly rather than through PRF.
 
 The conflict screen matches `syncCycle.ts` — both notes kept, the original
 keeping its id, the incoming version becoming the copy — which is worth
@@ -325,16 +329,73 @@ Two things it leaves open:
   can be used by any script in this origin with no gesture, and a PRF envelope
   cannot be opened without one.
 
-Mobile is **not** a Tauri port. Tauri 2 does target iOS and Android and that
-would have been the answer if web were not happening — but once a web client
-exists, mobile rides on it for nearly nothing.
+**Mobile is the web client in a Capacitor shell**, and the app stores are what
+decided it. This said PWA until the stores became a goal, and a PWA cannot be
+one: Apple does not accept them, and Play takes one only as a trusted web
+activity, which is a wrapper by another name. Something has to wrap it, so the
+only question left is which shell.
 
-Face ID looked like the thing that would reopen that, and it is not. The
+Not Tauri, and for the same reason as before rather than a new one. Tauri 2
+does target iOS and Android and that would have been the answer if web were not
+happening — but Capacitor wraps the build that already exists. `web/lib/bridge/`
+is the whole surface over IndexedDB and HTTP, running in a browser today. A
+Tauri port would mean compiling `src-tauri` for two more platforms, and the
+parts of it that matter on a phone are exactly the parts that do not transfer:
+`safe_storage` is the macOS Keychain and the store underneath it is files on
+disk. That is porting the half that needs rewriting to get a shell the app does
+not need.
+
+It is additive rather than a fork. Both shells are a webview rendering the same
+React and the same CodeMirror, and the seam is already in the types: `platform`
+answers `"web" | "desktop"` and gains `"mobile"`, where the mobile bridge is the
+web bridge with three or four capabilities swapped for native ones.
+
+**And it takes a bet off the table rather than adding one.** Face ID looked
+like the thing that would reopen the Tauri question and it never was — the
 Keychain is out of a PWA's reach, but WebAuthn's `prf` extension is not, and it
 gives the same property: a secret released only behind the platform
-authenticator. A Tauri build comes back on the table only if PRF turns out to be
-too thin in practice — too few devices, or a passkey story readers cannot
-follow.
+authenticator. In a shell, though, the Keychain is not out of reach either.
+Secure storage and the platform authenticator are there directly, which is what
+the Mac already has, with nothing resting on how widely PRF is implemented or
+how well a passkey reads to somebody who did not ask for one. PRF stays the
+answer in a browser, where it is the only one. What should not happen is
+carrying it into the shell: WebAuthn inside a webview wants associated domains
+and has no presentation context of its own, so PRF under Capacitor is the worst
+of both.
+
+**The shell is the cheap part, and not where the time goes.** That is
+CodeMirror on a touch keyboard — the viewport under a virtual keyboard,
+scrolling the cursor into view above it, composition from autocorrect and an
+IME, selection handles, anything that has to sit between the keyboard and the
+text. The risk is identical for a PWA, a Capacitor build and a Tauri one,
+because all three are the same webview, and ten screens of mocks do not reduce
+it. Weeks there, days on the wrap.
+
+Three things the stores add to the list above rather than to the end of it:
+
+- **Deleting an account stops being a loose end and becomes a gate.** Apple
+  requires in-app deletion of any account an app can create. The ordering
+  already recorded holds — export first, because removing the envelopes removes
+  every way of reading the notes — which makes it export, then deletion, then a
+  submission.
+- **A wrapper around a website is refused under 4.2**, and Tova is not one: it
+  writes, stores and reads with no account and no connection. What that asks is
+  that nothing on a phone requires signing in to do anything, which is the same
+  line the first-run paragraph arrives at from the other side.
+- **Sync, if it is ever paid, is paid through Apple** under 3.1.1 when it is
+  sold in the app. That shapes the account model, so it is a decision to make
+  before a paywall exists rather than after. The rules on linking out have been
+  moving; read them at the time.
+
+Reviewer access and export compliance are the other two forms — an
+end-to-end-encrypted app needs a demo account somebody can actually get into,
+and AES-256-GCM needs the encryption declaration answered.
+
+**The ordering does not change.** Build the mobile web client, open it in
+mobile Safari, wrap it after. The two paths share nearly everything — the
+layout, the touch editor, the unlock design, a sync running on a phone — and
+nothing in the client is wasted if a store comes later or never. Play is the
+lower-friction half of it when it does.
 
 ---
 
