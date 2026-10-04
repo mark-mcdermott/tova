@@ -28,3 +28,20 @@ if (typeof Range !== "undefined") {
     Object.assign([] as DOMRect[], { item: () => null }) as unknown as DOMRectList
   Range.prototype.getBoundingClientRect ??= () => emptyRect
 }
+
+/**
+ * jsdom does not implement `matchMedia` at all, so the layout question the app
+ * asks at mount would throw rather than answer. A query that matches nothing is
+ * the desktop answer, which is what a test that has not said otherwise means.
+ * Tests about the phone layout stub it themselves.
+ */
+window.matchMedia ??= ((query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  addListener: () => {},
+  removeListener: () => {},
+  dispatchEvent: () => false
+})) as unknown as typeof window.matchMedia

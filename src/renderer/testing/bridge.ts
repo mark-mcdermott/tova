@@ -39,7 +39,9 @@ export function stubBridge(overrides: DeepPartial<Bridge> = {}): Bridge {
       run: vi.fn(),
       list: vi.fn(async () => []),
       restore: vi.fn(),
-      status: vi.fn(),
+      // Read rather than only called: the app asks whether the vault is
+      // empty before it renders anything, and `undefined` is not an answer.
+      status: vi.fn(async () => ({ empty: false, backups: [] })),
       listVersions: vi.fn(async () => []),
       readVersion: vi.fn()
     },
