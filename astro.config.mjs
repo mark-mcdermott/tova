@@ -25,6 +25,13 @@ import tailwindcss from "@tailwindcss/vite"
 export default defineConfig({
   site: "https://tova.so",
   srcDir: "./web",
+  /*
+   * Beside `srcDir`, not at the root. Astro's default is `<root>/public`, and
+   * the root here is the whole repository — which would put the site's static
+   * files next to `src-tauri` and `conformance`, where nothing else about the
+   * web lives.
+   */
+  publicDir: "./web/public",
   outDir: "./out/web",
   adapter: vercel(),
   integrations: [react()],

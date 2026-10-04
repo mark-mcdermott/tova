@@ -1,5 +1,12 @@
 import { AvatarChoice, AvatarSources } from "../shared/preferences"
-import tovaAvatar from "./assets/avatars/tova.png"
+/*
+ * `?url` because this file is built twice. Vite, building the renderer for
+ * Tauri, turns a bare image import into a URL string; Astro, building the same
+ * file for the web, turns it into an `ImageMetadata` object — and an object in
+ * `src` renders as the text `[object Object]`, which is a broken image icon
+ * and no clue as to why. `?url` means the same thing to both.
+ */
+import tovaAvatar from "./assets/avatars/tova.png?url"
 
 /**
  * What a disc is painted until someone says otherwise: the yellow out of the
