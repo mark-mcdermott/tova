@@ -19,8 +19,9 @@ import {
   type PushedNote
 } from "../../src/shared/sync"
 import type { SyncTransport } from "../../src/shared/syncTransport"
+import { serverOrigin, withCookies } from "./serverOrigin"
 
-const NOTES = "/api/vault/notes"
+const notesUrl = (): string => `${serverOrigin()}/api/vault/notes`
 
 async function refuse(response: Response): Promise<never> {
   throw new Error(`The server said ${response.status}`)
@@ -32,17 +33,17 @@ export function webTransport(fetch: typeof globalThis.fetch = globalThis.fetch):
       const query = new URLSearchParams({ cursor: String(cursor) })
       if (limit !== undefined) query.set("limit", String(limit))
 
-      const response = await fetch(`${NOTES}?${query}`, { credentials: "same-origin" })
+      const response = await fetch(`${notesUrl()}?${query}`, { credentials: withCookies() })
       if (!response.ok) await refuse(response)
 
       return pullResponse.parse(await response.json()) satisfies PullResponse
     },
 
     async push(notes: PushedNote[]) {
-      const response = await fetch(NOTES, {
+      const response = await fetch(notesUrl(), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        credentials: "same-origin",
+        credentials: withCookies(),
         // `bigint` has no JSON, so a base version goes up as a string and the
         // endpoint's schema coerces it back.
         body: JSON.stringify({

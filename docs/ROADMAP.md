@@ -370,6 +370,34 @@ and anything larger is left alone.
 This is measured, tested and seen to move the toolbar by exactly what it
 claims in a browser. It has not been in front of a real keyboard.
 
+**Done since: the shell exists, and Tova runs on a phone.** Capacitor 8, iOS,
+Swift Package Manager rather than CocoaPods. `mobile/` is twelve lines that
+mount `Shell` — the same component `/app` mounts — and `vite.mobile.config.ts`
+builds it to `out/mobile`, which is what `webDir` names. Astro builds the web
+half for a server, and there is no server inside a phone; this is the same
+island as a static build. The app opens with no network, writes to IndexedDB,
+and `ios/` is exactly what `cap add ios` generates.
+
+Two things only a device said, and the first was fatal. `createAuthClient()`
+infers its base URL from the page, and the native shell's page comes from
+`capacitor://localhost` — which Better Auth refuses outright, at module scope,
+taking the bundle with it. A white screen with no console behind it.
+`web/lib/serverOrigin.ts` is now the one place that knows where the server is:
+the page's own origin in a browser, `https://tova.so` from a shell, with the
+cookie mode that follows from it.
+
+The second: iOS scrolls the document itself to lift a focused field above the
+keyboard. Tova's document is one screen tall and scrolls inside, so there is
+nowhere to go — but the webview moved it anyway, and the header spent the rest
+of the session under the status bar. A document that cannot scroll has nothing
+to offer it.
+
+Not yet: signing in or syncing from the shell. The addresses are right now,
+but a session cookie crossing from `capacitor://localhost` to `tova.so` is a
+cross-site cookie, and that wants `SameSite=None` and a CORS origin on the
+server side — a piece of work with its own care. Nor the Keychain, Face ID, or
+Android.
+
 **Mobile is the web client in a Capacitor shell**, and the app stores are what
 decided it. This said PWA until the stores became a goal, and a PWA cannot be
 one: Apple does not accept them, and Play takes one only as a trusted web

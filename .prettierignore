@@ -25,3 +25,8 @@ drizzle/
 # Astro's own output and caches.
 out/web/
 .astro/
+
+# Capacitor's native project. The Swift, the storyboards and the plists are
+# Xcode's to format, `cap add ios` writes them, and `cap sync` rewrites parts
+# of them — the same argument as `src-tauri/gen/` on the other side.
+ios/

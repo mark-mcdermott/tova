@@ -205,6 +205,19 @@
     padding-left: calc(2.75rem + var(--space-4));
   }
 
+  /*
+   * iOS scrolls the document itself to lift a focused field above the
+   * keyboard. Tova's document is exactly one screen tall and does its
+   * scrolling inside, so there is nowhere for it to go — but the webview
+   * moves it anyway, which drags the header up under the status bar and
+   * leaves it there. A document that cannot scroll has nothing to offer it.
+   */
+  html,
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   /* ── Writing, with the keys in front of it ─────────────────────────── */
 
   /*

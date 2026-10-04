@@ -12,8 +12,11 @@
 
 import { createAuthClient } from "better-auth/client"
 import type { Credentials } from "../../src/shared/vaultClient"
+import { serverOrigin } from "./serverOrigin"
 
-const auth = createAuthClient()
+// Named rather than inferred from the page: the native shell's page comes
+// from `capacitor://localhost`, which Better Auth rejects as a base URL.
+const auth = createAuthClient({ baseURL: serverOrigin() })
 
 /**
  * Better Auth answers with `{ data, error }` rather than throwing.
