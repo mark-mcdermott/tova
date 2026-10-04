@@ -20,8 +20,18 @@
  */
 const SERVER = "https://tova.so"
 
-/** The origin to address the server by, with no trailing slash. */
+/**
+ * The origin to address the server by, with no trailing slash.
+ *
+ * There is a third caller besides the two above, and it has no `window` at
+ * all: Astro prerenders the pages that import this, in Node, at build time.
+ * Asking where the server is has a perfectly good answer there — it is this
+ * one — and reaching for `window.location` first threw instead, which failed
+ * the deploy on a page that only wanted the module.
+ */
 export function serverOrigin(): string {
+  if (typeof window === "undefined") return SERVER
+
   const { protocol, origin } = window.location
   return protocol === "http:" || protocol === "https:" ? origin : SERVER
 }
@@ -34,5 +44,7 @@ export function serverOrigin(): string {
  * cross-site request sends no cookies at all unless it is asked to.
  */
 export function withCookies(): RequestCredentials {
+  if (typeof window === "undefined") return "include"
+
   return serverOrigin() === window.location.origin ? "same-origin" : "include"
 }

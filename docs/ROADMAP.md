@@ -386,6 +386,12 @@ taking the bundle with it. A white screen with no console behind it.
 the page's own origin in a browser, `https://tova.so` from a shell, with the
 cookie mode that follows from it.
 
+It has a third caller with no `window` at all, which the deploy found and the
+local checks did not: Astro prerenders the pages that import it, in Node, at
+build time. Asking where the server is has a perfectly good answer there, and
+reaching for `window.location` first threw instead. `pnpm run build:web` is
+not in the five commands `CLAUDE.md` lists, which is why this reached CI.
+
 The second: iOS scrolls the document itself to lift a focused field above the
 keyboard. Tova's document is one screen tall and scrolls inside, so there is
 nowhere to go — but the webview moved it anyway, and the header spent the rest
