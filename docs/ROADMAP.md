@@ -351,6 +351,25 @@ that was already there — the first crumb is a link to the listing the note sit
 in, which is a screen with the row on it. The mocks draw that as `‹ Notes`,
 which is the same act with a clearer affordance, and not a missing one.
 
+**Done since: the keyboard is in front of the page, and the page knows.** iOS
+does not shorten the layout viewport when the keys open — it draws them over
+the bottom of it — so the last lines of a note and the formatting row were
+behind the keyboard, and CodeMirror scrolling the cursor into view scrolled it
+into a part of the page nobody could see. `visualViewport` is the half that
+knows, and what it measures is published as `--keyboard-inset` rather than as
+React state, since what needs it is a padding and not a re-render per frame of
+an animation.
+
+Two edges are worth knowing. A negative `offsetTop` is the page being pulled
+past its own top, which is a rubber band and never a keyboard; counting it
+reported a covered strip on a screen with no keys on it. And iOS zooms the
+page when it focuses a field set under 16px, and never zooms back — the size
+preference goes down to 12, so a phone has a floor rather than an override,
+and anything larger is left alone.
+
+This is measured, tested and seen to move the toolbar by exactly what it
+claims in a browser. It has not been in front of a real keyboard.
+
 **Mobile is the web client in a Capacitor shell**, and the app stores are what
 decided it. This said PWA until the stores became a goal, and a PWA cannot be
 one: Apple does not accept them, and Play takes one only as a trusted web
