@@ -346,8 +346,10 @@ itself was giving its titles 47px of a 375px screen, with the date taking 117
 of them, so a row is read down there rather than across.
 
 Daily opens today's note rather than the week strip the mocks draw, which is a
-screen of its own and not built. Until the editor carries a way back to Notes,
-the sidebar is the only way out of a note on a phone.
+screen of its own and not built. The way back out of a note is the breadcrumb
+that was already there — the first crumb is a link to the listing the note sits
+in, which is a screen with the row on it. The mocks draw that as `‹ Notes`,
+which is the same act with a clearer affordance, and not a missing one.
 
 **Mobile is the web client in a Capacitor shell**, and the app stores are what
 decided it. This said PWA until the stores became a goal, and a PWA cannot be
