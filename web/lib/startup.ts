@@ -16,6 +16,7 @@ import { signedInAs } from "./credentials"
 import { recall } from "./keyStore"
 import { webNoteStore } from "./noteStore"
 import type { Signal } from "../../src/shared/signal"
+import { register } from "../../src/shared/runningSync"
 import { startSync, type Runner } from "../../src/shared/syncRunner"
 import { webTransport } from "./transport"
 
@@ -69,5 +70,11 @@ export async function startIfPossible(
     }
   })
 
+  /*
+   * Registered, so a screen can ask whether a sync is going and hurry one
+   * along without knowing which host started it. The desktop registers the
+   * same way from `main.tsx`.
+   */
+  register({ now: () => runner.now(), stop: () => runner.stop() })
   return { state: "syncing", runner }
 }

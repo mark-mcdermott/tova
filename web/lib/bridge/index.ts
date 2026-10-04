@@ -271,6 +271,7 @@ export function webBridge(
     app: {
       info: () =>
         Promise.resolve({
+          platform: "web" as const,
           version: "web",
           tauri: "",
           webview: navigator.userAgent,

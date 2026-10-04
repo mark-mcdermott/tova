@@ -85,6 +85,16 @@ export interface MoveNoteInput {
 }
 
 export interface AppInfo {
+  /**
+   * Which backend is answering.
+   *
+   * A few screens differ between them for reasons that are real rather than
+   * cosmetic — a browser has no keychain and no Finder, and the web has
+   * full-page flows for signing in that the desktop has nowhere to put. This
+   * is how a component asks, rather than sniffing for a missing field and
+   * hoping that keeps meaning what it means today.
+   */
+  platform: "web" | "desktop"
   version: string
   tauri: string
   webview: string

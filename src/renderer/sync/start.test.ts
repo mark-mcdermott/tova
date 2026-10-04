@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { startDesktopSync, stopDesktopSync, syncing } from "./start"
+import { startDesktopSync, stopDesktopSync } from "./start"
+import { isRunning } from "../../shared/runningSync"
 import type { TovaBridge } from "../../shared/types"
 
 function fakeSync(over: Partial<TovaBridge["sync"]> = {}) {
@@ -76,10 +77,12 @@ describe("starting it more than once", () => {
   it("hands back the one already running rather than starting another", async () => {
     const sync = fakeSync({ key: vi.fn(async () => new Uint8Array(32)) })
 
-    const first = await startDesktopSync()
+    await startDesktopSync()
     const second = await startDesktopSync()
 
-    expect(second).toBe(first)
+    // The second returns nothing because the first is still going, and the
+    // key is never asked for twice.
+    expect(second).toBeNull()
     expect(sync.key).toHaveBeenCalledOnce()
     stopDesktopSync()
   })
@@ -88,10 +91,10 @@ describe("starting it more than once", () => {
     fakeSync({ key: vi.fn(async () => new Uint8Array(32)) })
 
     await startDesktopSync()
-    expect(syncing()).toBe(true)
+    expect(isRunning()).toBe(true)
 
     stopDesktopSync()
-    expect(syncing()).toBe(false)
+    expect(isRunning()).toBe(false)
   })
 
   it("can be started again after being stopped", async () => {

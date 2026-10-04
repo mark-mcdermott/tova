@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { desktopSignIn, desktopSignOut } from "../../../sync/signIn"
-import { startDesktopSync, stopDesktopSync, syncNow } from "../../../sync/start"
+import { isRunning, syncNow } from "../../../../shared/runningSync"
+import { startDesktopSync, stopDesktopSync } from "../../../sync/start"
 import { Field } from "../Field"
 
 /**
@@ -13,6 +14,7 @@ import { Field } from "../Field"
  */
 export function SyncTab() {
   const [account, setAccount] = useState<string | null | "unknown">("unknown")
+  const [platform, setPlatform] = useState<"web" | "desktop" | null>(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [working, setWorking] = useState(false)
@@ -21,6 +23,7 @@ export function SyncTab() {
 
   useEffect(() => {
     void window.tova.sync.account().then(setAccount)
+    void window.tova.app.info().then((info) => setPlatform(info.platform))
   }, [])
 
   async function signIn(event: React.FormEvent) {
@@ -64,9 +67,11 @@ export function SyncTab() {
   async function runNow() {
     setSyncState("syncing")
     try {
-      // Starts it if signing in happened in a window that has since been
-      // closed and reopened, which is cheap and idempotent.
-      await startDesktopSync()
+      /*
+       * Whichever host started it. The desktop starts one from `main.tsx` and
+       * the web from `Shell.tsx`, and this screen is rendered by both — so it
+       * asks the registry rather than either of them.
+       */
       await syncNow()
       setSyncState("idle")
     } catch {
@@ -85,7 +90,31 @@ export function SyncTab() {
     }
   }
 
-  if (account === "unknown") return null
+  if (account === "unknown" || platform === null) return null
+
+  /*
+   * A browser signs in at /signin and manages the account at /account, which
+   * are full pages with room for the one screen that cannot be shown twice —
+   * the recovery key. Repeating any of that in a settings panel is how two
+   * flows come to disagree about it, so on the web this panel is a status
+   * line and a way to hurry a sync along, and the rest is a link.
+   */
+  const onTheWeb = platform === "web"
+
+  if (onTheWeb && account === null) {
+    return (
+      <div className="settings-panel">
+        <h2>Sync</h2>
+        <p className="settings-note">
+          Tova works without an account and always will. Signing in adds your other devices — your
+          notes are encrypted in this browser, with a key the server never sees.
+        </p>
+        <a className="settings-link" href="/signin">
+          Sign in
+        </a>
+      </div>
+    )
+  }
 
   if (account !== null) {
     return (
@@ -93,10 +122,15 @@ export function SyncTab() {
         <h2>Sync</h2>
         <p className="settings-note">
           Signed in as {account}. Notes written here reach your other devices, and theirs reach this
-          one — encrypted before they leave, with a key this Mac keeps in its keychain.
+          one — encrypted before they leave, with a key{" "}
+          {onTheWeb ? "this browser holds and cannot read out" : "this Mac keeps in its keychain"}.
         </p>
         <div className="settings-row">
-          <button type="button" onClick={() => void runNow()} disabled={syncState === "syncing"}>
+          <button
+            type="button"
+            onClick={() => void runNow()}
+            disabled={syncState === "syncing" || !isRunning()}
+          >
             {syncState === "syncing" ? "Syncing…" : "Sync now"}
           </button>
           {syncState === "failed" && (
@@ -111,18 +145,32 @@ export function SyncTab() {
           is for when you would rather not wait.
         </p>
 
-        <button
-          type="button"
-          className="danger-button"
-          onClick={() => void signOut()}
-          disabled={working}
-        >
-          Sign out
-        </button>
-        <p className="settings-note">
-          Signing out ends the session and removes the key from this Mac. Your notes stay in your
-          vault, as the files they have always been.
-        </p>
+        {onTheWeb ? (
+          <>
+            <a className="settings-link" href="/account">
+              Account and encryption
+            </a>
+            <p className="settings-note">
+              Changing your password, replacing your recovery key and forgetting this browser all
+              live there — each one needs room this panel does not have.
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="danger-button"
+              onClick={() => void signOut()}
+              disabled={working}
+            >
+              Sign out
+            </button>
+            <p className="settings-note">
+              Signing out ends the session and removes the key from this Mac. Your notes stay in
+              your vault, as the files they have always been.
+            </p>
+          </>
+        )}
       </div>
     )
   }
