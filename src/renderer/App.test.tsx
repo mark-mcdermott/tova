@@ -8,6 +8,20 @@ import { emptyHistory } from "./stores/history"
 import { stubBridge } from "./testing/bridge"
 import { DEFAULT_PREFERENCES } from "../shared/preferences"
 
+const openNote = {
+  id: "notes/river.md",
+  title: "River",
+  section: "notes" as const,
+  folder: null,
+  tags: [],
+  manualTags: [],
+  favorite: false,
+  updatedAt: 1,
+  createdAt: 1,
+  deletedAt: null,
+  body: ""
+}
+
 function viewport(phone: boolean) {
   window.matchMedia = vi.fn().mockReturnValue({
     matches: phone,
@@ -80,6 +94,56 @@ describe("the sidebar on a phone", () => {
     await userEvent.click(scrim)
 
     expect(useNotesStore.getState().sidebarCollapsed).toBe(true)
+  })
+})
+
+/*
+ * The mocks give the editor the formatting controls and the keyboard where
+ * this row would be. Two bars at the foot of a 24rem screen is most of the
+ * writing gone, so the one screen that is a piece of work keeps its own.
+ */
+describe("the tab bar", () => {
+  const bar = () => screen.queryByRole("navigation", { name: "Main" })
+
+  it("is there on a phone, anywhere but inside a note", async () => {
+    viewport(true)
+    useNotesStore.setState({ view: "settings" })
+    render(<App />)
+
+    await waitFor(() => expect(bar()).not.toBeNull())
+  })
+
+  it("is not there with a note open", async () => {
+    viewport(true)
+    // Both, because a launch with neither goes looking for somewhere to be
+    // and would open today's note over this one.
+    useNotesStore.setState({ view: "editor", activeId: openNote.id, active: openNote })
+    render(<App />)
+
+    await waitFor(() => expect(useNotesStore.getState().sidebarCollapsed).toBe(true))
+    expect(bar()).toBeNull()
+  })
+
+  /*
+   * The empty editor is not a piece of work: there is no note and no
+   * formatting toolbar under it, so taking the row away would leave a phone
+   * with nothing to tap at all.
+   */
+  it("is there when the editor has nothing open", async () => {
+    viewport(true)
+    useNotesStore.setState({ view: "editor", active: null })
+    render(<App />)
+
+    await waitFor(() => expect(bar()).not.toBeNull())
+  })
+
+  it("is never there on a desktop, where the sidebar is the navigation", async () => {
+    viewport(false)
+    useNotesStore.setState({ view: "settings" })
+    render(<App />)
+
+    await waitFor(() => expect(screen.queryByLabelText("Search notes")).not.toBeNull())
+    expect(bar()).toBeNull()
   })
 })
 

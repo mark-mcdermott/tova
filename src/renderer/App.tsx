@@ -17,6 +17,7 @@ import { Home } from "./components/Home/Home"
 import { Tooltip } from "./components/Popup/Tooltip"
 import { useTooltip } from "./useTooltip"
 import { usePhone } from "./usePhone"
+import { TabBar } from "./components/Mobile/TabBar"
 import { systemTheme, watchSystemTheme } from "./theme"
 import { Theme } from "../shared/preferences"
 import "./styles/editor.css"
@@ -196,6 +197,7 @@ export default function App() {
   }, [phone, activeId, view, closeSidebar])
 
   const needsRecovery = vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
+  const editing = view === "editor" && active !== null
 
   /*
    * Only once the preferences are actually here. They default to ungreeted, so
@@ -268,6 +270,11 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Writing is the one screen that keeps its own bottom row: the mocks
+          give it the formatting controls and the keyboard instead, and two
+          bars at the foot of a phone is most of the page gone. */}
+      {phone && !editing && <TabBar />}
     </div>
   )
 }

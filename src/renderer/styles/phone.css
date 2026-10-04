@@ -11,18 +11,79 @@
  * slides over it instead.
  */
 
-@media (max-width: 767px) {
-  /*
-   * The safe area is read once, here, and everything that needs to clear a
-   * notch or a home indicator takes it from these. `viewport-fit=cover` is
-   * what makes them anything other than zero.
-   */
-  .app {
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-left: env(safe-area-inset-left, 0px);
-    --safe-right: env(safe-area-inset-right, 0px);
+/*
+ * The safe area is read once, here, and everything that needs to clear a
+ * notch or a home indicator takes it from these. `viewport-fit=cover` is what
+ * makes them anything other than zero, and a window with no notch reads four
+ * zeroes — which is why this is not behind the breakpoint.
+ */
+.app {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
 
+/* ── The tab bar ──────────────────────────────────────────────────────── */
+
+/*
+ * Phone-only by construction rather than by width: `App` renders it when it
+ * applies. Styling it behind the breakpoint would leave it bare on the day
+ * something renders it wider, which is a worse failure than an unused rule.
+ */
+.tabbar {
+  position: fixed;
+  z-index: 25;
+  inset-inline: 0;
+  bottom: 0;
+
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) calc(var(--space-2) + var(--safe-bottom));
+
+  background: rgb(144 141 157 / 46%);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-top: 1px solid var(--glass-border);
+}
+
+.tabbar-tab {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--space-1);
+
+  /* The whole cell, so the target is the width of the column and not the
+     width of the word in it. */
+  min-height: 2.75rem;
+  padding: var(--space-1) var(--space-2);
+
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tabbar-tab.is-here {
+  background: var(--surface-quiet);
+  color: var(--text-primary);
+}
+
+.tabbar-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.tabbar-label {
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+@media (max-width: 767px) {
+  .app {
     /* How much of the screen the sidebar takes when it is over the writing,
        which is also where the writing you can still see begins. */
     --sidebar-over: min(var(--sidebar-width), calc(100vw - 3.5rem));
@@ -142,5 +203,55 @@
      The desktop has it at the pane's edge, where there is an edge. */
   .app .editor-nav {
     padding-left: calc(2.75rem + var(--space-4));
+  }
+
+  /* ── Listings ──────────────────────────────────────────────────────── */
+
+  /*
+   * The inset is set from the editor, where there is a pane to be set in
+   * from. Here it was taking 100px of a 375px screen and leaving the titles
+   * 47px to be read in.
+   */
+  .index-body {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  /* The tab bar is over the list, not above it, so the last row needs
+     somewhere to end that is not underneath it. */
+  .index-body,
+  .settings-body {
+    padding-bottom: calc(var(--safe-bottom) + 4.5rem);
+  }
+
+  /*
+   * A row is read down rather than across. Side by side, the date is a fixed
+   * 117px and the title is whatever is left — which on a phone is four
+   * characters and an ellipsis, so every row says the same nothing.
+   */
+  .index-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Rows are tapped, not hovered, so they need to be worth hitting. */
+  .index-star,
+  .index-actions button {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
+
+  /* The options name the sort — "Last edited", "Created" — so the word in
+     front of them is the one thing on this row nobody needs. Hidden from the
+     eye rather than from the control's name. */
+  .index-sort-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
