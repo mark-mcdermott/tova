@@ -17,6 +17,7 @@ import { Home } from "./components/Home/Home"
 import { Tooltip } from "./components/Popup/Tooltip"
 import { useTooltip } from "./useTooltip"
 import { usePhone } from "./usePhone"
+import { watchKeyboard } from "./keyboard"
 import { TabBar } from "./components/Mobile/TabBar"
 import { systemTheme, watchSystemTheme } from "./theme"
 import { Theme } from "../shared/preferences"
@@ -181,6 +182,13 @@ export default function App() {
     if (preferencesLoaded) setExpanded(rememberedFolds)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferencesLoaded, setExpanded])
+
+  /*
+   * The keyboard stands in front of the page rather than shortening it, so
+   * what it is covering has to be measured and handed to the stylesheet.
+   * Only where there is one: on a desktop this would be following a pinch.
+   */
+  useEffect(() => (phone ? watchKeyboard() : undefined), [phone])
 
   /*
    * On a phone the sidebar covers the writing, so it cannot be left open: not

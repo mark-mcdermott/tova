@@ -205,6 +205,32 @@
     padding-left: calc(2.75rem + var(--space-4));
   }
 
+  /* ── Writing, with the keys in front of it ─────────────────────────── */
+
+  /*
+   * `--keyboard-inset` is what `keyboard.ts` measured. The page keeps its
+   * full height with the keyboard open, so without this the last lines of a
+   * note and the formatting row are behind the keys, and scrolling the cursor
+   * into view scrolls it into a part of the page nobody can see.
+   */
+  .editor-body .cm-scroller {
+    padding-bottom: var(--keyboard-inset, 0px);
+  }
+
+  .toolbar {
+    margin-bottom: var(--keyboard-inset, 0px);
+  }
+
+  /*
+   * iOS zooms the page when a field it is focusing is set under 16px, and
+   * never zooms back out. The size preference goes down to 12, so this is a
+   * floor on a phone rather than an override: anything larger is left alone.
+   */
+  .cm-editor,
+  .cm-scroller {
+    font-size: max(16px, var(--editor-font-size, var(--text-base)));
+  }
+
   /* ── Listings ──────────────────────────────────────────────────────── */
 
   /*
