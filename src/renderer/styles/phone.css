@@ -1,0 +1,146 @@
+/*
+ * What changes on a phone.
+ *
+ * One breakpoint, and it is the number in `phone.ts` — `phone.test.ts` reads
+ * this file and fails if the two drift. The layout here is CSS alone: the app
+ * asks `usePhone()` only for behaviour that has nowhere else to live, like
+ * putting the sidebar away once you have picked something out of it.
+ *
+ * Below this width the two panes cannot both exist. The sidebar is 17.25rem
+ * and a phone is around 24rem, so it stops taking space from the writing and
+ * slides over it instead.
+ */
+
+@media (max-width: 767px) {
+  /*
+   * The safe area is read once, here, and everything that needs to clear a
+   * notch or a home indicator takes it from these. `viewport-fit=cover` is
+   * what makes them anything other than zero.
+   */
+  .app {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+
+    /* How much of the screen the sidebar takes when it is over the writing,
+       which is also where the writing you can still see begins. */
+    --sidebar-over: min(var(--sidebar-width), calc(100vw - 3.5rem));
+
+    /* The sidebar slides over the writing, so nothing may scroll sideways
+       underneath it — including a stray wide line of its own. */
+    overflow-x: hidden;
+  }
+
+  /* ── The sidebar, over the writing ─────────────────────────────────── */
+
+  .sidebar {
+    position: fixed;
+    z-index: 40;
+    inset-block: 0;
+    inset-inline-start: 0;
+
+    /* Wide enough for the tree, with enough of the writing still showing to
+       say what is underneath and where tapping will take you back to. */
+    width: var(--sidebar-over);
+
+    padding-top: calc(2.75rem + var(--safe-top));
+    padding-bottom: var(--safe-bottom);
+    padding-left: var(--safe-left);
+
+    /*
+     * Beside the editor this is a 28% tint on one shared pane of glass, and
+     * what shows through it is the background image both panes sit on. Over
+     * the writing it has to stop the writing being legible through it, which
+     * no tint on its own can do — so here the glass gets the blur that makes
+     * it glass, and the tint comes up to meet it.
+     */
+    background: rgb(144 141 157 / 56%);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+
+    animation: sidebar-in 160ms ease-out;
+  }
+
+  /*
+   * Tapping the writing puts the sidebar away, which is what the dimming is
+   * promising. It is a sibling of the sidebar rather than a child, so it
+   * covers the workspace and not itself.
+   */
+  .sidebar-scrim {
+    position: fixed;
+    z-index: 30;
+    /* Exactly the writing that is still showing. Running it under the sidebar
+       as well would make most of the control untappable, and put its middle —
+       where a tap is aimed — behind the panel it is meant to dismiss. */
+    inset: 0 0 0 var(--sidebar-over);
+
+    border: none;
+    background: rgb(17 20 31 / 38%);
+    animation: scrim-in 160ms ease-out;
+  }
+
+  @keyframes sidebar-in {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes scrim-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-scrim {
+      animation: none;
+    }
+  }
+
+  /* ── Opening it ────────────────────────────────────────────────────── */
+
+  /*
+   * On the desktop this is a sliver at the pane edge, sized for a pointer
+   * landing on a 1.5rem target. A thumb needs somewhere to go, so on a phone
+   * it becomes a control in the corner it reaches most easily.
+   */
+  .sidebar-reveal {
+    position: fixed;
+    z-index: 20;
+    /* Centred on the nav row it sits at the head of. */
+    top: calc(var(--safe-top) + var(--space-2));
+    left: calc(var(--safe-left) + var(--space-2));
+
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 0;
+
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background: var(--glass-bg-raised);
+    box-shadow: 0 2px 12px rgb(0 0 0 / 18%);
+  }
+
+  /* ── The writing, with the pane to itself ──────────────────────────── */
+
+  .workspace {
+    width: 100%;
+  }
+
+  /*
+   * The header is set in from the sidebar on the desktop, where there is a
+   * sidebar to be set in from. Here it only costs the prose its width.
+   */
+  .editor-header {
+    padding-right: var(--space-4);
+    padding-top: calc(var(--space-4) + var(--safe-top));
+  }
+
+  /* Room at the head of the row for the control that brings the sidebar back.
+     The desktop has it at the pane's edge, where there is an edge. */
+  .app .editor-nav {
+    padding-left: calc(2.75rem + var(--space-4));
+  }
+}

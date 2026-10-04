@@ -16,6 +16,7 @@ import { applyBackground, resolveBackground } from "./backgrounds"
 import { Home } from "./components/Home/Home"
 import { Tooltip } from "./components/Popup/Tooltip"
 import { useTooltip } from "./useTooltip"
+import { usePhone } from "./usePhone"
 import { systemTheme, watchSystemTheme } from "./theme"
 import { Theme } from "../shared/preferences"
 import "./styles/editor.css"
@@ -23,6 +24,8 @@ import "./styles/sidebar.css"
 import "./styles/settings.css"
 import "./styles/home.css"
 import "./styles/welcome.css"
+// Last, so its longhands land on top of the shorthands they narrow.
+import "./styles/phone.css"
 
 export default function App() {
   const load = useNotesStore((state) => state.load)
@@ -39,6 +42,9 @@ export default function App() {
   const sidebarCollapsedRef = useRef(sidebarCollapsed)
   sidebarCollapsedRef.current = sidebarCollapsed
   const toggleSidebar = useNotesStore((state) => state.toggleSidebar)
+  const closeSidebar = useNotesStore((state) => state.closeSidebar)
+  const activeId = useNotesStore((state) => state.activeId)
+  const phone = usePhone()
   const tip = useTooltip()
   const loadBlogs = useBlogsStore((state) => state.load)
   const loadPreferences = usePreferencesStore((state) => state.load)
@@ -175,6 +181,20 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferencesLoaded, setExpanded])
 
+  /*
+   * On a phone the sidebar covers the writing, so it cannot be left open: not
+   * at launch, where it would be the whole screen, and not after picking a
+   * note out of it, where it would be standing in front of the thing it was
+   * asked for. Opening it is a deliberate act and closing it is never one.
+   *
+   * Keyed on the destination rather than on the tap, because every way of
+   * getting somewhere passes through here — the rail, a search result, a
+   * crumb, the daily note rolling over at midnight.
+   */
+  useEffect(() => {
+    if (phone) closeSidebar()
+  }, [phone, activeId, view, closeSidebar])
+
   const needsRecovery = vaultStatus !== null && vaultStatus.empty && vaultStatus.backups.length > 0
 
   /*
@@ -201,17 +221,31 @@ export default function App() {
       {asking && <Welcome onChoose={(choice) => void answer(choice)} />}
       <div className="shell">
         {sidebarCollapsed ? (
+          // No tooltip on a phone: nothing hovers, and the shortcut it names
+          // wants a key the device does not have.
           <button
             type="button"
             className="sidebar-reveal"
-            {...tip("Show sidebar (Cmd+S)")}
+            {...(phone ? {} : tip("Show sidebar (Cmd+S)"))}
             aria-label="Show sidebar"
             onClick={toggleSidebar}
           >
             <ChevronIcon direction="right" />
           </button>
         ) : (
-          <Sidebar />
+          <>
+            {/* The dimmed writing is a control on a phone: it is the way back
+                out of a sidebar that is standing over it. */}
+            {phone && (
+              <button
+                type="button"
+                className="sidebar-scrim"
+                aria-label="Close sidebar"
+                onClick={closeSidebar}
+              />
+            )}
+            <Sidebar />
+          </>
         )}
 
         <main className="workspace">

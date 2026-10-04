@@ -82,6 +82,12 @@ interface NotesState {
   forward: () => Promise<void>
   rememberScroll: (scrollTop: number) => void
   toggleSidebar: () => void
+  /**
+   * Puts the sidebar away without asking what it was doing. On a phone it
+   * overlays the writing, so picking something out of it has to end with it
+   * gone — and a toggle would reopen it for anyone who had it shut already.
+   */
+  closeSidebar: () => void
   showSettings: (tab?: SettingsTab) => void
   toggleSection: (key: string) => void
   /** Applied once at launch, from what preferences remembered. */
@@ -248,6 +254,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   toggleSidebar: () => {
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }))
+  },
+
+  closeSidebar: () => {
+    set({ sidebarCollapsed: true })
   },
 
   /*

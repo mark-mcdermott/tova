@@ -329,6 +329,13 @@ Two things it leaves open:
   can be used by any script in this origin with no gesture, and a PRF envelope
   cannot be opened without one.
 
+**Done since: the shell fits a phone.** Below 768px the sidebar stops being a
+column and becomes a panel over the writing, with the control that brings it
+back at the head of the nav row and the writing itself as the way out of it.
+The breakpoint is one number in two languages that cannot read each other, so
+the test reads the stylesheet and fails when they drift. Safe areas are read
+once and taken from there, which is what `viewport-fit=cover` is for.
+
 **Mobile is the web client in a Capacitor shell**, and the app stores are what
 decided it. This said PWA until the stores became a goal, and a PWA cannot be
 one: Apple does not accept them, and Play takes one only as a trusted web
