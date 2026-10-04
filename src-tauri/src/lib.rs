@@ -75,6 +75,8 @@ use tauri::Manager;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AppInfo {
+    /// Which backend is answering. Always `desktop` from here, by definition.
+    platform: String,
     version: String,
     tauri: String,
     /// The web engine drawing the app. WKWebView on macOS, so a WebKit
@@ -89,6 +91,7 @@ struct AppInfo {
 #[tauri::command]
 fn app_info() -> AppInfo {
     AppInfo {
+        platform: "desktop".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         tauri: tauri::VERSION.to_string(),
         webview: tauri::webview_version().unwrap_or_else(|_| "unknown".into()),

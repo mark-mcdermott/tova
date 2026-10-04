@@ -12,6 +12,7 @@
  */
 
 import { syncOnce } from "../../shared/syncCycle"
+import { isRunning, register, unregister } from "../../shared/runningSync"
 import { signal, type Signal } from "../../shared/signal"
 import { startSync, type Runner } from "../../shared/syncRunner"
 import type { SyncTransport } from "../../shared/syncTransport"
@@ -44,34 +45,6 @@ export interface DesktopSync {
   runner: Runner
   /** Told after every local write, so a sync follows shortly. */
   localChanged: Signal
-  /** Runs one now rather than waiting for the timer. */
-  now: () => Promise<void>
-}
-
-/**
- * The one that is running, if one is.
- *
- * Held here because two things start a sync — the app opening, and somebody
- * signing in — and the second must not leave the first running alongside it.
- * Two runners against one vault would push the same note twice and refuse the
- * second themselves.
- */
-let running: DesktopSync | null = null
-
-/** Whether a sync is going, for a screen that wants to say so. */
-export function syncing(): boolean {
-  return running !== null
-}
-
-/** Stops it, for signing out. */
-export function stopDesktopSync(): void {
-  running?.runner.stop()
-  running = null
-}
-
-/** Runs one now, if there is one to run. Resolves when it settles. */
-export async function syncNow(): Promise<void> {
-  await running?.now()
 }
 
 /**
@@ -90,9 +63,9 @@ export async function syncNow(): Promise<void> {
  * awaited, because a vault opens at the speed of a folder.
  */
 export async function startDesktopSync(): Promise<DesktopSync | null> {
-  // Already going. Signing in while a sync is running is not a reason to
-  // start a second one against the same vault.
-  if (running !== null) return running
+  // Already going. Signing in while a sync is running is not a reason to start
+  // a second one against the same vault.
+  if (isRunning()) return null
 
   const key = await window.tova.sync.key().catch(() => null)
   if (key === null) return null
@@ -106,6 +79,16 @@ export async function startDesktopSync(): Promise<DesktopSync | null> {
     run: () => syncOnce(store, transport, key)
   })
 
-  running = { runner, localChanged, now: () => runner.now() }
-  return running
+  /*
+   * Registered rather than returned and forgotten. Two things start a sync —
+   * the app opening and somebody signing in — and Settings has to be able to
+   * ask whether one is going without knowing which of them did it.
+   */
+  register({ now: () => runner.now(), stop: () => runner.stop() })
+  return { runner, localChanged }
+}
+
+/** Stops it, for signing out. */
+export function stopDesktopSync(): void {
+  unregister()
 }
