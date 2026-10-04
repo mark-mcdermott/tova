@@ -15,13 +15,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Shared verify loop — definition lives in mm-claude-starter so a fix there
-  # lands in every repo. Node 25 matches local development.
   verify:
-    uses: mark-mcdermott/mm-claude-starter/.github/workflows/node-verify.yml@main
-    with:
-      node-version: "25"
-      lint-script: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Must precede setup-node, which needs pnpm on PATH to resolve its cache.
+      # The version comes from packageManager in package.json, so it lives in
+      # one place.
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: package.json
+
+      # Node major is pinned — an unpinned toolchain rots CI with no commit to
+      # blame. 25 matches local development.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "25"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Separate steps so a red run names which gate failed.
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run check
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
 
   # The backend being ported into. Its own job: it shares no toolchain with the
   # one above, and a red run should name which side of the port broke.
