@@ -8,6 +8,8 @@ import { SectionConfig, railLabel } from "./sections"
  * be sorted and read.
  */
 export type IndexTarget =
+  /** Everything in the vault, newest first. The one listing with no place. */
+  | { kind: "recent" }
   | { kind: "section"; section: Section }
   | { kind: "folder"; folder: string }
   | { kind: "blog"; blog: string }
@@ -36,6 +38,8 @@ export const SEARCH_SORTS: { value: IndexSort; label: string }[] = [
  */
 export function indexTitle(target: IndexTarget, sections: SectionConfig[]): string {
   switch (target.kind) {
+    case "recent":
+      return "All notes"
     case "section":
       return railLabel(sections, "section", target.section)
     case "folder":
@@ -54,6 +58,8 @@ export function indexTitle(target: IndexTarget, sections: SectionConfig[]): stri
 /** The sidebar key an index belongs to, so the rail can mark where you are. */
 export function indexKey(target: IndexTarget): string {
   switch (target.kind) {
+    case "recent":
+      return "recent"
     case "section":
       return target.section
     case "folder":
@@ -71,6 +77,10 @@ export function indexKey(target: IndexTarget): string {
 
 export function held(notes: NoteSummary[], target: IndexTarget): NoteSummary[] {
   switch (target.kind) {
+    case "recent":
+      // Everything you could still open. Trash is a place you go to on
+      // purpose, not something to meet on the way past.
+      return notes.filter((note) => note.section !== "trash")
     case "section":
       // A section lists everything under it, folders included: the index is the
       // whole of that place, not just what happens to be loose in it.

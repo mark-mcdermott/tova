@@ -115,6 +115,41 @@ describe("indexNotes", () => {
   })
 })
 
+/*
+ * The listing with no place: everything you could still open, newest first.
+ * It is what a phone opens on, and the one target a new note cannot take its
+ * section from.
+ */
+describe("all notes", () => {
+  const notes = [
+    note({ title: "Kept", updatedAt: 2 }),
+    note({ title: "Thrown", section: "trash", updatedAt: 3 }),
+    note({ title: "Daily", section: "daily", updatedAt: 1 })
+  ]
+
+  it("gathers every section rather than one", () => {
+    expect(indexNotes(notes, { kind: "recent" }, "updated").map((n) => n.title)).toEqual([
+      "Kept",
+      "Daily"
+    ])
+  })
+
+  /*
+   * Trash is a place you go to on purpose. A deleted note turning up in the
+   * list a phone opens on is the one thing somebody asked to stop seeing.
+   */
+  it("leaves the trash where it is", () => {
+    expect(
+      indexNotes(notes, { kind: "recent" }, "updated").some((n) => n.section === "trash")
+    ).toBe(false)
+  })
+
+  it("is named and keyed like any other listing", () => {
+    expect(indexTitle({ kind: "recent" }, DEFAULT_SECTIONS)).toBe("All notes")
+    expect(indexKey({ kind: "recent" })).toBe("recent")
+  })
+})
+
 describe("tagCounts", () => {
   it("counts each tag once per note, most-used first", () => {
     const notes = [

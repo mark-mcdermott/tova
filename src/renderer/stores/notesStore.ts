@@ -139,6 +139,9 @@ interface NotesState {
  * appearing because somebody clicked the folder is not the same favour.
  */
 function placeForNewNote(target: IndexTarget): { section: Section; folder: string | null } | null {
+  // Everything has no place of its own, so a new one goes where a note with
+  // nothing said about it goes.
+  if (target.kind === "recent") return { section: "notes", folder: null }
   if (target.kind === "folder") return { section: "notes", folder: target.folder }
   if (target.kind !== "section" || target.section === "trash") return null
   return { section: target.section, folder: null }

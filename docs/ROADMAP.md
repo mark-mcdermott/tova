@@ -336,6 +336,19 @@ The breakpoint is one number in two languages that cannot read each other, so
 the test reads the stylesheet and fails when they drift. Safe areas are read
 once and taken from there, which is what `viewport-fit=cover` is for.
 
+**Done since: three destinations and a listing to open on.** `IndexTarget`
+gains `recent` — everything you could still open, trash excluded, which is the
+one listing with no place of its own and so the one a new note cannot take its
+section from. The tab bar is Notes, Daily and Settings, and it is not on the
+editor: the mocks give that screen the formatting controls and the keyboard,
+and two bars at the foot of a phone is most of the page gone. The listing
+itself was giving its titles 47px of a 375px screen, with the date taking 117
+of them, so a row is read down there rather than across.
+
+Daily opens today's note rather than the week strip the mocks draw, which is a
+screen of its own and not built. Until the editor carries a way back to Notes,
+the sidebar is the only way out of a note on a phone.
+
 **Mobile is the web client in a Capacitor shell**, and the app stores are what
 decided it. This said PWA until the stores became a goal, and a PWA cannot be
 one: Apple does not accept them, and Play takes one only as a trusted web

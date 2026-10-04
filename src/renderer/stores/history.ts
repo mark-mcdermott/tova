@@ -35,6 +35,8 @@ export function screenKey(screen: Screen): string {
 
   const target = screen.target
   switch (target.kind) {
+    case "recent":
+      return "recent"
     case "section":
       return `section:${target.section}`
     case "folder":
