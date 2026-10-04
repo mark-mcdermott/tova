@@ -237,6 +237,11 @@ export function SignInForm({
         Unticked, and it stays that way unless somebody says otherwise. The key
         this keeps is what decrypts every note, so putting it on disk is a cost
         to consent to rather than a convenience to assume.
+
+        What it costs to decline has to be on the label, though. Signing in
+        happens here and the app is on another page, so an unkept key does not
+        survive the trip — which made declining mean "no sync at all" rather
+        than "ask me again", silently, with nothing anywhere saying so.
       */}
       <label className="flex cursor-pointer items-start gap-2.5 text-[15px]">
         <input
@@ -248,7 +253,8 @@ export function SignInForm({
         <span>
           Keep this device unlocked
           <span className="text-ink-faint block text-sm">
-            Stores your key in this browser so it does not ask again. Only on a device you trust.
+            Stores your key in this browser, so your notes can sync and it does not ask again.
+            Without it this browser writes locally only. Tick it on a device you trust.
           </span>
         </span>
       </label>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import App from "../../../src/renderer/App"
 import { installBridge } from "../../lib/bridge"
 import { startIfPossible } from "../../lib/startup"
+import { Locked } from "./Locked"
 import "../../../src/renderer/styles/globals.css"
 
 /**
@@ -21,6 +22,7 @@ export function Shell() {
   // `useState` with an initialiser, because it runs during the first render
   // and exactly once. An effect is too late and a bare call is every render.
   const [signals] = useState(installBridge)
+  const [locked, setLocked] = useState(false)
 
   /*
    * Sync starts in an effect, which is the right place for it: it reaches the
@@ -33,6 +35,8 @@ export function Shell() {
     let gone = false
 
     void startIfPossible(signals.localChanged, signals.vaultChanged).then((started) => {
+      // Signed in and unable to sync is the one worth saying out loud.
+      setLocked(started.state === "local only" && started.because === "locked")
       if (started.state !== "syncing") return
       // Unmounted while that was resolving. Stopping it now rather than
       // leaving a timer running against a tab nobody is looking at.
@@ -46,5 +50,10 @@ export function Shell() {
     }
   }, [signals])
 
-  return <App />
+  return (
+    <>
+      <App />
+      {locked && <Locked />}
+    </>
+  )
 }

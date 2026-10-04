@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { desktopSignIn, desktopSignOut } from "../../../sync/signIn"
+import { startDesktopSync, stopDesktopSync, syncNow } from "../../../sync/start"
 import { Field } from "../Field"
 
 /**
@@ -16,6 +17,7 @@ export function SyncTab() {
   const [password, setPassword] = useState("")
   const [working, setWorking] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "failed">("idle")
 
   useEffect(() => {
     void window.tova.sync.account().then(setAccount)
@@ -31,6 +33,13 @@ export function SyncTab() {
       if (result === "unlocked") {
         setAccount(email)
         setPassword("")
+        /*
+         * Here, rather than at the next launch. Sync used to start only when
+         * the app opened, so signing in did nothing visible and nothing at
+         * all until Tova was quit and reopened — which is indistinguishable
+         * from it being broken.
+         */
+        await startDesktopSync()
         return
       }
 
@@ -52,10 +61,24 @@ export function SyncTab() {
     }
   }
 
+  async function runNow() {
+    setSyncState("syncing")
+    try {
+      // Starts it if signing in happened in a window that has since been
+      // closed and reopened, which is cheap and idempotent.
+      await startDesktopSync()
+      await syncNow()
+      setSyncState("idle")
+    } catch {
+      setSyncState("failed")
+    }
+  }
+
   async function signOut() {
     setWorking(true)
     try {
       await desktopSignOut()
+      stopDesktopSync()
       setAccount(null)
     } finally {
       setWorking(false)
@@ -72,6 +95,22 @@ export function SyncTab() {
           Signed in as {account}. Notes written here reach your other devices, and theirs reach this
           one — encrypted before they leave, with a key this Mac keeps in its keychain.
         </p>
+        <div className="settings-row">
+          <button type="button" onClick={() => void runNow()} disabled={syncState === "syncing"}>
+            {syncState === "syncing" ? "Syncing…" : "Sync now"}
+          </button>
+          {syncState === "failed" && (
+            <span className="settings-note" role="alert">
+              That did not reach the server. It will try again on its own.
+            </span>
+          )}
+        </div>
+
+        <p className="settings-note">
+          Tova syncs on its own — a moment after you write, and every minute or so otherwise. This
+          is for when you would rather not wait.
+        </p>
+
         <button
           type="button"
           className="danger-button"
