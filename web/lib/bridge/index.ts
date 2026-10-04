@@ -16,6 +16,7 @@ import { normalizeScreen, type Screen } from "../../../src/shared/screen"
 import { NO_AVATARS } from "../../../src/shared/preferences"
 import type { NoteStore } from "../../../src/shared/noteStore"
 import type { TovaBridge } from "../../../src/shared/types"
+import { chooseAvatar } from "./avatar"
 import { webNotes } from "./notes"
 import { webSync } from "./sync"
 import { notYet, unavailable } from "./refuse"
@@ -64,6 +65,8 @@ const FIRST_RUN = { greeted: true, grammar: false, updates: false }
 const SESSION = "session"
 /** Folders somebody made before there was anything to put in them. */
 const FOLDERS = "emptyFolders"
+/** The picture somebody chose, as a data URL. */
+const AVATAR = "avatar"
 
 /**
  * Backgrounds and title faces the reader added.
@@ -209,13 +212,24 @@ export function webBridge(
       },
 
       /*
-       * No macOS account to ask, and no picker that copies a file into a
-       * vault. An avatar on the web is initials until somebody builds an
-       * upload, which is a different thing from the one this method describes.
+       * No macOS account to ask — `system` is a Mac's own account picture and
+       * a browser has none. `custom` is real: the browser has a picker of its
+       * own, so the one thing this screen offers that a browser can do, it
+       * does.
        */
-      avatarSources: () => Promise.resolve(NO_AVATARS),
+      async avatarSources() {
+        return { ...NO_AVATARS, custom: (await settings.read<string>(AVATAR)) ?? null }
+      },
       accountName: () => Promise.resolve(""),
-      chooseAvatar: unavailable("preferences.chooseAvatar"),
+
+      async chooseAvatar() {
+        const picture = await chooseAvatar()
+        // Dismissed. Nothing stored, and the choice left as it was.
+        if (picture === null) return null
+
+        await settings.write(AVATAR, picture)
+        return picture
+      },
 
       listBackgrounds: none,
       listTitleFonts: none,
