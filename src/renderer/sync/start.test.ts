@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { startDesktopSync } from "./start"
+import { startDesktopSync, stopDesktopSync, syncing } from "./start"
 import type { TovaBridge } from "../../shared/types"
 
 function fakeSync(over: Partial<TovaBridge["sync"]> = {}) {
@@ -13,7 +13,12 @@ function fakeSync(over: Partial<TovaBridge["sync"]> = {}) {
   return sync
 }
 
-beforeEach(() => void vi.restoreAllMocks())
+beforeEach(() => {
+  vi.restoreAllMocks()
+  // The runner is module-level, so one test leaving one going is the next
+  // test starting with somebody else's.
+  stopDesktopSync()
+})
 
 describe("starting a sync on the desktop", () => {
   /*
@@ -58,5 +63,45 @@ describe("starting a sync on the desktop", () => {
     })
 
     await expect(startDesktopSync()).resolves.toBeNull()
+  })
+})
+
+describe("starting it more than once", () => {
+  /*
+   * Two things start a sync: the app opening, and somebody signing in. The
+   * second must not leave the first running alongside it — two runners against
+   * one vault push the same note twice, and the second push is refused by the
+   * server as stale, which reads as a sync that keeps failing.
+   */
+  it("hands back the one already running rather than starting another", async () => {
+    const sync = fakeSync({ key: vi.fn(async () => new Uint8Array(32)) })
+
+    const first = await startDesktopSync()
+    const second = await startDesktopSync()
+
+    expect(second).toBe(first)
+    expect(sync.key).toHaveBeenCalledOnce()
+    stopDesktopSync()
+  })
+
+  it("says whether one is going, and stops saying so once it is stopped", async () => {
+    fakeSync({ key: vi.fn(async () => new Uint8Array(32)) })
+
+    await startDesktopSync()
+    expect(syncing()).toBe(true)
+
+    stopDesktopSync()
+    expect(syncing()).toBe(false)
+  })
+
+  it("can be started again after being stopped", async () => {
+    const sync = fakeSync({ key: vi.fn(async () => new Uint8Array(32)) })
+
+    await startDesktopSync()
+    stopDesktopSync()
+    await startDesktopSync()
+
+    expect(sync.key).toHaveBeenCalledTimes(2)
+    stopDesktopSync()
   })
 })

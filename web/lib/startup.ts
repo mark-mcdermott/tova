@@ -12,6 +12,7 @@
 
 import { syncOnce } from "../../src/shared/syncCycle"
 import { available } from "./idb"
+import { signedInAs } from "./credentials"
 import { recall } from "./keyStore"
 import { webNoteStore } from "./noteStore"
 import type { Signal } from "../../src/shared/signal"
@@ -20,8 +21,15 @@ import { webTransport } from "./transport"
 
 export type Started =
   | { state: "syncing"; runner: Runner }
-  /** Working, and only here. The reason is for a status line, not a dialog. */
-  | { state: "local only"; because: "no key" | "no storage" }
+  /**
+   * Working, and only here. The reason matters, because two of them mean
+   * different things to the reader.
+   *
+   * `signed out` is Tova as it has always been and needs no telling. `locked`
+   * is somebody who signed in, expects their notes to travel, and has no idea
+   * they do not — which is the one that has to be said out loud.
+   */
+  | { state: "local only"; because: "signed out" | "locked" | "no storage" }
 
 export async function startIfPossible(
   localChanged: Signal,
@@ -31,7 +39,16 @@ export async function startIfPossible(
   if (!available()) return { state: "local only", because: "no storage" }
 
   const held = await recall()
-  if (held === null) return { state: "local only", because: "no key" }
+  if (held === null) {
+    /*
+     * No key on this device. Which of two things that is depends on whether
+     * there is an account at all, and the difference is the whole of what the
+     * reader needs to know: signed out is nothing to report, and signed in
+     * without a key is sync quietly not happening.
+     */
+    const signedIn = await signedInAs().catch(() => null)
+    return { state: "local only", because: signedIn === null ? "signed out" : "locked" }
+  }
 
   const store = webNoteStore()
   const transport = webTransport()

@@ -258,6 +258,18 @@ describe("keeping the key on this device", () => {
    * to consent to rather than a convenience to assume — the same rule that
    * keeps the grammar dictionary and the update check off by default.
    */
+  /*
+   * The label has to say what declining costs. Signing in happens on one page
+   * and the app is on another, so an unkept key does not survive the trip —
+   * which made declining mean "no sync at all" rather than "ask me again",
+   * silently, with nothing anywhere saying so.
+   */
+  it("says on the label that declining means no syncing", () => {
+    render(<SignInForm client={fakeClient()} />)
+
+    expect(screen.getByText(/sync/i).textContent).toMatch(/locally only/i)
+  })
+
   it("stores nothing when the box is left alone", async () => {
     const keep = vi.fn(async () => true)
     keepingForm(keep)
