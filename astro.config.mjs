@@ -60,7 +60,9 @@ export default defineConfig({
        * failing then says which one is missing rather than failing the whole
        * deploy on a variable nothing uses yet.
        */
-      PUBLIC_SITE_URL: envField.string({ context: "client", access: "public", optional: true })
+      PUBLIC_SITE_URL: envField.string({ context: "client", access: "public", optional: true }),
+      /* Password reset and email verification, via `src/server/email.ts`. */
+      RESEND_API_KEY: envField.string({ context: "server", access: "secret", optional: true })
     }
   }
 })
