@@ -224,7 +224,15 @@ After each meaningful change:
 - `pnpm run check` — TypeScript strict passes
 - `pnpm run test` — suite green
 - `pnpm run build` — the renderer builds without errors
+- `pnpm run build:web` — the web half builds, including the pages Astro
+  prerenders in Node
 - `cargo test --manifest-path src-tauri/Cargo.toml` — the Rust suite is green
 - `pnpm run tauri:dev` — opens, feature works manually
 
-Keep all five green. Update `PROGRESS.md` when a phase completes.
+Keep all six green. Update `PROGRESS.md` when a phase completes.
+
+`build:web` earns its place rather than padding the list. `build` is the
+renderer alone, and the two halves fail in different ways: Astro renders some
+pages in Node at build time, so a module that reaches for `window` where
+nothing asked it to passes every other command here and fails the deploy.
+That has now happened twice — `astro:env` was the first.
