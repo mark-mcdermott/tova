@@ -1,10 +1,12 @@
 /**
  * The web's half of `SyncApi`.
  *
- * Better Auth's browser client and `fetch`, because the page is already on the
- * right origin — the session cookie rides along on its own and there is no
- * CORS to answer. The desktop's half goes out through Rust for the opposite
- * reason, and `src-tauri/src/account.rs` says which.
+ * Better Auth's browser client and `fetch`. In a browser the page is already
+ * on the right origin, so the session cookie rides along on its own and there
+ * is no CORS to answer; in the native shell the page comes from the device and
+ * the server has to be named, which `serverOrigin` does for both. The
+ * desktop's half goes out through Rust, and `src-tauri/src/account.rs` says
+ * why.
  *
  * What comes back is the server's JSON untouched. `src/shared/sync.ts` gives
  * it a shape, and it does that for both backends.
@@ -14,8 +16,10 @@ import type { SyncApi } from "../../../src/shared/types"
 import { credentials, signedInAs, signOut as endSession } from "../credentials"
 import { readSyncState, writeSyncState } from "../noteStore"
 import { forget, keepIfPossible, recall } from "../keyStore"
+import { serverOrigin, withCookies } from "../serverOrigin"
 
-const NOTES = "/api/vault/notes"
+const notesUrl = (): string => `${serverOrigin()}/api/vault/notes`
+const envelopesUrl = (): string => `${serverOrigin()}/api/vault/envelopes`
 
 async function json(response: Response): Promise<unknown> {
   if (!response.ok) throw new Error(`The server said ${response.status}`)
@@ -38,7 +42,7 @@ export function webSync(fetch: typeof globalThis.fetch = globalThis.fetch): Sync
       const query = new URLSearchParams({ cursor })
       if (limit !== undefined) query.set("limit", String(limit))
 
-      return json(await fetch(`${NOTES}?${query}`, { credentials: "same-origin" }))
+      return json(await fetch(`${notesUrl()}?${query}`, { credentials: withCookies() }))
     },
 
     /*
@@ -67,15 +71,15 @@ export function webSync(fetch: typeof globalThis.fetch = globalThis.fetch): Sync
     },
 
     async envelopes() {
-      return json(await fetch("/api/vault/envelopes", { credentials: "same-origin" }))
+      return json(await fetch(envelopesUrl(), { credentials: withCookies() }))
     },
 
     async push(notes) {
       return json(
-        await fetch(NOTES, {
+        await fetch(notesUrl(), {
           method: "POST",
           headers: { "content-type": "application/json" },
-          credentials: "same-origin",
+          credentials: withCookies(),
           body: JSON.stringify({ notes })
         })
       )

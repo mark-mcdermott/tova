@@ -46,6 +46,8 @@ export default tseslint.config(
       "release/",
       "src-tauri/target/",
       "src-tauri/gen/",
+      // Capacitor writes this and keeps writing it; see .prettierignore.
+      "ios/",
       "scripts/seed/vault/",
       "conformance/",
       // Astro writes these itself on every build and they are not ours to
