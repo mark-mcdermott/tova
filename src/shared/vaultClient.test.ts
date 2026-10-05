@@ -11,6 +11,8 @@ import { createEnvelopes, nextEpoch, replaceEnvelope, type StoredEnvelope } from
 const EMAIL = "mark@markmcdermott.io"
 const PASSWORD = "a long enough password to be worth having"
 const NEXT = "a different long enough password"
+/** Stands in for what an emailed reset link carries. */
+const RESET_TOKEN = "a-reset-token"
 
 /**
  * The two halves of a server, in memory.
@@ -40,6 +42,14 @@ function fakeServer() {
       if (signedIn === null) throw new Error("Not signed in")
       if (secrets.get(signedIn) !== current) throw new Error("Wrong current password")
       secrets.set(signedIn, next)
+    },
+    async requestReset() {
+      // Nothing to model: the mail is the server's business, and the flows do not read it.
+    },
+    /** No current secret and no session — the token stands in for both. */
+    async resetSecret(token, next) {
+      if (token !== RESET_TOKEN) throw new Error("That link has expired")
+      secrets.set(EMAIL, next)
     }
   }
 
@@ -164,6 +174,29 @@ describe("after a password reset", () => {
     await server.resetPasswordTo(NEXT)
 
     expect(await server.client.signIn(EMAIL, NEXT)).toEqual({ state: "locked" })
+  })
+
+  it("resets through the client, leaving the vault locked until the recovery key", async () => {
+    const { server, vault } = await signedUp()
+
+    await server.client.resetPassword(EMAIL, NEXT, RESET_TOKEN)
+
+    // The credential moved; the envelope did not. Locked is the correct outcome here,
+    // and the reason the reset mail tells people to have their recovery key ready.
+    expect(await server.client.signIn(EMAIL, NEXT)).toEqual({ state: "locked" })
+
+    const opened = await server.client.recoverAfterReset(EMAIL, NEXT, vault.recoveryKey)
+    expect(opened.contentKey).toEqual(vault.contentKey)
+  })
+
+  it("refuses a reset whose token is not the one that was issued", async () => {
+    const { server } = await signedUp()
+
+    await expect(server.client.resetPassword(EMAIL, NEXT, "stale")).rejects.toThrow(
+      "That link has expired"
+    )
+    // The old password still works, so a refused reset changed nothing.
+    expect(await server.canSignIn(PASSWORD)).toBe(true)
   })
 
   it("opens with the recovery key, and the new password works from then on", async () => {

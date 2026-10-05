@@ -68,11 +68,32 @@ export type Credentials = {
   signUp(email: string, secret: string, name: string): Promise<void>
   signIn(email: string, secret: string): Promise<void>
   changeSecret(current: string, next: string): Promise<void>
+  /** Asks for the reset mail. No crypto here — it is routed through the port so this stays the only file that knows Better Auth. */
+  requestReset(email: string): Promise<void>
+  /**
+   * Sets a new secret from an emailed token, with no current secret to prove.
+   *
+   * Separate from `changeSecret` because the thing it cannot do is the point: a reset
+   * replaces the credential and leaves the envelopes untouched, so the notes stay sealed
+   * under a wrapping key nobody now holds. `recoverAfterReset` is what re-opens them.
+   */
+  resetSecret(token: string, secret: string): Promise<void>
 }
 
 export type VaultClient = {
   signUp(email: string, password: string, name: string): Promise<NewVaultResult>
   signIn(email: string, password: string): Promise<SignedIn>
+  /** Asks for the reset mail. Pass-through to the port, so a form never reaches past the client. */
+  requestReset(email: string): Promise<void>
+  /**
+   * Completes an emailed reset. Derives the new auth secret here, because the server is
+   * never given a password — only the `auth` half of the split (`accountKeys.ts`).
+   *
+   * Signing in afterwards reports `locked`, which is correct and not a failure: the
+   * password envelope still belongs to the old password. `recoverAfterReset` takes it
+   * from there with the recovery key.
+   */
+  resetPassword(email: string, password: string, token: string): Promise<void>
   mintVault(email: string, password: string): Promise<NewVaultResult>
   unlockWithOldPassword(oldPassword: string): Promise<OpenVault>
   recoverAfterReset(email: string, password: string, recoveryKey: string): Promise<OpenVault>
@@ -162,6 +183,14 @@ export function makeVaultClient(credentials: Credentials, fetch: Fetch): VaultCl
       await create(1, vault.envelopes)
 
       return { contentKey: vault.contentKey, recoveryKey: vault.recoveryKey, epoch: 1 }
+    },
+
+    async requestReset(email) {
+      await credentials.requestReset(email)
+    },
+
+    async resetPassword(email, password, token) {
+      await credentials.resetSecret(token, await authSecretFor(email, password))
     },
 
     async signIn(email, password) {

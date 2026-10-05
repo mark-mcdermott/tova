@@ -38,6 +38,23 @@ export const credentials: Credentials = {
     orThrow(await auth.signIn.email({ email, password: secret }))
   },
 
+  async requestReset(email) {
+    /*
+     * Deliberately not reporting whether the address has an account: this is reachable
+     * by anyone, and a differing answer is an account-enumeration leak.
+     */
+    orThrow(await auth.requestPasswordReset({ email, redirectTo: "/reset-password" }))
+  },
+
+  async resetSecret(token, secret) {
+    /*
+     * No session and no current secret — the emailed token is the whole proof. Better
+     * Auth is handed the derived auth secret as `newPassword`, exactly as `changeSecret`
+     * does, because that is what it stores a hash of.
+     */
+    orThrow(await auth.resetPassword({ token, newPassword: secret }))
+  },
+
   async changeSecret(current, next) {
     /*
      * Other sessions are revoked, because the point of changing a password is
