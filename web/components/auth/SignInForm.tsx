@@ -234,6 +234,17 @@ export function SignInForm({
       />
 
       {/*
+        The only route back in for somebody who cannot sign in. Until the reset mail
+        existed there was nothing to link to, which is why this is new rather than
+        having been here all along.
+      */}
+      <p className="text-ink-faint -mt-2 text-sm">
+        <a href="/forgot-password" className="text-accent hover:text-accent-bright underline">
+          Forgot your password?
+        </a>
+      </p>
+
+      {/*
         Unticked, and it stays that way unless somebody says otherwise. The key
         this keeps is what decrypts every note, so putting it on disk is a cost
         to consent to rather than a convenience to assume.
