@@ -19,6 +19,7 @@ import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { getDb } from "./db"
 import * as schema from "./db/schema"
+import { sendPasswordResetEmail, sendVerificationEmail } from "./email"
 
 let auth: ReturnType<typeof build> | null = null
 
@@ -62,7 +63,29 @@ function build() {
        * about punctuation. The signup form is where a weak password should be
        * argued with.
        */
-      minPasswordLength: 8
+      minPasswordLength: 8,
+      /*
+       * Until this existed nothing could send mail, so a forgotten password had
+       * no route back at all — the reset screens and `recoverAfterReset` were
+       * already built and simply unreachable.
+       *
+       * What Better Auth resets is the account. It cannot reset the notes: the
+       * content key is sealed once per factor, and a new password derives a
+       * different wrapping key, so the recovery key is what re-opens the
+       * writing. `SignInForm` already asks for it and points at
+       * `/no-recovery-key` when it is gone; the mail says so too, because the
+       * moment to go and find it is before the reset rather than after.
+       */
+      sendResetPassword: async ({ user, url }) => {
+        await sendPasswordResetEmail(user.email, url)
+      }
+    },
+
+    emailVerification: {
+      sendOnSignUp: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendVerificationEmail(user.email, url)
+      }
     },
 
     session: {
