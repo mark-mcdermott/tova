@@ -61,8 +61,8 @@ importers:
         specifier: ^0.45.4
         version: 0.45.4(@neondatabase/serverless@1.2.0)(kysely@0.29.6)
       harper.js:
-        specifier: ^2.10.0
-        version: 2.10.0
+        specifier: ^3.2.0
+        version: 3.2.0
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -3015,8 +3015,8 @@ packages:
   h3@1.15.11:
     resolution: {integrity: sha512-L3THSe2MPeBwgIZVSH5zLdBBU90TOxarvhK9d04IDY2AmVS8j2Jz2LIWtwsGOU3lu2I5jCN7FNvVfY2+XyF+mg==}
 
-  harper.js@2.10.0:
-    resolution: {integrity: sha512-s6BDuqtRbX8M/5exH1G5M7VzAuv6l0TagbRxMY37OsrT/1kWFjWmqHydWrkYFqTUW+fFhu4Hj2yUxvChp862Pg==}
+  harper.js@3.2.0:
+    resolution: {integrity: sha512-TDsvGAavw1G0tDNzAkzDkv2Q/Z0kRSXgA4cJepdiiqJ9AJH2dr68D40W7W5uKiskZES/u3mjfgIdOEXVZCdhtA==}
 
   has-bigints@1.1.0:
     resolution: {integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg==}
@@ -7696,7 +7696,7 @@ snapshots:
       ufo: 1.6.4
       uncrypto: 0.1.3
 
-  harper.js@2.10.0:
+  harper.js@3.2.0:
     dependencies:
       fflate: 0.8.3
 
